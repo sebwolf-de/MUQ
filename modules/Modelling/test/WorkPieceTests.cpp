@@ -3,5 +3,5 @@
 #include "MUQ/Modelling/WorkPiece.h"
 
 TEST(WorkPiece, Build) {
-  EXPECT_EQ(1,2);
+  EXPECT_EQ(1,3);
 }
