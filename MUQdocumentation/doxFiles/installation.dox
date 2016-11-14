@@ -1,0 +1,285 @@
+/**
+ * \page muqinstall MUQ Installation Guide
+ *
+ * \section Getting MUQ
+ * MUQ is hosted on our <a href=https://bitbucket.org/mituq/muq>BitBucket site</a>.  To get the source code, you can clone our git repository by running
+ \code{.sh}
+ git clone https://bitbucket.org/mituq/muq
+ \endcode
+ in a terminal.  While it is usually better to clone our repository, so you can easily obtain updates and bugfixes, you can also download a version of MUQ <a href=https://bitbucket.org/mituq/muq/downloads>here</a>.
+ *
+ * \section Dependencies
+ * MUQ requires several libraries and can use features from several more, which are optional dependencies.
+ * The required dependencies are:
+ * - <a href=http://www.boost.org/>Boost</a> (General c++ tools, graph library, and serialization)
+ * - <a href=http://eigen.tuxfamily.org/>Eigen</a> (Templated linear algebra package)
+ * - <a href=http://www.cs.ubc.ca/research/flann/>FLANN</a> (Fast nearest neighbor library)
+ * - <a href=http://www.hdfgroup.org/HDF5/>HDF5</a>  (Structured binary file library)
+ * - <a href=http://computation.llnl.gov/casc/sundials/main.html>SUNDIALS</a> (ODE/DAE Integrator and nonlinear solver)
+ *
+ * The optional dependencies include:
+ * - <a href=http://libmesh.sourceforge.net/>LibMesh</a> (PDE library)
+ * - <a href=https://code.google.com/p/google-glog/>GLOG</a>   (Google logging framework)
+ * - <a href=https://code.google.com/p/googletest/>GTEST</a>  (Google testing framework)
+ * - <a href=http://trilinos.sandia.gov/packages/>Sacado</a> (Automatic differentiation library in Trilinos)
+ * - <a href=http://ab-initio.mit.edu/wiki/index.php/NLopt>NLOPT</a>  (Nonlinear optimization library)
+ * - <a href=http://mc-stan.org/>Stan</a> (Hamiltonian MCMC sampler)
+ * - <a href=http://arma.sourceforge.net/>Armadillo</a> (Linear algebra library)
+ * - <a href=http://software.intel.com/en-us/intel-mkl>Intel MKL</a> (BLAS and LAPACK routines to accelerate Eigen)
+ * - <a href=https://www.python.org/>Python</a> (Easy to use programming language)
+ *
+ * In the past, this large number of dependencies has made installation difficult.  However, we have dramatically
+ * improved the build process with some more advanced cmake tools.  Now, during the MUQ build, if required libraries are
+ * not found or can not be linked against, cmake will download the package and install the dependency in a local
+ * “external” folder.
+ *
+ *  \section bi Basic installation
+ *  The most basic installation of MUQ can be performed by simply changing into the build directory and running cmake
+ *  with an optional install prefix.  This will produce a makefile and MUQ can then be compiled by running make.  This
+ *  two step process is illustrated below:
+   \code{.sh}
+   cd build
+   cmake -DCMAKE_INSTALL_PREFIX=/my/install/path ..
+   make
+   make install
+   \endcode
+ *  With this command, cmake will look for all required libraries in default locations and will default to turning off
+ *  all optional dependencies.  It is important to recall that MUQ makes extensive use of c++11 features.  Thus, to
+ *  compile MUQ with this simple command, the default c++ compiler must support c++11.  g++ 4.7 or later will work, as will 
+ *  recent versions of clang.
+ *
+ *  At the end of the cmake run, a log file (summary.log) will be produced in the build directory and echoed to the
+ *screen.  This summary will list what optional dependencies are being used, the compiler to bed used, and where cmake
+ *found the required libraries.  An example of this summary is below:
+ *  \code{.sh}
+#############################################
+#
+#  MUQ configuration:
+#        CMAKE_BUILD_TYPE:         Release
+#        BUILD_SHARED_LIBS:        ON
+#        BUILD_STATIC_LIBS:        OFF
+#        CMAKE_INSTALL_PREFIX:     /Users/mparno/Desktop/MUQ_INSTALL
+#        CMAKE_SOURCE_DIR:         /Users/mparno/Documents/Repositories/MUQ/uqlab/MUQ
+#        CMAKE_BINARY_DIR:         /Users/mparno/Documents/Repositories/MUQ/uqlab/MUQ/build
+#        CMAKE_CXX_COMPILER name:  GNU 4.8.3 on platform Darwin i386
+#        CMAKE_CXX_COMPILER path:  /usr/local/bin/g++-4.8
+#
+#  Compiler flags used for this build:
+#        CMAKE_CXX_FLAGS:        -std=c++11 -Wall -g -Wno-maybe-uninitialized -Wno-sign-compare -Wno-unknown-pragmas -Wno-unused-variable -Wno-unused-local-typedefs -O3
+#
+#  Compiler definitions used for this build:
+#        COMPILE_DEFINITIONS:   MUQ_USE_NLOPT
+#
+#  Required dependencies: 
+#        EIGEN3 --------------> Met with internal build -- Failed compilation test.
+#
+#        BOOST ---------------> Met with existing library:
+#                                Include Directory:
+#                                  /usr/local/include
+#                                Libraries:
+#                                  /usr/local/lib/libboost_system.dylib
+#                                  /usr/local/lib/libboost_filesystem.dylib
+#                                  /usr/local/lib/libboost_regex.dylib
+#                                  /usr/local/lib/libboost_serialization.dylib
+#                                  /usr/local/lib/libboost_graph.dylib
+#                                  /usr/local/lib/libboost_date_time.dylib
+#
+#        HDF5 ----------------> Met with existing library:
+#                                Include Directory:
+#                                  /usr/local/include
+#                                Libraries:
+#                                  /usr/local/lib/libhdf5.dylib
+#
+#        HDF5HL --------------> Met with existing library:
+#                                Include Directory:
+#                                  /usr/local/include
+#                                Libraries:
+#                                  /usr/local/lib/libhdf5_hl.dylib
+#
+#        FLANN ---------------> Met with existing library:
+#                                Include Directory:
+#                                  /usr/local/include
+#                                Libraries:
+#                                  /usr/local/lib/libflann.dylib
+#
+#        SUNDIALS ------------> Met with existing library:
+#                                Include Directory:
+#                                  /usr/local/include
+#                                Libraries:
+#                                  /usr/local/lib/libsundials_cvodes.a
+#                                  /usr/local/lib/libsundials_idas.a
+#                                  /usr/local/lib/libsundials_kinsol.a
+#                                  /usr/local/lib/libsundials_nvecserial.a
+#
+#
+#  Optional dependencies:
+#        GLOG: ----------------> OFF.
+#
+#        GTEST ---------------> ON.
+#                                Include Directory:
+#                                  /usr/include
+#                                Libraries:
+#                                  /usr/lib/libgtest.a
+#
+#        SACADO: --------------> OFF.
+#
+#        LIBMESH: -------------> OFF.
+#
+#        NLOPT ---------------> ON.
+#                                Include Directory:
+#                                  /usr/local/include
+#                                Libraries:
+#                                  /usr/local/lib/libnlopt.dylib
+#
+#        ARMADILLO: -----------> OFF.
+#
+#
+#  Optional tools:   
+#        MPI: -----------------> OFF
+#        OpenMP: --------------> OFF
+#        CUDA: ----------------> OFF
+#        MKL: -----------------> OFF
+#        Python: --------------> OFF
+#
+#  MUQ Modules:   
+#        Utilities:              (BUILD=ON,TESTS=ON)
+#        Modelling:              (BUILD=ON,TESTS=ON)
+#        Polynomial Chaos:       (BUILD=ON,TESTS=ON,EXAMPLES=OFF)
+#        Inference:              (BUILD=ON,TESTS=ON,EXAMPLES=ON)
+#        Optimization:           (BUILD=ON,TESTS=ON)
+#        PDE:                    (BUILD=OFF,TESTS=OFF)
+#        Incremental Approx.:    (BUILD=ON,TESTS=ON,EXAMPLES=OFF)
+#        Geostats:               (BUILD=ON,TESTS=ON,EXAMPLES=OFF)
+#        Regression:             (BUILD=ON,TESTS=ON)
+#
+#############################################
+ 
+   \endcode
+   From the summary, we can see that most of the required libraries were already installed, and found in the usual
+ /usr/local location.  However, the summary shows that Eigen was not found and will be built during the MUQ
+ compilation.  If the summary shows that a library was found when you know it exists on your system, you can easily specify
+ the library location by adding "-DMUQ_<DepdencyName>_DIR=<PathToLibrary>" to the cmake call.  This procedure is
+ outlined in the advanced installation procedure below.
+
+   \section ci Advanced installation
+   \subsection ci1 Specifying dependency locations
+   In some cases, cmake might not be able to find libraries on your system, or you might want to use a different
+ version of the library than what is present in the standard locations.  This can be done by manually specifying to
+ root directory of the library.  For example, if my SUNDIALS libraries are installed in /path/to/sundials/lib, and my
+ SUNDIALS header files are installed in /path/to/sundials/include, I can pass this information on to cmake with the
+ following command:
+   \code{.sh}
+   cmake -DMUQ_SUNDIALS_DIR=/path/to/sundials ..
+   \endcode
+   In general, the root directory for the \a PACKAGE dependency can be set by defining MUQ_\a PACKAGE _DIR during the
+ call to cmake.  Also notice that the path given to sundials does not have last "include" or "lib" folder.  The 
+ cmake scripts in MUQ will automatically add these later on.
+ 
+   \subsection ci2 Using optional dependencies
+ 
+   Much like the way required library paths can be set.  The use of optional libraries can be defined during the cmake
+ call.  The use of a package \a PACKAGE can be turned on or off by defining MUQ_USE_\a PACKAGE.  For example, the
+ following cmake call turns on all optional dependencies except ARMADILLO.
+ 
+   \code{.sh}
+ 
+ cmake -DMUQ_USE_SACADO=ON                          \
+       -DMUQ_USE_GLOG=ON                            \
+       -DMUQ_USE_GTEST=ON                           \
+       -DMUQ_USE_NLOPT=ON                           \
+       -DMUQ_USE_ARMADILLO=OFF                      \
+       ..
+ 
+   \endcode
+ 
+   \subsection ci3 Specifying the compiler
+   CMake uses the CMAKE_CXX_COMPILER and CMAKE_C_COMPILER to specify the c++ and c compilers.  Thus, to specify the
+ compiler used to build MUQ, these variables can be set during the cmake call:
+   \code{.sh}
+ 
+   cmake -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-4.7.1 \
+      -DCMAKE_C_COMPILER=/usr/local/bin/gcc-4.7.1   \
+      ..
+   \endcode
+
+ \subsection ci4 A (more) complete CMake call
+The previous sections have given hints at how to fine tune the MUQ build.  Here we provide a single example with most of 
+the available build options.  Pieces of this script can be extracted and used independently.
+   \code{.sh}
+ 
+cmake                                             \
+    -DCMAKE_INSTALL_PREFIX=~/Desktop/MUQ_INSTALL  \
+    -DCMAKE_CXX_COMPILER=g++-4.8                  \
+    -DCMAKE_C_COMPILER=gcc-4.8                    \
+    -DMUQ_EIGEN3_DIR=/usr/local/                  \
+    -DMUQ_BOOST_DIR=/usr/local/                   \
+    -DMUQ_HDF5_DIR=~/hdf5/install                 \
+    -DMUQ_FLANN_DIR=~/software/flann/             \
+    -DMUQ_SUNDIALS_DIR=/usr/local/                \
+    -DMUQ_USE_SACADO=ON                           \
+    -DMUQ_SACADO_DIR=~/Documents/Trilinos/        \
+    -DMUQ_USE_LIBMESH=ON                          \
+    -DMUQ_LIBMESH_DIR=~/software/libmesh/         \
+    -DMUQ_USE_GLOG=ON                             \
+    -DMUQ_GLOG_DIR=~/software/glog/               \
+    -DMUQ_USE_GTEST=ON                            \
+    -DMUQ_GTEST_DIR=~/software/gtest/             \
+    -DMUQ_USE_NLOPT=ON                            \
+    -DMUQ_NLOPT_DIR=~/software/nlopt/             \
+    -DMUQ_USE_ARMADILLO=OFF                       \
+    -DMUQ_ARMADILLO_DIR=/usr/local/               \
+    -DMUQ_USE_PYTHON=ON                           \
+    -DMUQ_USE_MKL=ON                              \
+    -DMUQ_MKL_DIR=/opt/intel/composerxe-2011/mkl/ \
+    -DMUQ_USE_OPENMPI=OFF                         \
+    -DMUQ_USE_OPENMP=OFF                          \
+..
+ 
+   \endcode
+
+\subsection ci5 Installing LibMesh
+LibMesh is a large PDE library that MUQ needs for our PDE module.  Users need to install LibMesh on their own, but here we give
+ a few tips to help the installation play nicely with MUQ.
+<ul>
+<li> Make sure LibMesh is compiled with the sample compiler as MUQ and that c++11 support is enable.</li>
+<li> Add the "--enable-default-comm-world" flag to the LibMesh configure. </li>
+<li> When not compiling MUQ with MPI support, disable MPI in LibMesh with the "--disable-mpi" configure flag. </li>
+</ul>
+Following these tips, a typical installation of LibMesh can be completed with something like the following commands:
+\code{.sh}
+git clone https://github.com/libMesh/libmesh.git
+cd libmesh
+CC=gcc-4.8 CXX=g++-4.8 ./configure --enable-cxx11 --enable-shared --enable-default-comm-world --disable-mpi --prefix=~/LIBMESH_INSTALL/
+make -j4
+make install
+\endcode
+
+\subsection ci6 Installing Sacado
+Sacado is an automatic differentiation package within Sandia National Laboratories' <a href="http://trilinos.sandia.gov/">Trilinos</a> library.
+MUQ can use Sacado to automatically define model derivatives (including PDE models built on top of LibMesh).  The Trilinos install documentation
+can be found <a href=http://trilinos.sandia.gov/TrilinosBuildQuickRef.html>here</a>. The same tips for installing LibMesh apply to installing
+Trilinos as well.  The general procedure for installing Trilinos is:
+<ol>
+<li> Download the latest Trilinos release from <a href=http://trilinos.sandia.gov/>http://trilinos.sandia.gov/</a>
+<li> Uncompress the source and change into the source directory
+\code{.sh}
+tar -xzvf tar -xzvf trilinos-11.8.1-Source.tar.gz
+cd trilinos-11.8.1-Source
+\endcode
+</li>
+<li> Create a build dir and change into it
+\code{.sh}
+mkdir muq_build
+cd muq_build
+\endcode
+</li>
+<li> Run CMake for the Trilinos build. (see \ref ExampleTrilinosBuild)</li>
+<li> Run make.
+\code{.sh}
+make -j4
+make install
+\endcode
+</li>
+</ol>
+
+ */

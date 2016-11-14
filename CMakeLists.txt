@@ -1,0 +1,132 @@
+cmake_minimum_required(VERSION 2.8)
+
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/finds)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/checks)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/builds)
+  
+INCLUDE(CheckCXXSourceCompiles)
+INCLUDE(CheckCXXSourceRuns)
+INCLUDE(CheckFunctionExists)
+
+# define the project name
+project (MUQ) 
+set(MUQ_MAJOR_VERSION 1)
+set(MUQ_MINOR_VERSION 0)
+set(MUQ_PATCH_VERSION 0)
+set(MUQ_VERSION ${MUQ_MAJOR_VERSION}.${MUQ_MINOR_VERSION}.${MUQ_PATCH_VERSION})
+
+message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
+
+###############################################
+# Compiler configuration
+###############################################
+INCLUDE(SetupCompiler)
+INCLUDE(CompilerCheck)
+include_directories(.)
+
+###############################################
+# User options
+###############################################
+INCLUDE(OptionsSetup)
+
+###############################################
+# Manage dependencies
+###############################################
+INCLUDE(DependencySearch)
+
+include_directories(. ./external/include)
+
+# write a configure file containing information about what libraries are available
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/MUQ/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/MUQ/config.h)
+
+###############################################
+# set module dependencies
+###############################################
+INCLUDE(DependencyCheck)
+
+###############################################
+# Set up project
+###############################################
+
+# Go compile everything
+add_subdirectory(modules)
+
+# Create the list of libraries we just built
+INCLUDE(BuiltLibrarySetup)
+
+###############################################################
+# INSTALLATION INFORMATION
+###############################################################
+get_directory_property(MUQ_COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
+message(STATUS "Storing MUQ_COMPILE_DEFINITIONS = ${MUQ_COMPILE_DEFINITIONS}")
+
+set(MUQ_EXPORT_LIBRARIES "")
+FOREACH(BUILT_LIB ${MUQ_BUILT_LIBRARIES})
+		  list(APPEND MUQ_EXPORT_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/${BUILT_LIB})
+ENDFOREACH()
+
+export(PACKAGE MUQ)
+
+# Create the MUQConfig.cmake file
+configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}/MUQConfig.cmake" @ONLY)
+configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/MUQConfig.cmake" @ONLY)
+
+# Install the MUQConfig.cmake file
+install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/MUQConfig.cmake" 
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/MUQ"
+	    COMPONENT dev)
+  
+# Install the export set for use with the install-tree
+install(EXPORT MUQDepends
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/MUQ"
+	    COMPONENT dev)
+  
+# install all the MUQ headers -- may be better off installing for each package individually
+install(DIRECTORY MUQ
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/include"
+	    FILES_MATCHING PATTERN "*.h")
+  
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR}) 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR}) 
+
+###############################################
+# Write summary to terminal
+###############################################
+
+# write a summary of the build configuration
+include(MakeSummaryFile)
+
+FILE(READ ${CMAKE_BINARY_DIR}/summary.log MUQ_LOG_SUMMARY)
+MESSAGE("${MUQ_LOG_SUMMARY}")
+
+###############################################
+# Add a target to build documentation
+###############################################
+# add a target to generate API documentation with Doxygen
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+	message(STATUS "To build documentation, run 'make doc'")
+	
+	option(MUQDOC_INCLUDE_ANALYTICS OFF)
+	if(MUQDOC_INCLUDE_ANALYTICS)
+		message(STATUS "Will include google analytics header information in doxygen output.")
+			       set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/analytics_header.html)
+			       endif()
+			         
+  message(STATUS "Extracting parameter values from cpp files.  Results are stored in ${CMAKE_BINARY_DIR}/ExtractedParameters.dox")
+  message(STATUS "python ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}")
+  execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}
+                  OUTPUT_FILE "${CMAKE_BINARY_DIR}/ParameterDescriptions.dox")
+    
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/muq.doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile @ONLY)
+    #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/ParameterDescriptions.dox.in ${CMAKE_CURRENT_BINARY_DIR}/ParameterDescriptions.dox @ONLY)
+    add_custom_target(doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen" VERBATIM
+    )
+    
+    
+endif(DOXYGEN_FOUND)
+

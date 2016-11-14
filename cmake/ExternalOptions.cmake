@@ -1,0 +1,1 @@
+option(MUQ_USE_GTEST "Enable unit testing using GTEST" OFF)
