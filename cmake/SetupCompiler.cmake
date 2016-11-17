@@ -1,3 +1,5 @@
+
+
 include(CheckCXXCompilerFlag)
 
 #use the openmpi wrapper as necessary 
@@ -42,7 +44,7 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
    # check to make sure c++11 flag works
    CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CXX11)
    if(NOT HAS_CXX11)
-      message(FATAL_ERROR "A check of the '-std=c++11' compiler flag flagged.  It seems that the compiler does not support c++11.") 
+	   message(FATAL_ERROR "A check of the '-std=c++11' compiler flag flagged.  It seems that the compiler does not support c++11.") 
    endif()
    
    # set compiler flags for g++
@@ -50,17 +52,17 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
    
    
 elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-				  
+	
     # check to make sure c++11 flag works
     CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CXX11)
     if(NOT HAS_CXX11)
-       message(FATAL_ERROR "A check of the '-std=c++11' compiler flag flagged.  It seems that the compiler does not support c++11.") 
+ 	   message(FATAL_ERROR "A check of the '-std=c++11' compiler flag flagged.  It seems that the compiler does not support c++11.") 
     endif()
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11")
-    			 
+	set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11")
+		
     CHECK_CXX_COMPILER_FLAG("-std=c++11 -stdlib=libc++" HAS_LIBCXX11)
-    INCLUDE(LibcxxCheck)
-			
+	INCLUDE(LibcxxCheck)
+				
     # set compiler flags for clang
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -g -Wno-unused-function -Wno-redeclared-class-member -Wno-deprecated-register -Wno-uninitialized -Wno-sign-compare -Wno-unknown-pragmas -Wunused-function -Wno-unused-variable -Wno-overloaded-virtual")
    
@@ -76,11 +78,11 @@ IF(MUQ_USE_OPENMP)
 	if(HAS_FOPENMP AND HAS_PTHREAD)
   	  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -pthread -ldl")
    else()
-      if(HAS_FOPENMP)
-           set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -ldl")
-	     else()
+	   if(HAS_FOPENMP)
+	     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -ldl")
+	  else()
 		  message(WARNING "The flag MUQ_USE_OPENMP is ON, but the compiler does not seem to support the -fopenmp flag.  OPENMP will not be used.")
-		    endif()
+	  endif()
   endif()
 ENDIF(MUQ_USE_OPENMP)
 

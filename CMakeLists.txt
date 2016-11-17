@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required (VERSION 2.8) 
 
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/finds)
@@ -11,13 +11,15 @@ INCLUDE(CheckFunctionExists)
 
 # define the project name
 project (MUQ) 
-set(MUQ_MAJOR_VERSION 1)
-set(MUQ_MINOR_VERSION 0)
+set(MUQ_MAJOR_VERSION 0)
+set(MUQ_MINOR_VERSION 1)
 set(MUQ_PATCH_VERSION 0)
 set(MUQ_VERSION ${MUQ_MAJOR_VERSION}.${MUQ_MINOR_VERSION}.${MUQ_PATCH_VERSION})
 
+
 message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
 
+  
 ###############################################
 # Compiler configuration
 ###############################################
@@ -63,7 +65,7 @@ message(STATUS "Storing MUQ_COMPILE_DEFINITIONS = ${MUQ_COMPILE_DEFINITIONS}")
 
 set(MUQ_EXPORT_LIBRARIES "")
 FOREACH(BUILT_LIB ${MUQ_BUILT_LIBRARIES})
-		  list(APPEND MUQ_EXPORT_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/${BUILT_LIB})
+	list(APPEND MUQ_EXPORT_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/${BUILT_LIB})
 ENDFOREACH()
 
 export(PACKAGE MUQ)
@@ -90,6 +92,8 @@ install(DIRECTORY MUQ
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR}) 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR}) 
 
+
+
 ###############################################
 # Write summary to terminal
 ###############################################
@@ -111,9 +115,9 @@ if(DOXYGEN_FOUND)
 	option(MUQDOC_INCLUDE_ANALYTICS OFF)
 	if(MUQDOC_INCLUDE_ANALYTICS)
 		message(STATUS "Will include google analytics header information in doxygen output.")
-			       set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/analytics_header.html)
-			       endif()
-			         
+		set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/analytics_header.html)
+	endif()
+	  
   message(STATUS "Extracting parameter values from cpp files.  Results are stored in ${CMAKE_BINARY_DIR}/ExtractedParameters.dox")
   message(STATUS "python ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}")
   execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}

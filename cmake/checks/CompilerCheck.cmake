@@ -19,14 +19,13 @@ CHECK_CXX_SOURCE_COMPILES(
     #include <memory>
     int main(){
      std::shared_ptr<double> vec0;
-      vec0 = std::make_shared<double>(2.0);
+	 vec0 = std::make_shared<double>(2.0);
       return 0; 
      }
     "
     CPP11_SHAREDPTR_COMPILES)
-    
-    
-if(NOT CPP11_AUTO_COMPILES OR NOT CPP11_SHAREDPTR_COMPILES)
-   message( FATAL_ERROR "Basic tests of c++11 cannot be compiled.  Please make sure your compiler supports all c++11 features.\n" )
-endif()
-
+	
+	
+	if(NOT CPP11_AUTO_COMPILES OR NOT CPP11_SHAREDPTR_COMPILES)
+		message( FATAL_ERROR "Basic tests of c++11 cannot be compiled.  Please make sure your compiler supports all c++11 features.\n" )
+	endif()
