@@ -3,113 +3,104 @@
 #include<string>
 #include<sstream>
 #include<cassert>
-#include<map>
+#include<memory>
 
-#include "boost/variant.hpp"
-
-#define WorkParent(name, numIns, inouts...)				\
-  namespace muq {							\
-    namespace Modelling {						\
-      /* c */								\
-      class name : public WorkPiece<inouts>  {				\
-      public:								\
-      name() :								\
-	WorkPiece(numIns, #inouts) {}					\
-									\
-	virtual ~name() {}						\
-									\
-      private:								\
-      };								\
-    }									\
-  }						
+#include "boost/any.hpp"
 
 namespace muq {
   namespace Modelling {
     /// Base class for MUQ's modeling envronment
-    template<typename... inouts> // template the class on its input/output types
-      class WorkPiece {
+    class WorkPiece {
     public:
-      /**
-	 @param[in] numIns The number of inputs
-      */
-    WorkPiece(unsigned int const numIns, std::string const& ios) : 
-      types(InputOutputTypes(ios)), numInputs(numIns) {
-	// make sure we have enough in/outputs
-	assert(numIns<types.size());
-      }
-      
+
+      WorkPiece();
+
+      WorkPiece(unsigned int const num, bool const fixInput = true);
+            
+      WorkPiece(unsigned int const numIns, unsigned int const numOuts);
+
+      WorkPiece(std::vector<std::string> const& types, bool const fixInput = true);
+            
       virtual ~WorkPiece() {}
+
+      std::vector<boost::any> Evaluate(std::vector<boost::any> const& ins);
+
+      std::vector<boost::any> Evaluate();
       
-      template<typename first, typename... Args>			
-	void Evaluate(first const& in1, Args... args) {		
-	std::cout << in1 << std::endl;				
-	/*return std::tuple<inouts> (100);			*/	
-      }								
-      
-      /// Get the number of inputs
-      /**
-	 \return The number of inputs
-       */
-      unsigned int NumInputs() const { return numInputs; }
+      template<typename... Args>			
+	std::vector<boost::any> Evaluate(Args... args) {
+	inputs.clear();
+	outputs.clear();
 
-      /// Get the number of outputs
-      /**
-	 \return The number of outputs
-       */
-      unsigned int NumOutputs() const { return types.size()-numInputs; }
+	inputs.resize((numInputs<0? 0 : numInputs));
 
-      /// Get the input types
-      /**
-	 \return A vector in input types
-       */
-      std::vector<std::string> InputTypes() const { return std::vector<std::string>(types.begin()+NumOutputs(), types.end()); }
+	// begin calling the EvaluateMulti with the first input
+	return EvaluateMulti(0, args...);
+      }	
 
-      /// Get the output types
-      /**
-	 \return A vector in output types
-       */
-      std::vector<std::string> OutputTypes() const { return std::vector<std::string>(types.begin(), types.begin()+NumOutputs()); }
-     
-    private:
-      
-      /// Convert a comma-separated list of inputs into a vector
-      /**
-	 @param[in] ios A comma-separated list of in/outputs
-	 \return a vector of in/outputs
-       */
-      static std::vector<std::string> InputOutputTypes(std::string ios) {
-	// remove any whitespace from the in/output string
-	ios.erase(remove_if(ios.begin(), ios.end(), isspace), ios.end());
+      std::vector<boost::any> EvaluateMulti(unsigned int const inputNum) {
+	return Evaluate();
+      }
 
-	// allocate memory for a vector of in/outputs
-	std::vector<std::string> iosvec(std::count(ios.begin(), ios.end(), ',')+1);
+      template<typename ith, typename... Args>		       
+	std::vector<boost::any> EvaluateMulti(unsigned int const inputNum, ith const& in, Args... args) {
+	// we have not yet put all of the inputs into the map, the ith should be less than the total number
+	assert(numInputs<0 || inputNum+1<numInputs);
+	
+	if( inputTypes.size()>0 ) { // if we know the input types
+	  // make sure the index is valid
+	  assert(inputNum+1<inputTypes.size());
 
-	// convert to stringstream
-	std::stringstream ss(ios);
-
-	// get each in/output time and put it into the vector
-	for( auto it=iosvec.begin(); it!=iosvec.end(); ++it ) {
-	  // get the next in/output
-	  std::string substr;
-	  std::getline(ss, substr, ','); 
-
-	  // store it in the vector
-	  *it = substr;
+	  // make sure the type is correct
+	  assert(inputTypes[inputNum].compare(typeid(in).name())==0);
 	}
 
-	// return the in/outputs
-	return iosvec;
+	// add the last input to the input vector
+	if( numInputs<0 ) { inputs.push_back(in); } else { inputs[inputNum] = in; }
+
+	// call with EvaluateMulti with the remaining inputs
+	return EvaluateMulti(inputNum+1, args...);
+      }								
+      
+      template<typename last>			
+	std::vector<boost::any> EvaluateMulti(unsigned int const inputNum, last const& in) {
+	// this is the last input, the last one should equal the total number of inputs
+	assert(numInputs<0 || inputNum+1==numInputs);
+
+	if( inputTypes.size()>0 ) { // if we know the input types
+	  // make sure the index is valid
+	  assert(inputNum+1==inputTypes.size());
+
+	  // make sure the type is correct
+	  assert(inputTypes[inputNum].compare(typeid(in).name())==0);
+	}
+
+	// add the last input to the input vector
+	if( numInputs<0 ) { inputs.push_back(in); } else { inputs[inputNum] = in; }
+
+	return Evaluate();
       }
-
-      /// A vector of in/output types
-      std::vector<std::string> types;
-
+      
       /// The number of inputs
-      const unsigned int numInputs;
+      const int numInputs;
 
-      /// A map that stores the inputs 
-      std::map<unsigned int, boost::variant<inouts...> > inputs;
+      /// The number of outputs
+      const int numOutputs;
 
+    protected:
+
+      std::vector<boost::any> inputs = std::vector<boost::any>(0);
+
+      std::vector<boost::any> outputs = std::vector<boost::any>(0);
+
+    private:
+
+      virtual void EvaluateImpl() = 0;
+
+      std::vector<std::string> inputTypes = std::vector<std::string>(0);
+
+      std::vector<std::string> outputTypes = std::vector<std::string>(0);
+      
     }; // class WorkPiece
   } // namespace Modelling
 } // namespace muq
