@@ -20,6 +20,10 @@ namespace muq {
       WorkPiece(unsigned int const numIns, unsigned int const numOuts);
 
       WorkPiece(std::vector<std::string> const& types, bool const fixInput = true);
+
+      WorkPiece(std::vector<std::string> const& types, unsigned int const num, bool const fixInputType = true);
+
+      WorkPiece(std::vector<std::string> const& inTypes, std::vector<std::string> const& outTypes);
             
       virtual ~WorkPiece() {}
 

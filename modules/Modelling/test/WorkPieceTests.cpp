@@ -1,161 +1,24 @@
 #include "gtest/gtest.h"
 
-#include "MUQ/Modelling/WorkPiece.h"
+#include "WorkPieceTestClasses.h"
 
-struct AnObject {
-  AnObject(double const b) : value(b) {}
-
-  bool flag; 
-
-  const double value;
-};
-
-class UnfixedMod : public muq::Modelling::WorkPiece {
-public:
-
-  UnfixedMod() : WorkPiece() {}
-
-  virtual ~UnfixedMod() {}
-
-private:
-
-  virtual void EvaluateImpl() override {
-    switch( inputs.size() ) {
-    case 0 : {
-      const std::string hi = "hello!";
-
-      outputs.resize(3);
-
-      outputs[0] = hi;
-      outputs[1] = 3.0;
-      outputs[2] = 6;
-
-      return;
-    } case 1: {
-      outputs.resize(1);
-      outputs[0] = boost::any_cast<std::string>(inputs[0]);
-
-      return;
-    } default:
-      return;
-    }
-  }    
-};
-
-class FixedInsMod : public muq::Modelling::WorkPiece {
-public:
-
-  FixedInsMod(unsigned int numIns) : WorkPiece(numIns) {}
-
-  virtual ~FixedInsMod() {}
-
-private:
-
-  virtual void EvaluateImpl() override {
-    if( boost::any_cast<bool>(inputs[2]) ) {
-      outputs.resize(2);
-
-      outputs[0] = boost::any_cast<std::string>(inputs[0]);
-      outputs[1] = boost::any_cast<unsigned int>(inputs[1]);
-    } else {
-      outputs.resize(1);
-
-      outputs[0] = boost::any_cast<unsigned int>(inputs[1]);
-    }
-  }    
-};
-
-class FixedOutsMod : public muq::Modelling::WorkPiece {
-public:
-
-  FixedOutsMod(unsigned int numIns) : WorkPiece(numIns, false) {}
-
-  virtual ~FixedOutsMod() {}
-
-private:
-
-  virtual void EvaluateImpl() override {
-    outputs.resize(numOutputs);
-    
-    outputs[0] = 1.0;
-    outputs[1] = inputs.size()>0? boost::any_cast<int>(inputs[0]) : 2;
-  }    
-};
-
-class FixedInOutMod : public muq::Modelling::WorkPiece {
-public:
-
-  FixedInOutMod(unsigned int const numIns, unsigned int numOuts) : WorkPiece(numIns, numOuts) {}
-
-  virtual ~FixedInOutMod() {}
-
-private:
-
-  virtual void EvaluateImpl() override {
-    outputs = std::vector<boost::any>();
-  }
-};
-
-class FixedInTypeMod : public muq::Modelling::WorkPiece {
-public:
-
-  FixedInTypeMod(std::vector<std::string> const& types) : WorkPiece(types) {}
-
-  virtual ~FixedInTypeMod() {}
-
-private:
-
-  virtual void EvaluateImpl() override {
-    const std::string s = boost::any_cast<std::string>(inputs[0]);
-    auto obj = boost::any_cast<std::shared_ptr<AnObject> >(inputs[2]);
-
-    if( obj->flag ) {
-      outputs.resize(2);
-      outputs[0] = s;
-      outputs[1] = obj->value*boost::any_cast<double>(inputs[1]);
-
-      return;
-    }
-
-    outputs.resize(1);
-    outputs[0] = s;
-  }
-};
-
-class FixedOutTypeMod : public muq::Modelling::WorkPiece {
-public:
-
-  FixedOutTypeMod(std::vector<std::string> const& types) : WorkPiece(types, false) {}
-
-  virtual ~FixedOutTypeMod() {}
-
-private:
-
-  virtual void EvaluateImpl() override {
-    const std::string s = boost::any_cast<std::string>(inputs[0]);
-    auto obj = boost::any_cast<std::shared_ptr<AnObject> >(inputs[1]);
-
-    outputs.resize(2);
-    outputs[0] = s;
-    
-    if( obj->flag ) {
-      outputs[1] = obj->value*boost::any_cast<double>(inputs[2]);
-    } else {
-      outputs[1] = (double)obj->value;
-    }
-  }
-};
-
+/// A class to test the behavior of WorkPiece with various input/output types/numbers
 class WorkPieceTests : public::testing::Test {
 public:
 
+  /// Default constructor
   WorkPieceTests() {}
 
+  /// Default destructor
   virtual ~WorkPieceTests() {}
 
-  // the inputs
+  /// A string type object to input
   const std::string s = "a string";
+
+  /// A double type object to input
   const double a = 2.0;
+
+  /// An unsigned int type object to input
   const unsigned int b = 3;
 
 private:
@@ -250,7 +113,8 @@ TEST_F(WorkPieceTests, FixedInputOutputNum) {
   EXPECT_EQ(test->numOutputs, 2);
 }
 
-TEST_F(WorkPieceTests, FixedInputTypesNum) {
+TEST_F(WorkPieceTests, FixedInputTypes) {
+  // the input types
   std::vector<std::string> types({typeid(std::string).name(), typeid(double).name(), typeid(std::shared_ptr<AnObject>).name()});
 
   // create the test WorkPiece
@@ -281,7 +145,8 @@ TEST_F(WorkPieceTests, FixedInputTypesNum) {
   EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
 }
 
-TEST_F(WorkPieceTests, FixedOutputTypesNum) {
+TEST_F(WorkPieceTests, FixedOutputTypes) {
+  // the output types
   std::vector<std::string> types({typeid(std::string).name(), typeid(double).name()});
 
   // create the test WorkPiece
@@ -306,6 +171,109 @@ TEST_F(WorkPieceTests, FixedOutputTypesNum) {
   // evaluate the WorkPiece
   obj->flag = false;
   outputs = test->Evaluate(s, obj);
+
+  // make sure we get 2 outputs
+  EXPECT_EQ(outputs.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs[1]), (double)b);
+}
+
+TEST_F(WorkPieceTests, FixedInputTypesOutputNum) {
+  // the input types
+  std::vector<std::string> types({typeid(std::string).name(), typeid(double).name(), typeid(std::shared_ptr<AnObject>).name()});
+
+  // create the test WorkPiece
+  auto test = std::make_shared<FixedInTypeOutNumMod>(types, 2);
+
+  // make sure the number of inputs matches what we expect
+  EXPECT_EQ(test->numInputs, 3);
+  EXPECT_EQ(test->numOutputs, 2);
+
+  // create a version of "AnObject"
+  auto obj = std::make_shared<AnObject>(b);
+
+  // evaluate the WorkPiece
+  obj->flag = true;
+  auto outputs = test->Evaluate(s, a, obj);
+
+  // make sure we get 2 outputs
+  EXPECT_EQ(outputs.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs[1]), a*b);
+
+  // evaluate the WorkPiece
+  obj->flag = false;
+  outputs = test->Evaluate(s, a, obj);
+
+  // make sure we get 2 outputs
+  EXPECT_EQ(outputs.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
+  const std::string outString = "second string";
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs[1]).compare(outString)==0);
+}
+
+TEST_F(WorkPieceTests, FixedOutputTypesInputNum) {
+  // the output types
+  std::vector<std::string> types({typeid(std::string).name(), typeid(double).name()});
+
+  // create the test WorkPiece
+  auto test = std::make_shared<FixedOutTypeInNumMod>(types, 3);
+
+  // make sure the number of inputs matches what we expect
+  EXPECT_EQ(test->numInputs, 3);
+  EXPECT_EQ(test->numOutputs, 2);
+
+  // create a version of "AnObject"
+  auto obj = std::make_shared<AnObject>(b);
+
+  // evaluate the WorkPiece
+  obj->flag = true;
+  auto outputs = test->Evaluate(s, obj, a);
+
+  // make sure we get 2 outputs
+  EXPECT_EQ(outputs.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs[1]), a*b);
+
+  // evaluate the WorkPiece
+  obj->flag = false;
+  outputs = test->Evaluate(s, obj, 'a'); // use a random character as the third input (fixed number, not fixed type)
+
+  // make sure we get 2 outputs
+  EXPECT_EQ(outputs.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs[1]), (double)b);
+}
+
+TEST_F(WorkPieceTests, FixedTypes) {
+  // the input types
+  std::vector<std::string> inTypes({typeid(std::string).name(), typeid(std::shared_ptr<AnObject>).name(), typeid(double).name()});
+
+  // the output types
+  std::vector<std::string> outTypes({typeid(std::string).name(), typeid(double).name()});
+
+  // create the test WorkPiece
+  auto test = std::make_shared<FixedTypesMod>(inTypes, outTypes);
+
+  // make sure the number of inputs matches what we expect
+  EXPECT_EQ(test->numInputs, 3);
+  EXPECT_EQ(test->numOutputs, 2);
+
+  // create a version of "AnObject"
+  auto obj = std::make_shared<AnObject>(b);
+
+  // evaluate the WorkPiece
+  obj->flag = true;
+  auto outputs = test->Evaluate(s, obj, a);
+
+  // make sure we get 2 outputs
+  EXPECT_EQ(outputs.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs[1]), a*b);
+
+  // evaluate the WorkPiece
+  obj->flag = false;
+  outputs = test->Evaluate(s, obj, 1.0);
 
   // make sure we get 2 outputs
   EXPECT_EQ(outputs.size(), 2);

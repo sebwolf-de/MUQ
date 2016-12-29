@@ -10,6 +10,10 @@ WorkPiece::WorkPiece(unsigned int const numIns, unsigned int const numOuts) : nu
 
 WorkPiece::WorkPiece(std::vector<std::string> const& types, bool const fixInput) : numInputs(fixInput? types.size() : -1), numOutputs(fixInput? -1 : types.size()), inputTypes(fixInput? types : std::vector<std::string>(0)), outputTypes(fixInput? std::vector<std::string>(0) : types) {}
 
+WorkPiece::WorkPiece(std::vector<std::string> const& types, unsigned int const num, bool const fixInputTypes) : numInputs(fixInputTypes? types.size() : num), numOutputs(fixInputTypes? num : types.size()), inputTypes(fixInputTypes? types : std::vector<std::string>(0)), outputTypes(fixInputTypes? std::vector<std::string>(0): types) {}
+
+WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::vector<std::string> const& outTypes) : numInputs(inTypes.size()), numOutputs(outTypes.size()), inputTypes(inTypes), outputTypes(outTypes) {}
+
 std::vector<boost::any> WorkPiece::Evaluate() {
   // make sure we have the correct number of inputs
   assert(numInputs<0 || inputs.size()==numInputs);
