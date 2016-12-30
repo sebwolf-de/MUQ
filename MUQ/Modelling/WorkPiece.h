@@ -63,6 +63,7 @@ namespace muq {
        */
       WorkPiece(std::vector<std::string> const& inTypes, std::vector<std::string> const& outTypes);
             
+      /// Default destructor
       virtual ~WorkPiece() {}
 
       std::vector<boost::any> Evaluate(std::vector<boost::any> const& ins);
@@ -131,17 +132,33 @@ namespace muq {
 
     protected:
 
+      /// The inputs
+      /**
+	 The inputs to this muq::Modelling::WorkPiece, which are passed to WorkPiece::Evaluate().  If the number of inputs is specified (i.e., WorkPiece::numInputs is not -1) then WorkPiece::Evaluate() checks to make sure the size of this vector is equal to WorkPiece::numInputs before calling WorkPiece::EvaluateImpl().  If the input types are specified (i.e., WorkPiece::inputTypes is not an empty vector) then WorkPiece::Evaluate() checks that the input types match WorkPiece::inputTypes before calling WorkPiece::EvaluateImpl().
+       */
       std::vector<boost::any> inputs = std::vector<boost::any>(0);
 
+      /// The inputs
+      /**
+	 The outputs of this muq::Modelling::WorkPiece, which are filled by WorkPiece::EvaluateImpl().  If the number of outputs is specified (i.e., WorkPiece::numOutputs is not -1) then WorkPiece::Evaluate() checks to make sure the size of this vector is equal to WorkPiece::numOutputs after calling WorkPiece::EvaluateImpl().  If the output types are specified (i.e., WorkPiece::outputTypes is not an empty vector) then WorkPiece::Evaluate() checks that the output types match WorkPiece::outputTypes after calling WorkPiece::EvaluateImpl().
+       */
       std::vector<boost::any> outputs = std::vector<boost::any>(0);
 
     private:
 
-      virtual void EvaluateImpl() = 0;
-
+      /// The input types
+      /**
+	 Each element specifies the type of the corresponding input.  This vector must have the same number of elements as WorkPiece::numInputs or it is empty (default), which indicates that the input types are variable.
+       */
       std::vector<std::string> inputTypes = std::vector<std::string>(0);
 
+      /// The output types
+      /**
+	 Each element specifies the type of the corresponding output.  This vector must have the same number of elements as WorkPiece::numOutputs or it is empty (default), which indicates that the output types are variable.
+       */
       std::vector<std::string> outputTypes = std::vector<std::string>(0);
+
+      virtual void EvaluateImpl() = 0;
       
     }; // class WorkPiece
   } // namespace Modelling
