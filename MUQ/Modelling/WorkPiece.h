@@ -66,10 +66,26 @@ namespace muq {
       /// Default destructor
       virtual ~WorkPiece() {}
 
+      /// Evaluate this muq::Modelling::WorkPiece
+      /**
+	 This function takes the inputs to the muq::Modelling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if the are specified.  It then calls WorkPiece::EvaluateImpl(), which populates WorkPiece::outputs using WorkPiece::inputs.  This function then checks WorkPiece::outputs, which much match WorkPiece::numOutputs and WorkPiece::outputTypes if they are specified.
+	 @param[in] ins A vector of inputs 
+	 \return The outputs of this muq::Modelling::WorkPiece
+       */
       std::vector<boost::any> Evaluate(std::vector<boost::any> const& ins);
 
+      /// Evaluate this muq::Modelling::WorkPiece in the case that there are no inputs
+      /**
+	 \return The outputs of this muq::Modelling::WorkPiece
+       */
       std::vector<boost::any> Evaluate();
       
+      /// Evalaute this muq::Modelling::WorkPiece using multiple arguments
+      /**
+	 This function allows the user to call WorkPiece::Evaluate without first creating a vector of inputs.  Instead, the user calls WorkPiece::Evaluate with multiple arguments (the number of arguments must match the number of inputs) and this function creates the input vector.
+	 @param[in] args The inputs (may be more than one)
+	 \return The outputs of this muq::Modelling::WorkPiece
+       */
       template<typename... Args>			
 	std::vector<boost::any> Evaluate(Args... args) {
 	inputs.clear();
@@ -80,49 +96,6 @@ namespace muq {
 	// begin calling the EvaluateMulti with the first input
 	return EvaluateMulti(0, args...);
       }	
-
-      std::vector<boost::any> EvaluateMulti(unsigned int const inputNum) {
-	return Evaluate();
-      }
-
-      template<typename ith, typename... Args>		       
-	std::vector<boost::any> EvaluateMulti(unsigned int const inputNum, ith const& in, Args... args) {
-	// we have not yet put all of the inputs into the map, the ith should be less than the total number
-	assert(numInputs<0 || inputNum+1<numInputs);
-	
-	if( inputTypes.size()>0 ) { // if we know the input types
-	  // make sure the index is valid
-	  assert(inputNum+1<inputTypes.size());
-
-	  // make sure the type is correct
-	  assert(inputTypes[inputNum].compare(typeid(in).name())==0);
-	}
-
-	// add the last input to the input vector
-	if( numInputs<0 ) { inputs.push_back(in); } else { inputs[inputNum] = in; }
-
-	// call with EvaluateMulti with the remaining inputs
-	return EvaluateMulti(inputNum+1, args...);
-      }								
-      
-      template<typename last>			
-	std::vector<boost::any> EvaluateMulti(unsigned int const inputNum, last const& in) {
-	// this is the last input, the last one should equal the total number of inputs
-	assert(numInputs<0 || inputNum+1==numInputs);
-
-	if( inputTypes.size()>0 ) { // if we know the input types
-	  // make sure the index is valid
-	  assert(inputNum+1==inputTypes.size());
-
-	  // make sure the type is correct
-	  assert(inputTypes[inputNum].compare(typeid(in).name())==0);
-	}
-
-	// add the last input to the input vector
-	if( numInputs<0 ) { inputs.push_back(in); } else { inputs[inputNum] = in; }
-
-	return Evaluate();
-      }
       
       /// The number of inputs
       const int numInputs;
@@ -158,7 +131,77 @@ namespace muq {
        */
       std::vector<std::string> outputTypes = std::vector<std::string>(0);
 
+      /// User-implemented function that determines the behavior of this muq::Modelling::WorkPiece
+      /**
+	 This function determines how the WorkPiece::inputs determine WorkPiece::outputs.  Must be implemented by a child.
+
+	 WorkPiece::Evaluate() calls this function after checking the inputs and storing them in WorkPiece::inputs.  This function populates WorkPiece::outputs, the outputs of this muq::Modelling::WorkPiece.  WorkPiece::Evaluate() checks the outputs after calling this function.
+       */
       virtual void EvaluateImpl() = 0;
+
+      /// Creates WorkPiece::inputs when the WorkPiece::Evaluate is called with multiple arguments
+      /**
+	 @param[in] inputNum The current input number (the \f$i^{th}\f$ input)
+	 @param[in] in The input corresponding to the \f$i^{th}\f$ input
+	 @param[in] args The remaining (greater than \f$i\f$) inputs
+	 \return The outputs of this muq::Modelling::WorkPiece
+      */
+      template<typename ith, typename... Args>		       
+	std::vector<boost::any> EvaluateMulti(unsigned int const inputNum, ith const& in, Args... args) {
+	// we have not yet put all of the inputs into the map, the ith should be less than the total number
+	assert(numInputs<0 || inputNum+1<numInputs);
+	
+	if( inputTypes.size()>0 ) { // if we know the input types
+	  // make sure the index is valid
+	  assert(inputNum+1<inputTypes.size());
+
+	  // make sure the type is correct
+	  assert(inputTypes[inputNum].compare(typeid(in).name())==0);
+	}
+
+	// add the last input to the input vector
+	if( numInputs<0 ) { inputs.push_back(in); } else { inputs[inputNum] = in; }
+
+	// call with EvaluateMulti with the remaining inputs
+	return EvaluateMulti(inputNum+1, args...);
+      }								
+      
+      /// Creates WorkPiece::inputs when the WorkPiece::Evaluate is called with multiple arguments
+      /**
+	 @param[in] inputNum The current input number (the last input, should match WorkPiece::numInputs-1 if it is specfied)
+	 @param[in] in The input corresponding to the last input
+	 \return The outputs of this muq::Modelling::WorkPiece
+      */
+      template<typename last>			
+	std::vector<boost::any> EvaluateMulti(unsigned int const inputNum, last const& in) {
+	// this is the last input, the last one should equal the total number of inputs
+	assert(numInputs<0 || inputNum+1==numInputs);
+
+	if( inputTypes.size()>0 ) { // if we know the input types
+	  // make sure the index is valid
+	  assert(inputNum+1==inputTypes.size());
+
+	  // make sure the type is correct
+	  assert(inputTypes[inputNum].compare(typeid(in).name())==0);
+	}
+
+	// add the last input to the input vector
+	if( numInputs<0 ) { inputs.push_back(in); } else { inputs[inputNum] = in; }
+
+	return Evaluate();
+      }
+
+      /// Evaluate WorkPiece::Evaluate in the case when there are no inputs 
+      /**
+	 @param[in] inputNum The number of inputs (should be zero)
+	 \return The outputs of this muq::Modelling::WorkPiece
+      */
+      std::vector<boost::any> EvaluateMulti(unsigned int const inputNum) {
+	// make sure there are no inputs
+	assert(inputNum==0);
+
+	return Evaluate();
+      }
       
     }; // class WorkPiece
   } // namespace Modelling

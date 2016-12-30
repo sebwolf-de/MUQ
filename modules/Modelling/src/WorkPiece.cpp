@@ -57,21 +57,32 @@ std::vector<boost::any> WorkPiece::Evaluate() {
   // make sure we have the correct number of outputs
   assert(numOutputs<0 || outputs.size()==numOutputs);
 
+  // make sure the output types are correct
   assert(outputTypes.size()==0 || outputTypes.size()==outputs.size());
   for(unsigned int i=0; i<outputTypes.size(); ++i ) {
     assert(outputTypes[i].compare(outputs[i].type().name())==0);
   }
 
+  // return the outputs
   return outputs;
-
 }
 
 std::vector<boost::any> WorkPiece::Evaluate(std::vector<boost::any> const& ins) {
   // make sure we have the correct number of inputs
   assert(numInputs<0 || ins.size()==numInputs);
 
+  // clear the inputs 
   inputs.clear();
+
+  // make sure the input types are correct
+  assert(inputTypes.size()==0 || inputTypes.size()==ins.size());
+  for(unsigned int i=0; i<inputTypes.size(); ++i ) {
+    assert(inputTypes[i].compare(ins[i].type().name())==0);
+  }
+
+  // set the inputs to the current inputs
   inputs = ins;
 
+  // the inputs are set, so call evaluate with no inputs
   return Evaluate();
 }
