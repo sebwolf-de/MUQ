@@ -66,7 +66,7 @@ public:
   /**
      @param[in] numIns The fixed number of inputs
    */
-  FixedInsMod(unsigned int numIns) : WorkPiece(numIns) {}
+ FixedInsMod(unsigned int numIns) : WorkPiece(numIns) {}
 
   /// Default destructor
   virtual ~FixedInsMod() {}
@@ -104,7 +104,7 @@ public:
   /**
      @param[in] numOuts The fixed number of outputs
    */
-  FixedOutsMod(unsigned int numOuts) : WorkPiece(numOuts, false) {}
+  FixedOutsMod(unsigned int numOuts) : WorkPiece(numOuts, WorkPiece::Fix::Outputs) {}
 
   /// Default destructor
   virtual ~FixedOutsMod() {}
@@ -243,7 +243,7 @@ public:
   /**
      @param[in] types A list of the output types (the fixed number of outputs is determined by the size of this vector)
    */
-  FixedOutTypeMod(std::vector<std::string> const& types) : WorkPiece(types, false) {}
+ FixedOutTypeMod(std::vector<std::string> const& types) : WorkPiece(types, WorkPiece::Fix::Outputs) {}
 
   /// Default destructor
   virtual ~FixedOutTypeMod() {}
@@ -284,7 +284,7 @@ public:
      @param[in] types A list of the output types (the fixed number of outputs is determined by the size of this vector)
      @param[in] numOuts The number of inputs
    */
- FixedOutTypeInNumMod(std::vector<std::string> const& types, unsigned int const numIns) : WorkPiece(types, numIns, false) {}
+ FixedOutTypeInNumMod(std::vector<std::string> const& types, unsigned int const numIns) : WorkPiece(types, numIns, WorkPiece::Fix::Outputs) {}
 
   /// Default destructor
   virtual ~FixedOutTypeInNumMod() {}
