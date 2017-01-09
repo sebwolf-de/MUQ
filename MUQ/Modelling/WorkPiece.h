@@ -9,6 +9,10 @@
 
 namespace muq {
   namespace Modelling {
+
+    template <typename T>
+    using ref_vector = std::vector<std::reference_wrapper<const T>>;
+
     /// Base class for MUQ's modelling envronment
     class WorkPiece {
     protected:
@@ -73,6 +77,8 @@ namespace muq {
 	 \return The outputs of this muq::Modelling::WorkPiece
        */
       std::vector<boost::any> Evaluate(std::vector<boost::any> const& ins);
+      
+      std::vector<boost::any> Evaluate(ref_vector<boost::any> const& ins);
 
       /// Evaluate this muq::Modelling::WorkPiece in the case that there are no inputs
       /**
@@ -88,13 +94,13 @@ namespace muq {
        */
       template<typename... Args>			
 	std::vector<boost::any> Evaluate(Args... args) {
-	inputs.clear();
+	  
 	outputs.clear();
 
-	inputs.resize((numInputs<0? 0 : numInputs));
+	std::vector<boost::any> inputs;
 
 	// begin calling the EvaluateMulti with the first input
-	return EvaluateMulti(0, args...);
+	return EvaluateRecursive(inputs, args...);
       }	
       
       /// The number of inputs
@@ -109,7 +115,7 @@ namespace muq {
       /**
 	 The inputs to this muq::Modelling::WorkPiece, which are passed to WorkPiece::Evaluate().  If the number of inputs is specified (i.e., WorkPiece::numInputs is not -1) then WorkPiece::Evaluate() checks to make sure the size of this vector is equal to WorkPiece::numInputs before calling WorkPiece::EvaluateImpl().  If the input types are specified (i.e., WorkPiece::inputTypes is not an empty vector) then WorkPiece::Evaluate() checks that the input types match WorkPiece::inputTypes before calling WorkPiece::EvaluateImpl().
        */
-      std::vector<boost::any> inputs = std::vector<boost::any>(0);
+      //std::vector<boost::any> inputs = std::vector<boost::any>(0);
 
       /// The inputs
       /**
@@ -137,7 +143,7 @@ namespace muq {
 
 	 WorkPiece::Evaluate() calls this function after checking the inputs and storing them in WorkPiece::inputs.  This function populates WorkPiece::outputs, the outputs of this muq::Modelling::WorkPiece.  WorkPiece::Evaluate() checks the outputs after calling this function.
        */
-      virtual void EvaluateImpl() = 0;
+      virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) = 0;
 
       /// Creates WorkPiece::inputs when the WorkPiece::Evaluate is called with multiple arguments
       /**
@@ -147,8 +153,11 @@ namespace muq {
 	 \return The outputs of this muq::Modelling::WorkPiece
       */
       template<typename ith, typename... Args>		       
-	std::vector<boost::any> EvaluateMulti(unsigned int const inputNum, ith const& in, Args... args) {
-	// we have not yet put all of the inputs into the map, the ith should be less than the total number
+      std::vector<boost::any> EvaluateRecursive(std::vector<boost::any> &inputs, ith const& in, Args... args) {
+
+	const int inputNum = inputs.size();
+
+        // we have not yet put all of the inputs into the map, the ith should be less than the total number
 	assert(numInputs<0 || inputNum+1<numInputs);
 	
 	if( inputTypes.size()>0 ) { // if we know the input types
@@ -160,10 +169,10 @@ namespace muq {
 	}
 
 	// add the last input to the input vector
-	if( numInputs<0 ) { inputs.push_back(in); } else { inputs[inputNum] = in; }
+	inputs.push_back(in);
 
 	// call with EvaluateMulti with the remaining inputs
-	return EvaluateMulti(inputNum+1, args...);
+	return EvaluateRecursive(inputs, args...);
       }								
       
       /// Creates WorkPiece::inputs when the WorkPiece::Evaluate is called with multiple arguments
@@ -173,8 +182,11 @@ namespace muq {
 	 \return The outputs of this muq::Modelling::WorkPiece
       */
       template<typename last>			
-	std::vector<boost::any> EvaluateMulti(unsigned int const inputNum, last const& in) {
-	// this is the last input, the last one should equal the total number of inputs
+      std::vector<boost::any> EvaluateRecursive(std::vector<boost::any> &inputs, last const& in) {
+
+	const int inputNum = inputs.size();
+
+        // this is the last input, the last one should equal the total number of inputs
 	assert(numInputs<0 || inputNum+1==numInputs);
 
 	if( inputTypes.size()>0 ) { // if we know the input types
@@ -186,21 +198,9 @@ namespace muq {
 	}
 
 	// add the last input to the input vector
-	if( numInputs<0 ) { inputs.push_back(in); } else { inputs[inputNum] = in; }
-
-	return Evaluate();
-      }
-
-      /// Evaluate WorkPiece::Evaluate in the case when there are no inputs 
-      /**
-	 @param[in] inputNum The number of inputs (should be zero)
-	 \return The outputs of this muq::Modelling::WorkPiece
-      */
-      std::vector<boost::any> EvaluateMulti(unsigned int const inputNum) {
-	// make sure there are no inputs
-	assert(inputNum==0);
-
-	return Evaluate();
+	inputs.push_back(in);
+	
+	return Evaluate(inputs);
       }
       
     }; // class WorkPiece

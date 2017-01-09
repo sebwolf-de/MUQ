@@ -1,5 +1,6 @@
 #include "MUQ/Modelling/WorkPiece.h"
 
+
 /// An object used to test using user-created inputs to WorkPieces
 struct AnObject {
   /// Construct the object
@@ -31,7 +32,8 @@ private:
   /**
      The behavior changes depending on the number of inputs
    */
-  virtual void EvaluateImpl() override {
+  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
+         
     switch( inputs.size() ) {
     case 0 : { // there are no inputs
       const std::string hi = "hello!";
@@ -77,7 +79,7 @@ private:
   /**
      The behavior changes depending on the type of the third input
    */
-  virtual void EvaluateImpl() override {
+  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
     if( boost::any_cast<bool>(inputs[2]) ) { // if the third input is a bool
       // there are 2 outputs
       outputs.resize(2);
@@ -115,7 +117,7 @@ private:
   /**
      The behavior changes depending on the number of inputs
    */
-  virtual void EvaluateImpl() override {
+  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
     outputs.resize(numOutputs);
     
     outputs[0] = 1.0;
@@ -144,7 +146,7 @@ private:
   /**
    We don't actually do anything.
    */
-  virtual void EvaluateImpl() override {
+  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
     outputs = std::vector<boost::any>();
   }
 };
@@ -168,7 +170,7 @@ private:
   /**
      The behavior changes depending on the flag value of the input AnObject
    */
-  virtual void EvaluateImpl() override {
+  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
     // the first input must be a string and the parent checks this
     const std::string s = boost::any_cast<std::string>(inputs[0]);
     // the second input must be a shared pointer to AnObject and the parent checks this
@@ -210,7 +212,7 @@ private:
   /**
      The behavior changes depending on the flag value of the input AnObject
    */
-  virtual void EvaluateImpl() override {
+  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
     // the first input must be a string and the parent checks this
     const std::string s = boost::any_cast<std::string>(inputs[0]);
     // the second input must be a shared pointer to AnObject and the parent checks this
@@ -254,7 +256,7 @@ private:
   /**
      The behavior changes depending on the flag value of the input AnObject
    */
-  virtual void EvaluateImpl() override {
+  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
     // the first input must be a string but the parent does not check this
     const std::string s = boost::any_cast<std::string>(inputs[0]);
     // the second input must be a shared pointer to an object but the parent does not check this
@@ -295,7 +297,7 @@ private:
   /**
      The behavior changes depending on the flag value of the input AnObject
    */
-  virtual void EvaluateImpl() override {
+  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
     // the first input must be a string but the parent does not check this
     const std::string s = boost::any_cast<std::string>(inputs[0]);
     // the second input must be a shared pointer to AnObject but the parent does not check this
@@ -338,7 +340,7 @@ private:
   /**
      The behavior changes depending on the flag value of the input AnObject
    */
-  virtual void EvaluateImpl() override {
+  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
     // the first input must be a string but the parent does not check this
     const std::string s = boost::any_cast<std::string>(inputs[0]);
     // the second input must be a shared pointer to AnObject but the parent does not check this

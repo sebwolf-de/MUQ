@@ -47,12 +47,13 @@ WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::vector<std::s
 
 std::vector<boost::any> WorkPiece::Evaluate() {
   // make sure we have the correct number of inputs
-  assert(numInputs<0 || inputs.size()==numInputs);
+  assert(numInputs<=0);
 
   outputs.clear();
 
   // evaluate the WorkPiece
-  EvaluateImpl();
+  std::vector<std::reference_wrapper<const boost::any>> emptyVec;
+  EvaluateImpl(emptyVec);
 
   // make sure we have the correct number of outputs
   assert(numOutputs<0 || outputs.size()==numOutputs);
@@ -67,22 +68,36 @@ std::vector<boost::any> WorkPiece::Evaluate() {
   return outputs;
 }
 
-std::vector<boost::any> WorkPiece::Evaluate(std::vector<boost::any> const& ins) {
+std::vector<boost::any> WorkPiece::Evaluate(std::vector<std::reference_wrapper<const boost::any>> const& ins) {
   // make sure we have the correct number of inputs
   assert(numInputs<0 || ins.size()==numInputs);
 
-  // clear the inputs 
-  inputs.clear();
+  // the inputs are set, so call evaluate with no inputs
+  EvaluateImpl(ins);
+
+  // make sure the output types are correct
+  assert(outputTypes.size()==0 || outputTypes.size()==outputs.size());
+  for(unsigned int i=0; i<outputTypes.size(); ++i ) {
+    assert(outputTypes[i].compare(outputs[i].type().name())==0);
+  }
+  
+  return outputs;
+}
+
+std::vector<boost::any> WorkPiece::Evaluate(std::vector<boost::any> const& ins) {
+  // make sure we have the correct number of inputs
+  assert(numInputs<0 || ins.size()==numInputs);
 
   // make sure the input types are correct
   assert(inputTypes.size()==0 || inputTypes.size()==ins.size());
   for(unsigned int i=0; i<inputTypes.size(); ++i ) {
     assert(inputTypes[i].compare(ins[i].type().name())==0);
   }
-
-  // set the inputs to the current inputs
-  inputs = ins;
-
+  
+  std::vector<std::reference_wrapper<const boost::any>> in_refs;
+  for(int i=0; i<ins.size(); ++i)
+      in_refs.push_back(std::cref(ins.at(i)));
+  
   // the inputs are set, so call evaluate with no inputs
-  return Evaluate();
+  return Evaluate(in_refs);
 }
