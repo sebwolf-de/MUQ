@@ -142,33 +142,12 @@ cmake \
 -DMUQ_USE_NLOPT=$with_nlopt \
 -DMUQ_NLOPT_DIR=$NLOPT_DIR \
 -DMUQ_USE_OPENMPI=OFF \
-$WORKSPACE/MUQ
+$WORKSPACE
 
 #######################################
 ##### BUILD MUQ
 #######################################
 make install
-
-#######################################
-##### BUILD ALL THE TUTORIAL EXAMPLES
-#######################################
-use_pde=0
-if [ $use_pde -eq 1 ]; then
-  folders=$(find $WORKSPACE/MUQ/examples -name build -prune -o -type d -name example-* -print)
-else
-  folders=$(find $WORKSPACE/MUQ/examples -name build -prune -o -name PDE -prune -o -type d -name example-* -print)
-fi
-
-for f in $folders; do
-  cd $f
-  if [ ! -d "build" ]; then
-    mkdir build
-  fi
-  cd build
-  cmake ..
-  make
-  
-done
 
 cd $dir
 

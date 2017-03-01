@@ -24,7 +24,7 @@ fi
 ##### Update the library path if on OSX
 #######################################
 if [[ `hostname` == "macys.mit.edu" ]]; then
-  export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/Users/jenkins/util/gtest/lib/:$WORKSPACE/MUQ/install/lib:$WORKSPACE/MUQ/install/muq_external/lib
+  export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/Users/jenkins/util/gtest/lib/:$WORKSPACE/install/lib:$WORKSPACE/install/muq_external/lib
   PYTEST=py.test
 fi
 
@@ -32,7 +32,7 @@ fi
 ##### Update the library path if on Linux
 #######################################
 if [[ `hostname`=="reynolds.mit.edu" ]]; then
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$WORKSPACE/MUQ/install/lib:$WORKSPACE/MUQ/install/muq_external/lib
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$WORKSPACE/install/lib:$WORKSPACE/install/muq_external/lib
   PYTEST=/usr/local/bin/py.test
 fi
 
@@ -41,7 +41,7 @@ fi
 #######################################
 build/modules/RunAllTests --gtest_output=xml:results/tests/TestResults.xml
 if [ $with_python -eq 1 ]; then
-  export PYTHONPATH=$PYTHONPATH:$WORKSPACE/MUQ/install/lib
+  export PYTHONPATH=$PYTHONPATH:$WORKSPACE/install/lib
 
   if [ $with_nlopt -eq 1 ]; then
     $PYTEST -v --junitxml results/tests/PythonTestResults.xml modules/RunPythonTests.py
@@ -53,7 +53,7 @@ fi
 #######################################
 ##### Run the examples
 #######################################
-for f in $(find $WORKSPACE/MUQ/examples/ -name build -prune -o -type d -name example-* -print); do
+for f in $(find $WORKSPACE/examples/ -name build -prune -o -type d -name example-* -print); do
   cd $f
   # run any executables that were created in the build directory
   for e in $(find build/ -maxdepth 1 -type f -perm +0111); do
