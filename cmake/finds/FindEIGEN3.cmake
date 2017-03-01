@@ -1,19 +1,19 @@
 find_package(PkgConfig)
 if(NOT DEFINED MUQ_EIGEN3_DIR)
-       
-       pkg_check_modules(PC_EIGEN3 QUIET EIGEN3)
-       set(EIGEN3_DEFINITIONS ${PC_EIGEN3_CFLAGS_OTHER})
+	
+	pkg_check_modules(PC_EIGEN3 QUIET EIGEN3)
+	set(EIGEN3_DEFINITIONS ${PC_EIGEN3_CFLAGS_OTHER})
 
-       find_path(EIGEN3_INCLUDE_DIR Eigen/Core
-       				      HINTS ${PC_EIGEN3_INCLUDEDIR} ${PC_EIGEN3_INCLUDE_DIRS}
-          			        PATH_SUFFIXES eigen3)
+	find_path(EIGEN3_INCLUDE_DIR Eigen/Core
+    		  HINTS ${PC_EIGEN3_INCLUDEDIR} ${PC_EIGEN3_INCLUDE_DIRS}
+          	  PATH_SUFFIXES eigen3)
 
 else()
 
 	find_path(EIGEN3_INCLUDE_DIR Eigen/Core
 	          HINTS ${MUQ_EIGEN3_DIR}
-				  PATH_SUFFIXES eigen3 NO_DEFAULT_PATH)
-								
+			  PATH_SUFFIXES eigen3 NO_DEFAULT_PATH)
+					
 endif()
 set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR} )
 

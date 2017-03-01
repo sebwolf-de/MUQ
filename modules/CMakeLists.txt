@@ -7,7 +7,7 @@ if(UtilitiesAndModelling_build)
     add_subdirectory(Modelling)
 
     # always link in modelling and general utilities
-    list(APPEND test_link_libs muqModelling)
+    list(APPEND test_link_libs muqModelingCore)
 endif(UtilitiesAndModelling_build)
 
 #only build the tests if some of them should be built

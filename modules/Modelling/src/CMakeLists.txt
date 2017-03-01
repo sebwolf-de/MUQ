@@ -8,10 +8,10 @@ SET(SOURCES
 #  Objects to build
 
 # Define the library
-ADD_LIBRARY(muqModelling ${SOURCES})
-TARGET_LINK_LIBRARIES(muqModelling ${MUQ_LINK_LIBS})
+ADD_LIBRARY(muqModelingCore ${SOURCES})
+TARGET_LINK_LIBRARIES(muqModelingCore ${MUQ_LINK_LIBS})
 
-install(TARGETS muqModelling
+install(TARGETS muqModelingCore
     EXPORT MUQDepends
     LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
     ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")

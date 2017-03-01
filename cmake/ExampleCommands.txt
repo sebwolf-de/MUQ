@@ -1,0 +1,3 @@
+cmake -DCMAKE_CXX_COMPILER=/usr/local/bin/mpic++ -DCMAKE_C_COMPILER=/usr/local/bin/mpicc -DCMAKE_INSTALL_PREFIX=~/Desktop/MUQ_INSTALL/ -DTrilinos_DIR=~/Documents/Repositories/Trilinos/trilinos-11.4.1-Source/pde_build/lib/ -DSUNDIALS_ROOT=~/Documents/Software/sundials-2.5.0/ ../
+
+
