@@ -3,25 +3,25 @@
 // define the muq namespace
 using namespace muq::Modelling;
 
-// Create a muq::Modelling::WorkPiece with no fixed number of inputs and outputs and variable input/output types.
+// Create a muq::Modeling::WorkPiece with no fixed number of inputs and outputs and variable input/output types.
 WorkPiece::WorkPiece() : 
   numInputs(-1), // the number of inputs is unfixed
   numOutputs(-1) // the number of ouputs is unfixed
 {}
 
-// Create a muq::Modelling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
+// Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
 WorkPiece::WorkPiece(unsigned int const num, WorkPiece::Fix const fix) : 
   numInputs(fix==WorkPiece::Fix::Inputs? num : -1), // possibly fix the number of inputs 
   numOutputs(fix==WorkPiece::Fix::Outputs? num : -1) // possibly fix the number of outputs
 {}
 
-// Create a muq::Modelling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
+// Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
 WorkPiece::WorkPiece(unsigned int const numIns, unsigned int const numOuts) : 
   numInputs(numIns), // fix the number of inputs
   numOutputs(numOuts) // fix the number of outputs
 {}
 
-// Create a muq::Modelling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types
+// Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types
 WorkPiece::WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const fix) : 
   numInputs(fix==WorkPiece::Fix::Inputs? types.size() : -1), // possibly fix the number of inputs 
   numOutputs(fix==WorkPiece::Fix::Outputs? types.size() : -1), // possibly fix the number of outputs 
@@ -29,7 +29,7 @@ WorkPiece::WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const
   outputTypes(fix==WorkPiece::Fix::Outputs? types : std::vector<std::string>(0)) // possibly fix the output types
 {}
 
-// Create a muq::Modelling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types. The number of outputs/inputs (which ever does not have fixed types) is fixed but the types may vary.
+// Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types. The number of outputs/inputs (which ever does not have fixed types) is fixed but the types may vary.
 WorkPiece::WorkPiece(std::vector<std::string> const& types, unsigned int const num, WorkPiece::Fix const fix) : 
   numInputs(fix==WorkPiece::Fix::Inputs? types.size() : num), // fix the number of inputs 
   numOutputs(fix==WorkPiece::Fix::Outputs? types.size() : num), // fix the number of outputs 
@@ -37,7 +37,7 @@ WorkPiece::WorkPiece(std::vector<std::string> const& types, unsigned int const n
   outputTypes(fix==WorkPiece::Fix::Outputs? types : std::vector<std::string>(0)) // possibly fix the output types
 {}
 
-// Create a muq::Modelling::WorkPiece with a fixed number of inputs and outputs with specified types
+// Create a muq::Modeling::WorkPiece with a fixed number of inputs and outputs with specified types
 WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::vector<std::string> const& outTypes) : 
   numInputs(inTypes.size()), // fix the number of inputs 
   numOutputs(outTypes.size()), // fix the number of outputs 
@@ -76,6 +76,7 @@ std::vector<boost::any> WorkPiece::Evaluate(std::vector<std::reference_wrapper<c
   EvaluateImpl(ins);
 
   // make sure the output types are correct
+  assert(numOutputs<0 || outputs.size()==numOutputs);
   assert(outputTypes.size()==0 || outputTypes.size()==outputs.size());
   for(unsigned int i=0; i<outputTypes.size(); ++i ) {
     assert(outputTypes[i].compare(outputs[i].type().name())==0);
@@ -94,9 +95,12 @@ std::vector<boost::any> WorkPiece::Evaluate(std::vector<boost::any> const& ins) 
     assert(inputTypes[i].compare(ins[i].type().name())==0);
   }
   
-  std::vector<std::reference_wrapper<const boost::any>> in_refs;
+  // create the input vector and reserve enough space
+  ref_vector<const boost::any> in_refs;
+  in_refs.reserve(ins.size());
+  // populate the input vector
   for(int i=0; i<ins.size(); ++i)
-      in_refs.push_back(std::cref(ins.at(i)));
+    in_refs.push_back(std::cref(ins.at(i)));
   
   // the inputs are set, so call evaluate with no inputs
   return Evaluate(in_refs);

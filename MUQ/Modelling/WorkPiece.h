@@ -10,6 +10,7 @@
 namespace muq {
   namespace Modelling {
 
+    /// A vector of references to something ... 
     template <typename T>
     using ref_vector = std::vector<std::reference_wrapper<const T>>;
 
@@ -26,24 +27,24 @@ namespace muq {
       
     public:
       
-      /// Create a muq::Modelling::WorkPiece with no fixed number of inputs and outputs and variable input/output types.
+      /// Create a muq::Modeling::WorkPiece with no fixed number of inputs and outputs and variable input/output types.
       WorkPiece();
 
-      /// Create a muq::Modelling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
+      /// Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
       /**
 	 @param[in] num The number of inputs or outputs (which one depends on the second parameter)
 	 @param[in] fix WorkPiece::Fix::Inputs (default): the first parameter is the number of inputs; WorkPiece::Fix::Outputs: the first parameter is the number of outputs
        */
       WorkPiece(unsigned int const num, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
             
-      /// Create a muq::Modelling::WorkPiece with a fixed number of inputs and outputs but variable input/output types
+      /// Create a muq::Modeling::WorkPiece with a fixed number of inputs and outputs but variable input/output types
       /**
 	 @param[in] numIns The number of inputs
 	 @param[in] numOuts The number of outputs
        */
       WorkPiece(unsigned int const numIns, unsigned int const numOuts);
 
-      /// Create a muq::Modelling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types
+      /// Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types
       /**
 	 If the number and type of the inputs is specified then the number and type of the outputs is variable.  The opposite is true if the number and type of the outputs is specified.
 	 @param[in] types A vector of strings, each element is the type of an input or output (the number of inputs or outputs is the size of this vector)
@@ -51,7 +52,7 @@ namespace muq {
        */
       WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
 
-      /// Create a muq::Modelling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types. The number of outputs/inputs (which ever does not have fixed types) is fixed but the types may vary.
+      /// Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types. The number of outputs/inputs (which ever does not have fixed types) is fixed but the types may vary.
       /**
 	 If the number and type of the inputs is specified then the number of outputs is fixed but the type of the outputs is variable.  The opposite is true if the number and type of the outputs is specified.
 	 @param[in] types A vector of strings, each element is the type of an input or output (the number of inputs or outputs is the size of this vector)
@@ -60,7 +61,7 @@ namespace muq {
        */
       WorkPiece(std::vector<std::string> const& types, unsigned int const num, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
 
-      /// Create a muq::Modelling::WorkPiece with a fixed number of inputs and outputs with specified types
+      /// Create a muq::Modeling::WorkPiece with a fixed number of inputs and outputs with specified types
       /**
 	 @param[in] inTypes A vector of strings, each element is the type of an input (the number of inputs is the size of this vector)
 	 @param[in] outTypes A vector of strings, each element is the type of an output (the number of outputs is the size of this vector)
@@ -70,34 +71,47 @@ namespace muq {
       /// Default destructor
       virtual ~WorkPiece() {}
 
-      /// Evaluate this muq::Modelling::WorkPiece
+      /// Evaluate this muq::Modeling::WorkPiece
       /**
-	 This function takes the inputs to the muq::Modelling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if the are specified.  It then calls WorkPiece::EvaluateImpl(), which populates WorkPiece::outputs using WorkPiece::inputs.  This function then checks WorkPiece::outputs, which much match WorkPiece::numOutputs and WorkPiece::outputTypes if they are specified.
+	 This function takes the inputs to the muq::Modeling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if they are specified.  It then calls WorkPiece::EvaluateImpl(), which populates WorkPiece::outputs using the input arguments (passed to WorkPiece::EvaluateImpl()).  This function then checks WorkPiece::outputs, which much match WorkPiece::numOutputs and WorkPiece::outputTypes if they are specified.
+
+	 This function builds a reference vector to the inputs and calls WorkPiece::Evaluate(ref_vector<boost::any> const& ins)
 	 @param[in] ins A vector of inputs 
-	 \return The outputs of this muq::Modelling::WorkPiece
+	 \return The outputs of this muq::Modeling::WorkPiece
        */
       std::vector<boost::any> Evaluate(std::vector<boost::any> const& ins);
       
+      /// Evaluate this muq::Modeling::WorkPiece using references to the inputs
+      /**
+	 This function takes the references to the inputs to the muq::Modeling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if they are specified.  It then calls WorkPiece::EvaluateImpl(), which populates WorkPiece::outputs using the input arguments (passed to WorkPiece::EvaluateImpl()).  This function then checks WorkPiece::outputs, which much match WorkPiece::numOutputs and WorkPiece::outputTypes if they are specified.
+
+	 References are used for efficiency in the muq::Modeling::WorkGraph.
+	 @param[in] ins A vector of references to the inputs 
+	 \return The outputs of this muq::Modeling::WorkPiece
+       */
       std::vector<boost::any> Evaluate(ref_vector<boost::any> const& ins);
 
-      /// Evaluate this muq::Modelling::WorkPiece in the case that there are no inputs
+      /// Evaluate this muq::Modeling::WorkPiece in the case that there are no inputs
       /**
-	 \return The outputs of this muq::Modelling::WorkPiece
+	 \return The outputs of this muq::Modeling::WorkPiece
        */
       std::vector<boost::any> Evaluate();
       
-      /// Evalaute this muq::Modelling::WorkPiece using multiple arguments
+      /// Evalaute this muq::Modeling::WorkPiece using multiple arguments
       /**
-	 This function allows the user to call WorkPiece::Evaluate without first creating a vector of inputs.  Instead, the user calls WorkPiece::Evaluate with multiple arguments (the number of arguments must match the number of inputs) and this function creates the input vector.
+	 This function allows the user to call WorkPiece::Evaluate without first creating a vector of inputs.  Instead, the user calls WorkPiece::Evaluate with multiple arguments (if specified, the number of arguments must match the number of inputs) and this function creates the input vector.
 	 @param[in] args The inputs (may be more than one)
-	 \return The outputs of this muq::Modelling::WorkPiece
+	 \return The outputs of this muq::Modeling::WorkPiece
        */
       template<typename... Args>			
 	std::vector<boost::any> Evaluate(Args... args) {
 	  
+	// we have new outputs
 	outputs.clear();
 
-	std::vector<boost::any> inputs;
+	// create the reference input vector
+	ref_vector<boost::any> inputs;
+	inputs.reserve(numInputs<0? 0 : numInputs);
 
 	// begin calling the EvaluateMulti with the first input
 	return EvaluateRecursive(inputs, args...);
@@ -111,15 +125,9 @@ namespace muq {
 
     protected:
 
-      /// The inputs
+      /// The outputs
       /**
-	 The inputs to this muq::Modelling::WorkPiece, which are passed to WorkPiece::Evaluate().  If the number of inputs is specified (i.e., WorkPiece::numInputs is not -1) then WorkPiece::Evaluate() checks to make sure the size of this vector is equal to WorkPiece::numInputs before calling WorkPiece::EvaluateImpl().  If the input types are specified (i.e., WorkPiece::inputTypes is not an empty vector) then WorkPiece::Evaluate() checks that the input types match WorkPiece::inputTypes before calling WorkPiece::EvaluateImpl().
-       */
-      //std::vector<boost::any> inputs = std::vector<boost::any>(0);
-
-      /// The inputs
-      /**
-	 The outputs of this muq::Modelling::WorkPiece, which are filled by WorkPiece::EvaluateImpl().  If the number of outputs is specified (i.e., WorkPiece::numOutputs is not -1) then WorkPiece::Evaluate() checks to make sure the size of this vector is equal to WorkPiece::numOutputs after calling WorkPiece::EvaluateImpl().  If the output types are specified (i.e., WorkPiece::outputTypes is not an empty vector) then WorkPiece::Evaluate() checks that the output types match WorkPiece::outputTypes after calling WorkPiece::EvaluateImpl().
+	 The outputs of this muq::Modeling::WorkPiece are filled by WorkPiece::EvaluateImpl().  If the number of outputs is specified (i.e., WorkPiece::numOutputs is not -1) then WorkPiece::Evaluate() checks to make sure the size of this vector is equal to WorkPiece::numOutputs after calling WorkPiece::EvaluateImpl().  If the output types are specified (i.e., WorkPiece::outputTypes is not an empty vector) then WorkPiece::Evaluate() checks that the output types match WorkPiece::outputTypes after calling WorkPiece::EvaluateImpl().
        */
       std::vector<boost::any> outputs = std::vector<boost::any>(0);
 
@@ -137,11 +145,11 @@ namespace muq {
        */
       std::vector<std::string> outputTypes = std::vector<std::string>(0);
 
-      /// User-implemented function that determines the behavior of this muq::Modelling::WorkPiece
+      /// User-implemented function that determines the behavior of this muq::Modeling::WorkPiece
       /**
 	 This function determines how the WorkPiece::inputs determine WorkPiece::outputs.  Must be implemented by a child.
 
-	 WorkPiece::Evaluate() calls this function after checking the inputs and storing them in WorkPiece::inputs.  This function populates WorkPiece::outputs, the outputs of this muq::Modelling::WorkPiece.  WorkPiece::Evaluate() checks the outputs after calling this function.
+	 WorkPiece::Evaluate() calls this function after checking the inputs and storing them in WorkPiece::inputs.  This function populates WorkPiece::outputs, the outputs of this muq::Modeling::WorkPiece.  WorkPiece::Evaluate() checks the outputs after calling this function.
        */
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) = 0;
 
@@ -150,10 +158,10 @@ namespace muq {
 	 @param[in] inputNum The current input number (the \f$i^{th}\f$ input)
 	 @param[in] in The input corresponding to the \f$i^{th}\f$ input
 	 @param[in] args The remaining (greater than \f$i\f$) inputs
-	 \return The outputs of this muq::Modelling::WorkPiece
+	 \return The outputs of this muq::Modeling::WorkPiece
       */
       template<typename ith, typename... Args>		       
-      std::vector<boost::any> EvaluateRecursive(std::vector<boost::any> &inputs, ith const& in, Args... args) {
+      std::vector<boost::any> EvaluateRecursive(ref_vector<boost::any> &inputs, ith const& in, Args... args) {
 
 	const int inputNum = inputs.size();
 
@@ -169,7 +177,8 @@ namespace muq {
 	}
 
 	// add the last input to the input vector
-	inputs.push_back(in);
+	const boost::any in_any(in);
+	inputs.push_back(std::cref(in_any));
 
 	// call with EvaluateMulti with the remaining inputs
 	return EvaluateRecursive(inputs, args...);
@@ -179,10 +188,10 @@ namespace muq {
       /**
 	 @param[in] inputNum The current input number (the last input, should match WorkPiece::numInputs-1 if it is specfied)
 	 @param[in] in The input corresponding to the last input
-	 \return The outputs of this muq::Modelling::WorkPiece
+	 \return The outputs of this muq::Modeling::WorkPiece
       */
       template<typename last>			
-      std::vector<boost::any> EvaluateRecursive(std::vector<boost::any> &inputs, last const& in) {
+      std::vector<boost::any> EvaluateRecursive(ref_vector<boost::any> &inputs, last const& in) {
 
 	const int inputNum = inputs.size();
 
@@ -198,11 +207,12 @@ namespace muq {
 	}
 
 	// add the last input to the input vector
-	inputs.push_back(in);
+	const boost::any in_any(in);
+	inputs.push_back(std::cref(in_any));
 	
 	return Evaluate(inputs);
       }
       
     }; // class WorkPiece
-  } // namespace Modelling
+  } // namespace Modeling
 } // namespace muq
