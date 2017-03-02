@@ -8,7 +8,7 @@ shopt -s nocasematch
 dir=`pwd`
 bin_dir=$(echo "$dir" | tr '[:lower:]' '[:upper:]')
 
-build_type="Release"
+build_type="Debug"
 if echo $bin_dir| grep -q "RELEASE"; then
   build_type="Release"
 else
@@ -39,6 +39,8 @@ fi
 
 if [[ `hostname` == "reynolds" ]]; then
 
+  BOOST_SOURCE=/home/mparno/util/boost_1_63_0.tar.gz
+    
   if echo $bin_dir| grep -q "CLANG"; then
     GTEST_DIR=/home/mparno/util/gtest/clang
     echo "Using gtest compiled with clang in ${GTEST_DIR}"
@@ -51,6 +53,8 @@ if [[ `hostname` == "reynolds" ]]; then
 
 elif [[ `hostname` == "macys.mit.edu" ]]; then
 
+  BOOST_SOURCE=/Users/mparno/util/boost_1_63_0.tar.gz
+    
   # export the path so we can get cmake
   export PATH=/usr/local/bin:/usr/local/sbin:$PATH
 
@@ -146,7 +150,7 @@ cmake \
 -DMUQ_USE_NLOPT=$with_nlopt \
 -DMUQ_NLOPT_DIR=$NLOPT_DIR \
 -DMUQ_USE_OPENMPI=OFF \
--DBOOST_EXTERNAL_SOURCE=/home/mparno/util/boost_1_63_0.tar.gz \
+-DBOOST_EXTERNAL_SOURCE=$BOOST_SOURCE \
 $dir
 
 #######################################
