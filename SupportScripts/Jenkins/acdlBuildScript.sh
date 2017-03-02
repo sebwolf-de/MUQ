@@ -145,6 +145,7 @@ cmake \
 -DMUQ_USE_NLOPT=$with_nlopt \
 -DMUQ_NLOPT_DIR=$NLOPT_DIR \
 -DMUQ_USE_OPENMPI=OFF \
+-DBOOST_EXTERNAL_SOURCE=/home/mparno/util/boost_1_63_0.tar.gz      
 $WORKSPACE
 
 #######################################
