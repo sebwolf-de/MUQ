@@ -40,10 +40,10 @@ fi
 if [[ `hostname` == "reynolds" ]]; then
 
   if echo $bin_dir| grep -q "CLANG"; then
-    GTEST_DIR=/home1/jenkins/util/gtest/clang
+    GTEST_DIR=/home/mparno/util/gtest/clang
     echo "Using gtest compiled with clang in ${GTEST_DIR}"
   else
-    GTEST_DIR=/home1/jenkins/util/gtest/gnu
+    GTEST_DIR=/home/mparno/util/gtest/gnu
     echo "Using gtest compiled with gcc in ${GTEST_DIR}"
   fi
 
@@ -101,6 +101,9 @@ elif echo $bin_dir | grep -q "GNU48"; then
 elif echo $bin_dir | grep -q "GNU47"; then
   my_cc_compiler="gcc-4.7"
   my_cxx_compiler="g++-4.7"
+elif echo $bin_dir | grep -q "GNU5"; then
+  my_cc_compiler="gcc-5"
+  my_cxx_compiler="g++-5"
 elif echo $bin_dir | grep -q "GNU"; then
   my_cc_compiler="gcc"
   my_cxx_compiler="g++"
