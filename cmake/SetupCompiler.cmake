@@ -61,7 +61,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 	set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11")
 		
     CHECK_CXX_COMPILER_FLAG("-std=c++11 -stdlib=libc++" HAS_LIBCXX11)
-	INCLUDE(LibcxxCheck)
+    INCLUDE(LibcxxCheck)
 				
     # set compiler flags for clang
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -g -Wno-unused-function -Wno-redeclared-class-member -Wno-deprecated-register -Wno-uninitialized -Wno-sign-compare -Wno-unknown-pragmas -Wunused-function -Wno-unused-variable -Wno-overloaded-virtual")
