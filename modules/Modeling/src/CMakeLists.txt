@@ -2,6 +2,8 @@
 #   generic interface library
 SET(SOURCES
     WorkPiece.cpp
+
+    WorkGraph.cpp
   )
 
 ##########################################

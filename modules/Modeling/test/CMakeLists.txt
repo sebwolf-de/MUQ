@@ -3,7 +3,7 @@
 
 # files containing google tests
 set(Test_Modelling_Sources
-    Modelling/test/WorkPieceTests.cpp
+    Modeling/test/WorkPieceTests.cpp
 
     PARENT_SCOPE
     )

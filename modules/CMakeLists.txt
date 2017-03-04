@@ -4,7 +4,7 @@ set(all_gtest_sources RunTests.cpp)
 set(test_link_libs )
 
 if(UtilitiesAndModelling_build)
-    add_subdirectory(Modelling)
+    add_subdirectory(Modeling)
 
     # always link in modelling and general utilities
     list(APPEND test_link_libs muqModelingCore)
