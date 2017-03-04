@@ -1,4 +1,4 @@
-#include "MUQ/Modelling/WorkPiece.h"
+#include "MUQ/Modeling/Core/WorkPiece.h"
 
 // define the muq namespace
 using namespace muq::Modeling::Core;

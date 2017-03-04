@@ -1,4 +1,4 @@
-#include "MUQ/Modelling/WorkPiece.h"
+#include "MUQ/Modeling/Core/WorkPiece.h"
 
 /// An object used to test using user-created inputs to WorkPieces
 struct AnObject {

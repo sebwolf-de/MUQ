@@ -1,9 +1,9 @@
 # define the source files in this directory that we want to include in the
 #   generic interface library
 SET(SOURCES
-    WorkPiece.cpp
+    Core/WorkPiece.cpp
 
-    WorkGraph.cpp
+    Core/WorkGraph.cpp
   )
 
 ##########################################
