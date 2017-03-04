@@ -1,3 +1,6 @@
+#ifndef WORKPIECE_H_
+#define WORKPIECE_H_
+
 #include<iostream>
 #include<vector>
 #include<string>
@@ -216,3 +219,5 @@ namespace muq {
     }; // class WorkPiece
   } // namespace Modeling
 } // namespace muq
+
+#endif
