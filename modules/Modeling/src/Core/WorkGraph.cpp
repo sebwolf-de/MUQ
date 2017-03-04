@@ -3,3 +3,5 @@
 using namespace muq::Modeling::Core;
 
 WorkGraph::WorkGraph() {}
+
+WorkGraph::~WorkGraph() {}

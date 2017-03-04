@@ -12,6 +12,8 @@ namespace muq {
 	
 	WorkGraph();
 
+	virtual ~WorkGraph();
+
       private:
       };
       
