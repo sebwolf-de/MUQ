@@ -11,7 +11,7 @@
 #include "boost/any.hpp"
 
 namespace muq {
-  namespace Modelling {
+  namespace Modeling {
 
     /// A vector of references to something ... 
     template <typename T>

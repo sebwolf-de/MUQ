@@ -17,7 +17,7 @@ struct AnObject {
 };
 
 /// A WorkPiece with no fixed input/output number or type
-class UnfixedMod : public muq::Modelling::WorkPiece {
+class UnfixedMod : public muq::Modeling::WorkPiece {
 public:
 
   /// Default constructor
@@ -32,7 +32,7 @@ private:
   /**
      The behavior changes depending on the number of inputs
    */
-  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
+  virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
          
     switch( inputs.size() ) {
     case 0 : { // there are no inputs
@@ -61,7 +61,7 @@ private:
 };
 
 /// A WorkPiece with a fixed number of inputs but no fixed input types and no fixed output number or type
-class FixedInsMod : public muq::Modelling::WorkPiece {
+class FixedInsMod : public muq::Modeling::WorkPiece {
 public:
 
   /// Constructor 
@@ -79,7 +79,7 @@ private:
   /**
      The behavior changes depending on the type of the third input
    */
-  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
+  virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
     if( boost::any_cast<bool>(inputs[2]) ) { // if the third input is a bool
       // there are 2 outputs
       outputs.resize(2);
@@ -99,7 +99,7 @@ private:
 };
 
 /// A WorkPiece with no fixed input number or type and a fixed number of ouputs but no fixed output type
-class FixedOutsMod : public muq::Modelling::WorkPiece {
+class FixedOutsMod : public muq::Modeling::WorkPiece {
 public:
 
   /// Constructor
@@ -117,7 +117,7 @@ private:
   /**
      The behavior changes depending on the number of inputs
    */
-  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
+  virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
     outputs.resize(numOutputs);
     
     outputs[0] = 1.0;
@@ -127,7 +127,7 @@ private:
 };
 
 /// A WorkPiece with a fixed number of inputs and outputs but no fixed types
-class FixedInOutMod : public muq::Modelling::WorkPiece {
+class FixedInOutMod : public muq::Modeling::WorkPiece {
 public:
 
   /// Constructor
@@ -146,13 +146,13 @@ private:
   /**
    We don't actually do anything.
    */
-  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
+  virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
     outputs = std::vector<boost::any>();
   }
 };
 
 /// A WorkPiece with a fixed input number and type but niether the number nor type of the output is fixed
-class FixedInTypeMod : public muq::Modelling::WorkPiece {
+class FixedInTypeMod : public muq::Modeling::WorkPiece {
 public:
 
   /// Constructor
@@ -170,7 +170,7 @@ private:
   /**
      The behavior changes depending on the flag value of the input AnObject
    */
-  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
+  virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
     // the first input must be a string and the parent checks this
     const std::string s = boost::any_cast<std::string>(inputs[0]);
     // the second input must be a shared pointer to AnObject and the parent checks this
@@ -193,7 +193,7 @@ private:
 };
 
 /// A WorkPiece with a fixed input number and type and a fixed number of outputs
-class FixedInTypeOutNumMod : public muq::Modelling::WorkPiece {
+class FixedInTypeOutNumMod : public muq::Modeling::WorkPiece {
 public:
 
   /// Constructor
@@ -212,7 +212,7 @@ private:
   /**
      The behavior changes depending on the flag value of the input AnObject
    */
-  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
+  virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
     // the first input must be a string and the parent checks this
     const std::string s = boost::any_cast<std::string>(inputs[0]);
     // the second input must be a shared pointer to AnObject and the parent checks this
@@ -238,7 +238,7 @@ private:
 };
 
 /// A WorkPiece with a fixed output number and type but niether the number nor type of the input is fixed
-class FixedOutTypeMod : public muq::Modelling::WorkPiece {
+class FixedOutTypeMod : public muq::Modeling::WorkPiece {
 public:
 
   /// Constructor
@@ -256,7 +256,7 @@ private:
   /**
      The behavior changes depending on the flag value of the input AnObject
    */
-  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
+  virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
     // the first input must be a string but the parent does not check this
     const std::string s = boost::any_cast<std::string>(inputs[0]);
     // the second input must be a shared pointer to an object but the parent does not check this
@@ -278,7 +278,7 @@ private:
 };
 
 /// A WorkPiece with a fixed output number and type and a fixed number of inputs
-class FixedOutTypeInNumMod : public muq::Modelling::WorkPiece {
+class FixedOutTypeInNumMod : public muq::Modeling::WorkPiece {
 public:
 
   /// Constructor
@@ -297,7 +297,7 @@ private:
   /**
      The behavior changes depending on the flag value of the input AnObject
    */
-  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
+  virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
     // the first input must be a string but the parent does not check this
     const std::string s = boost::any_cast<std::string>(inputs[0]);
     // the second input must be a shared pointer to AnObject but the parent does not check this
@@ -321,7 +321,7 @@ private:
 };
 
 /// A WorkPiece with a fixed number and type for both the inputs and the outputs
-class FixedTypesMod : public muq::Modelling::WorkPiece {
+class FixedTypesMod : public muq::Modeling::WorkPiece {
 public:
 
   /// Constructor
@@ -340,7 +340,7 @@ private:
   /**
      The behavior changes depending on the flag value of the input AnObject
    */
-  virtual void EvaluateImpl(muq::Modelling::ref_vector<boost::any> const& inputs) override {
+  virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
     // the first input must be a string but the parent does not check this
     const std::string s = boost::any_cast<std::string>(inputs[0]);
     // the second input must be a shared pointer to AnObject but the parent does not check this

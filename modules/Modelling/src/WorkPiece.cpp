@@ -1,7 +1,7 @@
 #include "MUQ/Modelling/WorkPiece.h"
 
 // define the muq namespace
-using namespace muq::Modelling;
+using namespace muq::Modeling;
 
 // Create a muq::Modeling::WorkPiece with no fixed number of inputs and outputs and variable input/output types.
 WorkPiece::WorkPiece() : 
