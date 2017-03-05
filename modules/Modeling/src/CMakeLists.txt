@@ -4,6 +4,8 @@ SET(SOURCES
     Core/WorkPiece.cpp
 
     Core/WorkGraph.cpp
+    Core/WorkGraphNode.cpp
+    Core/WorkGraphEdge.cpp
   )
 
 ##########################################
