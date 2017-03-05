@@ -7,6 +7,7 @@ namespace muq {
   namespace Modeling { 
     namespace Core {
 
+      /// A node in a muq::Modeling::Core::WorkGraph
       class WorkGraphNode {
       public:
 

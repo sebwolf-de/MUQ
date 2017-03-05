@@ -10,14 +10,14 @@ public:
      @param[in] name We are looking for nodes with this name
      @param[in] graph A pointer to the graph that stores the nodes
    */
-  NodeNameFinder(std::string const& name, std::shared_ptr<Graph> graph) : name(name), graph(graph) {}
+  inline NodeNameFinder(std::string const& name, std::shared_ptr<Graph> graph) : name(name), graph(graph) {}
 
   /// Does a given vertex have the same name as the given name
   /**
      param[in] vertex The vertex of the graph
      \return true if the names are the same, false if not
    */
-  bool operator()(boost::graph_traits<Graph>::vertex_descriptor vertex) const {
+  inline bool operator()(boost::graph_traits<Graph>::vertex_descriptor vertex) const {
     // check the names
     return name.compare(graph->operator[](vertex)->name)==0;
   }
