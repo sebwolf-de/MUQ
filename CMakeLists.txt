@@ -33,6 +33,34 @@ include_directories(.)
 INCLUDE(OptionsSetup)
 
 ###############################################
+# Find source files and calculate required dependencies
+###############################################
+INCLUDE(GetPossibleDependencyList)
+
+message(STATUS "All possible MUQ dependencies = ${POSSIBLE_MUQ_DEPENDENCIES}")
+
+# Initially, we have no targets to build
+set(MUQ_TARGETS "" CACHE INTERNAL "List of MUQ libraries to build.")
+
+# Go compile everything
+add_subdirectory(modules)
+
+## Figure out what dependencies we actually need
+list(REMOVE_DUPLICATES MUQ_DEPENDS)	
+
+foreach(depend ${POSSIBLE_MUQ_DEPENDENCIES})
+
+    list (FIND  MUQ_DEPENDS ${depend} dindex)
+    if (${dindex} GREATER -1)
+        message(STATUS "Found that Dependency ${depend} is required.")
+    else()
+        set(MUQ_USE_${depend} OFF)
+    endif()
+
+endforeach()
+
+
+###############################################
 # Manage dependencies
 ###############################################
 INCLUDE(DependencySearch)
@@ -50,13 +78,6 @@ INCLUDE(DependencyCheck)
 ###############################################
 # Set up project
 ###############################################
-
-# Initially, we have no targets to build
-set(MUQ_TARGETS "" CACHE INTERNAL "List of MUQ libraries to build.")
-
-# Go compile everything
-add_subdirectory(modules)
-
 
 # Build all the targets
 foreach(libName ${MUQ_TARGETS})

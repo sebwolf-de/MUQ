@@ -26,9 +26,8 @@ macro (GetDependency name)
 	# store library information
 	LIST(APPEND MUQ_LINK_LIBS ${${name}_LIBRARIES})
 	LIST(APPEND MUQ_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
-	
-endmacro(GetDependency)
 
+endmacro(GetDependency)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/include)
 
