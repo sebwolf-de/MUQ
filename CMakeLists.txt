@@ -11,8 +11,8 @@ INCLUDE(CheckFunctionExists)
 
 # define the project name
 project (MUQ) 
-set(MUQ_MAJOR_VERSION 0)
-set(MUQ_MINOR_VERSION 1)
+set(MUQ_MAJOR_VERSION 1)
+set(MUQ_MINOR_VERSION 0)
 set(MUQ_PATCH_VERSION 0)
 set(MUQ_VERSION ${MUQ_MAJOR_VERSION}.${MUQ_MINOR_VERSION}.${MUQ_PATCH_VERSION})
 
@@ -103,6 +103,7 @@ include(MakeSummaryFile)
 
 FILE(READ ${CMAKE_BINARY_DIR}/summary.log MUQ_LOG_SUMMARY)
 MESSAGE("${MUQ_LOG_SUMMARY}")
+
 
 ###############################################
 # Add a target to build documentation

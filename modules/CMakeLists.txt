@@ -3,15 +3,16 @@ set(all_gtest_sources RunTests.cpp)
 
 set(test_link_libs )
 
-if(UtilitiesAndModelling_build)
-    add_subdirectory(Modelling)
+add_subdirectory(Modelling)
+add_subdirectory(Approximation)
 
-    # always link in modelling and general utilities
-    list(APPEND test_link_libs muqModelingCore)
-endif(UtilitiesAndModelling_build)
+
+list(APPEND test_link_libs muqModelingCore)
+
 
 #only build the tests if some of them should be built
-IF(UtilitiesAndModelling_tests)
+IF(MUQ_BUILD_TESTS)
+
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
   
     CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_PTHREAD)
@@ -20,6 +21,8 @@ IF(UtilitiesAndModelling_tests)
     endif()
   
     ADD_EXECUTABLE(RunAllTests ${all_gtest_sources})
+
     message("MUQ_LINK_LIBS=${MUQ_LINK_LIBS}")
     TARGET_LINK_LIBRARIES(RunAllTests ${test_link_libs} ${GTEST_LIBRARY} ${external_test_libs})
+
 ENDIF()
