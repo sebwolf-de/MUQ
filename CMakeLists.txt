@@ -51,8 +51,26 @@ INCLUDE(DependencyCheck)
 # Set up project
 ###############################################
 
+# Initially, we have no targets to build
+set(MUQ_TARGETS "" CACHE INTERNAL "List of MUQ libraries to build.")
+
 # Go compile everything
 add_subdirectory(modules)
+
+
+# Build all the targets
+foreach(libName ${MUQ_TARGETS})
+    message("Sources = ${libName}")
+    ADD_LIBRARY(${libName} ${${libName}_SOURCES})
+    TARGET_LINK_LIBRARIES(${libName} ${MUQ_LINK_LIBS})
+
+    install(TARGETS ${libName}
+        EXPORT MUQDepends
+        LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+    
+endforeach()
+
 
 # Create the list of libraries we just built
 INCLUDE(BuiltLibrarySetup)

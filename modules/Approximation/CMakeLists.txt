@@ -1,6 +1,6 @@
 add_subdirectory(src)
 
-if(BUILD_APPROXIMATION_TESTS)
+if(MUQ_BUILD_TESTS)
 
   #pass the test sources to the higher level
   add_subdirectory(test)

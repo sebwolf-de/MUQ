@@ -1,17 +1,13 @@
-# define the source files in this directory that we want to include in the
-#   generic interface library
-SET(SOURCES
-    WorkPiece.cpp
-  )
 
-##########################################
-#  Objects to build
 
-# Define the library
-ADD_LIBRARY(muqModelingCore ${SOURCES})
-TARGET_LINK_LIBRARIES(muqModelingCore ${MUQ_LINK_LIBS})
 
-install(TARGETS muqModelingCore
-    EXPORT MUQDepends
-    LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
-    ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+set(MUQ_DEPENDS "${MUQ_DEPENDS};EIGEN" CACHE INTERNAL "List of Dependencies that MUQ will need.")
+
+
+set(MUQ_TARGETS "${MUQ_TARGETS};muqModelingCore" CACHE INTERNAL "List of MUQ libraries to build.")
+SET(muqModelingCore_SOURCES
+
+    modules/Modelling/src/WorkPiece.cpp
+
+    CACHE INTERNAL "List of source files for the muqModelingCore library."
+)

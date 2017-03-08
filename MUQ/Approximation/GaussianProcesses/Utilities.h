@@ -2,6 +2,8 @@
 #ifndef UTILITIES_H_
 #define UTILITIES_H_
 
+#include <Eigen/Dense>
+
 namespace muq
 {
 namespace Approximation
