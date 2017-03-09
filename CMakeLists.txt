@@ -39,57 +39,7 @@ INCLUDE(CompileGroup)
 
 message(STATUS "All possible MUQ dependencies = ${POSSIBLE_MUQ_DEPENDENCIES}")
 
-# Initially, we have no targets to build
-set(MUQ_TARGETS "" CACHE INTERNAL "List of MUQ libraries to build.")
-
-# Go compile everything
-add_subdirectory(modules)
-
-## Figure out what dependencies we actually need
-set(MUQ_REQUIRES )
-set(MUQ_DESIRES )
-foreach(group ${MUQ_GROUPS})
-
-    foreach(depend ${${group}_REQUIRES})
-        list(APPEND MUQ_REQUIRES ${depend})
-    endforeach()
-
-    foreach(depend ${${group}_DESIRES})
-        list(APPEND MUQ_DESIRES ${depend})
-    endforeach()
-    
-endforeach()
-
-# Remove duplicate requirements
-list(REMOVE_DUPLICATES MUQ_REQUIRES)
-if(MUQ_DESIRES)
-    list(REMOVE_DUPLICATES MUQ_DESIRES)
-endif()
-
-# Create a list of all MUQ libraries to build
-set(MUQ_TARGETS )
-foreach(group ${MUQ_GROUPS})
-    list(APPEND MUQ_TARGETS ${${group}_LIBRARY})
-endforeach()
-list(REMOVE_DUPLICATES MUQ_TARGETS)
-
-# Set up the source for each target library
-foreach(target ${MUQ_TARGETS})
-    set(${target}_SOURCES )
-
-    foreach(group ${MUQ_GROUPS})
-        if(MUQ_GROUP_${group})
-	    if(${${group}_LIBRARY} MATCHES ${target})
-	        list(APPEND ${target}_SOURCES ${${group}_SOURCES})
-	    endif()
-	endif()
-    endforeach()
-
-    if(${target}_SOURCES)
-        list(REMOVE_DUPLICATES ${target}_SOURCES)
-    endif()
-    message("SOURCES for ${target} are ${${target}_SOURCES}")
-endforeach()
+INCLUDE(ProcessCompileGroups)
 
 
 ###############################################
@@ -110,50 +60,7 @@ INCLUDE(DependencyCheck)
 ###############################################
 # Create BUILD targets for cmake
 ###############################################
-if(MUQ_USE_GTEST)
-    message(STATUS "GTEST looks good, so we'll build tests.")
-    set(MUQ_BUILD_TESTS ON)
-endif()
-
-# Build all the targets
-foreach(libName ${MUQ_TARGETS})
-
-    message("LOOKING AT ${libName}")
-    message("${${libName}_SOURCES}")
-    
-    list(LENGTH ${libName}_SOURCES strLength)
-    if(${strLength} GREATER 0)
-        message("ADDING TARGET ${libName}")
-	message("ADDING SOURCES ${${libName}_SOURCES}")
-	
-        ADD_LIBRARY(${libName} ${${libName}_SOURCES})
-        TARGET_LINK_LIBRARIES(${libName} ${MUQ_LINK_LIBS})
-
-        install(TARGETS ${libName}
-                EXPORT MUQDepends
-                LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
-                ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
-    endif()
-    
-endforeach()
-
-# If a group depends on an external library that is going to be built by MUQ, then make sure we account for that dependency
-foreach(group ${MUQ_GROUPS})
-
-    list(LENGTH ${group}_SOURCES strLength)
-
-    foreach(depend ${POSSIBLE_MUQ_DEPENDENCIES})
-        list(FIND ${group}_REQUIRES ${depend} needsExternal)
-
-        if(USE_INTERNAL_${depend})
-            if(needsExternal AND ${USE_INTERNAL_${depend}} AND (strLength GREATER 0))
-                add_dependencies(${${group}_LIBRARY} ${depend})
-            endif()
-	endif()
-    endforeach()
-endforeach()
-
-
+INCLUDE(SetupCompileTargets)
 
 # Create the list of libraries we just built
 INCLUDE(BuiltLibrarySetup)
