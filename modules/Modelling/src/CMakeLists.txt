@@ -2,7 +2,8 @@
 # CreateCompileGroup(
 #     <group_name>
 #     <library_name> 
-#     <requirements>
+#     <required dependencies>
+#     <optional dependencies>
 #     <source file 1>
 #     <source file 2>
 #     ...
@@ -12,6 +13,7 @@
 CreateCompileGroup(
     MODELING_CORE
     muqModelingCore
-    "EIGEN"
+    "EIGEN3;BOOST"
+    ""
     WorkPiece.cpp
 )

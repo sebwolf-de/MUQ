@@ -46,17 +46,45 @@ set(MUQ_TARGETS "" CACHE INTERNAL "List of MUQ libraries to build.")
 add_subdirectory(modules)
 
 ## Figure out what dependencies we actually need
-list(REMOVE_DUPLICATES MUQ_DEPENDS)	
+set(MUQ_REQUIRES )
+set(MUQ_DESIRES )
+foreach(group ${MUQ_GROUPS})
 
-foreach(depend ${POSSIBLE_MUQ_DEPENDENCIES})
+    foreach(depend ${${group}_REQUIRES})
+        list(APPEND MUQ_REQUIRES ${depend})
+    endforeach()
 
-    list (FIND  MUQ_DEPENDS ${depend} dindex)
-    if (${dindex} GREATER -1)
-        message(STATUS "Found that Dependency ${depend} is required.")
-    else()
-        set(MUQ_USE_${depend} OFF)
-    endif()
+    foreach(depend ${${group}_DESIRES})
+        list(APPEND MUQ_DESIRES ${depend})
+    endforeach()
+    
+endforeach()
 
+# Remove duplicate requirements
+list(REMOVE_DUPLICATES MUQ_REQUIRES)
+if(MUQ_DESIRES)
+    list(REMOVE_DUPLICATES MUQ_DESIRES)
+endif()
+
+# Create a list of all MUQ libraries to build
+set(MUQ_TARGETS )
+foreach(group ${MUQ_GROUPS})
+    list(APPEND MUQ_TARGETS ${${group}_LIBRARY})
+endforeach()
+list(REMOVE_DUPLICATES MUQ_TARGETS)
+
+# Set up the source for each target library
+foreach(target ${MUQ_TARGETS})
+    set(${target}_SOURCES )
+
+    foreach(group ${MUQ_GROUPS})
+        if(${${group}_LIBRARY} MATCHES ${target})
+	    list(APPEND ${target}_SOURCES ${${group}_SOURCES})
+	endif()    
+    endforeach()
+
+    list(REMOVE_DUPLICATES ${target}_SOURCES)	
+    message("SOURCES for ${target} are ${${target}_SOURCES}")
 endforeach()
 
 
@@ -76,7 +104,7 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/MUQ/config.h.in ${CMAKE_CURRENT_SOURC
 INCLUDE(DependencyCheck)
 
 ###############################################
-# Set up project
+# Create BUILD targets for cmake
 ###############################################
 
 # Build all the targets

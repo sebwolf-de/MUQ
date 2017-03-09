@@ -42,17 +42,21 @@ macro (PrintRequired name pad)
 if(USE_INTERNAL_${name})
 if(${name}_FOUND)
 FILE(APPEND ${_log_summary}
-"#        ${name}${pad}------------> Met with internal build -- Failed compilation test.\n"
+"#        ${name}${pad}-------------> Met with internal build -- Failed compilation test.\n"
 )
 else()
 FILE(APPEND ${_log_summary}
-"#        ${name}${pad}------------> Met with internal build -- Could not find library.\n"
+"#        ${name}${pad}-------------> Met with internal build -- Could not find library.\n"
 )
 endif()
 
+elseif(NOT ${MUQ_NEEDS_${name}})
+FILE(APPEND ${_log_summary}
+"#        ${name}${pad}-------------> Not required for selected compile groups.\n"
+)
 else()
 FILE(APPEND ${_log_summary}
-"#        ${name}${pad}------------> Met with existing library:\n"
+"#        ${name}${pad}-------------> Met with existing library:\n"
 "#                                Include Directory:\n"
 "#                                  ${${name}_INCLUDE_DIR}\n")
 
@@ -91,7 +95,7 @@ macro(PrintOptional name pad)
 "#        ${name}${pad}-----------> OFF -- Could not find library.\n")
 	else()
 		FILE(APPEND ${_log_summary} 
-"#        ${name}${pad}-----------> ON.\n"
+"#        ${name}${pad}------------> ON.\n"
 "#                                Include Directory:\n"
 "#                                  ${${name}_INCLUDE_DIR}\n")
 
