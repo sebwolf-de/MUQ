@@ -19,7 +19,6 @@ set(MUQ_VERSION ${MUQ_MAJOR_VERSION}.${MUQ_MINOR_VERSION}.${MUQ_PATCH_VERSION})
 
 message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
 
-  
 ###############################################
 # Compiler configuration
 ###############################################
@@ -36,6 +35,7 @@ INCLUDE(OptionsSetup)
 # Find source files and calculate required dependencies
 ###############################################
 INCLUDE(GetPossibleDependencyList)
+INCLUDE(CompileGroup)
 
 message(STATUS "All possible MUQ dependencies = ${POSSIBLE_MUQ_DEPENDENCIES}")
 
