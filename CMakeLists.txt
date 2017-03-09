@@ -78,12 +78,16 @@ foreach(target ${MUQ_TARGETS})
     set(${target}_SOURCES )
 
     foreach(group ${MUQ_GROUPS})
-        if(${${group}_LIBRARY} MATCHES ${target})
-	    list(APPEND ${target}_SOURCES ${${group}_SOURCES})
-	endif()    
+        if(MUQ_GROUP_${group})
+	    if(${${group}_LIBRARY} MATCHES ${target})
+	        list(APPEND ${target}_SOURCES ${${group}_SOURCES})
+	    endif()
+	endif()
     endforeach()
 
-    list(REMOVE_DUPLICATES ${target}_SOURCES)	
+    if(${target}_SOURCES)
+        list(REMOVE_DUPLICATES ${target}_SOURCES)
+    endif()
     message("SOURCES for ${target} are ${${target}_SOURCES}")
 endforeach()
 
@@ -109,14 +113,16 @@ INCLUDE(DependencyCheck)
 
 # Build all the targets
 foreach(libName ${MUQ_TARGETS})
-    message("Sources = ${libName}")
-    ADD_LIBRARY(${libName} ${${libName}_SOURCES})
-    TARGET_LINK_LIBRARIES(${libName} ${MUQ_LINK_LIBS})
 
-    install(TARGETS ${libName}
-        EXPORT MUQDepends
-        LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
-        ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+    if(${${libName}_SOURCES})
+        ADD_LIBRARY(${libName} ${${libName}_SOURCES})
+        TARGET_LINK_LIBRARIES(${libName} ${MUQ_LINK_LIBS})
+
+        install(TARGETS ${libName}
+                EXPORT MUQDepends
+                LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+                ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+    endif()
     
 endforeach()
 
