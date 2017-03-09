@@ -137,17 +137,10 @@ FILE(APPEND ${_log_summary}
 "
 )
 
-FILE(APPEND ${_log_summary}
-"#  MUQ Modules:   
-#        Utilities:              (BUILD=${UtilitiesAndModelling_build},TESTS=${UtilitiesAndModelling_tests})
-#        Modelling:              (BUILD=${UtilitiesAndModelling_build},TESTS=${UtilitiesAndModelling_tests})
-#        Inference:              (BUILD=${Inference_build},TESTS=${Inference_tests})
-#        Optimization:           (BUILD=${Optimization_build},TESTS=${Optimization_tests})
-#        PDE:                    (BUILD=${PDE_build},TESTS=${PDE_tests})
-#        Geostats:               (BUILD=${Geostats_build},TESTS=${Geostats_tests})
-#        Approximation:          (BUILD=${Approximation_build},TESTS=${Approximation_tests})
-#
-"
-)
+FILE(APPEND ${_log_summary} "#  MUQ Modules: \n")
+foreach(target ${MUQ_TARGETS})
+    string(REPLACE "muq" "" moduleName ${target})
+    FILE(APPEND ${_log_summary} "#        ${moduleName}:\n")
+endforeach()
 
 FILE(APPEND ${_log_summary} "#############################################\n\n")

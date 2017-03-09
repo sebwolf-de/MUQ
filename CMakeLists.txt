@@ -110,11 +110,22 @@ INCLUDE(DependencyCheck)
 ###############################################
 # Create BUILD targets for cmake
 ###############################################
+if(MUQ_USE_GTEST)
+    message(STATUS "GTEST looks good, so we'll build tests.")
+    set(MUQ_BUILD_TESTS ON)
+endif()
 
 # Build all the targets
 foreach(libName ${MUQ_TARGETS})
 
-    if(${${libName}_SOURCES})
+    message("LOOKING AT ${libName}")
+    message("${${libName}_SOURCES}")
+    
+    list(LENGTH ${libName}_SOURCES strLength)
+    if(${strLength} GREATER 0)
+        message("ADDING TARGET ${libName}")
+	message("ADDING SOURCES ${${libName}_SOURCES}")
+	
         ADD_LIBRARY(${libName} ${${libName}_SOURCES})
         TARGET_LINK_LIBRARIES(${libName} ${MUQ_LINK_LIBS})
 
