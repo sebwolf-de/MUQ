@@ -137,6 +137,23 @@ foreach(libName ${MUQ_TARGETS})
     
 endforeach()
 
+# If a group depends on an external library that is going to be built by MUQ, then make sure we account for that dependency
+foreach(group ${MUQ_GROUPS})
+
+    list(LENGTH ${group}_SOURCES strLength)
+
+    foreach(depend ${POSSIBLE_MUQ_DEPENDENCIES})
+        list(FIND ${group}_REQUIRES ${depend} needsExternal)
+
+        if(USE_INTERNAL_${depend})
+            if(needsExternal AND ${USE_INTERNAL_${depend}} AND (strLength GREATER 0))
+                add_dependencies(${${group}_LIBRARY} ${depend})
+            endif()
+	endif()
+    endforeach()
+endforeach()
+
+
 
 # Create the list of libraries we just built
 INCLUDE(BuiltLibrarySetup)
