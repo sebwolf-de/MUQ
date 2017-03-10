@@ -47,6 +47,13 @@ foreach(target ${MUQ_TARGETS})
     foreach(group ${MUQ_GROUPS})
         if(MUQ_GROUP_${group})
 	    if(${${group}_LIBRARY} MATCHES ${target})
+
+                # Check to see if a group has any source (e.g., *.cpp) files.  Flag it as something that will be built if it does.
+	        list(LENGTH ${group}_SOURCES sources_length)
+		if(sources_length GREATER 0)
+	            set(${group}_IS_COMPILED ON CACHE INTERNAL "Whether or not the ${group} is used in any library.")
+		endif()
+		
 	        list(APPEND ${target}_SOURCES ${${group}_SOURCES})
 	    endif()
 	endif()

@@ -61,6 +61,7 @@ INCLUDE(DependencyCheck)
 # Create BUILD targets for cmake
 ###############################################
 INCLUDE(SetupCompileTargets)
+INCLUDE(SetupTestTargets)
 
 # Create the list of libraries we just built
 INCLUDE(BuiltLibrarySetup)

@@ -4,21 +4,18 @@
 # file.
 #
 
-
-if(MUQ_USE_GTEST)
-    message(STATUS "GTEST looks good, so we'll build tests.")
-    set(MUQ_BUILD_TESTS ON)
-endif()
+set(MUQ_LIBRARIES )
 
 # Build all the targets
 foreach(libName ${MUQ_TARGETS})
 
     list(LENGTH ${libName}_SOURCES strLength)
     if(${strLength} GREATER 0)
-       	
+    
         ADD_LIBRARY(${libName} ${${libName}_SOURCES})
         TARGET_LINK_LIBRARIES(${libName} ${MUQ_LINK_LIBS})
 
+        list(APPEND MUQ_LIBRARIES ${libName})
         install(TARGETS ${libName}
                 EXPORT MUQDepends
                 LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"

@@ -1,9 +1,9 @@
 
-# files containing google tests
-set(APPROXIMATION_TEST_SOURCES
-    Approximation/test/GaussianProcesses/KernelTests.cpp
+message(STATUS "ADDING APPROXIMATION TESTS!")
 
-    PARENT_SCOPE
+CreateTestGroup(
+  APPROXIMATION_GP
+  GaussianProcesses/KernelTests.cpp
 )
 
 
