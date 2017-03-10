@@ -14,16 +14,18 @@ IF(MUQ_USE_GTEST)
     
     foreach(group ${MUQ_TEST_GROUPS})
         message("${group}_TEST_SOURCES = ${${group}_TEST_SOURCES}")
-        if(${${group}_IS_COMPILED})
+	if(${group}_IS_COMPILED)
 	    list(APPEND all_compiled_libraries ${${group}_LIBRARY})
+        endif()
+        if(${MUQ_GROUP_${group}})
             list(APPEND all_gtest_sources ${${group}_TEST_SOURCES})
         endif()
     endforeach()
 
-    message("ALL COMPILED LIBRARIES = ${all_compiled_libraries}")
     list(REMOVE_DUPLICATES all_compiled_libraries)
+    list(REMOVE_DUPLICATES all_gtest_sources)
 
-
+    message(ALL TEST SOURCES = ${all_gtest_sources})
     ADD_EXECUTABLE(RunAllTests ${all_gtest_sources})
 
     # Make sure the test executable depends on all of the targets
