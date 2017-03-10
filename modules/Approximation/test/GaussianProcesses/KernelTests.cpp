@@ -11,8 +11,8 @@ using namespace muq::Approximation;
 
 TEST(Approximation_GP, HyperFit1)
 {
-    const unsigned numPred  = 20;
-    const unsigned maxTrain = 10;
+    const unsigned numPred  = 50;
+    const unsigned maxTrain = 50;
     
     const double pi = 4.0 * atan(1.0);
 
@@ -40,5 +40,14 @@ TEST(Approximation_GP, HyperFit1)
     // Create the GP
     ConstantMean mean(1);
     auto gp = ConstructGP(mean, kernel);
+
+
+    gp.Fit(trainLocs, trainData);
+    
+    // Make a prediction
+    auto post = gp.Predict(predLocs);
+
+    //for(int i=0; i<predLocs.cols(); ++i)
+    //	std::cout << "[" << predLocs(0,i) << ", " << post.mean(0,i) << "]," << std::endl;
     
 }

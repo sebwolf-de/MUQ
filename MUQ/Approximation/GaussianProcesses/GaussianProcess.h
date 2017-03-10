@@ -71,6 +71,12 @@ namespace muq
     };
 
 
+    class GaussianInformation
+    {
+    public:
+	Eigen::MatrixXd mean;
+	Eigen::MatrixXd covariance;
+    };
     
     template<typename MeanType, typename KernelType>
     class GaussianProcess
@@ -85,14 +91,38 @@ namespace muq
 	    coDim(covKernel.GetCodim())
         {};
 
+
 	    
 	void Fit(Eigen::MatrixXd const& xs,
 		 Eigen::MatrixXd const& vals)
 	{
+	    assert(xs.cols()==vals.cols());
+
+	    // Store the training data
+	    trainLocs = xs;
+	    trainVals = vals;
+
+	    // Further setup...
+	    Fit();
+	}
+
+	void Fit()
+	{
+	    // Evaluate the priorMean
+	    trainMean = priorMean.Evaluate(trainLocs);
+
+	    // Store the covariance information
+	    Eigen::MatrixXd cov(trainLocs.cols(), trainLocs.cols());
+	    covKernel.BuildCovariance(trainLocs, cov);
+	    covSolver = cov.llt();
+	}
+
+	void Optimize()
+	{
 
 	    OptInfo<MeanType, KernelType> info;
-	    info.xs = &xs;
-	    info.vals = &vals;
+	    info.xs = &trainLocs;
+	    info.vals = &trainVals;
 	    info.gp = this;
 
 	    Eigen::VectorXd params = covKernel.GetParams();
@@ -117,8 +147,46 @@ namespace muq
 	    
 	    nlopt_destroy(opt);
 
+	    // Now that we've optimized the hyperparameters, get set up for predictions
+	    Fit(trainLocs, trainVals);
+
 	}
 
+	GaussianInformation Predict(Eigen::MatrixXd const& newLocs)
+	{
+
+	    // Construct the cross covariance
+	    Eigen::MatrixXd crossCov(newLocs.cols(), trainLocs.cols());
+	    covKernel.BuildCovariance(newLocs, trainLocs, crossCov);
+
+	    GaussianInformation output;
+
+	    std::cout << "Here 0" << std::endl;
+		    
+	    // Solve for the posterior mean
+	    Eigen::Map<Eigen::VectorXd> valMap(trainVals.data(), trainVals.rows()*trainVals.cols());
+	    Eigen::Map<Eigen::VectorXd> priorMeanMap(trainMean.data(), trainMean.rows()*trainMean.cols());
+
+	    output.mean.resize(trainVals.rows(), newLocs.cols());
+	    Eigen::Map<Eigen::VectorXd> postMean(output.mean.data(), trainVals.rows()*newLocs.cols());
+
+	    std::cout << "Here 1" << std::endl;
+	    
+	    postMean = crossCov * covSolver.solve(valMap - priorMeanMap);
+            output.mean += priorMean.Evaluate(newLocs);
+	    
+	    std::cout << "Here 2" << std::endl;
+	    
+	    // Compute the prior covariance
+	    Eigen::MatrixXd priorCov(newLocs.cols(), newLocs.cols());
+	    covKernel.BuildCovariance(newLocs,priorCov);
+	    
+	    // Solve for the posterior covariance
+	    output.covariance = priorCov - crossCov * covSolver.solve(crossCov.transpose());
+
+	    return output;
+	};
+	
 	// Evaluates the log marginal likelihood needed when fitting hyperparameters
 	double EvaluateLikelihood(Eigen::MatrixXd const& xs,
 				  Eigen::MatrixXd const& vals,
@@ -172,7 +240,14 @@ namespace muq
 	MeanType   priorMean;
 	KernelType covKernel;
 
-    private:	
+    private:
+
+	Eigen::MatrixXd trainMean;
+	Eigen::MatrixXd trainLocs;
+	Eigen::MatrixXd trainVals;
+	
+	Eigen::LLT<Eigen::MatrixXd> covSolver;
+	
 	const int inputDim;
 	const int coDim;
 
