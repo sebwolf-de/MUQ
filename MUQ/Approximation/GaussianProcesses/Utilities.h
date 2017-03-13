@@ -29,6 +29,51 @@ unsigned GetShape(Eigen::Matrix<ScalarType, rows, cols> const& mat, unsigned dim
     return dim==0 ? mat.rows() : mat.cols();
 }
 
+/** @brief Calculates the distance squared between two points defined by vectors v1 and v2. 
+    @details Assumes the vectors are the same size and recursively compute the squared distance
+             between them.  The recursion is used for numerical accuracy.
+*/
+template<typename VectorType1, typename VectorType2>
+double CalcSquaredDistance(VectorType1 const& v1, VectorType2 const& v2, int startDim=0, int endDim=-1)
+{
+    if(endDim==-1)
+    {
+	endDim = GetShape(v1,0);
+    }
+
+    const int dim = endDim-startDim;
+    const int minDim = 10;
+    
+    // If the dimension is small enough, just compute the some with a for loop
+    if(dim<minDim)
+    {
+	double output = 0.0;
+	for(int i=0; i<dim; ++i)
+	{
+	    output += std::pow(v1(startDim+i)-v2(startDim+i), 2.0);
+	}
+	return output;
+    }
+    else
+    {
+
+	int midDim = startDim + std::floor(0.5*dim);
+	return CalcSquaredDistance(v1,v2, startDim, midDim) + CalcSquaredDistance(v1,v2, midDim, endDim);
+    }
+
+}
+
+
+/** Calculates the distance between two points defined by vectors v1 and v2. */
+template<typename VectorType1, typename VectorType2>
+double CalcDistance(VectorType1 const& v1, VectorType2 const& v2)
+{
+    // Make sure the vectors are the same size
+    const int dim = GetShape(v1,0);
+    assert(dim==GetShape(v2,0));
+
+    return std::sqrt(CalcSquaredDistance(v1,v2));
+}
 
 /** 
 

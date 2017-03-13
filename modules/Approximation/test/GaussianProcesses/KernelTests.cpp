@@ -9,6 +9,18 @@
 
 using namespace muq::Approximation;
 
+TEST(Approximation_GP, VectorNorm)
+{
+
+    int dim = 100;
+    Eigen::VectorXd v1 = Eigen::VectorXd::Random(dim);
+    Eigen::VectorXd v2 = Eigen::VectorXd::Random(dim);
+
+
+    EXPECT_DOUBLE_EQ((v2-v1).norm(), CalcDistance(v1,v2));
+}
+
+
 TEST(Approximation_GP, HyperFit1)
 {
     const unsigned numPred  = 50;
