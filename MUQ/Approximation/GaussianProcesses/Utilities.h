@@ -3,6 +3,7 @@
 #define UTILITIES_H_
 
 #include <Eigen/Dense>
+#include <vector>
 
 namespace muq
 {
@@ -86,9 +87,10 @@ template<typename MatType>
 class ColumnSlice
 {
 public:
+    //ColumnSlice(MatType const& matrixIn, unsigned colIn) : col(colIn), matrix(matrixIn){};
     ColumnSlice(MatType const& matrixIn, unsigned colIn) : col(colIn), matrix(matrixIn){};
 
-    double const& operator()(unsigned row) const{return matrix(row,col);};
+    double const& operator()(unsigned row) const{return matrix(row, col);};
     double const& operator()(unsigned row, unsigned col2) const{assert(col2==0); return matrix(row,col);};
     
     unsigned dimension(unsigned dim) const
@@ -98,9 +100,56 @@ public:
 	else
 	    return GetShape(matrix,0);
     };
+    
 private:
     const unsigned   col;
     MatType        const& matrix;
+};
+
+template<typename VecType>
+class VectorSlice
+{
+public:
+    VectorSlice(VecType const& vectorIn, std::vector<unsigned> const& indsIn) : vector(vectorIn), inds(indsIn){};
+
+    double const& operator()(unsigned row) const{return vector(inds.at(row));};
+
+    unsigned dimension(unsigned dim) const
+    {
+	if(dim>0)
+	    return 1;
+	else
+	    return inds.size();
+    }
+    
+private:
+    VecType const& vector;
+    std::vector<unsigned> const& inds;
+};
+
+template<typename MatType>
+class MatrixBlock
+{
+public:
+    MatrixBlock(MatType & matrixIn,
+		unsigned startRowIn,
+		unsigned startColIn,
+		unsigned numRowsIn,
+		unsigned numColsIn) : startRow(startRowIn), startCol(startColIn), numRows(numRowsIn), numCols(numColsIn), matrix(matrixIn)
+    {
+	assert(GetShape(matrix,0)>=startRow+numRows);
+	assert(GetShape(matrix,1)>=startCol+numCols);
+    };
+
+    double& operator()(unsigned row, unsigned col) const{return matrix(startRow + row, startCol + col);};
+
+    unsigned rows() const{return numRows;};
+    unsigned cols() const{return numCols;};
+    
+private:
+    
+    const unsigned startRow, startCol, numRows, numCols;
+    MatType        & matrix;
 };
 
 /** 
@@ -111,9 +160,21 @@ Grab a particular column of a matrix and return as an instance of the "ColumnSli
 template<typename MatType>
 ColumnSlice<MatType> GetColumn(MatType const& matrix, unsigned col)
 {
-    return ColumnSlice<MatType>(matrix,col);
+    return ColumnSlice<MatType>(matrix, col);
 }
 
+template<typename MatType>
+VectorSlice<MatType> GetSlice(MatType const& matrix, std::vector<unsigned> const& inds)
+{
+    return VectorSlice<MatType>(matrix, inds);
+}
+
+
+template<typename MatType>
+MatrixBlock<MatType> GetBlock(MatType const& matrix, unsigned rowStart, unsigned colStart, unsigned numRows, unsigned numCols)
+{
+    return MatrixBlock<MatType>(matrix, rowStart, colStart, numRows, numCols);
+}
 
 
 /**

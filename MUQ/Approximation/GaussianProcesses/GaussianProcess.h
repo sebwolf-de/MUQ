@@ -160,8 +160,6 @@ namespace muq
 	    covKernel.BuildCovariance(newLocs, trainLocs, crossCov);
 
 	    GaussianInformation output;
-
-	    std::cout << "Here 0" << std::endl;
 		    
 	    // Solve for the posterior mean
 	    Eigen::Map<Eigen::VectorXd> valMap(trainVals.data(), trainVals.rows()*trainVals.cols());
@@ -169,13 +167,9 @@ namespace muq
 
 	    output.mean.resize(trainVals.rows(), newLocs.cols());
 	    Eigen::Map<Eigen::VectorXd> postMean(output.mean.data(), trainVals.rows()*newLocs.cols());
-
-	    std::cout << "Here 1" << std::endl;
 	    
 	    postMean = crossCov * covSolver.solve(valMap - priorMeanMap);
             output.mean += priorMean.Evaluate(newLocs);
-	    
-	    std::cout << "Here 2" << std::endl;
 	    
 	    // Compute the prior covariance
 	    Eigen::MatrixXd priorCov(newLocs.cols(), newLocs.cols());

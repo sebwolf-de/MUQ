@@ -47,6 +47,7 @@ class ProductKernel;
 template<typename LeftType, typename RightType>
 class SumKernel;
 
+
 /**
 
 \class KernelBase
@@ -60,22 +61,28 @@ class SumKernel;
 - void SetParams(VectorType)
 
 */
-template<class ChildType>
+template<typename ChildType>
 class KernelBase
 {
 
+    static std::vector<unsigned> BuildDimInds(unsigned dim)
+    {
+	std::vector<unsigned> output(dim);
+	for(int i=0; i<dim; ++i)
+	    output[i] = i;
+
+	return output;
+    }
+    
 public:
+
+    KernelBase(unsigned dim) : KernelBase(BuildDimInds(dim)){};
+    KernelBase(std::vector<unsigned> dimIndsIn) : dimInds(dimIndsIn){};
+
     template<typename RightType>
     ProductKernel<ChildType, RightType> operator*(RightType const& kernel2) const
     {
 	return ProductKernel<ChildType,RightType>(*reinterpret_cast<const ChildType*>(this),kernel2);
-    }
-
-    ChildType operator*(double scale) const
-    {
-	ChildType newKernel(*reinterpret_cast<const ChildType*>(this));
-	newKernel.sigma2 *= scale;
-	return newKernel;
     }
 
     template<typename RightType>
@@ -83,15 +90,23 @@ public:
     {
 	return SumKernel<ChildType,RightType>(*reinterpret_cast<const ChildType*>(this),kernel2);
     }
+    
+    
+    /* KernelBase operator*(double scale) const */
+    /* { */
+    /* 	ChildType newKernel(*reinterpret_cast<const ChildType*>(this)); */
+    /* 	newKernel.sigma2 *= scale; */
+    /* 	return newKernel; */
+    /* } */
 
     template<typename PosMatrixType, typename DerivMatrixType>
     void BuildDerivativeMatrix(PosMatrixType const& xs, int wrt, DerivMatrixType &derivs)
     {
-	unsigned codim = ChildType::GetCodim();
+	unsigned codim = GetCodim();
+	assert(codim==1);
     	unsigned dim   = GetShape(xs, 0);
         unsigned N1    = GetShape(xs, 1);
 
-    	assert(ChildType::GetDim() == GetShape(xs,0));
     	assert(GetShape(derivs, 0) == codim*GetShape(xs,1));
     	assert(GetShape(derivs, 1) == codim*GetShape(xs,1));
 
@@ -99,7 +114,7 @@ public:
 	{
 	    for(unsigned row=col; row<N1; ++row)
 	    {
-    		derivs(row, col) = static_cast<ChildType*>(this) -> GetDerivative( GetColumn(xs,row), GetColumn(xs, col), wrt );
+    		derivs(row, col) = static_cast<ChildType*>(this) -> GetDerivative( GetColumn(xs, row), GetColumn(xs, col), wrt );
 		derivs(col, row) = derivs(row,col);
     	    }
     	}
@@ -109,11 +124,12 @@ public:
     template<typename PosMatrixType, typename CovMatrixType>
     void BuildCovariance(PosMatrixType const& xs, CovMatrixType & cov)
     {
-        unsigned codim = ChildType::GetCodim();
+        unsigned codim = GetCodim();
+	assert(codim==1);
+	
     	unsigned dim   = GetShape(xs, 0);
         unsigned N1    = GetShape(xs, 1);
 
-    	assert(ChildType::GetDim() == GetShape(xs,0));
     	assert(GetShape(cov, 0) == codim*GetShape(xs,1));
     	assert(GetShape(cov, 1) == codim*GetShape(xs,1));
 
@@ -130,12 +146,13 @@ public:
     template<typename PosMatrixType, typename CovMatrixType>
     void BuildCovariance(PosMatrixType const& xs, PosMatrixType const& ys, CovMatrixType & cov)
     {
-        unsigned codim = ChildType::GetCodim();
+        unsigned codim = GetCodim();
+	assert(codim==1);
+	
     	unsigned dim   = GetShape(xs, 0);
         unsigned N1    = GetShape(xs, 1);
     	unsigned N2    = GetShape(ys, 1);
 
-    	assert(ChildType::GetDim() == GetShape(xs,0));
     	assert(GetShape(xs, 0)  == GetShape(ys,0));
     	assert(GetShape(cov, 0) == codim*GetShape(xs,1));
     	assert(GetShape(cov, 1) == codim*GetShape(ys,1));
@@ -151,91 +168,93 @@ public:
     };
 
 
-    Eigen::MatrixXd GetParamBounds() const
+    virtual Eigen::MatrixXd GetParamBounds() const
     {
 	return paramBounds;
     };
-	
+
+
+    virtual int GetDim() const{return dimInds.size();};
+    virtual int GetCodim() const{return 1;};
+    virtual int GetNumParams() const{return 0;};
+    virtual Eigen::VectorXd GetParams() const{return Eigen::VectorXd();};
+
+    virtual void SetParams(Eigen::VectorXd const& params){};
+
+
+    const std::vector<unsigned> dimInds;
+
 protected:
 
+    
     Eigen::MatrixXd paramBounds;
 };
 
 
-/**
-@class TensorProductKernel
+/* /\** */
+/* @class TensorProductKernel */
 
-Create a covariance kernel with multiple inputs by multiplying several univariate kernels together.
-\f[
-k([x_1,x_2,\ldots, x_d], [y_1,y_2, \ldots, y_d]) = k_1(x_1,y_1) * k_2(x_2,y_2) * \ldots * k_d(x_d,y_d)
-\f]
+/* Create a covariance kernel with multiple inputs by multiplying several univariate kernels together. */
+/* \f[ */
+/* k([x_1,x_2,\ldots, x_d], [y_1,y_2, \ldots, y_d]) = k_1(x_1,y_1) * k_2(x_2,y_2) * \ldots * k_d(x_d,y_d) */
+/* \f] */
 
- */
-template<class... KTypes>
-class TensorProductKernel : public KernelBase<TensorProductKernel<KTypes...>>
-{
-public:
+/*  *\/ */
+/* template<class... KTypes> */
+/* class TensorProductKernel : public KernelBase<TensorProductKernel<KTypes...>> */
+/* { */
+/* public: */
     
-    TensorProductKernel(const KTypes&... kernelsIn) : kernels(std::make_tuple(kernelsIn...)){};
+/*     TensorProductKernel(const KTypes&... kernelsIn) : kernels(std::make_tuple(kernelsIn...)) */
+/*     { */
+/* 	dim = std::tuple_size<std::tuple<KTypes...>>::value; */
+/*     }; */
 
-    template<typename PosMatrixType1, typename PosMatrixType2>
-    double operator()(PosMatrixType1 const& xs, PosMatrixType2 const& ys)
-    {
-	const unsigned dim = GetShape(xs, 0);
+/*     template<typename PosMatrixType1, typename PosMatrixType2> */
+/*     double operator()(PosMatrixType1 const& xs, PosMatrixType2 const& ys) */
+/*     { */
+/* 	const unsigned dim = GetShape(xs, 0); */
 	
-	KernelEvaluator<0,std::tuple_size<std::tuple<KTypes...>>::value-1,KTypes...> evaluator;
-	Eigen::VectorXd kernelVals(dim);
+/* 	KernelEvaluator<0,std::tuple_size<std::tuple<KTypes...>>::value-1,KTypes...> evaluator; */
+/* 	Eigen::VectorXd kernelVals(dim); */
 	
-	evaluator.TensorEvaluate(kernels, xs, ys, 0, 0, kernelVals);
-	return kernelVals.prod();
-    }
+/* 	evaluator.TensorEvaluate(kernels, xs, ys, 0, 0, kernelVals); */
+/* 	return kernelVals.prod(); */
+/*     } */
 
-    template<typename PosMatrixType1, typename PosMatrixType2>
-    double GetDerivative(PosMatrixType1 const& xs, PosMatrixType2 const& ys, int wrt) const
-    {
-	assert(false);
-	return 0.0;
-    }
+/*     template<typename PosMatrixType1, typename PosMatrixType2> */
+/*     double GetDerivative(PosMatrixType1 const& xs, PosMatrixType2 const& ys, int wrt) const */
+/*     { */
+/* 	assert(false); */
+/* 	return 0.0; */
+/*     } */
 
-    static unsigned GetCodim()
-    {
-	return 1;
-    };
+/*     virtual int GetCodim() const override */
+/*     { */
+/* 	return 1; */
+/*     }; */
     
-    static unsigned GetDim()
-    {
-	return std::tuple_size<std::tuple<KTypes...>>::value;
-    };
+/*     virtual int GetNumParams() const override */
+/*     { */
+/* 	return ParamsGrabber<KTypes...>::GetNumParams(); */
+/*     }; */
 
-    static unsigned GetNumParams()
-    {
-	return ParamsGrabber<KTypes...>::GetNumParams();
-    };
+/*     virtual Eigen::VectorXd GetParams() const override */
+/*     { */
+/* 	assert(false); */
+/* 	return Eigen::VectorXd(); */
+/*     } */
 
-
-    static unsigned GetNumConstraints()
-    {
-	return GetDim()-1 + ParamsGrabber<KTypes...>::GetNumConstraints();
-    };
-
-    Eigen::VectorXd GetParams() const
-    {
-	assert(false);
-	return Eigen::VectorXd();
-    }
-
-    
-    template<typename Derived>   
-    void SetParams(Eigen::DenseCoeffsBase<Derived> const& params)
-    {
-	KernelEvaluator<0,std::tuple_size<std::tuple<KTypes...>>::value-1,KTypes...>::SetParams(kernels,params);
-    }
+/*     virtual void SetParams(Eigen::VectorXd const& params) override */
+/*     { */
+/* 	KernelEvaluator<0,std::tuple_size<std::tuple<KTypes...>>::value-1,KTypes...>::SetParams(kernels,params); */
+/*     } */
 
 	
-private:
+/* private: */
     
-    std::tuple<KTypes...> kernels;
-};
+/*     std::tuple<KTypes...> kernels; */
+/* }; */
 
 
 /**
@@ -253,9 +272,11 @@ class WhiteNoiseKernel : public KernelBase<WhiteNoiseKernel>
 {
 
 public:
-    
-    WhiteNoiseKernel(const double sigma2In,
-		     const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : sigma2(sigma2In)
+
+    template<typename dimType>
+    WhiteNoiseKernel(dimType dim,
+		     const double sigma2In,
+		     const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : KernelBase<WhiteNoiseKernel>(dim), sigma2(sigma2In)
     {
 	paramBounds.resize(2,1);
 	paramBounds(0) = sigmaBounds[0]; // lower bound on sigma2
@@ -265,41 +286,32 @@ public:
     template<typename VecType1, typename VecType2>
     double operator()(VecType1 const& x1, VecType2 const& x2 ) const
     {
-	return (*this)(x1(0),x2(0));
+	double dist = CalcDistance(x1,x2);
+	return (dist<1e-14) ? sigma2 : 0.0;
     }
 
     template<typename VecType1, typename VecType2>
     double GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt) const
     {
 	assert(wrt==0);
+	double dist = CalcDistance(x1,x2);
 
-	return (std::abs<double>(x1(0)-x2(0))<1e-14) ? 1.0 : 0.0;
+	return (dist<1e-14) ? 1.0 : 0.0;
     }
 	
-    double operator()(const double x1, const double x2) const
-    {
-	return (std::abs<double>(x1-x2)<1e-14) ? sigma2 : 0.0;
-    }
 
-    static unsigned GetNumParams()
+    virtual int GetNumParams() const override
     {
 	return 1;
     };
 
-    static unsigned GetNumConstraints()
-    {
-	return 0;
-    }
-
-
     
-    Eigen::VectorXd GetParams() const
+    virtual Eigen::VectorXd GetParams() const override
     {
 	return sigma2*Eigen::VectorXd::Ones(1);
     }
     
-    template<typename VecType>
-    void SetParams(VecType const& params)
+    virtual void SetParams(Eigen::VectorXd const& params) override
     {
         sigma2 = params(0);
     }
@@ -325,10 +337,13 @@ class SquaredExpKernel : public KernelBase<SquaredExpKernel>
 {
 
 public:
-    SquaredExpKernel(const double sigma2In,
+
+    template<typename dimType>
+    SquaredExpKernel(dimType dimIn,
+		     const double sigma2In,
 		     const double lengthIn,
 	             const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
-	             const Eigen::Vector2d lengthBounds = {1e-10, std::numeric_limits<double>::infinity()}) : sigma2(sigma2In), length(lengthIn)
+	             const Eigen::Vector2d lengthBounds = {1e-10, std::numeric_limits<double>::infinity()}) : KernelBase<SquaredExpKernel>(dimIn), sigma2(sigma2In), length(lengthIn)
     {
 	paramBounds.resize(2,2);
 	paramBounds(0,0) = sigmaBounds(0);
@@ -341,7 +356,11 @@ public:
     template<typename VecType1, typename VecType2>
     double operator()(VecType1 const& x1, VecType2 const& x2 ) const
     {
-	return (*this)(x1(0),x2(0));
+	assert(GetShape(x2,0)==GetShape(x1,0));
+
+	double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
+	
+	return sigma2*exp(-0.5*pow(dist/length,2.0));
     }
 
     template<typename VecType1, typename VecType2>
@@ -349,13 +368,15 @@ public:
     {
 	assert(wrt<GetNumParams());
 
+	double dist = CalcDistance( GetSlice(x1, dimInds), GetSlice(x2, dimInds) );
+	
 	if(wrt==0) // derivative wrt sigma2
 	{
-	    return exp(-0.5*pow((x1(0)-x2(0))/length,2.0));
+	    return exp(-0.5*pow(dist/length,2.0));
 	}
 	else if(wrt==1) // derivative wrt length
 	{
-	    return sigma2 * exp(-0.5*pow((x1(0)-x2(0))/length,2.0)) * pow(x1(0)-x2(0),2.0) * pow(length, -3.0);
+	    return sigma2 * exp(-0.5*pow(dist/length,2.0)) * pow(dist,2.0) * pow(length, -3.0);
 	}
 	else
 	{
@@ -363,39 +384,23 @@ public:
 	    return 0.0;
 	}
     }
-
-    double operator()(const double x1, const double x2) const
-    {
-	return sigma2*exp(-0.5*pow((x1-x2)/length,2.0));
-    }
-
-    static unsigned GetDim()
-    {
-	return 1;
-    }
     
-    static unsigned GetCodim()
+    virtual int GetCodim() const override
     {
 	return 1;
     };
     
-    static unsigned GetNumParams()
+    virtual int GetNumParams() const override
     {
 	return 2;
     };
-
-    static unsigned GetNumConstraints()
-    {
-	return 0;
-    }
 	
-    Eigen::VectorXd GetParams() const
+    virtual Eigen::VectorXd GetParams() const override
     {
 	return Eigen::Vector2d{sigma2,length};
     }
     
-    template<typename VecType>
-    void SetParams(VecType const& params)
+    virtual void SetParams(Eigen::VectorXd const& params) override
     {
         sigma2 = params(0);
 	length = params(1);
@@ -421,8 +426,11 @@ class ConstantKernel : public KernelBase<ConstantKernel>
 {
 
 public:
-    ConstantKernel(const double sigma2In,
-                   const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : sigma2(sigma2In)
+
+    template<typename dimType>
+    ConstantKernel(dimType dim,
+	           const double sigma2In,
+                   const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : KernelBase<ConstantKernel>(dim), sigma2(sigma2In)
     {
 	paramBounds.resize(2,1);
 	paramBounds(0,0) = sigmaBounds(0);
@@ -432,7 +440,7 @@ public:
     template<typename VecType>
     double operator()(VecType const& x1, VecType const& x2 ) const
     {
-	return (*this)(x1(0),x2(0));
+	return sigma2;
     }
 
     template<typename VecType1, typename VecType2>
@@ -443,39 +451,17 @@ public:
 	return 1.0;
     }
 
-
-    double operator()(const double x1, const double x2) const
-    {
-	return sigma2;
-    }
-
-    static unsigned GetDim()
-    {
-	return 1;
-    }
-    
-    static unsigned GetCodim()
+    virtual int GetNumParams() const override
     {
 	return 1;
     };
-    
-    static unsigned GetNumParams()
-    {
-	return 1;
-    };
-
-    static unsigned GetNumConstraints()
-    {
-	return 0;
-    }
 	
-    Eigen::VectorXd GetParams() const
+    virtual Eigen::VectorXd GetParams() const override
     {
 	return sigma2*Eigen::VectorXd::Ones(1);
     }
 
-    template<typename VecType>
-    void SetParams(VecType const& params)
+    virtual void SetParams(Eigen::VectorXd const& params) override
     {
         sigma2 = params(0);
     }
@@ -495,7 +481,7 @@ class CoregionalKernel : public KernelBase<CoregionalKernel<KTypes...>>
 {
 
 public:
-    CoregionalKernel(Eigen::MatrixXd const& coCov, const KTypes&... kernelsIn) : kernels(std::make_tuple(kernelsIn...))
+    CoregionalKernel(Eigen::MatrixXd const& coCov, const KTypes&... kernelsIn) : KernelBase<CoregionalKernel<KTypes...>>(coCov.rows()), kernels(std::make_tuple(kernelsIn...))
     {
         Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigSolver(coCov);
         A = eigSolver.eigenvectors()*eigSolver.eigenvalues().cwiseSqrt().asDiagonal();
@@ -509,7 +495,6 @@ public:
         unsigned N1    = GetShape(xs, 1);
 	unsigned N2    = GetShape(ys, 1);
 
-	assert(GetDim() == GetShape(xs,0));
 	assert(GetShape(xs, 0)  == GetShape(ys,0));
 	assert(GetShape(cov, 0) == codim*GetShape(xs,1));
 	assert(GetShape(cov, 1) == codim*GetShape(ys,1));
@@ -533,7 +518,6 @@ public:
 	unsigned dim   = GetShape(xs, 0);
         unsigned N1    = GetShape(xs, 1);
 
-	assert(GetDim() == GetShape(xs,0));
 	assert(GetShape(cov, 0) == codim*GetShape(xs,1));
 	assert(GetShape(cov, 1) == codim*GetShape(xs,1));
 
@@ -549,26 +533,16 @@ public:
 	    }
 	}
     };
-	
-    static unsigned GetDim()
-    {
-        return std::tuple_element<0, std::tuple<KTypes...> >::type::GetDim();
-    };
 
-    static unsigned GetCodim()
+    virtual int GetCodim() const override
     {
 	return std::tuple_size<std::tuple<KTypes...>>::value;;
     };
     
-    static unsigned GetNumParams()
+    virtual int GetNumParams() const override
     {
         unsigned codim = std::tuple_size<std::tuple<KTypes...>>::value;
         return (codim+1)*(codim)/2 + ParamsGrabber<KTypes...>::GetNumParams();
-    };
-
-    static unsigned GetNumConstraints()
-    {
-	return ParamsGrabber<KTypes...>::GetNumConstraints();
     };
 	
 private:
@@ -594,12 +568,15 @@ class PeriodicKernel : public KernelBase<PeriodicKernel>
 {
 
 public:
-    PeriodicKernel(const double sigma2In,
+
+    template<typename dimType>
+    PeriodicKernel(dimType dim,
+		   const double sigma2In,
 		   const double lengthIn,
 		   const double periodIn,
                    const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
 	           const Eigen::Vector2d lengthBounds = {1e-10, std::numeric_limits<double>::infinity()},
-	           const Eigen::Vector2d periodBounds = {1e-10, std::numeric_limits<double>::infinity()}) : sigma2(sigma2In), length(lengthIn), period(periodIn)
+	           const Eigen::Vector2d periodBounds = {1e-10, std::numeric_limits<double>::infinity()}) : KernelBase<PeriodicKernel>(dim), sigma2(sigma2In), length(lengthIn), period(periodIn)
     {
 	paramBounds.resize(2,3);
 
@@ -616,7 +593,8 @@ public:
     template<typename VecType>
     double operator()(VecType const& x1, VecType const& x2 ) const
     {
-	return (*this)(x1(0),x2(0));
+	double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
+	return sigma2 * exp(-2.0 * pow(sin(pi*dist/period),2.0) / pow(length,2.0));
     }
 
 
@@ -625,19 +603,21 @@ public:
     {
 	assert(wrt < GetNumParams());
 
+	double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
+	
 	if( wrt == 0)
 	{
-	    return exp(-2.0 * pow(sin(pi*(x1(0)-x2(0))/period),2.0) / pow(length,2.0));
+	    return exp(-2.0 * pow(sin(pi*dist/period),2.0) / pow(length,2.0));
 
 	}
 	else if(wrt==1)
 	{
-	    return 4.0 * sigma2 * exp(-2.0 * pow(sin(pi*(x1(0)-x2(0))/period),2.0) / pow(length,2.0)) *  std::pow(sin(pi*(x1(0)-x2(0))/period),2.0) * std::pow(length,-3.0);
+	    return 4.0 * sigma2 * exp(-2.0 * pow(sin(pi*dist/period),2.0) / pow(length,2.0)) *  std::pow(sin(pi*dist/period),2.0) * std::pow(length,-3.0);
 	}
 	else if(wrt==2)
 	{
-	    double temp = pi*(x1(0)-x2(0))/period;
-	    return 4.0 * sigma2 * exp(-2.0 * pow(sin(temp),2.0) / pow(length,2.0)) * sin(temp) * cos(temp) * pi * (x1(0)-x2(0)) * std::pow(length*period,-2.0);
+	    double temp = pi*dist/period;
+	    return 4.0 * sigma2 * exp(-2.0 * pow(sin(temp),2.0) / pow(length,2.0)) * sin(temp) * cos(temp) * pi * dist * std::pow(length*period,-2.0);
 	}
 	else
 	{
@@ -646,43 +626,26 @@ public:
 	}
     }
 
-    
-    double operator()(const double x1, const double x2) const
-    {
-	return sigma2 * exp(-2.0 * pow(sin(pi*(x1-x2)/period),2.0) / pow(length,2.0));
-    }
-
-    
-
-    static unsigned GetNumParams()
+    virtual int GetNumParams() const override
     {
 	return 3;
     };
 
-    static unsigned GetNumConstraints()
-    {
-	return 0;
-    }
 	
-    Eigen::VectorXd GetParams() const
+    virtual Eigen::VectorXd GetParams() const override
     {
 	return Eigen::Vector3d{sigma2, length, period};
     };
     
-    template<typename VecType>
-    void SetParams(VecType const& params)
+    virtual void  SetParams(Eigen::VectorXd const& params) override
     {
         sigma2 = params(0);
 	length = params(1);
 	period = params(2);
     }
 
-    static unsigned GetDim()
-    {
-	return 1;
-    };
     
-    static unsigned GetCodim()
+    virtual int GetCodim() const override
     {
 	return 1;
     };
@@ -694,6 +657,7 @@ private:
 
     const double pi = 4.0 * atan(1.0); //boost::math::constants::pi<double>();
 };
+
 
 /**
 
@@ -709,7 +673,7 @@ class ProductKernel : public KernelBase<ProductKernel<LeftType,RightType>>
 {
 
 public:
-    ProductKernel(LeftType const& kernel1In, RightType const& kernel2In) : kernel1(kernel1In), kernel2(kernel2In){};
+ProductKernel(LeftType const& kernel1In, RightType const& kernel2In) : KernelBase<ProductKernel<LeftType,RightType>>(kernel1In.GetDim()), kernel1(kernel1In), kernel2(kernel2In){};
 
     template<typename VecType>
     double operator()(VecType const& x1, VecType const& x2 ) const
@@ -722,33 +686,23 @@ public:
     {
 	assert(wrt < GetNumParams());
 
-	if(wrt < LeftType::GetNumParams() )
+	if(wrt < kernel1.GetNumParams() )
 	{
 
 	    return kernel1.GetDerivative(x1, x2, wrt) * kernel2(x1,x2);
 	}
 	else
 	{
-	    return kernel1(x1,x2) * kernel2.GetDerivative(x1,x2, wrt-LeftType::GetNumParams());
+	    return kernel1(x1,x2) * kernel2.GetDerivative(x1,x2, wrt-kernel1.GetNumParams());
 	}
     }
     
-    static unsigned GetDim()
+    virtual int GetNumParams() const override
     {
-        return LeftType::GetDim();
-    };
-    
-    static unsigned GetNumParams()
-    {
-	return LeftType::GetNumParams() + RightType::GetNumParams();
+	return kernel1.GetNumParams() + kernel2.GetNumParams();
     };
 
-    static unsigned GetNumConstraints()
-    {
-	return 1 + LeftType::GetNumConstraints() + RightType::GetNumConstraints();
-    }
-
-    Eigen::MatrixXd GetParamBounds() const
+    virtual Eigen::MatrixXd GetParamBounds() const override
     {
 	Eigen::MatrixXd bounds(2,GetNumParams());
 
@@ -758,7 +712,7 @@ public:
 	return bounds;
     };
 	
-    Eigen::VectorXd GetParams() const
+    virtual Eigen::VectorXd GetParams() const override
     {
 	Eigen::VectorXd params(GetNumParams());
 
@@ -768,15 +722,15 @@ public:
 	return params;
     };
     
-    void SetParams(Eigen::VectorXd const& params)
+    virtual void SetParams(Eigen::VectorXd const& params) override
     {
         kernel1.SetParams(params.head(kernel1.GetNumParams()));
 	kernel2.SetParams(params.tail(kernel2.GetNumParams()));
     }
 
-    static unsigned GetCodim()
+    virtual int GetCodim() const override
     {
-	return LeftType::GetCodim();
+	return kernel1.GetCodim();
     };
     
     LeftType  kernel1;
@@ -799,7 +753,7 @@ class SumKernel : public KernelBase<SumKernel<LeftType,RightType>>
 {
 
 public:
-    SumKernel(LeftType const& kernel1In, RightType const& kernel2In) : kernel1(kernel1In), kernel2(kernel2In){};
+    SumKernel(LeftType const& kernel1In, RightType const& kernel2In) : KernelBase<SumKernel<LeftType,RightType>>(kernel1In.GetDim()), kernel1(kernel1In), kernel2(kernel2In){};
 
     template<typename VecType>
     double operator()(VecType const& x1, VecType  const& x2 ) const
@@ -812,38 +766,30 @@ public:
     {
 	assert(wrt < GetNumParams());
 
-	if(wrt < LeftType::GetNumParams() )
+	if(wrt < kernel1.GetNumParams() )
 	{
 
 	    return kernel1.GetDerivative(x1, x2, wrt);
 	}
 	else
 	{
-	    return kernel2.GetDerivative(x1,x2, wrt-LeftType::GetNumParams());
+	    return kernel2.GetDerivative(x1,x2, wrt-kernel1.GetNumParams());
 	}
     }
     
-    static unsigned GetDim()
-    {
-        return LeftType::GetDim();
-    };
 
-    static unsigned GetCodim()
+    virtual int GetCodim() const override
     {
-        return LeftType::GetCodim();
+        return kernel1.GetCodim();
     };
     
-    static unsigned GetNumParams()
+    virtual int GetNumParams() const override
     {
-	return LeftType::GetNumParams() + RightType::GetNumParams();
+	return kernel1.GetNumParams() + kernel2.GetNumParams();
     };
 
-    static unsigned GetNumConstraints()
-    {
-	return LeftType::GetNumConstraints() + RightType::GetNumConstraints();
-    }
 
-    Eigen::MatrixXd GetParamBounds() const
+    virtual Eigen::MatrixXd GetParamBounds() const override
     {
 	Eigen::MatrixXd bounds(2,GetNumParams());
 
@@ -853,7 +799,7 @@ public:
 	return bounds;
     };
 	
-    Eigen::VectorXd GetParams() const
+    virtual Eigen::VectorXd GetParams() const override
     {
 	Eigen::VectorXd params(GetNumParams());
 
@@ -863,7 +809,7 @@ public:
 	return params;
     };
         
-    void SetParams(Eigen::VectorXd const& params)
+    virtual void SetParams(Eigen::VectorXd const& params) override
     {
         kernel1.SetParams(params.head(kernel1.GetNumParams()));
 	kernel2.SetParams(params.tail(kernel2.GetNumParams()));
@@ -884,11 +830,11 @@ USAGE:
    TensorTie(k1,k2,k3,k4)
 
 */
-template<class... KTypes>
-TensorProductKernel<KTypes...> TensorTie(const KTypes&... kernels)
-{
-    return TensorProductKernel<KTypes...>(kernels...);
-};
+/* template<class... KTypes> */
+/* TensorProductKernel<KTypes...> TensorTie(const KTypes&... kernels) */
+/* { */
+/*     return TensorProductKernel<KTypes...>(kernels...); */
+/* }; */
 
 
 /**
