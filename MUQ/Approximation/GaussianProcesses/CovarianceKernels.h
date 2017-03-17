@@ -114,8 +114,20 @@ public:
 	{
 	    for(unsigned row=col; row<N1; ++row)
 	    {
-    		derivs(row, col) = static_cast<ChildType*>(this) -> GetDerivative( GetColumn(xs, row), GetColumn(xs, col), wrt );
-		derivs(col, row) = derivs(row,col);
+		auto block = GetBlock(derivs, row*codim, col*codim, codim, codim);
+    		static_cast<ChildType*>(this)->GetDerivative( GetColumn(xs, row), GetColumn(xs, col), wrt, block);
+
+                // if we aren't on the diagonal, copy the block of the covariance matrix we just added to the upper triangular part of the covariance matrix
+		if(col!=row)
+		{
+		    for(int j=0; j<codim; ++j)
+		    {
+			for(int i=0; i<codim; ++i)
+			{
+			    derivs(row*codim + i, col*codim + j) = derivs(col*codim + j, row*codim + i);
+			}
+		    }
+		}
     	    }
     	}
     }
@@ -137,8 +149,20 @@ public:
 	{
 	    for(unsigned row=col; row<N1; ++row)
 	    {
-    		cov(row, col) = (*static_cast<ChildType*>(this))( GetColumn(xs,row), GetColumn(xs, col) );
-		cov(col, row) = cov(row,col);
+		auto block = GetBlock(cov, row*codim, col*codim, codim, codim);
+    		static_cast<ChildType*>(this)->Evaluate( GetColumn(xs,row), GetColumn(xs, col) , block);
+
+		// if we aren't on the diagonal, copy the block of the covariance matrix we just added to the upper triangular part of the covariance matrix
+		if(col!=row)
+		{
+		    for(int j=0; j<codim; ++j)
+		    {
+			for(int i=0; i<codim; ++i)
+			{
+			    cov(row*codim + i, col*codim + j) = cov(col*codim + j, row*codim + i);
+			}
+		    }
+		}
     	    }
     	}
     };
@@ -161,7 +185,8 @@ public:
 	{
 	    for(unsigned row=0; row<N1; ++row)
 	    {
-    		cov(row, col) = (*static_cast<ChildType*>(this))( GetColumn(xs,row), GetColumn(ys,col) );
+		auto block = GetBlock(cov, row*codim, col*codim, codim, codim);
+    		static_cast<ChildType*>(this)->Evaluate( GetColumn(xs,row), GetColumn(ys,col), block);
     	    }
     	}
 	
@@ -283,20 +308,20 @@ public:
 	paramBounds(1) = sigmaBounds[1]; // upper bound on sigma2
     };
 
-    template<typename VecType1, typename VecType2>
-    double operator()(VecType1 const& x1, VecType2 const& x2 ) const
+    template<typename VecType1, typename VecType2, typename MatrixType>
+    void Evaluate(VecType1 const& x1, VecType2 const& x2, MatrixType &cov) const
     {
-	double dist = CalcDistance(x1,x2);
-	return (dist<1e-14) ? sigma2 : 0.0;
+	double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
+	cov(0,0) = (dist<1e-14) ? sigma2 : 0.0;
     }
 
-    template<typename VecType1, typename VecType2>
-    double GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt) const
+    template<typename VecType1, typename VecType2, typename MatrixType>
+    void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType &derivs) const
     {
 	assert(wrt==0);
-	double dist = CalcDistance(x1,x2);
+	double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
 
-	return (dist<1e-14) ? 1.0 : 0.0;
+	derivs(0,0) = (dist<1e-14) ? 1.0 : 0.0;
     }
 	
 
@@ -353,18 +378,18 @@ public:
 	paramBounds(1,1) = lengthBounds(1);
     };
 
-    template<typename VecType1, typename VecType2>
-    double operator()(VecType1 const& x1, VecType2 const& x2 ) const
+    template<typename VecType1, typename VecType2, typename MatrixType>
+    void Evaluate(VecType1 const& x1, VecType2 const& x2, MatrixType &cov ) const
     {
 	assert(GetShape(x2,0)==GetShape(x1,0));
 
 	double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
 	
-	return sigma2*exp(-0.5*pow(dist/length,2.0));
+	cov(0,0) = sigma2*exp(-0.5*pow(dist/length,2.0));
     }
 
-    template<typename VecType1, typename VecType2>
-    double GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt) const
+    template<typename VecType1, typename VecType2, typename MatrixType>
+    void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType & derivs) const
     {
 	assert(wrt<GetNumParams());
 
@@ -372,16 +397,15 @@ public:
 	
 	if(wrt==0) // derivative wrt sigma2
 	{
-	    return exp(-0.5*pow(dist/length,2.0));
+	    derivs(0,0) = exp(-0.5*pow(dist/length,2.0));
 	}
 	else if(wrt==1) // derivative wrt length
 	{
-	    return sigma2 * exp(-0.5*pow(dist/length,2.0)) * pow(dist,2.0) * pow(length, -3.0);
+	    derivs(0,0) = sigma2 * exp(-0.5*pow(dist/length,2.0)) * pow(dist,2.0) * pow(length, -3.0);
 	}
 	else
 	{
 	    assert(false);
-	    return 0.0;
 	}
     }
     
@@ -430,6 +454,11 @@ public:
     template<typename dimType>
     ConstantKernel(dimType dim,
 	           const double sigma2In,
+                   const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : ConstantKernel(dim, sigma2In*Eigen::MatrixXd::Ones(1,1), sigmaBounds){};
+	
+    template<typename dimType>
+    ConstantKernel(dimType dim,
+	           Eigen::MatrixXd const& sigma2In,
                    const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : KernelBase<ConstantKernel>(dim), sigma2(sigma2In)
     {
 	paramBounds.resize(2,1);
@@ -437,37 +466,70 @@ public:
 	paramBounds(1,0) = sigmaBounds(1);
     };
 
-    template<typename VecType>
-    double operator()(VecType const& x1, VecType const& x2 ) const
+    template<typename VecType, typename MatrixType>
+    void Evaluate(VecType const& x1, VecType const& x2, MatrixType & cov ) const
     {
-	return sigma2;
+	cov = sigma2;
     }
 
-    template<typename VecType1, typename VecType2>
-    double GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt) const
+    template<typename VecType1, typename VecType2, typename MatrixType>
+    void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType & derivs) const
     {
-	assert(wrt==0);
-
-	return 1.0;
+	int k=0;
+	for(int col=0; col<sigma2.cols(); ++col)
+	{
+	    for(int row=col; row<sigma2.rows(); ++row)
+	    {
+		if(k==wrt)
+		{
+		    derivs(row,col) = 1.0;
+		    derivs(col,row) = 1.0;
+		}
+		else
+		{
+		    derivs(row,col) = 0.0;
+		    derivs(col,row) = 0.0;
+		}
+	    }
+	}
     }
 
+    // The parameters in this kernel are the lower triangular components of the covariance.
     virtual int GetNumParams() const override
     {
-	return 1;
+	return sigma2.rows()*(sigma2.cols()+1)/2;
     };
 	
     virtual Eigen::VectorXd GetParams() const override
     {
-	return sigma2*Eigen::VectorXd::Ones(1);
+	Eigen::VectorXd output(GetNumParams());
+	int k=0;
+	for(int col=0; col<sigma2.cols(); ++col)
+	{
+	    for(int row=col; row<sigma2.rows(); ++row)
+	    {
+		output(k) = sigma2(row,col);
+		++k;
+	    }
+	}
+	return output;
     }
 
     virtual void SetParams(Eigen::VectorXd const& params) override
     {
-        sigma2 = params(0);
+        int k=0;
+	for(int col=0; col<sigma2.cols(); ++col)
+	{
+	    for(int row=col; row<sigma2.rows(); ++row)
+	    {
+		sigma2(row,col) = params(k);
+		++k;
+	    }
+	}
     }
 
 private:
-    double sigma2;
+    Eigen::MatrixXd sigma2;
 };
 
 /** 
@@ -481,59 +543,35 @@ class CoregionalKernel : public KernelBase<CoregionalKernel<KTypes...>>
 {
 
 public:
-    CoregionalKernel(Eigen::MatrixXd const& coCov, const KTypes&... kernelsIn) : KernelBase<CoregionalKernel<KTypes...>>(coCov.rows()), kernels(std::make_tuple(kernelsIn...))
+    
+    CoregionalKernel(Eigen::MatrixXd const& Gamma, const KTypes&... kernelsIn) : KernelBase<CoregionalKernel<KTypes...>>(Gamma.rows()), kernels(std::make_tuple(kernelsIn...))
     {
-        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigSolver(coCov);
-        A = eigSolver.eigenvectors()*eigSolver.eigenvalues().cwiseSqrt().asDiagonal();
+	// Make sure the matrix and kernels are the same size
+	assert(Gamma.cols()==std::tuple_size<std::tuple<KTypes...>>::value);
+
+	// Compute the eigenvalue decomposition of the covariance Gamma to get the matrix A
+	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigSolver;
+	eigSolver.compute(Gamma, true);
+	A = eigSolver.eigenvectors()*eigSolver.eigenvalues().cwiseSqrt().asDiagonal();
     };
 
-    template<typename PosMatrixType, typename CovMatrixType>
-    void BuildCovariance(PosMatrixType const& xs, PosMatrixType const& ys, CovMatrixType & cov)
+    template<typename VecType, typename MatrixType>
+    void Evaluate(VecType const& x1, VecType const& x2, MatrixType & cov ) const
     {
-        unsigned codim = GetCodim();
-	unsigned dim   = GetShape(xs, 0);
-        unsigned N1    = GetShape(xs, 1);
-	unsigned N2    = GetShape(ys, 1);
+	Eigen::VectorXd rhoVec(GetCodim());
+	KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::Evaluate(kernels, x1, x2, rhoVec);
+	cov = A * rhoVec.asDiagonal() * A.transpose();
+    }
 
-	assert(GetShape(xs, 0)  == GetShape(ys,0));
-	assert(GetShape(cov, 0) == codim*GetShape(xs,1));
-	assert(GetShape(cov, 1) == codim*GetShape(ys,1));
-
-        Eigen::VectorXd rhoVec(codim);
-	for(unsigned row=0; row<N1; ++row)
-	{
-            for(unsigned col=0; col<N2; ++col)
-	    {        
-                KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::Evaluate(kernels, xs, ys, row, col, rhoVec);
-
-	        cov.block(row*codim,col*codim,codim,codim) = A * rhoVec.asDiagonal() * A.transpose(); 
-	    }
-	}
-    };
-
-    template<typename PosMatrixType, typename CovMatrixType>
-    void BuildCovariance(PosMatrixType const& xs, CovMatrixType & cov)
+    template<typename VecType1, typename VecType2, typename MatrixType>
+    void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType & derivs) const
     {
-        unsigned codim = GetCodim();
-	unsigned dim   = GetShape(xs, 0);
-        unsigned N1    = GetShape(xs, 1);
+	int kernelInd = 0;
+	double kernelDeriv = KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::GetDeriv(kernels, x1, x2, wrt, 0, kernelInd);
+	derivs = Eigen::MatrixXd(A.col(kernelInd) * kernelDeriv * A.col(kernelInd).transpose());
+    }
 
-	assert(GetShape(cov, 0) == codim*GetShape(xs,1));
-	assert(GetShape(cov, 1) == codim*GetShape(xs,1));
-
-        Eigen::VectorXd rhoVec(codim);
-	for(unsigned row=0; row<N1; ++row)
-	{
-            for(unsigned col=0; col<=row; ++col)
-	    {        
-                KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::Evaluate(kernels, xs, xs, row, col, rhoVec);
-
-	        cov.block(row*codim, col*codim, codim, codim) = A * rhoVec.asDiagonal() * A.transpose();
-		cov.block(col*codim, row*codim, codim, codim) = cov.block(row*codim, col*codim, codim, codim).transpose().eval(); 
-	    }
-	}
-    };
-
+    
     virtual int GetCodim() const override
     {
 	return std::tuple_size<std::tuple<KTypes...>>::value;;
@@ -542,8 +580,20 @@ public:
     virtual int GetNumParams() const override
     {
         unsigned codim = std::tuple_size<std::tuple<KTypes...>>::value;
-        return (codim+1)*(codim)/2 + ParamsGrabber<KTypes...>::GetNumParams();
+        return ParamsGrabber<KTypes...>::GetNumParams();
     };
+
+    virtual Eigen::VectorXd GetParams() const override
+    {
+	Eigen::VectorXd params(GetNumParams());
+	KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::GetParams(kernels, params);
+	return params;
+    }
+
+    virtual void SetParams(Eigen::VectorXd const& params) override
+    {
+        KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::SetParams(kernels, params);
+    }
 	
 private:
 
@@ -590,16 +640,16 @@ public:
 	paramBounds(1,2) = periodBounds(1);
     };
 
-    template<typename VecType>
-    double operator()(VecType const& x1, VecType const& x2 ) const
+    template<typename VecType, typename MatType>
+    void Evaluate(VecType const& x1, VecType const& x2, MatType & cov) const
     {
 	double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
-	return sigma2 * exp(-2.0 * pow(sin(pi*dist/period),2.0) / pow(length,2.0));
+	cov(0,0) = sigma2 * exp(-2.0 * pow(sin(pi*dist/period),2.0) / pow(length,2.0));
     }
 
 
-    template<typename VecType1, typename VecType2>
-    double GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt) const
+    template<typename VecType1, typename VecType2, typename MatType>
+    void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatType & derivs) const
     {
 	assert(wrt < GetNumParams());
 
@@ -607,22 +657,21 @@ public:
 	
 	if( wrt == 0)
 	{
-	    return exp(-2.0 * pow(sin(pi*dist/period),2.0) / pow(length,2.0));
+	    derivs(0,0) = exp(-2.0 * pow(sin(pi*dist/period),2.0) / pow(length,2.0));
 
 	}
 	else if(wrt==1)
 	{
-	    return 4.0 * sigma2 * exp(-2.0 * pow(sin(pi*dist/period),2.0) / pow(length,2.0)) *  std::pow(sin(pi*dist/period),2.0) * std::pow(length,-3.0);
+	    derivs(0,0) = 4.0 * sigma2 * exp(-2.0 * pow(sin(pi*dist/period),2.0) / pow(length,2.0)) *  std::pow(sin(pi*dist/period),2.0) * std::pow(length,-3.0);
 	}
 	else if(wrt==2)
 	{
 	    double temp = pi*dist/period;
-	    return 4.0 * sigma2 * exp(-2.0 * pow(sin(temp),2.0) / pow(length,2.0)) * sin(temp) * cos(temp) * pi * dist * std::pow(length*period,-2.0);
+	    derivs(0,0) = 4.0 * sigma2 * exp(-2.0 * pow(sin(temp),2.0) / pow(length,2.0)) * sin(temp) * cos(temp) * pi * dist * std::pow(length*period,-2.0);
 	}
 	else
 	{
 	    assert(false);
-	    return 0.0;
 	}
     }
 
@@ -673,28 +722,42 @@ class ProductKernel : public KernelBase<ProductKernel<LeftType,RightType>>
 {
 
 public:
-ProductKernel(LeftType const& kernel1In, RightType const& kernel2In) : KernelBase<ProductKernel<LeftType,RightType>>(kernel1In.GetDim()), kernel1(kernel1In), kernel2(kernel2In){};
-
-    template<typename VecType>
-    double operator()(VecType const& x1, VecType const& x2 ) const
+    ProductKernel(LeftType const& kernel1In, RightType const& kernel2In) : KernelBase<ProductKernel<LeftType,RightType>>(kernel1In.GetDim()), kernel1(kernel1In), kernel2(kernel2In)
     {
-	return kernel1(x1,x2)*kernel2(x1,x2);
+	assert(kernel1.GetCodim()==kernel2.GetCodim());
+    };
+
+    template<typename VecType, typename MatType>
+    void Evaluate(VecType const& x1, VecType const& x2, MatType & cov ) const
+    {
+	Eigen::MatrixXd temp1(GetCodim(), GetCodim());
+	Eigen::MatrixXd temp2(GetCodim(), GetCodim());
+
+	kernel1.Evaluate(x1,x2, temp1);
+	kernel2.Evaluate(x1,x2, temp2);
+
+	cov = Eigen::MatrixXd(temp1.array() * temp2.array());
     }
 
-    template<typename VecType1, typename VecType2>
-    double GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt) const
+    template<typename VecType1, typename VecType2, typename MatType>
+    void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatType & derivs) const
     {
 	assert(wrt < GetNumParams());
 
-	if(wrt < kernel1.GetNumParams() )
-	{
+	Eigen::MatrixXd temp1(GetCodim(), GetCodim());
+	Eigen::MatrixXd temp2(GetCodim(), GetCodim());
 
-	    return kernel1.GetDerivative(x1, x2, wrt) * kernel2(x1,x2);
+	if(wrt < kernel1.GetNumParams() )
+	{	    
+	    kernel1.GetDerivative(x1, x2, wrt, temp1);
+	    kernel2.Evaluate(x1,x2, temp2);
 	}
 	else
 	{
-	    return kernel1(x1,x2) * kernel2.GetDerivative(x1,x2, wrt-kernel1.GetNumParams());
+	    kernel1.Evaluate(x1,x2, temp1);
+	    kernel2.GetDerivative(x1,x2, wrt-kernel1.GetNumParams(), temp2);
 	}
+	derivs = Eigen::MatrixXd(temp1.array() * temp2.array());
     }
     
     virtual int GetNumParams() const override
@@ -753,27 +816,34 @@ class SumKernel : public KernelBase<SumKernel<LeftType,RightType>>
 {
 
 public:
-    SumKernel(LeftType const& kernel1In, RightType const& kernel2In) : KernelBase<SumKernel<LeftType,RightType>>(kernel1In.GetDim()), kernel1(kernel1In), kernel2(kernel2In){};
-
-    template<typename VecType>
-    double operator()(VecType const& x1, VecType  const& x2 ) const
+    SumKernel(LeftType const& kernel1In, RightType const& kernel2In) : KernelBase<SumKernel<LeftType,RightType>>(kernel1In.GetDim()), kernel1(kernel1In), kernel2(kernel2In)
     {
-        return kernel1(x1,x2) + kernel2(x1,x2);
+	assert(kernel1.GetCodim() == kernel2.GetCodim());
+    };
+
+    template<typename VecType, typename MatType>
+	void Evaluate(VecType const& x1, VecType  const& x2 , MatType & cov) const
+    {
+	Eigen::MatrixXd temp1(GetCodim(), GetCodim());
+	Eigen::MatrixXd temp2(GetCodim(), GetCodim());
+	
+        kernel1.Evaluate(x1,x2, temp1);
+	kernel2.Evaluate(x1,x2, temp2);
+	cov = temp1 + temp2;
     }
 
-    template<typename VecType1, typename VecType2>
-    double GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt) const
+    template<typename VecType1, typename VecType2, typename MatType>
+    void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatType & derivs) const
     {
 	assert(wrt < GetNumParams());
 
-	if(wrt < kernel1.GetNumParams() )
+        if(wrt < kernel1.GetNumParams() )
 	{
-
-	    return kernel1.GetDerivative(x1, x2, wrt);
+	    return kernel1.GetDerivative(x1, x2, wrt, derivs);
 	}
 	else
 	{
-	    return kernel2.GetDerivative(x1,x2, wrt-kernel1.GetNumParams());
+	    return kernel2.GetDerivative(x1,x2, wrt-kernel1.GetNumParams(), derivs);
 	}
     }
     

@@ -143,6 +143,20 @@ public:
 
     double& operator()(unsigned row, unsigned col) const{return matrix(startRow + row, startCol + col);};
 
+    template<typename Derived>
+    MatrixBlock& operator=(Eigen::DenseBase<Derived> const& otherMat)
+    {
+	assert(otherMat.rows()==numRows);
+	assert(otherMat.cols()==numCols);
+	
+	for(int j=0; j<otherMat.cols(); ++j)
+	{
+	    for(int i=0; i<otherMat.rows(); ++i)
+		matrix(i,j) = otherMat(i,j);
+	}
+	return *this;
+    }
+    
     unsigned rows() const{return numRows;};
     unsigned cols() const{return numCols;};
     
@@ -171,7 +185,7 @@ VectorSlice<MatType> GetSlice(MatType const& matrix, std::vector<unsigned> const
 
 
 template<typename MatType>
-MatrixBlock<MatType> GetBlock(MatType const& matrix, unsigned rowStart, unsigned colStart, unsigned numRows, unsigned numCols)
+MatrixBlock<MatType> GetBlock(MatType & matrix, unsigned rowStart, unsigned colStart, unsigned numRows, unsigned numCols)
 {
     return MatrixBlock<MatType>(matrix, rowStart, colStart, numRows, numCols);
 }
@@ -193,11 +207,20 @@ struct KernelEvaluator
 			 unsigned                     ycol,
 			 Eigen::VectorXd            & output)
     {
-	output(StartDim) = std::get<StartDim>(kernels)( GetColumn(xs,xcol), GetColumn(ys,ycol) );
-        KernelEvaluator<StartDim+1, EndDim, KTypes...>::Evaluate(kernels, xs, ys, xcol, ycol, output);
-	
+	KernelEvaluator<StartDim, EndDim, KTypes...>::Evaluate(kernels, xs, ys, GetColumn(xs, xcol), GetColumn(ys,ycol), output);
     }
 
+    template<typename MatrixType>
+    static void Evaluate(std::tuple<KTypes...> const& kernels,
+			 MatrixType            const& xs,
+			 MatrixType            const& ys,
+			 Eigen::VectorXd            & output)
+    {
+	output(StartDim) = std::get<StartDim>(kernels)( xs, ys );
+        KernelEvaluator<StartDim+1, EndDim, KTypes...>::Evaluate(kernels, xs, ys, output);
+	
+    }
+    
     template<typename MatrixType>
     static void TensorEvaluate(std::tuple<KTypes...> const& kernels,
 			       MatrixType            const& xs,
@@ -211,6 +234,18 @@ struct KernelEvaluator
     }
 
     template<typename Derived>
+    static void GetParams(std::tuple<KTypes...>     const& kernels,
+			  Eigen::DenseCoeffsBase<Derived> & params,
+	                  unsigned                         currInd =0)
+    {
+        auto kernel = std::get<StartDim>(kernels);
+	unsigned numParams = kernel.GetNumParams();
+	params.segment(currInd,numParams) = kernel.GetParams();
+	
+        KernelEvaluator<StartDim+1, EndDim, KTypes...>::GetParams(kernels, params, currInd+numParams);
+    }
+    
+    template<typename Derived>
     static void SetParams(std::tuple<KTypes...>     const& kernels,
 			  Eigen::DenseCoeffsBase<Derived> const& params,
 	                  unsigned                         currInd =0)
@@ -220,6 +255,29 @@ struct KernelEvaluator
 	kernel.SetParams(params.segment(currInd,numParams));
 	
         KernelEvaluator<StartDim+1, EndDim, KTypes...>::SetParams(kernels, params, currInd+numParams);
+    }
+
+    template<typename MatrixType>
+    static double GetDeriv(std::tuple<KTypes...>     const& kernels,
+			   MatrixType                const& x1,
+			   MatrixType                const& x2,
+			   unsigned                         wrt,
+			   unsigned                         currParams, // the number of parameters in all previous kernels
+	                   unsigned                       & kernelInd) // The current kernel of interest (same as the start dim template)
+    {
+        auto kernel = std::get<StartDim>(kernels);
+	unsigned numParams = kernel.GetNumParams();
+	if(wrt<currParams + numParams)
+	{
+	    Eigen::MatrixXd temp(1,1);
+	    kernel.GetDerivative(x1, x2, wrt-currParams, temp);
+	    kernelInd = StartDim;
+	    return temp(0,0);
+	}
+	else
+	{   
+	    KernelEvaluator<StartDim+1, EndDim, KTypes...>::SetParams(kernels, x1,x2, wrt, currParams + numParams, kernelInd);
+	}
     }
 };
 
@@ -235,8 +293,6 @@ struct KernelEvaluator<StartDim, StartDim, KTypes...>
     static void Evaluate(std::tuple<KTypes...> const& kernels,
 			 MatrixType            const& xs,
 			 MatrixType            const& ys,
-			 unsigned                     xcol,
-			 unsigned                     ycol,
 			 Eigen::VectorXd            & output)
     {
 	// do nothing
@@ -253,6 +309,14 @@ struct KernelEvaluator<StartDim, StartDim, KTypes...>
 	// do nothing
     }
 
+    template<typename Derived>
+    static void GetParams(std::tuple<KTypes...>     const& kernels,
+			  Eigen::DenseCoeffsBase<Derived> & params,
+	                  unsigned                         currInd = 0)
+    {
+	// do nothing
+    }
+	
     template<typename Derived>
     static void SetParams(std::tuple<KTypes...>     const& kernels,
 			  Eigen::DenseCoeffsBase<Derived> const& params,
