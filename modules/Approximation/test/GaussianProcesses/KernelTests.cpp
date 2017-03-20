@@ -116,6 +116,40 @@ TEST(Approximation_GP, HyperFit2d)
 
 }
 
+TEST(Approximation_GP, LinearTransformKernel)
+{
+    
+    const unsigned dim = 2;
+    Eigen::MatrixXd sigma2(2,2);
+    sigma2 << 1.0, 0.9,
+	      0.9, 1.5;
+    
+    auto kernel = ConstantKernel(dim, sigma2) * SquaredExpKernel(dim, 2.0, 0.35 );
+
+    EXPECT_EQ(2, kernel.coDim);
+    
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(3,2);
+
+    auto kernel2 = TransformKernel(A, kernel);
+
+    Eigen::MatrixXd x1(dim,1);
+    x1 << 0.1, 0.4;
+
+    Eigen::MatrixXd x2(dim,1);
+    x2 << 0.2, 0.7;
+    
+    Eigen::MatrixXd result = kernel2.Evaluate(x1,x2);
+
+    Eigen::MatrixXd expected = A * kernel.Evaluate(x1,x2) * A.transpose();
+
+    for(int j=0; j<A.rows(); ++j)
+    {
+	for(int i=0; i<A.rows(); ++i)
+	    EXPECT_DOUBLE_EQ(expected(i,j), result(i,j));
+    }
+}
+
+
 
 TEST(Approximation_GP, Clone)
 {

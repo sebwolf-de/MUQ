@@ -56,12 +56,17 @@ public:
 
     KernelBase(unsigned inputDimIn,
 	       unsigned coDimIn,
-	       unsigned numParamsIn) : KernelBase(inputDimIn, BuildDimInds(inputDimIn), coDimIn, numParamsIn){};
+	       unsigned numParamsIn) : KernelBase(inputDimIn, BuildDimInds(inputDimIn), coDimIn, numParamsIn)
+    {};
     
     KernelBase(unsigned              inputDimIn,
 	       std::vector<unsigned> dimIndsIn,
 	       unsigned              coDimIn,
-	       unsigned              numParamsIn) : dimInds(dimIndsIn), inputDim(inputDimIn), coDim(coDimIn), numParams(numParamsIn){};
+	       unsigned              numParamsIn) : dimInds(dimIndsIn), inputDim(inputDimIn), coDim(coDimIn), numParams(numParamsIn)
+    {
+	assert(inputDim>0);
+	assert(coDim>0);
+    };
 
 
     virtual Eigen::MatrixXd Evaluate(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const = 0;
@@ -344,6 +349,7 @@ private:
     double sigma2;
 
 };
+
 
 
 /**
@@ -948,6 +954,70 @@ private:
     RightType kernel2;
 };
 
+
+
+/**
+
+@class WhiteNoiseKernel
+
+Given another kernel $k_2(x,y)$ and a linear transformation $A$, this class implements a kernel of the form
+\f[
+k(x,y) = A * k_2(x,y) * A^T.
+\f]
+ */
+template<typename KernelType>
+class LinearTransformKernel : public KernelImpl<LinearTransformKernel<KernelType>>
+{
+
+public:
+
+    
+LinearTransformKernel(Eigen::MatrixXd const& Ain,
+		          KernelType  const& Kin) : KernelImpl<LinearTransformKernel<KernelType>>(Kin.inputDim, Ain.rows(), Kin.numParams), A(Ain), K(Kin)
+    {
+	assert(Ain.cols() == Kin.coDim);
+    };
+
+    template<typename VecType1, typename VecType2, typename MatrixType>
+    inline void EvaluateImpl(VecType1 const& x1, VecType2 const& x2, MatrixType &cov) const
+    {
+	Eigen::MatrixXd tempCov(K.coDim, K.coDim);
+	K.EvaluateImpl(x1,x2,tempCov);
+	
+	cov = A * tempCov * A.transpose();
+    }
+
+    template<typename VecType1, typename VecType2, typename MatrixType>
+    inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType &derivs) const
+    {
+	Eigen::MatrixXd tempDerivs(K.coDim, K.coDim);
+	K.GetDerivative(x1,x2, wrt, tempDerivs);
+	derivs = A * tempDerivs * A.transpose();
+    }
+	
+
+    virtual Eigen::VectorXd GetParams() const override
+    {
+	return K.GetParams();
+    }
+    
+    virtual void SetParams(Eigen::VectorXd const& params) override
+    {
+        K.SetParams(params);
+    }
+
+private:
+    Eigen::MatrixXd A;
+    KernelType      K;
+
+};
+
+
+template<typename KernelType>
+LinearTransformKernel<KernelType> TransformKernel(Eigen::MatrixXd const& A, KernelType const& K)
+{
+    return LinearTransformKernel<KernelType>(A,K);
+}
 
 /**
 

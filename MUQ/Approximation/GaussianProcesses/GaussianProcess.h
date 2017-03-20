@@ -28,19 +28,24 @@ namespace muq
     
     double nlopt_obj(unsigned n, const double *x, double *nlopt_grad, void *opt_info);
 
+
+
+
+    
     class MeanFunctionBase
     {
     public:
         MeanFunctionBase(unsigned dimIn,
-	                 unsigned coDimIn) : dim(dimIn), coDim(coDimIn){}
+	                 unsigned coDimIn) : inputDim(dimIn), coDim(coDimIn){}
 	
 	virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const = 0;
 
 	virtual std::shared_ptr<MeanFunctionBase> Clone() const = 0;
 
-    protected:
-	unsigned dim, coDim;
+	const unsigned inputDim;
+	const unsigned coDim;
     };
+
     
     class ConstantMean : public MeanFunctionBase
     {
@@ -59,23 +64,85 @@ namespace muq
 	}	    
     };
 
+    
+    template<typename LinearOperator>
+    class LinearTransformMean : public MeanFunctionBase
+    {
 
+    public:
+	template<typename MeanType>
+	LinearTransformMean(LinearOperator const& Ain,
+			    MeanType const& meanIn) :
+	    MeanFunctionBase(meanIn.inputDim, A.rows()),
+	    A(Ain),
+	    otherMean(meanIn.Clone())
+	{
+	    assert(A.cols() == otherMean->coDim);
+	};
+
+        virtual std::shared_ptr<MeanFunctionBase> Clone() const override
+	{
+	    return std::make_shared<LinearTransformMean>(*this);
+	}
+		
+	virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const override
+	{
+	    return A * otherMean->Evaluate(xs);
+	}
+	
+    private:
+	LinearOperator A;
+	std::shared_ptr<MeanFunctionBase> otherMean;
+    };
+    
+
+    
+    class SumMean : public MeanFunctionBase
+    {
+
+    public:
+	template<typename MeanType1, typename MeanType2>
+	SumMean(MeanType1 const& mu1In,
+		MeanType2 const& mu2In) :
+	    MeanFunctionBase(mu1In.inputDim, mu1In.coDim),
+		mu1(mu1In), mu2(mu2In)
+	{
+	    assert(mu1->inputDim == mu2->inputDim);
+	    assert(mu1->coDim == mu2->coDim);
+	};
+
+        virtual std::shared_ptr<MeanFunctionBase> Clone() const override
+	{
+	    return std::make_shared<SumMean>(*this);
+	}
+		
+	virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const override
+	{
+	    return mu1->Evaluate(xs) + mu2->Evaluate(xs);
+	}
+	
+    private:
+	std::shared_ptr<MeanFunctionBase> mu1, mu2;
+    };
+
+
+    
     class GaussianInformation
     {
     public:
 	Eigen::MatrixXd mean;
 	Eigen::MatrixXd covariance;
     };
+
     
     class GaussianProcess
     {
 
     public:
-    GaussianProcess(std::shared_ptr<MeanFunctionBase> meanIn,
-		    std::shared_ptr<KernelBase>       covKernelIn);
+        GaussianProcess(std::shared_ptr<MeanFunctionBase> meanIn,
+			std::shared_ptr<KernelBase>       covKernelIn);
 
 
-	    
 	void Fit(Eigen::MatrixXd const& xs,
 		 Eigen::MatrixXd const& vals);
 
@@ -112,7 +179,7 @@ namespace muq
 	
     };// class GaussianProcess
 
-
+    
     template<typename MeanType, typename KernelType>
     GaussianProcess ConstructGP(MeanType const& mean,
 				KernelType const& kernel)
