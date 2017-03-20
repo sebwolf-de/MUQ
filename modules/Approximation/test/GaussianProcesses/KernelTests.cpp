@@ -20,6 +20,26 @@ TEST(Approximation_GP, VectorNorm)
     EXPECT_DOUBLE_EQ((v2-v1).norm(), CalcDistance(v1,v2));
 }
 
+TEST(Approximation_GP, SeperableDetection)
+{
+    const unsigned dim = 4; // The total number of input dimensions
+    std::vector<unsigned> inds1{0,1};
+    std::vector<unsigned> inds2{2,3};
+    
+    auto kernel1 = SquaredExpKernel(dim, inds1, 2.0, 0.35)*PeriodicKernel(dim, inds2, 1.0, 0.75, 0.25);
+    EXPECT_TRUE(kernel1.IsSeparable(inds1));
+    EXPECT_TRUE(kernel1.IsSeparable(inds2));
+
+    inds1.push_back(2);
+    auto kernel2 = SquaredExpKernel(dim, inds1, 2.0, 0.35)*PeriodicKernel(dim, inds2, 1.0, 0.75, 0.25);
+    EXPECT_FALSE(kernel2.IsSeparable(inds1));
+    EXPECT_FALSE(kernel2.IsSeparable(inds2));
+
+
+    inds1.resize(1);
+    inds1[0] = 0;
+    EXPECT_FALSE(kernel2.IsSeparable(inds1));
+}
 
 TEST(Approximation_GP, HyperFit1d)
 {
@@ -47,8 +67,8 @@ TEST(Approximation_GP, HyperFit1d)
     for(int i=0; i<maxTrain; ++i)
 	trainData(i) = sin(4*2*pi*trainLocs(i) ) + sqrt(1e-4)*normal_dist(e1);
 
-    const int dim = 1;
-    auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} )*PeriodicKernel(dim, 1.0,0.75,0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});    
+    const unsigned dim = 1;
+    auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} )*PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});    
    
     // Create the GP
     ConstantMean mean(1);
@@ -102,7 +122,8 @@ TEST(Approximation_GP, HyperFit2d)
     // define a tensor product kernel
     std::vector<unsigned> inds1{0};
     std::vector<unsigned> inds2{1};
-    auto kernel = SquaredExpKernel(inds1, 2.0, 0.35, {0.1,10} )*SquaredExpKernel(inds2, 2.0, 0.35, {0.1,10} );
+    const unsigned dim = 2;
+    auto kernel = SquaredExpKernel(dim, inds1, 2.0, 0.35, {0.1,10} )*SquaredExpKernel(dim, inds2, 2.0, 0.35, {0.1,10} );
 
     
     // Create the GP

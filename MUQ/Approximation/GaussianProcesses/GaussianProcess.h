@@ -87,8 +87,8 @@ namespace muq
 			KernelType const& covKernelIn) :
 	    priorMean(priorMeanIn),
 	    covKernel(covKernelIn),
-	    inputDim(covKernel.GetDim()),
-	    coDim(covKernel.GetCodim())
+	    inputDim(covKernel.inputDim),
+	    coDim(covKernel.coDim)
         {};
 
 
@@ -214,7 +214,7 @@ namespace muq
 	    if(computeGrad)
 	    {
 		// Compute the gradient of the log likelihood
-		const int numParams = covKernel.GetNumParams();
+		const int numParams = covKernel.numParams;
 		grad.resize(numParams);
 		Eigen::MatrixXd derivMat(coDim * numXs, coDim * numXs);
 		for(int i=0; i<numParams; ++i)
