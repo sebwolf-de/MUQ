@@ -253,6 +253,7 @@ public:
 		auto block = GetBlock(cov, row*coDim, col*coDim, coDim, coDim);
     		static_cast<const ChildType*>(this)->EvaluateImpl( GetColumn(xs,row), GetColumn(xs, col) , block);
 
+		std::cout << "Here 1" << std::endl;
 		// if we aren't on the diagonal, copy the block of the covariance matrix we just added to the upper triangular part of the covariance matrix
 		if(col!=row)
 		{
@@ -576,7 +577,7 @@ public:
 
 	// Compute the eigenvalue decomposition of the covariance Gamma to get the matrix A
 	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigSolver;
-	eigSolver.compute(Gamma, true);
+	eigSolver.compute(Gamma, Eigen::ComputeEigenvectors);
 	A = eigSolver.eigenvectors()*eigSolver.eigenvalues().cwiseSqrt().asDiagonal();
     };
 
@@ -591,7 +592,7 @@ public:
     template<typename VecType1, typename VecType2, typename MatrixType>
     inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType & derivs) const
     {
-	int kernelInd = 0;
+	unsigned kernelInd = 0;
 	double kernelDeriv = KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::GetDeriv(kernels, x1, x2, wrt, 0, kernelInd);
 	derivs = Eigen::MatrixXd(A.col(kernelInd) * kernelDeriv * A.col(kernelInd).transpose());
     }
@@ -1033,9 +1034,9 @@ Create a coregional kernel
  
 */
 template<class... KTypes>
-CoregionalKernel<KTypes...> CoregionTie(Eigen::MatrixXd const& coCov, const KTypes&... kernels)
+CoregionalKernel<KTypes...> CoregionTie(unsigned dim, Eigen::MatrixXd const& coCov, const KTypes&... kernels)
 {
-    return CoregionalKernel<KTypes...>(coCov, kernels...);
+    return CoregionalKernel<KTypes...>(dim, coCov, kernels...);
 };
 
 
