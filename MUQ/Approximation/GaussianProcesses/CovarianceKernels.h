@@ -972,7 +972,7 @@ class LinearTransformKernel : public KernelImpl<LinearTransformKernel<KernelType
 public:
 
     
-LinearTransformKernel(Eigen::MatrixXd const& Ain,
+    LinearTransformKernel(Eigen::MatrixXd const& Ain,
 		          KernelType  const& Kin) : KernelImpl<LinearTransformKernel<KernelType>>(Kin.inputDim, Ain.rows(), Kin.numParams), A(Ain), K(Kin)
     {
 	assert(Ain.cols() == Kin.coDim);
@@ -1017,6 +1017,12 @@ template<typename KernelType>
 LinearTransformKernel<KernelType> TransformKernel(Eigen::MatrixXd const& A, KernelType const& K)
 {
     return LinearTransformKernel<KernelType>(A,K);
+}
+
+template<typename KernelType, typename = typename std::enable_if<std::is_base_of<KernelImpl<KernelType>, KernelType>::value, KernelType>::type>
+LinearTransformKernel<KernelType> operator*(Eigen::MatrixXd const& A, KernelType const&K)
+{
+    return TransformKernel(A,K);
 }
 
 /**

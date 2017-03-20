@@ -96,6 +96,11 @@ namespace muq
     };
     
 
+    template<typename MeanType, typename = typename std::enable_if<std::is_base_of<MeanFunctionBase, MeanType>::value, MeanType>::type>
+    LinearTransformMean<MeanType> operator*(Eigen::MatrixXd const& A, MeanType const&K)
+    {
+	return LinearTransformMean<Eigen::MatrixXd>(A,K);
+    }
     
     class SumMean : public MeanFunctionBase
     {
@@ -125,6 +130,11 @@ namespace muq
 	std::shared_ptr<MeanFunctionBase> mu1, mu2;
     };
 
+    template<typename MeanType1, typename MeanType2, typename = typename std::enable_if<std::is_base_of<MeanFunctionBase, MeanType1>::value, MeanType1>::type>
+    SumMean operator+(MeanType1 const& mu1, MeanType2 const& mu2)
+    {
+	return SumMean(mu1, mu2);
+    }
 
     
     class GaussianInformation

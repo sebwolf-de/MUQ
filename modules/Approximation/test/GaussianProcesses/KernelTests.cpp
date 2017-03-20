@@ -130,7 +130,8 @@ TEST(Approximation_GP, LinearTransformKernel)
     
     Eigen::MatrixXd A = Eigen::MatrixXd::Random(3,2);
 
-    auto kernel2 = TransformKernel(A, kernel);
+    auto kernel2 = A*kernel;
+    auto kernel3 = A * ConstantKernel(dim, sigma2) * SquaredExpKernel(dim, 2.0, 0.35 );
 
     Eigen::MatrixXd x1(dim,1);
     x1 << 0.1, 0.4;
@@ -138,14 +139,18 @@ TEST(Approximation_GP, LinearTransformKernel)
     Eigen::MatrixXd x2(dim,1);
     x2 << 0.2, 0.7;
     
-    Eigen::MatrixXd result = kernel2.Evaluate(x1,x2);
+    Eigen::MatrixXd result2 = kernel2.Evaluate(x1,x2);
+    Eigen::MatrixXd result3 = kernel3.Evaluate(x1,x2);
 
     Eigen::MatrixXd expected = A * kernel.Evaluate(x1,x2) * A.transpose();
 
     for(int j=0; j<A.rows(); ++j)
     {
 	for(int i=0; i<A.rows(); ++i)
-	    EXPECT_DOUBLE_EQ(expected(i,j), result(i,j));
+	{
+	    EXPECT_NEAR(expected(i,j), result2(i,j), 1e-15);
+	    EXPECT_NEAR(expected(i,j), result3(i,j), 1e-15);
+	}
     }
 }
 
