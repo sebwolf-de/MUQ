@@ -16,29 +16,7 @@ TEST(Approximation_GP, VectorNorm)
     Eigen::VectorXd v1 = Eigen::VectorXd::Random(dim);
     Eigen::VectorXd v2 = Eigen::VectorXd::Random(dim);
 
-
     EXPECT_DOUBLE_EQ((v2-v1).norm(), CalcDistance(v1,v2));
-}
-
-TEST(Approximation_GP, SeperableDetection)
-{
-    const unsigned dim = 4; // The total number of input dimensions
-    std::vector<unsigned> inds1{0,1};
-    std::vector<unsigned> inds2{2,3};
-    
-    auto kernel1 = SquaredExpKernel(dim, inds1, 2.0, 0.35)*PeriodicKernel(dim, inds2, 1.0, 0.75, 0.25);
-    EXPECT_TRUE(kernel1.IsSeparable(inds1));
-    EXPECT_TRUE(kernel1.IsSeparable(inds2));
-
-    inds1.push_back(2);
-    auto kernel2 = SquaredExpKernel(dim, inds1, 2.0, 0.35)*PeriodicKernel(dim, inds2, 1.0, 0.75, 0.25);
-    EXPECT_FALSE(kernel2.IsSeparable(inds1));
-    EXPECT_FALSE(kernel2.IsSeparable(inds2));
-
-
-    inds1.resize(1);
-    inds1[0] = 0;
-    EXPECT_FALSE(kernel2.IsSeparable(inds1));
 }
 
 TEST(Approximation_GP, HyperFit1d)
@@ -136,4 +114,31 @@ TEST(Approximation_GP, HyperFit2d)
     // Make a prediction
     auto post = gp.Predict(predLocs);
 
+}
+
+
+TEST(Approximation_GP, Clone)
+{
+    
+    const unsigned dim = 2;
+    auto kernel = ConstantKernel(dim, 2.0) * SquaredExpKernel(dim, 2.0, 0.35 );
+
+    std::shared_ptr<KernelBase> kernel_copy = kernel.Clone();
+
+    
+    EXPECT_DOUBLE_EQ(kernel.inputDim, kernel_copy->inputDim);
+    EXPECT_DOUBLE_EQ(kernel.coDim, kernel_copy->coDim);
+    EXPECT_DOUBLE_EQ(kernel.numParams, kernel_copy->numParams);
+
+    
+    Eigen::VectorXd x1(dim);
+    x1 << 0.1, 0.4;
+    
+    Eigen::VectorXd x2(dim);
+    x2 << 0.2, 0.7;
+
+    Eigen::MatrixXd result = kernel.Evaluate(x1,x2);
+    Eigen::MatrixXd result_ptr = kernel_copy->Evaluate(x1,x2);
+    
+    EXPECT_DOUBLE_EQ(result(0,0), result_ptr(0,0));
 }
