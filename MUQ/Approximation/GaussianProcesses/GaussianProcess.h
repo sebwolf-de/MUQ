@@ -39,7 +39,7 @@ namespace muq
 
 	info->gp->covKernel.SetParams(params);
 	
-	logLikely = info->gp->EvaluateLikelihood(*info->xs, *info->vals, grad, nlopt_grad);	    
+	logLikely = info->gp->EvaluateMarginalLikelihood(*info->xs, *info->vals, grad, nlopt_grad);	    
 
 	if (nlopt_grad)
 	{
@@ -182,10 +182,10 @@ namespace muq
 	};
 	
 	// Evaluates the log marginal likelihood needed when fitting hyperparameters
-	double EvaluateLikelihood(Eigen::MatrixXd const& xs,
-				  Eigen::MatrixXd const& vals,
-				  Eigen::VectorXd      & grad,
-	                          bool                   computeGrad = true)
+	double EvaluateMarginalLikelihood(Eigen::MatrixXd const& xs,
+					  Eigen::MatrixXd const& vals,
+					  Eigen::VectorXd      & grad,
+					  bool                   computeGrad = true)
 	{
 
 	    int numXs = xs.cols();
