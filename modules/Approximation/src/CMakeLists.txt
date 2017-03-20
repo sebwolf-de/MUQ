@@ -3,5 +3,5 @@ CreateCompileGroup(
     muqApproximation
     "EIGEN3"
     "NLOPT"
-    ""
+    GaussianProcesses/GaussianProcess.cpp
 )

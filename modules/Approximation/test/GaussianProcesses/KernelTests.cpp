@@ -49,7 +49,7 @@ TEST(Approximation_GP, HyperFit1d)
     auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} )*PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});    
    
     // Create the GP
-    ConstantMean mean(1);
+    ConstantMean mean(dim, 1);
     auto gp = ConstructGP(mean, kernel);
 
 
@@ -105,7 +105,7 @@ TEST(Approximation_GP, HyperFit2d)
 
     
     // Create the GP
-    ConstantMean mean(1);
+    ConstantMean mean(dim, 1);
     auto gp = ConstructGP(mean, kernel);
 
     gp.Fit(trainLocs, trainData);

@@ -65,6 +65,18 @@ public:
 
 
     virtual Eigen::MatrixXd Evaluate(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const = 0;
+
+    virtual void FillCovariance(Eigen::MatrixXd             const& xs,
+				Eigen::MatrixXd             const& ys,
+				Eigen::Ref<Eigen::MatrixXd>        cov) const = 0;
+
+    virtual void FillCovariance(Eigen::MatrixXd             const& xs,
+				Eigen::Ref<Eigen::MatrixXd>        cov) const = 0;
+
+    virtual void FillDerivativeMatrix(Eigen::MatrixXd             const& xs,
+				      unsigned                           wrt,
+				      Eigen::Ref<Eigen::MatrixXd>        derivs) const = 0;
+    
     
     virtual Eigen::MatrixXd GetParamBounds() const
     {
@@ -77,16 +89,8 @@ public:
     virtual void SetParams(Eigen::VectorXd const& params){};
 
     virtual std::shared_ptr<KernelBase> Clone() const = 0;
-	    
-    /**
-       Can the kernel be decomposed into something like
-       \[
-         k([x1,x2,x3],[y1,y2,y3]) = k_1([x]1,[y1])*k_2([x2,x3],[y2,y3])
-     */
-    virtual bool IsSeparable(std::vector<unsigned> const& inds) const
-    {
-	return false;
-    }
+
+    
     
     const std::vector<unsigned> dimInds;
 
@@ -147,6 +151,27 @@ public:
 	return std::make_shared<ChildType>(static_cast<ChildType const &>(*this));
     }
 
+    virtual void FillCovariance(Eigen::MatrixXd             const& xs,
+				Eigen::MatrixXd             const& ys,
+				Eigen::Ref<Eigen::MatrixXd>        cov) const override
+    {
+	FillCovarianceImpl(xs,ys,cov);
+    };
+
+    virtual void FillCovariance(Eigen::MatrixXd             const& xs,
+				Eigen::Ref<Eigen::MatrixXd>        cov) const override
+    {
+	FillCovarianceImpl(xs,cov);
+    };
+
+    virtual void FillDerivativeMatrix(Eigen::MatrixXd             const& xs,
+				      unsigned                           wrt,
+				      Eigen::Ref<Eigen::MatrixXd>        derivs) const override
+    {
+	FillDerivativeMatrixImpl(xs,wrt, derivs);
+    };
+    
+
     
     template<typename RightType>
     ProductKernel<ChildType, RightType> operator*(RightType const& kernel2) const
@@ -176,7 +201,7 @@ public:
     /* } */
 
     template<typename PosMatrixType, typename DerivMatrixType>
-    void BuildDerivativeMatrix(PosMatrixType const& xs, int wrt, DerivMatrixType &derivs)
+    void FillDerivativeMatrixImpl(PosMatrixType const& xs, int wrt, DerivMatrixType &derivs) const
     {
     	unsigned dim   = GetShape(xs, 0);
         unsigned N1    = GetShape(xs, 1);
@@ -189,7 +214,7 @@ public:
 	    for(unsigned row=col; row<N1; ++row)
 	    {
 		auto block = GetBlock(derivs, row*coDim, col*coDim, coDim, coDim);
-    		static_cast<ChildType*>(this)->GetDerivative( GetColumn(xs, row), GetColumn(xs, col), wrt, block);
+    		static_cast<const ChildType*>(this)->GetDerivative( GetColumn(xs, row), GetColumn(xs, col), wrt, block);
 
                 // if we aren't on the diagonal, copy the block of the covariance matrix we just added to the upper triangular part of the covariance matrix
 		if(col!=row)
@@ -208,7 +233,7 @@ public:
 
     
     template<typename PosMatrixType, typename CovMatrixType>
-    void BuildCovariance(PosMatrixType const& xs, CovMatrixType & cov)
+    void FillCovarianceImpl(PosMatrixType const& xs, CovMatrixType & cov) const
     {	
     	unsigned dim   = GetShape(xs, 0);
         unsigned N1    = GetShape(xs, 1);
@@ -221,7 +246,7 @@ public:
 	    for(unsigned row=col; row<N1; ++row)
 	    {
 		auto block = GetBlock(cov, row*coDim, col*coDim, coDim, coDim);
-    		static_cast<ChildType*>(this)->EvaluateImpl( GetColumn(xs,row), GetColumn(xs, col) , block);
+    		static_cast<const ChildType*>(this)->EvaluateImpl( GetColumn(xs,row), GetColumn(xs, col) , block);
 
 		// if we aren't on the diagonal, copy the block of the covariance matrix we just added to the upper triangular part of the covariance matrix
 		if(col!=row)
@@ -240,7 +265,7 @@ public:
 
     
     template<typename PosMatrixType, typename CovMatrixType>
-    void BuildCovariance(PosMatrixType const& xs, PosMatrixType const& ys, CovMatrixType & cov)
+    void FillCovarianceImpl(PosMatrixType const& xs, PosMatrixType const& ys, CovMatrixType & cov) const
     {	
     	unsigned dim   = GetShape(xs, 0);
         unsigned N1    = GetShape(xs, 1);
@@ -255,7 +280,7 @@ public:
 	    for(unsigned row=0; row<N1; ++row)
 	    {
 		auto block = GetBlock(cov, row*coDim, col*coDim, coDim, coDim);
-    		static_cast<ChildType*>(this)->EvaluateImpl( GetColumn(xs,row), GetColumn(ys,col), block);
+    		static_cast<const ChildType*>(this)->EvaluateImpl( GetColumn(xs,row), GetColumn(ys,col), block);
     	    }
     	}
 	

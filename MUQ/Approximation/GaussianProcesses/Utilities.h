@@ -30,6 +30,13 @@ unsigned GetShape(Eigen::Matrix<ScalarType, rows, cols> const& mat, unsigned dim
     return dim==0 ? mat.rows() : mat.cols();
 }
 
+template<typename Derived>
+unsigned GetShape(Eigen::Ref<Derived> const& mat, unsigned dim)
+{
+    assert(dim<2);
+    return dim==0 ? mat.rows() : mat.cols();
+}
+
 /** @brief Calculates the distance squared between two points defined by vectors v1 and v2. 
     @details Assumes the vectors are the same size and recursively compute the squared distance
              between them.  The recursion is used for numerical accuracy.
