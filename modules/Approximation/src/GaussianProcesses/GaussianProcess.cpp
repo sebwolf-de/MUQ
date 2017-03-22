@@ -141,7 +141,7 @@ double  GaussianProcess::EvaluateMarginalLikelihood(Eigen::MatrixXd const& xs,
     Eigen::LLT<Eigen::MatrixXd> chol = cov.llt();
 
     // Compute the log determinant of the covariance
-    auto L = chol.matrixL();
+    const Eigen::TriangularView<const Eigen::MatrixXd, Eigen::Lower> L = chol.matrixL();
     double logDet = 0.0;
     for(int i=0; i<L.rows(); ++i)
 	logDet += 2.0*log(L(i,i));

@@ -1,7 +1,9 @@
 # USAGE:
 # CreateCompileGroup(
 #     <group_name>
-#     <library_name> 
+#     <brief description>
+#     <other required groups>
+#     <library_name>
 #     <required dependencies>
 #     <optional dependencies>
 #     <source file 1>

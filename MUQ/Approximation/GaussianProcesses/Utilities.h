@@ -155,11 +155,13 @@ public:
     {
 	assert(otherMat.rows()==numRows);
 	assert(otherMat.cols()==numCols);
-	
-	for(int j=0; j<otherMat.cols(); ++j)
+
+	for(unsigned j=0; j<numCols; ++j)
 	{
-	    for(int i=0; i<otherMat.rows(); ++i)
-		matrix(i,j) = otherMat(i,j);
+	    for(unsigned i=0; i<numRows; ++i)
+	    {
+		matrix(startRow + i, startCol + j) = otherMat(i,j);
+	    }
 	}
 	return *this;
     }

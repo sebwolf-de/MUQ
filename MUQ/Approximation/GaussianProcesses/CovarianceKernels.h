@@ -253,7 +253,6 @@ public:
 		auto block = GetBlock(cov, row*coDim, col*coDim, coDim, coDim);
     		static_cast<const ChildType*>(this)->EvaluateImpl( GetColumn(xs,row), GetColumn(xs, col) , block);
 
-		std::cout << "Here 1" << std::endl;
 		// if we aren't on the diagonal, copy the block of the covariance matrix we just added to the upper triangular part of the covariance matrix
 		if(col!=row)
 		{
@@ -261,7 +260,7 @@ public:
 		    {
 			for(int i=0; i<coDim; ++i)
 			{
-			    cov(row*coDim + i, col*coDim + j) = cov(col*coDim + j, row*coDim + i);
+			    cov(col*coDim + j, row*coDim + i) = cov(row*coDim + i, col*coDim + j);
 			}
 		    }
 		}
@@ -586,7 +585,8 @@ public:
     {
 	Eigen::VectorXd rhoVec(this->coDim);
 	KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::Evaluate(kernels, x1, x2, rhoVec);
-	cov = A * rhoVec.asDiagonal() * A.transpose();
+
+	cov = ( A * rhoVec.asDiagonal() * A.transpose() ).eval();
     }
 
     template<typename VecType1, typename VecType2, typename MatrixType>
