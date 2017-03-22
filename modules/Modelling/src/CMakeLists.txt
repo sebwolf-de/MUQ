@@ -1,17 +1,23 @@
-# define the source files in this directory that we want to include in the
-#   generic interface library
-SET(SOURCES
+# USAGE:
+# CreateCompileGroup(
+#     <group name>
+#     <brief description>
+#     <library_name>
+#     <other compile group dependencies>
+#     <required dependencies>
+#     <optional dependencies>
+#     <source file 1>
+#     <source file 2>
+#     ...
+#     <source file N>
+# )
+
+CreateCompileGroup(
+    MODELING_CORE
+    "The basic building blocks of the Modeling library."
+    muqModeling
+    ""
+    "EIGEN3;BOOST"
+    ""
     WorkPiece.cpp
-  )
-
-##########################################
-#  Objects to build
-
-# Define the library
-ADD_LIBRARY(muqModelingCore ${SOURCES})
-TARGET_LINK_LIBRARIES(muqModelingCore ${MUQ_LINK_LIBS})
-
-install(TARGETS muqModelingCore
-    EXPORT MUQDepends
-    LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
-    ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+)

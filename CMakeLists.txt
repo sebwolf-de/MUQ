@@ -11,15 +11,14 @@ INCLUDE(CheckFunctionExists)
 
 # define the project name
 project (MUQ) 
-set(MUQ_MAJOR_VERSION 0)
-set(MUQ_MINOR_VERSION 1)
+set(MUQ_MAJOR_VERSION 1)
+set(MUQ_MINOR_VERSION 0)
 set(MUQ_PATCH_VERSION 0)
 set(MUQ_VERSION ${MUQ_MAJOR_VERSION}.${MUQ_MINOR_VERSION}.${MUQ_PATCH_VERSION})
 
 
 message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
 
-  
 ###############################################
 # Compiler configuration
 ###############################################
@@ -31,6 +30,17 @@ include_directories(.)
 # User options
 ###############################################
 INCLUDE(OptionsSetup)
+
+###############################################
+# Find source files and calculate required dependencies
+###############################################
+INCLUDE(GetPossibleDependencyList)
+INCLUDE(CompileGroup)
+
+message(STATUS "All possible MUQ dependencies = ${POSSIBLE_MUQ_DEPENDENCIES}")
+
+# The ProcesCompileGroups function will add modules/CMakeLists.txt and then process any computed Compile/Test groups
+INCLUDE(ProcessCompileGroups)
 
 ###############################################
 # Manage dependencies
@@ -48,11 +58,10 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/MUQ/config.h.in ${CMAKE_CURRENT_SOURC
 INCLUDE(DependencyCheck)
 
 ###############################################
-# Set up project
+# Create BUILD targets for cmake
 ###############################################
-
-# Go compile everything
-add_subdirectory(modules)
+INCLUDE(SetupCompileTargets)
+INCLUDE(SetupTestTargets)
 
 # Create the list of libraries we just built
 INCLUDE(BuiltLibrarySetup)
@@ -103,6 +112,7 @@ include(MakeSummaryFile)
 
 FILE(READ ${CMAKE_BINARY_DIR}/summary.log MUQ_LOG_SUMMARY)
 MESSAGE("${MUQ_LOG_SUMMARY}")
+
 
 ###############################################
 # Add a target to build documentation
