@@ -10,6 +10,9 @@ namespace muq
 namespace Approximation
 {
 
+template<typename MatType>
+class MatrixBlock;
+
 /** 
 
 Templated function to get the shape of an array.  In Eigen parlance, GetShape(mat,0) is the same as mat.rows() and GetShape(mat,1) is the same as mat.cols().
@@ -29,6 +32,14 @@ unsigned GetShape(Eigen::Matrix<ScalarType, rows, cols> const& mat, unsigned dim
     assert(dim<2);
     return dim==0 ? mat.rows() : mat.cols();
 }
+
+template<typename Derived>
+unsigned GetShape(MatrixBlock<Derived> const& mat, unsigned dim)
+{
+    assert(dim<2);
+    return dim==0 ? mat.rows() : mat.cols();
+}
+
 
 template<typename Derived>
 unsigned GetShape(Eigen::Ref<Derived> const& mat, unsigned dim)
@@ -106,6 +117,24 @@ public:
 	    return 1;
 	else
 	    return GetShape(matrix,0);
+    };
+
+    unsigned rows() const
+    {
+        return GetShape(matrix,0);
+    }
+
+    unsigned cols() const
+    {
+        return 1;
+    }
+    
+    operator Eigen::VectorXd() const
+    {
+        Eigen::VectorXd output(rows());
+        for(int i=0; i<rows(); ++i)
+            output(i) = (*this)(i);
+        return output;
     };
     
 private:

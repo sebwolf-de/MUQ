@@ -69,8 +69,15 @@ public:
     };
 
 
+    virtual ~KernelBase(){};
+    
     virtual Eigen::MatrixXd Evaluate(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const = 0;
+    
+    virtual Eigen::MatrixXd BuildCovariance(Eigen::MatrixXd const& x) const = 0;
 
+    virtual Eigen::MatrixXd BuildCovariance(Eigen::MatrixXd const& x1,
+                                            Eigen::MatrixXd const& x2) const = 0;
+    
     virtual void FillCovariance(Eigen::MatrixXd             const& xs,
 				Eigen::MatrixXd             const& ys,
 				Eigen::Ref<Eigen::MatrixXd>        cov) const = 0;
@@ -82,6 +89,8 @@ public:
 				      unsigned                           wrt,
 				      Eigen::Ref<Eigen::MatrixXd>        derivs) const = 0;
     
+
+    virtual Eigen::MatrixXd GetDerivative(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2, int wrt) const = 0;
     
     virtual Eigen::MatrixXd GetParamBounds() const
     {
@@ -150,6 +159,8 @@ public:
 	       unsigned              coDimIn,
 	       unsigned              numParamsIn) : KernelBase(inputDimIn, dimIndsIn, coDimIn, numParamsIn){};
 
+
+    virtual ~KernelImpl(){};
     
     virtual std::shared_ptr<KernelBase> Clone() const override
     {
@@ -175,8 +186,14 @@ public:
     {
 	FillDerivativeMatrixImpl(xs,wrt, derivs);
     };
-    
 
+    
+    virtual Eigen::MatrixXd GetDerivative(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2, int wrt) const override
+    {
+        Eigen::MatrixXd output(coDim, coDim);
+        reinterpret_cast<const ChildType*>(this)->GetDerivative(x1,x2,wrt,output);
+        return output;
+    };
     
     template<typename RightType>
     ProductKernel<ChildType, RightType> operator*(RightType const& kernel2) const
@@ -190,11 +207,27 @@ public:
 	return SumKernel<ChildType,RightType>(*reinterpret_cast<const ChildType*>(this),kernel2);
     }
 
-
     virtual Eigen::MatrixXd Evaluate(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const override
     {
-	Eigen::MatrixXd output(coDim, coDim);
-	static_cast<const ChildType*>(this)->EvaluateImpl(x1,x2,output);
+
+        Eigen::MatrixXd output(coDim, coDim);
+        static_cast<const ChildType*>(this)->EvaluateImpl( x1, x2, output);
+        return output;
+    };
+    
+    virtual Eigen::MatrixXd BuildCovariance(Eigen::MatrixXd const& x) const override
+    {
+	Eigen::MatrixXd output(coDim*x.cols(), coDim*x.cols());
+        FillCovariance(x, output);
+        return output;
+    }
+
+
+    virtual Eigen::MatrixXd BuildCovariance(Eigen::MatrixXd const& x1,
+                                            Eigen::MatrixXd const& x2) const override
+    {
+	Eigen::MatrixXd output(coDim*x1.cols(), coDim*x2.cols());
+        FillCovariance(x1, x2, output);
 	return output;
     }
     
@@ -318,6 +351,8 @@ public:
 	paramBounds(1) = sigmaBounds[1]; // upper bound on sigma2
     };
 
+    virtual ~WhiteNoiseKernel(){};
+    
     template<typename VecType1, typename VecType2, typename MatrixType>
     inline void EvaluateImpl(VecType1 const& x1, VecType2 const& x2, MatrixType &cov) const
     {
@@ -397,6 +432,8 @@ public:
 	paramBounds(1,1) = lengthBounds(1);
     };
 
+    virtual ~SquaredExpKernel(){};
+    
     template<typename VecType1, typename VecType2, typename MatrixType>
     inline void EvaluateImpl(VecType1 const& x1, VecType2 const& x2, MatrixType &cov ) const
     {
@@ -488,6 +525,8 @@ public:
 	paramBounds(0,0) = sigmaBounds(0);
 	paramBounds(1,0) = sigmaBounds(1);
     };
+
+    virtual ~ConstantKernel(){};
     
     template<typename VecType, typename MatrixType>
     inline void EvaluateImpl(VecType const& x1, VecType const& x2, MatrixType & cov ) const
@@ -560,19 +599,18 @@ private:
 This kernel supports coregionalization for modeling vector-valued Gaussian processes.
 
  */
-template<class... KTypes>
-class CoregionalKernel : public KernelImpl<CoregionalKernel<KTypes...>>
+class CoregionalKernel : public KernelImpl<CoregionalKernel>
 {
 
 public:
     
     CoregionalKernel(unsigned               dim,
 		     Eigen::MatrixXd const& Gamma,
-		     const KTypes&...       kernelsIn) : KernelImpl<CoregionalKernel<KTypes...>>(dim, Gamma.rows(), GetNumParams(kernelsIn...)),
-	                                                 kernels(std::make_tuple(kernelsIn...))
+		     std::vector<std::shared_ptr<KernelBase>> const& kernelsIn) : KernelImpl<CoregionalKernel>(dim, Gamma.rows(), GetNumParams(kernelsIn)),
+                                                                                  kernels(kernelsIn)
     {
 	// Make sure the matrix and kernels are the same size
-	assert(Gamma.cols()==std::tuple_size<std::tuple<KTypes...>>::value);
+	assert(Gamma.cols()==kernelsIn.size());
 
 	// Compute the eigenvalue decomposition of the covariance Gamma to get the matrix A
 	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigSolver;
@@ -580,52 +618,82 @@ public:
 	A = eigSolver.eigenvectors()*eigSolver.eigenvalues().cwiseSqrt().asDiagonal();
     };
 
+    virtual ~CoregionalKernel(){};
+
     template<typename VecType, typename MatrixType>
     inline void EvaluateImpl(VecType const& x1, VecType const& x2, MatrixType & cov ) const
     {
 	Eigen::VectorXd rhoVec(this->coDim);
-	KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::Evaluate(kernels, x1, x2, rhoVec);
-
+        for(int i=0; i<this->coDim; ++i)
+            rhoVec(i) = kernels.at(i)->Evaluate(x1,x2)(0,0);
+        
 	cov = ( A * rhoVec.asDiagonal() * A.transpose() ).eval();
     }
 
     template<typename VecType1, typename VecType2, typename MatrixType>
     inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType & derivs) const
     {
-	unsigned kernelInd = 0;
-	double kernelDeriv = KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::GetDeriv(kernels, x1, x2, wrt, 0, kernelInd);
-	derivs = Eigen::MatrixXd(A.col(kernelInd) * kernelDeriv * A.col(kernelInd).transpose());
+	unsigned cumParams = 0;
+        unsigned kernelInd = 0;
+        Eigen::MatrixXd kernelDerivs;
+        
+        for(unsigned i=0; i<this->coDim; ++i)
+        {
+            if(wrt < cumParams + kernels.at(i)->numParams)
+            {
+                kernelDerivs = kernels.at(i)->GetDerivative(x1, x2, wrt-cumParams);
+                kernelInd = i;
+                break;
+            }
+            else
+            {
+                cumParams += kernels.at(i)->numParams;
+            }
+        }
+
+        assert(kernelDerivs.rows()==1);
+        assert(kernelDerivs.cols()==1);
+        
+	derivs = Eigen::MatrixXd(A.col(kernelInd) * kernelDerivs(0,0) * A.col(kernelInd).transpose());
     }
 
 
     virtual Eigen::VectorXd GetParams() const override
     {
 	Eigen::VectorXd params(this->numParams);
-	KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::GetParams(kernels, params);
+        unsigned cumParams = 0;
+        for(int i=0; i<this->coDim; ++i)
+        {
+            params.segment(cumParams, kernels.at(i)->numParams) = kernels.at(i)->GetParams();
+            cumParams += kernels.at(i)->numParams;
+        }
+        
 	return params;
     }
 
     virtual void SetParams(Eigen::VectorXd const& params) override
     {
-        KernelEvaluator<0, std::tuple_size<std::tuple<KTypes...>>::value, KTypes...>::SetParams(kernels, params);
+        unsigned cumParams = 0;
+        for(int i=0; i<this->coDim; ++i)
+        {
+            kernels.at(i)->SetParams( params.segment(cumParams, kernels.at(i)->numParams));
+            cumParams += kernels.at(i)->numParams;
+        }
+        
     }
 	
 private:
 
     Eigen::MatrixXd A;
-    std::tuple<KTypes...> kernels;
+    std::vector<std::shared_ptr<KernelBase>> kernels;
 
-    template<class Type1, class... OtherTypes>
-    static unsigned GetNumParams(Type1 const& kernel1, const OtherTypes&... otherKernels)
+    static unsigned GetNumParams(std::vector<std::shared_ptr<KernelBase>> const& kernelsIn)
     {
-        return kernel1.numParams + GetNumParams(otherKernels...);
+        unsigned allParams = 0;
+        for(unsigned i = 0; i<kernelsIn.size(); ++i)
+            allParams += kernelsIn.at(i)->numParams;
+        return allParams;
     };
-    template<class Type1>
-    static unsigned GetNumParams(Type1 const& kernel1)
-    {
-        return kernel1.numParams;
-    };
-
 
 };
 
@@ -660,6 +728,8 @@ public:
     {
 	SetupBounds(sigmaBounds, lengthBounds, periodBounds);
     };
+
+    virtual ~PeriodicKernel(){};
     
     PeriodicKernel(unsigned dim,
 		   const double sigma2In,
@@ -773,6 +843,8 @@ ProductKernel(LeftType const& kernel1In, RightType const& kernel2In) : KernelImp
 	assert((kernel1.coDim==kernel2.coDim) | (kernel1.coDim==1) | (kernel2.coDim==1));
     };
 
+    virtual ~ProductKernel(){};
+    
     template<typename VecType, typename MatType>
     inline void EvaluateImpl(VecType const& x1, VecType const& x2, MatType & cov ) const
     {
@@ -894,9 +966,12 @@ public:
 	                                                               kernel1(kernel1In),
 	                                                               kernel2(kernel2In)
     {
+        assert(kernel2.inputDim == kernel2.inputDim);
 	assert(kernel1.coDim == kernel2.coDim);
     };
 
+    virtual ~SumKernel(){};
+    
     template<typename VecType, typename MatType>
     inline void EvaluateImpl(VecType const& x1, VecType  const& x2 , MatType & cov) const
     {
@@ -956,6 +1031,90 @@ private:
 };
 
 
+template<typename KernelType1, typename KernelType2>
+class ConcatenateKernel : public KernelImpl<ConcatenateKernel<KernelType1,KernelType2>>
+{
+
+public:
+    ConcatenateKernel(KernelType1 const& kernel1In, KernelType2 const& kernel2In) : KernelImpl<ConcatenateKernel<KernelType1,KernelType2>>(kernel1In.inputDim,
+														 kernel1In.coDim + kernel2In.coDim,
+														 kernel1In.numParams + kernel2In.numParams),
+	                                                               kernel1(kernel1In),
+	                                                               kernel2(kernel2In)
+    {
+	assert(kernel1.inputDim == kernel2.inputDim);
+    };
+
+    virtual ~ConcatenateKernel(){};
+    
+    template<typename VecType, typename MatType>
+    inline void EvaluateImpl(VecType const& x1, VecType  const& x2 , MatType & cov) const
+    {
+        auto block1 = GetBlock(cov, 0, 0, kernel1.coDim, kernel1.coDim);
+        auto block2 = GetBlock(cov, kernel1.coDim, kernel1.coDim, kernel2.coDim, kernel2.coDim);
+        
+        kernel1.EvaluateImpl(x1, x2, block1);
+	kernel2.EvaluateImpl(x1, x2, block2);
+    }
+
+    template<typename VecType1, typename VecType2, typename MatType>
+    inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatType & derivs) const
+    {
+	assert(wrt < this->numParams);
+
+        // Initialize the derivative matrix to 0
+        for(int j=0; j<derivs.cols(); ++j)
+        {
+            for(int i=0; i<derivs.rows(); ++i)
+                derivs(i,j) = 0.0;
+        }
+        
+        if(wrt < kernel1.numParams )
+	{
+            auto block = GetBlock(derivs, 0, 0, kernel1.coDim, kernel1.coDim);
+	    return kernel1.GetDerivative(x1, x2, wrt, block);
+	}
+	else
+	{
+            auto block = GetBlock(derivs, kernel1.coDim, kernel1.coDim, kernel2.coDim, kernel2.coDim);
+	    return kernel2.GetDerivative(x1, x2, wrt-kernel1.numParams, block);
+	}
+    }
+    
+    virtual Eigen::MatrixXd GetParamBounds() const override
+    {
+	Eigen::MatrixXd bounds(2,this->numParams);
+
+	bounds.block(0,0,2,kernel1.numParams) = kernel1.GetParamBounds();
+	bounds.block(0,kernel1.numParams,2,kernel2.numParams) = kernel2.GetParamBounds();
+
+	return bounds;
+    };
+	
+    virtual Eigen::VectorXd GetParams() const override
+    {
+	Eigen::VectorXd params(this->numParams);
+
+	params.head(kernel1.numParams) = kernel1.GetParams();
+	params.tail(kernel2.numParams) = kernel2.GetParams();
+
+	return params;
+    };
+        
+    virtual void SetParams(Eigen::VectorXd const& params) override
+    {
+        kernel1.SetParams(params.head(kernel1.numParams));
+	kernel2.SetParams(params.tail(kernel2.numParams));
+    }
+
+    
+private:
+    KernelType1  kernel1;
+    KernelType2 kernel2;
+};
+
+
+
 
 /**
 
@@ -979,6 +1138,8 @@ public:
 	assert(Ain.cols() == Kin.coDim);
     };
 
+    virtual ~LinearTransformKernel(){};
+    
     template<typename VecType1, typename VecType2, typename MatrixType>
     inline void EvaluateImpl(VecType1 const& x1, VecType2 const& x2, MatrixType &cov) const
     {
@@ -1026,6 +1187,21 @@ LinearTransformKernel<KernelType> operator*(Eigen::MatrixXd const& A, KernelType
     return TransformKernel(A,K);
 }
 
+
+template<class KernelType1, class... KTypes>
+void FillKernelVector(std::vector<std::shared_ptr<KernelBase>> & vec, const KernelType1& kernel1, const KTypes&... kernels)
+{
+    vec.push_back(kernel1.Clone());
+    FillKernelVector(vec, kernels...);
+}
+
+template<class KernelType1>
+void FillKernelVector(std::vector<std::shared_ptr<KernelBase>> & vec, const KernelType1& kernel1)
+{
+    vec.push_back(kernel1.Clone());
+}
+
+
 /**
 
 Create a coregional kernel
@@ -1033,11 +1209,31 @@ Create a coregional kernel
 @param[in] kernels Covariance kernels for the principal components of the covariance.
  
 */
-template<class... KTypes>
-CoregionalKernel<KTypes...> CoregionTie(unsigned dim, Eigen::MatrixXd const& coCov, const KTypes&... kernels)
+template<class KernelType1, class... KTypes>
+CoregionalKernel CoregionTie(Eigen::MatrixXd const& coCov, const KernelType1& kernel1, const KTypes&... kernels)
 {
-    return CoregionalKernel<KTypes...>(dim, coCov, kernels...);
-};
+    std::vector<std::shared_ptr<KernelBase>> vec;
+    FillKernelVector(vec, kernel1, kernels...);
+    
+    return CoregionalKernel(kernel1.inputDim, coCov, vec);
+
+}
+template<class KernelType1>
+CoregionalKernel CoregionTie(Eigen::MatrixXd const& coCov, const KernelType1& kernel1, int numRepeat)
+{
+    std::vector<std::shared_ptr<KernelBase>> vec(numRepeat);
+    for(int i=0; i<numRepeat; ++i)
+        vec.at(i) = kernel1.Clone();
+
+    return CoregionalKernel(kernel1.inputDim, coCov, vec);
+}
+
+template<class KernelType1, class KernelType2>
+ConcatenateKernel<KernelType1, KernelType2> Concatenate(KernelType1 const& kernel1, KernelType2 const& kernel2)
+{
+    return ConcatenateKernel<KernelType1, KernelType2>(kernel1, kernel2);
+}
+
 
 
 /** @} */ // end of Doxygen covariance kernel group
