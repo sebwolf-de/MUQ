@@ -1198,7 +1198,8 @@ void FillKernelVector(std::vector<std::shared_ptr<KernelBase>> & vec, const Kern
 template<class KernelType1>
 void FillKernelVector(std::vector<std::shared_ptr<KernelBase>> & vec, const KernelType1& kernel1)
 {
-    vec.push_back(kernel1.Clone());
+    KernelBase const& baseRef = kernel1;
+    vec.push_back(baseRef.Clone());
 }
 
 
@@ -1209,11 +1210,11 @@ Create a coregional kernel
 @param[in] kernels Covariance kernels for the principal components of the covariance.
  
 */
-template<class KernelType1, class... KTypes>
-CoregionalKernel CoregionTie(Eigen::MatrixXd const& coCov, const KernelType1& kernel1, const KTypes&... kernels)
+template<class KernelType1, class KernelType2, std::enable_if<std::is_base_of<KernelBase, KernelType2>::value>, class... KTypes>
+CoregionalKernel CoregionTie(Eigen::MatrixXd const& coCov, const KernelType1& kernel1, const KernelType2& kernel2, const KTypes&... kernels)
 {
     std::vector<std::shared_ptr<KernelBase>> vec;
-    FillKernelVector(vec, kernel1, kernels...);
+    FillKernelVector(vec, kernel1, kernel2, kernels...);
     
     return CoregionalKernel(kernel1.inputDim, coCov, vec);
 
@@ -1222,8 +1223,9 @@ template<class KernelType1>
 CoregionalKernel CoregionTie(Eigen::MatrixXd const& coCov, const KernelType1& kernel1, int numRepeat)
 {
     std::vector<std::shared_ptr<KernelBase>> vec(numRepeat);
+    KernelBase const& baseRef = kernel1;
     for(int i=0; i<numRepeat; ++i)
-        vec.at(i) = kernel1.Clone();
+        vec.at(i) = baseRef.Clone();
 
     return CoregionalKernel(kernel1.inputDim, coCov, vec);
 }
