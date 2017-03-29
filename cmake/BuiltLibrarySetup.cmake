@@ -5,27 +5,15 @@ if(APPLE AND MUQ_USE_PYTHON)
 endif(APPLE AND MUQ_USE_PYTHON)
 
 
-if(Approximation_build)
-	list(APPEND MUQ_BUILT_LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}muqApproximation${MUQ_SHARED_LIB_SUFFIX})
-endif()
+foreach(libName ${MUQ_TARGETS})
 
-if(Inference_build)
-	list(APPEND MUQ_BUILT_LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}muqInference${MUQ_SHARED_LIB_SUFFIX})
-endif()
+    list(LENGTH ${libName}_SOURCES strLength)
+    if(${strLength} GREATER 0)
 
-if(Optimization_build)
-	list(APPEND MUQ_BUILT_LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}muqOptimization${MUQ_SHARED_LIB_SUFFIX})
-endif()
+        list(APPEND MUQ_BUILT_LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}${libName}${MUQ_SHARED_LIB_SUFFIX})
 
-if(Geostats_build)
-	list(APPEND MUQ_BUILT_LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}muqGeostatistics${MUQ_SHARED_LIB_SUFFIX})
-endif()
+    endif()
+    
+endforeach()
 
-if(UtilitiesAndModelling_build)
-	list(APPEND MUQ_BUILT_LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}muqUtilities${MUQ_SHARED_LIB_SUFFIX})
-	list(APPEND MUQ_BUILT_LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}muqModelling${MUQ_SHARED_LIB_SUFFIX})
-endif()
-
-if(PDE_build)
-	list(APPEND MUQ_BUILT_LIBRARIES ${CMAKE_SHARED_LIBRARY_PREFIX}muqPde${MUQ_SHARED_LIB_SUFFIX})
-endif()
+message("MUQ_BUILT_LIBRARIES = ${MUQ_BUILT_LIBRARIES}")

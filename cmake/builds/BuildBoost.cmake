@@ -96,7 +96,7 @@ if(MUQ_USE_PYTHON)
         if(MUQ_USE_OPENMPI)
 			if(MUQ_USE_LIBC11)
           ExternalProject_Add(
-            Boost
+            BOOST
             PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost
             URL ${BOOST_EXTERNAL_SOURCE}
             PATCH_COMMAND cp ${CMAKE_SOURCE_DIR}/external/boost/shared_ptr_helper.hpp ${CMAKE_CURRENT_BINARY_DIR}/external/boost/src/Boost/boost/serialization/shared_ptr_helper.hpp
@@ -108,7 +108,7 @@ if(MUQ_USE_PYTHON)
             )
 		else(MUQ_USE_LIBC11)
             ExternalProject_Add(
-              Boost
+              BOOST
               PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost
               URL ${BOOST_EXTERNAL_SOURCE}
               PATCH_COMMAND cp ${CMAKE_SOURCE_DIR}/external/boost/shared_ptr_helper.hpp ${CMAKE_CURRENT_BINARY_DIR}/external/boost/src/Boost/boost/serialization/shared_ptr_helper.hpp
@@ -124,7 +124,7 @@ if(MUQ_USE_PYTHON)
 			
 			if(MUQ_USE_LIBC11)
           ExternalProject_Add(
-            Boost
+            BOOST
             PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost
             URL ${BOOST_EXTERNAL_SOURCE}
             PATCH_COMMAND cp ${CMAKE_SOURCE_DIR}/external/boost/shared_ptr_helper.hpp ${CMAKE_CURRENT_BINARY_DIR}/external/boost/src/Boost/boost/serialization/shared_ptr_helper.hpp
@@ -136,7 +136,7 @@ if(MUQ_USE_PYTHON)
             )
 		else(MUQ_USE_LIBC11)
             ExternalProject_Add(
-              Boost
+              BOOST
               PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost
               URL ${BOOST_EXTERNAL_SOURCE}
               PATCH_COMMAND cp ${CMAKE_SOURCE_DIR}/external/boost/shared_ptr_helper.hpp ${CMAKE_CURRENT_BINARY_DIR}/external/boost/src/Boost/boost/serialization/shared_ptr_helper.hpp
@@ -154,7 +154,7 @@ else(MUQ_USE_PYTHON)
         if(MUQ_USE_OPENMPI)
 			if(MUQ_USE_LIBC11)
           ExternalProject_Add(
-            Boost
+            BOOST
             PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost
             URL ${BOOST_EXTERNAL_SOURCE}
             PATCH_COMMAND cp ${CMAKE_SOURCE_DIR}/external/boost/shared_ptr_helper.hpp ${CMAKE_CURRENT_BINARY_DIR}/external/boost/src/Boost/boost/serialization/shared_ptr_helper.hpp
@@ -166,7 +166,7 @@ else(MUQ_USE_PYTHON)
             )
 		else(MUQ_USE_LIBC11)
             ExternalProject_Add(
-              Boost
+              BOOST
               PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost
               URL ${BOOST_EXTERNAL_SOURCE}
               PATCH_COMMAND cp ${CMAKE_SOURCE_DIR}/external/boost/shared_ptr_helper.hpp ${CMAKE_CURRENT_BINARY_DIR}/external/boost/src/Boost/boost/serialization/shared_ptr_helper.hpp
@@ -180,7 +180,7 @@ else(MUQ_USE_PYTHON)
         else(MUQ_USE_OPENMPI)
 			if(MUQ_USE_LIBC11)
           ExternalProject_Add(
-            Boost
+            BOOST
             PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost
             URL ${BOOST_EXTERNAL_SOURCE}
             PATCH_COMMAND cp ${CMAKE_SOURCE_DIR}/external/boost/shared_ptr_helper.hpp ${CMAKE_CURRENT_BINARY_DIR}/external/boost/src/Boost/boost/serialization/shared_ptr_helper.hpp
@@ -192,7 +192,7 @@ else(MUQ_USE_PYTHON)
             )
 		else(MUQ_USE_LIBC11)
             ExternalProject_Add(
-              Boost
+              BOOST
               PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost
               URL ${BOOST_EXTERNAL_SOURCE}
               PATCH_COMMAND cp ${CMAKE_SOURCE_DIR}/external/boost/shared_ptr_helper.hpp ${CMAKE_CURRENT_BINARY_DIR}/external/boost/src/Boost/boost/serialization/shared_ptr_helper.hpp
@@ -206,7 +206,7 @@ else(MUQ_USE_PYTHON)
         endif(MUQ_USE_OPENMPI)
         
 endif(MUQ_USE_PYTHON)
-set_property( TARGET Boost PROPERTY FOLDER "Externals")
+set_property( TARGET BOOST PROPERTY FOLDER "Externals")
 
 set( Boost_INCLUDE_DIRS ${Boost_INSTALL_DIR}/include )
 
@@ -250,6 +250,7 @@ if(MUQ_USE_PYTHON)
   endif(MUQ_USE_OPENMPI)
 
 endif(MUQ_USE_PYTHON)
+
 
 
 
