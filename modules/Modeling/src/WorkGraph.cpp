@@ -1,6 +1,6 @@
-#include "MUQ/Modeling/Core/WorkGraph.h"
+#include "MUQ/Modeling/WorkGraph.h"
 
-using namespace muq::Modeling::Core;
+using namespace muq::Modeling;
 
 /// A helper struct that determines if a node in the graph has a given name
 struct NodeNameFinder {

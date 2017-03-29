@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
 
-#include "MUQ/Modeling/Core/WorkGraph.h"
+#include "MUQ/Modeling/WorkGraph.h"
 
 #include "WorkPieceTestClasses.h"
 
-using namespace muq::Modeling::Core;
+using namespace muq::Modeling;
 
 TEST(WorkGraphTests, ConstructGraph) {
   // create a test WorkPiece
