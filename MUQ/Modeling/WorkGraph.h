@@ -10,7 +10,8 @@ namespace muq {
   namespace Modeling { 
     // Define a directed graph type
     typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, std::shared_ptr<WorkGraphNode>, std::shared_ptr<WorkGraphEdge> > Graph;
-    
+
+    /// A graph of connected muq::Modeling::WorkPiece's 
     class WorkGraph {
     public:
       
