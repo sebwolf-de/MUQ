@@ -91,8 +91,18 @@ unsigned int WorkGraph::NumEdges() const {
 bool WorkGraph::HasNode(std::string const& name) const {
   assert(graph);
 
+  // create a node iterator
+  boost::graph_traits<Graph>::vertex_iterator iter;
+
+  // check if we have the node
+  return HasNode(iter, name);
+}
+
+bool WorkGraph::HasNode(boost::graph_traits<Graph>::vertex_iterator& iter, std::string const& name) const {
+  assert(graph);
+    
   // try to find the node with this name
-  const boost::graph_traits<Graph>::vertex_iterator iter = GetNodeIterator(name);
+  iter = GetNodeIterator(name);
 
   // the node exists if the iterator is not the end
   return iter!=vertices(*graph).second;
@@ -268,6 +278,69 @@ std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > Work
   }
 
   return inputs;
+}
+
+bool WorkGraph::HasEdge(boost::graph_traits<Graph>::vertex_descriptor const& vOut, boost::graph_traits<Graph>::vertex_descriptor const& vIn, int const inputDim) const {
+  // iteraters through the output edges of the input node
+  boost::graph_traits<Graph>::out_edge_iterator ei, ei_end;
+  boost::tie(ei, ei_end) = boost::out_edges(vOut, *graph);
+
+  for( ; ei!=ei_end ; ++ei ) {  // loop through the output edges
+    if( target(*ei, *graph)==vIn && graph->operator[](*ei)->inputDim==inputDim ) { // if the target is the input node and the input dimension is the same
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void WorkGraph::RecursiveCopyAndCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph> newGraph) const {
+  // the input edges into vOld
+  boost::graph_traits<Graph>::in_edge_iterator e, e_end;
+  for( tie(e, e_end)=in_edges(vOld, *graph); e!=e_end; ++e ) { // loop through the input edges
+    // the upstream node iterator
+    auto v = boost::source(*e, *graph);
+    
+    boost::graph_traits<Graph>::vertex_descriptor nextV;
+    boost::graph_traits<Graph>::vertex_iterator ind;
+
+    if( newGraph->HasNode(ind, graph->operator[](v)->name) ) { // if the node already exists in the new graph ...
+      // ... the next node is that node
+      nextV = *ind;
+    } else { // if not ...
+      // ... copy the source node over to the new graph and make an edge
+      nextV = boost::add_vertex(*(newGraph->graph));
+      newGraph->graph->operator[](nextV) = graph->operator[](v);
+    }
+
+    if( !HasEdge(nextV, vNew, graph->operator[](*e)->inputDim ) ) { // if the edge does not already exist ...
+      // add the edge from this node to the existing node, 
+      auto nextE = boost::add_edge(nextV, vNew, (*newGraph->graph));
+      newGraph->graph->operator[](nextE.first) = std::make_shared<WorkGraphEdge>(graph->operator[](*e)->outputDim, graph->operator[](*e)->inputDim);
+    }
+
+    // recurse down a step further
+    RecursiveCopyAndCut(v, nextV, newGraph);
+  }
+}
+
+std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) const {
+  // create a new graph 
+  auto newGraph = std::make_shared<WorkGraph>();
+
+  // the an iterator to the output node
+  auto oldV = GetNodeIterator(nameOut);
+
+  // add a new node to the output graph
+  auto newV = boost::add_vertex(*(newGraph->graph));
+
+  // copy the output node
+  newGraph->graph->operator[](newV) = graph->operator[](*oldV);
+
+  // recurse through graph
+  RecursiveCopyAndCut(*oldV, newV, newGraph);
+
+  return newGraph;
 }
 
 class MyVertexWriter {
