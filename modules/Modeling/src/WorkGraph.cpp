@@ -115,24 +115,32 @@ void WorkGraph::AddEdge(std::string const& nameFrom, unsigned int const outputDi
   auto itTo = GetNodeIterator(nameTo);
   assert(itTo!=vertices(*graph).second);
 
+  // the number of inputs and outputs
+  const int numOutputs = graph->operator[](*itFrom)->piece->numOutputs;
+  const int numInputs = graph->operator[](*itTo)->piece->numInputs;
+
   // either we don't know the number of outputs from "nameFrom" or the output dimension is less than the number of outputs
-  if( graph->operator[](*itFrom)->piece->numOutputs>=0 && outputDim>=graph->operator[](*itFrom)->piece->numOutputs ) {
+  if( numOutputs>=0 && outputDim>=numOutputs ) {
     std::cerr << std::endl << "ERROR: The number of outputs for node '" << nameFrom << "' is " << graph->operator[](*itFrom)->piece->numOutputs << " but the output required by 'WorkGraph::AddEdge' is " << outputDim << std::endl << std::endl;
-    assert(graph->operator[](*itFrom)->piece->numOutputs<0 || outputDim<graph->operator[](*itFrom)->piece->numOutputs);
+    assert(numOutputs<0 || outputDim<numOutputs);
   }
   
   // either we don't know the number of inputs to "nameTo" or the input dimension is less than the number of inputs
-  if( graph->operator[](*itTo)->piece->numInputs>=0 && inputDim>=graph->operator[](*itTo)->piece->numInputs ) {
+  if( numInputs>=0 && inputDim>=numInputs ) {
     std::cerr << std::endl << "ERROR: The number of inputs for node '" << nameTo << "' is " << graph->operator[](*itTo)->piece->numInputs << " but the input required by 'WorkGraph::AddEdge' is " << inputDim << std::endl << std::endl;
-    assert(graph->operator[](*itTo)->piece->numInputs<0 || inputDim<graph->operator[](*itTo)->piece->numInputs);
+    assert(numInputs<0 || inputDim<numInputs);
   }
 
+  // the input/output type
+  const std::string inType = graph->operator[](*itTo)->piece->InputType(inputDim);
+  const std::string outType = graph->operator[](*itFrom)->piece->OutputType(outputDim);
+
   // either we don't know the input and/or output type or they match
-  if(graph->operator[](*itTo)->piece->InputType(inputDim).compare("")!=0 && // we don't know the input type
-     graph->operator[](*itFrom)->piece->OutputType(outputDim).compare("")!=0 && // we don't know the output type
-     graph->operator[](*itTo)->piece->InputType(inputDim).compare(graph->operator[](*itFrom)->piece->OutputType(outputDim))!=0 ) { // the types must match
+  if(inType.compare("")!=0 && // we don't know the input type
+     outType.compare("")!=0 && // we don't know the output type
+     inType.compare(outType)!=0 ) { // the types must match
     std::cerr << std::endl << "ERROR: Types do not match in 'WorkGraph::AddEdge'.  The input type node '" << nameTo << "' is " << graph->operator[](*itTo)->piece->InputType(inputDim) << " but the output type for node '" << nameFrom << "' is " << graph->operator[](*itFrom)->piece->OutputType(outputDim) << std::endl << std::endl;
-    assert(graph->operator[](*itTo)->piece->InputType(inputDim).compare(graph->operator[](*itFrom)->piece->OutputType(outputDim))==0); // the types must match
+    assert(inType.compare(outType)==0); // the types must match
   }
     
   // remove any other edge going into dimension inputDim of the nameTo node
