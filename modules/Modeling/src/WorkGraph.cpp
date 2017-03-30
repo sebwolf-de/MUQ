@@ -115,6 +115,17 @@ void WorkGraph::AddEdge(std::string const& nameFrom, unsigned int const outputDi
   auto itTo = GetNodeIterator(nameTo);
   assert(itTo!=vertices(*graph).second);
 
+  // either we don't know the number of outputs from "nameFrom" or the output dimension is less than the number of outputs
+  if( graph->operator[](*itFrom)->piece->numOutputs>0 && outputDim>graph->operator[](*itFrom)->piece->numOutputs ) {
+    std::cerr << std::endl << "ERROR: The number of outputs for node '" << nameFrom << "' is " << graph->operator[](*itFrom)->piece->numOutputs << " but the output required by 'WorkGraph::AddEdge' is " << outputDim << std::endl << std::endl;
+    assert(graph->operator[](*itFrom)->piece->numOutputs<0 || outputDim<graph->operator[](*itFrom)->piece->numOutputs);
+  }
+  // either we don't know the number of inputs to "nameTo" or the input dimension is less than the number of inputs
+  if( graph->operator[](*itTo)->piece->numInputs>0 && inputDim>graph->operator[](*itTo)->piece->numInputs ) {
+    std::cerr << std::endl << "ERROR: The number of inputs for node '" << nameTo << "' is " << graph->operator[](*itTo)->piece->numInputs << " but the input required by 'WorkGraph::AddEdge' is " << inputDim << std::endl << std::endl;
+    assert(graph->operator[](*itTo)->piece->numInputs<0 || inputDim<graph->operator[](*itTo)->piece->numInputs);
+  }
+
   // remove any other edge going into dimension inputDim of the nameTo node
   boost::remove_in_edge_if(*itTo, SameInputDim(inputDim, graph), *graph);
 
@@ -153,23 +164,36 @@ std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > Work
     isSet.reserve(std::max((int)isSet.capacity(), numOutputs));
 
     // for each vertex, loop over the input nodes and figure out if the outputs are set
-    boost::graph_traits<Graph>::in_edge_iterator e, e_end;
-    for( tie(e, e_end)=in_edges(*v, *graph); e!=e_end; ++e ) {
+    boost::graph_traits<Graph>::out_edge_iterator e, e_end;
+    for( tie(e, e_end)=out_edges(*v, *graph); e!=e_end; ++e ) {
       // we have an input, so store it in the vector
       isSet.push_back(graph->operator[](*e)->outputDim);
     }
 
     // if an input to this ModPiece is not set, it will be stored as an output to the graph
     for( int i=0; i<numOutputs; ++i ) {
-      if( std::find(std::begin(isSet), std::end(isSet), i)==isSet.end() ) { // if the output is not set ..
+      if( std::find(isSet.begin(), isSet.end(), i)==isSet.end() ) { // if the output is not set ..
 	// ... store this vertex and the output number
 	outputs.push_back(std::make_pair(*v, i));
       }
     }
 
-    // if we don't know the number of inputs
+    // if we don't know the number of outputs
     if( numOutputs<0 ) {
       outputs.push_back(std::make_pair(*v, -1));
+
+      if( isSet.size()>0 ) { // if some outputs have been set ...
+	// the maximum output number that is set
+	const unsigned int maxOut = *std::max_element(isSet.begin(), isSet.end());
+
+	// loop through all the outputs less than the max input
+	for( unsigned int i=0; i<maxOut; ++i ) {
+	  if( std::find(isSet.begin(), isSet.end(), i)==isSet.end() ) { // if an output is not set ...
+	    // ... it must be a graph output
+	    outputs.push_back(std::make_pair(*v, i));
+	  }
+	}
+      }
     }
   }
 
@@ -210,6 +234,19 @@ std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > Work
     // if we don't know the number of inputs
     if( numInputs<0 ) {
       inputs.push_back(std::make_pair(*v, -1));
+
+      if( isSet.size()>0 ) { // if some inputs have been set ...
+	// the maximum input number that is set
+	const unsigned int maxIn = *std::max_element(isSet.begin(), isSet.end());
+	
+	// loop through all the inputs less than the max input
+	for( unsigned int i=0; i<maxIn; ++i ) {
+	  if( std::find(isSet.begin(), isSet.end(), i)==isSet.end() ) { // if an input is not set ...
+	    // ... it must be a graph input
+	    inputs.push_back(std::make_pair(*v, i));
+	  }
+	}
+      }
     }
   }
 
