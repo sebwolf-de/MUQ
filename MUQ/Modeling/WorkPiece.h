@@ -120,8 +120,27 @@ namespace muq {
       }
 
       /// Get the (unique) name of this work piece
+      /**
+	 \return The name of the muq::Modeling::WorkPiece
+       */
       std::string Name() const;
-      
+
+      /// Get the input type (if we know it) for a specific input
+      /**
+	 The return input type name is "demangled" so it is more human readable.
+	 @param[in] inputNum The input we want the name of 
+	 \return If we know the input types, the input type name is returned.  If we do not know the input types, return ""
+       */
+      std::string InputType(unsigned int inputNum) const;
+
+      /// Get the output type (if we know it) for a specific output
+      /**
+	 The return output type name is "demangled" so it is more human readable.
+	 @param[in] outputNum The output we want the name of 
+	 \return If we know the output types, the output type name is returned.  If we do not know the output types, return ""
+       */
+      std::string OutputType(unsigned int outputNum) const;
+
       /// The number of inputs
       const int numInputs;
 	

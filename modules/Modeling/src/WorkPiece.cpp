@@ -126,3 +126,29 @@ std::string WorkPiece::Name() const {
 
   return ss.str();
 }
+
+std::string WorkPiece::InputType(unsigned int inputNum) const {
+  // make sure the inputNum is less than the number of inputs or that we don't know the number of inputs
+  assert(numInputs<0 || inputNum<numInputs);
+
+  if( inputTypes.size()>0 ) { // if we know the input types ...
+    int status;
+    // ... returned the demangled name
+    return abi::__cxa_demangle(inputTypes.at(inputNum).c_str(), 0, 0, &status);
+  }
+
+  return "";
+}
+
+std::string WorkPiece::OutputType(unsigned int outputNum) const {
+  // make sure the inputNum is less than the number of inputs or that we don't know the number of inputs
+  assert(numOutputs<0 || outputNum<numOutputs);
+
+  if( outputTypes.size()>0 ) { // if we know the input types ...
+    int status;
+    // ... returned the demangled name
+    return abi::__cxa_demangle(outputTypes.at(outputNum).c_str(), 0, 0, &status);
+  }
+
+  return "";
+}
