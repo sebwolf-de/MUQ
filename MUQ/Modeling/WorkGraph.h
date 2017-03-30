@@ -40,10 +40,11 @@ namespace muq {
       /// Add a new edge to the graph
       /**
 	 @param[in] nameFrom The name of the upstream node.
+	 @param[in] outputDim The output dimension of "nameFrom" that will be given to "nameTo"
 	 @param[in] nameTo The name of the downstream node.
 	 @param[in] inputDim The input dimension of "nameTo" that will be given the output of "nameFrom"
 	 */
-      void AddEdge(std::string const& nameFrom, std::string const& nameTo, unsigned int const inputDim);
+      void AddEdge(std::string const& nameFrom, unsigned int const outputDim, std::string const& nameTo, unsigned int const inputDim);
       
       /// Is the given node in the graph?
       /**
@@ -51,6 +52,9 @@ namespace muq {
 	 \return true if the graph has a node named 'name', false otherwise
       */
       bool HasNode(std::string const& name) const;
+
+      /// Visualize the graph
+      void Visualize(std::string const& filename) const;
       
     private:
 
@@ -60,6 +64,12 @@ namespace muq {
 	 \return An iterator to that node (returns the "end" iterator if that node does not exist
       */
       boost::graph_traits<Graph>::vertex_iterator GetNodeIterator(std::string const& name) const;
+
+      /// Find the inputs to the graph
+      /**
+	 \return The inputs to the graph, each input is the vertex and the input dimension that has not be set
+       */
+      std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > GraphInputs() const;
       
       /// The directed graph that represents this muq::Modeling::Core::WorkGraph
       std::shared_ptr<Graph> graph;

@@ -9,12 +9,16 @@ namespace muq {
       
       /// Create an edge for muq::Modeling::Core::WorkGraph
       /**
-	 @param[in] dim The input number
+	 @param[in] outputDim The output dimension of the output node that will be given to the input node
+	 @param[in] inputDim The input dimension of the input node that will be given the output of the output node
       */
-      WorkGraphEdge(unsigned int dim);
+      WorkGraphEdge(unsigned int const outputDim, unsigned int const inputDim);
+
+      /// The output dimension
+      const unsigned int outputDim;
       
-      /// The input number
-      const unsigned int dim;
+      /// The input dimension
+      const unsigned int inputDim;
       
     private:
       

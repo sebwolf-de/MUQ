@@ -30,6 +30,8 @@ TEST(WorkGraphTests, ConstructGraph) {
   EXPECT_TRUE(graph->HasNode("test1"));
 
   // connect test0 to test1
-  graph->AddEdge("test0", "test1", 0);
+  graph->AddEdge("test0", 0, "test1", 0);
   EXPECT_EQ(graph->NumEdges(), 1);
+
+  graph->Visualize("graph.pdf");
 }
