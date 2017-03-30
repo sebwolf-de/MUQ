@@ -3,6 +3,7 @@ CreateTestGroup(
     
     WorkPieceTests.cpp
     WorkGraphTests.cpp
+    WorkGraphPieceTests.cpp
 )
 
 

@@ -24,4 +24,6 @@ CreateCompileGroup(
     WorkGraph.cpp
     WorkGraphNode.cpp
     WorkGraphEdge.cpp
+
+    WorkGraphPiece.cpp
 )
