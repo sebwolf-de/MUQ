@@ -136,9 +136,49 @@ boost::graph_traits<Graph>::vertex_iterator WorkGraph::GetNodeIterator(std::stri
   return std::find_if(v, v_end, NodeNameFinder(name, graph));
 }
 
+std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > WorkGraph::GraphOutputs() const {
+  // create an empty vector to hold outputs
+  std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > outputs;
+
+    // loop through the vertices
+  boost::graph_traits<Graph>::vertex_iterator v, v_end;
+  for( std::tie(v, v_end)=vertices(*graph); v!=v_end; ++v ) {
+    // a vector of the outputs that are set
+    std::vector<int> isSet;
+
+    // number of outputs (negative indcates we don't know)
+    const int numOutputs = graph->operator[](*v)->piece->numOutputs;
+
+    // if possible, reserve memory for the outputs that are set (the size reserved is the total number of outputs, however, if it is negative we don't know how many outputs there are so we reserve whatever the compiler did by default...)
+    isSet.reserve(std::max((int)isSet.capacity(), numOutputs));
+
+    // for each vertex, loop over the input nodes and figure out if the outputs are set
+    boost::graph_traits<Graph>::in_edge_iterator e, e_end;
+    for( tie(e, e_end)=in_edges(*v, *graph); e!=e_end; ++e ) {
+      // we have an input, so store it in the vector
+      isSet.push_back(graph->operator[](*e)->outputDim);
+    }
+
+    // if an input to this ModPiece is not set, it will be stored as an output to the graph
+    for( int i=0; i<numOutputs; ++i ) {
+      if( std::find(std::begin(isSet), std::end(isSet), i)==isSet.end() ) { // if the output is not set ..
+	// ... store this vertex and the output number
+	outputs.push_back(std::make_pair(*v, i));
+      }
+    }
+
+    // if we don't know the number of inputs
+    if( numOutputs<0 ) {
+      outputs.push_back(std::make_pair(*v, -1));
+    }
+  }
+
+  return outputs;
+}
+
 std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > WorkGraph::GraphInputs() const {
-  // create an empty vector to hold output
-  std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > output;
+  // create an empty vector to hold inputs
+  std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > inputs;
 
   // loop through the vertices
   boost::graph_traits<Graph>::vertex_iterator v, v_end;
@@ -146,26 +186,34 @@ std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > Work
     // a vector of the inputs that are set
     std::vector<int> isSet;
 
-    // if possible, reserve memory for the inputs that are set (the size reserved is the total number of inputs, however, if it is negative we don't know how many inputs there are so we reserve whatever the compiler did by default...)
-    isSet.reserve(std::max((int)isSet.capacity(), graph->operator[](*v)->piece->numInputs));
+    // number of inputs (negative indcates we don't know)
+    const int numInputs = graph->operator[](*v)->piece->numInputs;
 
+    // if possible, reserve memory for the inputs that are set (the size reserved is the total number of inputs, however, if it is negative we don't know how many inputs there are so we reserve whatever the compiler did by default...)
+    isSet.reserve(std::max((int)isSet.capacity(), numInputs));
+    
     // for each vertex, loop over the input nodes and figure out if the inputs are set
     boost::graph_traits<Graph>::in_edge_iterator e, e_end;
     for( tie(e, e_end)=in_edges(*v, *graph); e!=e_end; ++e ) {
       // we have an input, so store it in the vector
       isSet.push_back(graph->operator[](*e)->inputDim);
     }
-
+    
     // if an input to this ModPiece is not set, it will be stored as an input to the graph
-    for( unsigned int i=0; i<isSet.size(); ++i ) {
-      if( std::find(std::begin(isSet), std::end(isSet), i)!=isSet.end() ) { // if the input is not set ..
+    for( int i=0; i<numInputs; ++i ) {
+      if( std::find(std::begin(isSet), std::end(isSet), i)==isSet.end() ) { // if the input is not set ..
 	// ... store this vertex and the input number
-	output.push_back(std::make_pair(*v, i));
+	inputs.push_back(std::make_pair(*v, i));
       }
+    }
+
+    // if we don't know the number of inputs
+    if( numInputs<0 ) {
+      inputs.push_back(std::make_pair(*v, -1));
     }
   }
 
-  return output;
+  return inputs;
 }
 
 class MyVertexWriter {
@@ -174,46 +222,23 @@ public:
   MyVertexWriter(std::shared_ptr<const Graph> graph) : graph(graph) {}
 
   void operator()(std::ostream& out, const boost::graph_traits<Graph>::vertex_descriptor& v) const {
-    /*int status;
-    auto modPtr = graph->operator[](v)->piece;
-    const string realString = modPtr->GetName();
-	
-    string style;
-    if ((strcmp(realString.c_str(), "muq::Modelling::ModParameter") == 0) && (((*g)[v]->name).find("InputNode") == 0)) {
-      style =  "shape=invhouse,colorscheme=pastel16,color=1, style=filled";
-    } else {
-		 if(colorOption==ModGraph::DERIV_COLOR){
- 			style = GetDerivColor(modPtr) + ", style=filled";
- 		}else if(colorOption==ModGraph::CALLS_COLOR){
- 			style = GetRangeColor(modPtr->GetNumCalls("Evaluate"),minRange,maxRange) + ", style=filled";
-	 	}else if(colorOption==ModGraph::TIME_COLOR){
-	 		style = GetRangeColor(modPtr->GetRunTime("Evaluate"),minRange,maxRange) + ", style=filled";
- 		}else{
-			style = "colorscheme=pastel16,color=2, style=filled";
-		}
-		
-		if(addDerivLabels){
-		
-		  string derivs = "0000";
-		  if(modPtr->hasDirectGradient)
-		    derivs[0] = '1';
-		  if(modPtr->hasDirectJacobian)
-		    derivs[1] = '1';
-		  if(modPtr->hasDirectJacobianAction)
-		    derivs[2] = '1';
-		  if(modPtr->hasDirectHessian)
-		    derivs[3] = '1';
-		  
-	      out << "[label=\"" << (*g)[v]->name << " : " << realString << " (" << derivs << ")\", " << style << "]";
-		}else{
-		  out << "[label=\"" << (*g)[v]->name << " : " << realString << "\", " << style << "]";
-		}
-    }
-    */
+    int status;
+
+    // the WorkPiece associated with this node
+    auto workPtr = graph->operator[](v)->piece;
+
+    // the name of this work piece
+    const std::string nodeName = workPtr->Name();
+
+    // style for the node visualization 
+    const std::string style = "colorscheme=pastel16,color=2, style=filled";
+
+    // label the node
+    out << "[label=\"" << graph->operator[](v)->name << " : " << nodeName << "\", " << style << "]";
   }
 
 private:
-  //double minRange, maxRange;
+  // the graph we are visualizing
   std::shared_ptr<const Graph> graph;
 };
 
@@ -223,14 +248,16 @@ public:
   MyEdgeWriter(std::shared_ptr<const Graph> graph) : graph(graph) {}
 
   void operator()(std::ostream& out, const boost::graph_traits<Graph>::edge_descriptor& e) const {
-    /*int inputNum  = (*g)[e]->GetDim();
-    int inputSize = (*g)[e.m_target]->piece->inputSizes(inputNum);
+    const unsigned int inputDim = graph->operator[](e)->inputDim;
+    
+    const unsigned int outputDim = graph->operator[](e)->outputDim;
 
     // first, write the name as the label
-    out << "[label=\" " << inputNum << "[" << inputSize << "]\"]";*/
+    out << "[label=\" [out, in]: [" << outputDim << ", " << inputDim << "]\"]";
   }
 
 private:
+  // the graph we are visualizing
   std::shared_ptr<const Graph> graph;
 };
 
@@ -240,7 +267,7 @@ public:
   MyGraphWriter(std::shared_ptr<const Graph> graph) : graph(graph) {}
 
   void operator()(std::ostream& out) const {
-    //out << "splines = true;" << endl;
+    out << "splines = true;" << std::endl;
   }
 
 private:
@@ -280,23 +307,35 @@ void WorkGraph::Visualize(std::string const& filename) const {
 
   fout.seekp(-2, std::ios_base::cur); //back up so the rest is inside the brackets
 
-  //loop over all the inputs and draw them
+  // loop over all the inputs and draw them
   std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > graphInputs = GraphInputs();
 
-  int i = 0;
+  int in = 0;
   for( auto aPair : graphInputs ) { // loop through the graph inputs
     vertexNum++;
-    fout << vertexNum << "[label=\"Input #" << i << "\", shape=invhouse,colorscheme=pastel13,color=1, style=filled];" << std::endl;
-    //fout << vertexNum << "->" << propmapIndex[aPair.first] << "[label=\" " << aPair.second << "[" << graph->operator[](aPair.first)->piece->inputSizes(aPair.second) << "]\"];" << std::endl;
-    ++i;
+    if( aPair.second<0 ) { // if we do not know the input number 
+      fout << vertexNum << "[label=\"Unfixed input\", shape=invhouse,colorscheme=pastel13,color=1, style=filled];" << std::endl;
+      fout << vertexNum << "->" << propmapIndex[aPair.first] << std::endl;
+    } else { // if we know the input number
+      fout << vertexNum << "[label=\"Input #" << in << "\", shape=invhouse,colorscheme=pastel13,color=1, style=filled];" << std::endl;
+      fout << vertexNum << "->" << propmapIndex[aPair.first] << "[label=\" in: " << aPair.second << "\"];" << std::endl;
+      ++in;
+    }
   }
 
-  //find all the nodes with no outputs
-  BGL_FORALL_VERTICES(v, *graph, Graph) {
-    if( boost::out_degree(v, *graph) == 0) {
-      vertexNum++;
-      fout << vertexNum << "[label=\"Output" <<   "\", shape=box,colorscheme=pastel16,color=1, style=filled];" << std::endl;
-      //fout << propmapIndex[v]  << "->" << vertexNum << "[label=\" [" << ModelGraph[v]->piece->outputSize << "]\"];" << std::endl;
+  // loop over all the outputs and draw them
+  std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > graphOutputs = GraphOutputs();
+
+  int out = 0;
+  for( auto aPair : graphOutputs ) { // loop through the graph outputs
+    vertexNum++;
+    if( aPair.second<0 ) { // if we do not know the output number 
+      fout << vertexNum << "[label=\"Unfixed output\", shape=box,colorscheme=pastel16,color=1, style=filled];" << std::endl;
+      fout << propmapIndex[aPair.first]  << "->" << vertexNum << std::endl;
+    } else { // if we know the input number
+      fout << vertexNum << "[label=\"Output #" << out << "\", shape=box,colorscheme=pastel16,color=1, style=filled];" << std::endl;
+      fout << propmapIndex[aPair.first]  << "->" << vertexNum << "[label=\" out: " << aPair.second << "\"];" << std::endl;
+      ++out;
     }
   }
 

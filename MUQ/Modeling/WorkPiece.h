@@ -117,7 +117,10 @@ namespace muq {
 	
 	// begin calling the EvaluateMulti with the first input
 	return EvaluateRecursive(inputs, args...);
-      }	
+      }
+
+      /// Get the (unique) name of this work piece
+      std::string Name() const;
       
       /// The number of inputs
       const int numInputs;
@@ -214,6 +217,12 @@ namespace muq {
 	
 	return Evaluate(inputs);
       }
+
+      /// Set the ID number, must be called by the constructor
+      unsigned int SetID();
+
+      /// A unique ID number assigned by the constructor
+      const unsigned int id;
     }; // class WorkPiece
   } // namespace Modeling
 } // namespace muq

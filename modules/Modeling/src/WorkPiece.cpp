@@ -6,19 +6,22 @@ using namespace muq::Modeling;
 // Create a muq::Modeling::WorkPiece with no fixed number of inputs and outputs and variable input/output types.
 WorkPiece::WorkPiece() : 
   numInputs(-1), // the number of inputs is unfixed
-  numOutputs(-1) // the number of ouputs is unfixed
+  numOutputs(-1), // the number of ouputs is unfixed
+  id(SetID()) // the unique id of this WorkPiece
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
 WorkPiece::WorkPiece(unsigned int const num, WorkPiece::Fix const fix) : 
   numInputs(fix==WorkPiece::Fix::Inputs? num : -1), // possibly fix the number of inputs 
-  numOutputs(fix==WorkPiece::Fix::Outputs? num : -1) // possibly fix the number of outputs
+  numOutputs(fix==WorkPiece::Fix::Outputs? num : -1), // possibly fix the number of outputs
+  id(SetID()) // the unique id of this WorkPiece
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
 WorkPiece::WorkPiece(unsigned int const numIns, unsigned int const numOuts) : 
   numInputs(numIns), // fix the number of inputs
-  numOutputs(numOuts) // fix the number of outputs
+  numOutputs(numOuts), // fix the number of outputs
+  id(SetID()) // the unique id of this WorkPiece
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types
@@ -26,7 +29,8 @@ WorkPiece::WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const
   numInputs(fix==WorkPiece::Fix::Inputs? types.size() : -1), // possibly fix the number of inputs 
   numOutputs(fix==WorkPiece::Fix::Outputs? types.size() : -1), // possibly fix the number of outputs 
   inputTypes(fix==WorkPiece::Fix::Inputs? types : std::vector<std::string>(0)), // possibly fix the input types
-  outputTypes(fix==WorkPiece::Fix::Outputs? types : std::vector<std::string>(0)) // possibly fix the output types
+  outputTypes(fix==WorkPiece::Fix::Outputs? types : std::vector<std::string>(0)), // possibly fix the output types
+  id(SetID()) // the unique id of this WorkPiece
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types. The number of outputs/inputs (which ever does not have fixed types) is fixed but the types may vary.
@@ -34,7 +38,8 @@ WorkPiece::WorkPiece(std::vector<std::string> const& types, unsigned int const n
   numInputs(fix==WorkPiece::Fix::Inputs? types.size() : num), // fix the number of inputs 
   numOutputs(fix==WorkPiece::Fix::Outputs? types.size() : num), // fix the number of outputs 
   inputTypes(fix==WorkPiece::Fix::Inputs? types : std::vector<std::string>(0)), // possibly fix the input types
-  outputTypes(fix==WorkPiece::Fix::Outputs? types : std::vector<std::string>(0)) // possibly fix the output types
+  outputTypes(fix==WorkPiece::Fix::Outputs? types : std::vector<std::string>(0)), // possibly fix the output types
+  id(SetID()) // the unique id of this WorkPiece
 {}
 
 // Create a muq::Modeling::WorkPiece with a fixed number of inputs and outputs with specified types
@@ -42,8 +47,14 @@ WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::vector<std::s
   numInputs(inTypes.size()), // fix the number of inputs 
   numOutputs(outTypes.size()), // fix the number of outputs 
   inputTypes(inTypes), // fix the input types
-  outputTypes(outTypes) // fix the output types
+  outputTypes(outTypes), // fix the output types
+  id(SetID()) // the unique id of this WorkPiece
 {}
+
+unsigned int WorkPiece::SetID() {
+  static unsigned int workPieceId = 0;
+  return ++workPieceId;
+}
 
 std::vector<boost::any> WorkPiece::Evaluate() {
   // make sure we have the correct number of inputs
@@ -104,4 +115,14 @@ std::vector<boost::any> WorkPiece::Evaluate(std::vector<boost::any> const& ins) 
   
   // the inputs are set, so call evaluate with no inputs
   return Evaluate(in_refs);
+}
+
+std::string WorkPiece::Name() const {
+  int status;
+  std::stringstream ss;
+
+  // the unique name is the name of the (child) class + "_{ID number}"
+  ss << abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status) << "_" << id;
+
+  return ss.str();
 }

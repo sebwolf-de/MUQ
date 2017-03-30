@@ -70,7 +70,13 @@ namespace muq {
 	 \return The inputs to the graph, each input is the vertex and the input dimension that has not be set
        */
       std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > GraphInputs() const;
-      
+
+      /// Find the outputs to the graph
+      /**
+	 \return The outputs to the graph, each input is the vertex and the output dimension that has not be set
+       */
+      std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > GraphOutputs() const;
+
       /// The directed graph that represents this muq::Modeling::Core::WorkGraph
       std::shared_ptr<Graph> graph;
     };
