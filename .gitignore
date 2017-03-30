@@ -1,2 +1,8 @@
 build/*
 *~
+
+modules/Modeling/test/WorkGraphVisualizations/FixedInOutNum.pdf
+
+modules/Modeling/test/WorkGraphVisualizations/FixedInOutType.pdf
+
+modules/Modeling/test/WorkGraphVisualizations/UnfixedInOut.pdf
