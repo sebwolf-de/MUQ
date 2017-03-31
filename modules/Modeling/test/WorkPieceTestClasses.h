@@ -172,15 +172,62 @@ private:
   virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
     // the first input must be a string and the parent checks this
     const std::string s = boost::any_cast<std::string>(inputs[0]);
-    // the second input must be a shared pointer to AnObject and the parent checks this
+    // the third input must be a shared pointer to AnObject and the parent checks this
     auto obj = boost::any_cast<std::shared_ptr<AnObject> >(inputs[2]);
 
-    if( obj->flag ) { // of the flag in AnObject is true ...
+    if( obj->flag ) { // if the flag in AnObject is true ...
       // ... the output size is 2
       outputs.resize(2);
       outputs[0] = s;
       // the second output must a double but the parent does not check this
       outputs[1] = obj->value*boost::any_cast<double>(inputs[1]);
+
+      return;
+    }
+
+    // if the flag in AnObject is false, the ouput size is 1
+    outputs.resize(1);
+    outputs[0] = s;
+  }
+};
+
+/// A WorkPiece with a fixed input number and type but niether the number nor type of the output is fixed
+class SomeFixedInTypeMod : public muq::Modeling::WorkPiece {
+public:
+
+  /// Constructor
+  /**
+     @param[in] types A map that fixes some of the input types
+   */
+ SomeFixedInTypeMod(std::map<unsigned int, std::string> const& types) : WorkPiece(types) {}
+
+  /// Default destructor
+  virtual ~SomeFixedInTypeMod() {}
+
+private:
+
+  /// User-defined EvaluateImpl function
+  /**
+     The behavior changes depending on the flag value of the input AnObject
+   */
+  virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
+    // the first input must be a string and the parent checks this
+    const std::string s = boost::any_cast<std::string>(inputs[0]);
+
+    bool flag = false;
+    if( inputs.size()>1 ) {
+      // the third input must be a shared pointer to AnObject and the parent checks this
+      auto obj = boost::any_cast<std::shared_ptr<AnObject> >(inputs[2]);
+      flag = obj->flag;
+    }
+
+    if( flag ) { // if the flag in AnObject is true ...
+      // ... the output size is 2
+      outputs.resize(2);
+      outputs[0] = s;
+      
+      // the second input and output must a double but the parent does not check either of these
+      outputs[1] = boost::any_cast<double>(inputs[1]);
 
       return;
     }

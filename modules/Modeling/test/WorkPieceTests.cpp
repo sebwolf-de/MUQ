@@ -178,6 +178,40 @@ TEST_F(WorkPieceTests, FixedOutputTypes) {
   EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs[1]), (double)b);
 }
 
+TEST_F(WorkPieceTests, SomeFixedInputTypes) {
+  // the input types
+  std::map<unsigned int, std::string> types;
+  types[0] = typeid(std::string).name();
+  types[2] = typeid(std::shared_ptr<AnObject>).name();
+
+  // create the test WorkPiece
+  auto test = std::make_shared<SomeFixedInTypeMod>(types);
+
+  // make sure the number of inputs matches what we expect
+  EXPECT_EQ(test->numInputs, -1);
+  EXPECT_EQ(test->numOutputs, -1);
+
+  // create a version of "AnObject"
+  auto obj = std::make_shared<AnObject>(b);
+
+  // evaluate the WorkPiece
+  obj->flag = true;
+  auto outputs = test->Evaluate(s, a, obj, 9.0, 'c');
+
+  // make sure we get 2 outputs
+  EXPECT_EQ(outputs.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs[1]), a);
+
+  // evaluate the WorkPiece
+  obj->flag = false;
+  outputs = test->Evaluate(s);
+
+  // make sure we get 1 output
+  EXPECT_EQ(outputs.size(), 1);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
+}
+
 TEST_F(WorkPieceTests, FixedInputTypesOutputNum) {
   // the input types
   std::vector<std::string> types({typeid(std::string).name(), typeid(double).name(), typeid(std::shared_ptr<AnObject>).name()});

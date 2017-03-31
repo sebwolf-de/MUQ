@@ -28,8 +28,17 @@ WorkPiece::WorkPiece(unsigned int const numIns, unsigned int const numOuts) :
 WorkPiece::WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const fix) : 
   numInputs(fix==WorkPiece::Fix::Inputs? types.size() : -1), // possibly fix the number of inputs 
   numOutputs(fix==WorkPiece::Fix::Outputs? types.size() : -1), // possibly fix the number of outputs 
-  inputTypes(fix==WorkPiece::Fix::Inputs? types : std::vector<std::string>(0)), // possibly fix the input types
-  outputTypes(fix==WorkPiece::Fix::Outputs? types : std::vector<std::string>(0)), // possibly fix the output types
+  inputTypes(fix==WorkPiece::Fix::Inputs? Types(types) : std::map<unsigned int, std::string>()), // possibly fix the input types
+  outputTypes(fix==WorkPiece::Fix::Outputs? Types(types) : std::map<unsigned int, std::string>()), // possibly fix the output types
+  id(SetID()) // the unique id of this WorkPiece
+{}
+
+// Create a muq::Modeling::WorkPiece where either some of the inputs have specified types or some of the outputs have specified types
+WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& types, WorkPiece::Fix const fix) :
+  numInputs(-1), // the number of inputs is unfixed
+  numOutputs(-1), // the number of ouputs is unfixed
+  inputTypes(fix==WorkPiece::Fix::Inputs? types : std::map<unsigned int, std::string>()), // possibly fix the input types
+  outputTypes(fix==WorkPiece::Fix::Outputs? types : std::map<unsigned int, std::string>()), // possibly fix the output types
   id(SetID()) // the unique id of this WorkPiece
 {}
 
@@ -37,8 +46,8 @@ WorkPiece::WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const
 WorkPiece::WorkPiece(std::vector<std::string> const& types, unsigned int const num, WorkPiece::Fix const fix) : 
   numInputs(fix==WorkPiece::Fix::Inputs? types.size() : num), // fix the number of inputs 
   numOutputs(fix==WorkPiece::Fix::Outputs? types.size() : num), // fix the number of outputs 
-  inputTypes(fix==WorkPiece::Fix::Inputs? types : std::vector<std::string>(0)), // possibly fix the input types
-  outputTypes(fix==WorkPiece::Fix::Outputs? types : std::vector<std::string>(0)), // possibly fix the output types
+  inputTypes(fix==WorkPiece::Fix::Inputs? Types(types) : std::map<unsigned int, std::string>()), // possibly fix the input types
+  outputTypes(fix==WorkPiece::Fix::Outputs? Types(types) : std::map<unsigned int, std::string>()), // possibly fix the output types
   id(SetID()) // the unique id of this WorkPiece
 {}
 
@@ -46,10 +55,22 @@ WorkPiece::WorkPiece(std::vector<std::string> const& types, unsigned int const n
 WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::vector<std::string> const& outTypes) : 
   numInputs(inTypes.size()), // fix the number of inputs 
   numOutputs(outTypes.size()), // fix the number of outputs 
-  inputTypes(inTypes), // fix the input types
-  outputTypes(outTypes), // fix the output types
+  inputTypes(Types(inTypes)), // fix the input types
+  outputTypes(Types(outTypes)), // fix the output types
   id(SetID()) // the unique id of this WorkPiece
 {}
+
+std::map<unsigned int, std::string> WorkPiece::Types(std::vector<std::string> const& typesVec) const {
+  // initialize the map from input/output number to input/output type
+  std::map<unsigned int, std::string> typesMap;
+
+  // populate the map with the elments in the type vector
+  for( unsigned int i=0; i<typesVec.size(); ++i ) {
+    typesMap[i] = typesVec.at(i);
+  }
+
+  return typesMap;
+}
 
 unsigned int WorkPiece::SetID() {
   static unsigned int workPieceId = 0;

@@ -3,6 +3,7 @@
 
 #include<iostream>
 #include<vector>
+#include<map>
 #include<string>
 #include<sstream>
 #include<cassert>
@@ -53,7 +54,26 @@ namespace muq {
 	 @param[in] fix WorkPiece::Fix::Inputs (default): the elements of the first parameter are the types of the inputs; WorkPiece::Fix::Outputs: the elements of the first parameter are the types of the outputs
       */
       WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
-      
+
+      /// Create a muq::Modeling::WorkPiece where either some of the inputs have specified types or some of the outputs have specified types
+      /**
+	 If the inputs are specified, then the outputs are not (and vice versa).  The number of in/outputs is variable but some of them have specified type.  For example, if the first input is a string and the third input is a double then
+	 <ul>
+	 <li> Evaluate("string", 1.0, 2.0);
+	 <li> Evaluate("string");
+	 <li> Evaluate();
+	 <li> Evaluate("string", "another string", 5.0, std::shared_ptr<AnObject>);
+	 </ul>
+	 are valid muq::Modeling::WorkPiece::Evaluate calls but 
+	 <ul>
+	 <li> Evaluate(1.0, 2.0, "string"); 
+	 </ul>
+	 is not valid.
+	 @param[in] types A map from the input/output number to the input/output type
+	 @param[in] fix WorkPiece::Fix::Inputs (default): the elements of the first parameter are the types of the inputs; WorkPiece::Fix::Outputs: the elements of the first parameter are the types of the outputs
+      */
+      WorkPiece(std::map<unsigned int, std::string> const& types, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
+
       /// Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types. The number of outputs/inputs (which ever does not have fixed types) is fixed but the types may vary.
       /**
 	 If the number and type of the inputs is specified then the number of outputs is fixed but the type of the outputs is variable.  The opposite is true if the number and type of the outputs is specified.
@@ -156,19 +176,15 @@ namespace muq {
       std::vector<boost::any> outputs = std::vector<boost::any>(0);
 	
     private:
-      
-      /// The input types
+
+      /// Convert a vector of input types to a map
       /**
-	 Each element specifies the type of the corresponding input.  This vector must have the same number of elements as WorkPiece::numInputs or it is empty (default), which indicates that the input types are variable.
-      */
-      std::vector<std::string> inputTypes = std::vector<std::string>(0);
-      
-      /// The output types
-      /**
-	 Each element specifies the type of the corresponding output.  This vector must have the same number of elements as WorkPiece::numOutputs or it is empty (default), which indicates that the output types are variable.
-      */
-      std::vector<std::string> outputTypes = std::vector<std::string>(0);
-      
+	 The key in the map is the index of the vector.
+	 @param[in] typesVec A vector of input types
+	 \return A map of input types
+       */
+      std::map<unsigned int, std::string> Types(std::vector<std::string> const& typesVec) const;
+            
       /// User-implemented function that determines the behavior of this muq::Modeling::WorkPiece
       /**
 	 This function determines how the WorkPiece::inputs determine WorkPiece::outputs.  Must be implemented by a child.
@@ -191,13 +207,13 @@ namespace muq {
 	
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
 	assert(numInputs<0 || inputNum+1<numInputs);
-	
-	if( inputTypes.size()>0 ) { // if we know the input types
-	  // make sure the index is valid
-	  assert(inputNum+1<inputTypes.size());
-	  
-	  // make sure the type is correct
-	  assert(inputTypes[inputNum].compare(typeid(in).name())==0);
+
+	// find the input type
+	auto it = inputTypes.find(inputNum);
+
+	if( it!=inputTypes.end() ) { // if we know the input type
+	  // check to see that the types match
+	  assert(it->second.compare(typeid(in).name())==0);
 	}
 	
 	// add the last input to the input vector
@@ -221,13 +237,13 @@ namespace muq {
 	
 	// this is the last input, the last one should equal the total number of inputs
 	assert(numInputs<0 || inputNum+1==numInputs);
-	
-	if( inputTypes.size()>0 ) { // if we know the input types
-	  // make sure the index is valid
-	  assert(inputNum+1==inputTypes.size());
-	  
-	  // make sure the type is correct
-	  assert(inputTypes[inputNum].compare(typeid(in).name())==0);
+
+	// find the input type
+	auto it = inputTypes.find(inputNum);
+
+	if( it!=inputTypes.end() ) { // if we know the input type
+	  // check to see that the types match
+	  assert(it->second.compare(typeid(in).name())==0);
 	}
 	
 	// add the last input to the input vector
@@ -236,6 +252,18 @@ namespace muq {
 	
 	return Evaluate(inputs);
       }
+
+      /// The input types
+      /**
+	 Each element specifies the type of the corresponding input.  This vector must have the same number of elements as WorkPiece::numInputs or it is empty (default), which indicates that the input types are variable.
+      */
+      std::map<unsigned int, std::string> inputTypes;
+      
+      /// The output types
+      /**
+	 Each element specifies the type of the corresponding output.  This vector must have the same number of elements as WorkPiece::numOutputs or it is empty (default), which indicates that the output types are variable.
+      */
+      std::map<unsigned int, std::string> outputTypes;
 
       /// Set the ID number, must be called by the constructor
       unsigned int SetID();
