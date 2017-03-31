@@ -5,6 +5,7 @@
 
 #include "MUQ/Modeling/WorkGraphNode.h"
 #include "MUQ/Modeling/WorkGraphEdge.h"
+#include "MUQ/Modeling/WorkGraphPiece.h"
 
 namespace muq {
   namespace Modeling { 
@@ -66,6 +67,13 @@ namespace muq {
 	 \return A new graph where all of the nodes that do not affect the output node are cut
        */
       std::shared_ptr<WorkGraph> DependentCut(std::string const& nameOut) const;
+
+      /// Create a muq::Modeling::WorkPiece whose output matches a given node
+      /**
+	 @param[in] node The name of the output node
+	 \return A muq::Modeling::WorkPiece whose outputs are the same as the output node
+       */
+      std::shared_ptr<WorkPiece> CreateWorkPiece(std::string const& node) const;
       
     private:
 
@@ -75,7 +83,7 @@ namespace muq {
 	 @param[in] vNew The new vertex, a copy of the old one on the new graph
 	 @param[in] newGraph All of the upstreams nodes from vOld will be copied are copied to this new graph
        */
-      void RecursiveCopyAndCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph> newGraph) const;
+      void RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph> newGraph) const;
 
       /// Is the given node in the graph?
       /**

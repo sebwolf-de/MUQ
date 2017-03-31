@@ -146,7 +146,7 @@ private:
    We don't actually do anything.
    */
   virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
-    outputs = std::vector<boost::any>();
+    outputs = std::vector<boost::any>(numOutputs);
   }
 };
 

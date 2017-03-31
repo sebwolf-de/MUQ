@@ -162,7 +162,7 @@ TEST(WorkGraphTests, DependentCut) {
   EXPECT_EQ(graph->NumNodes(), 4);
   EXPECT_TRUE(graph->HasNode("test 3"));
 
-  // connect test0 to test1 and test2 and test 3
+  // connect test0, test1, test2, and test 3
   graph->AddEdge("test 0", 1, "test 1", 0);
   EXPECT_EQ(graph->NumEdges(), 1);
   graph->AddEdge("test 0", 0, "test 2", 1);
