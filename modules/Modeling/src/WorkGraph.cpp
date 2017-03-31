@@ -294,7 +294,7 @@ bool WorkGraph::HasEdge(boost::graph_traits<Graph>::vertex_descriptor const& vOu
   return false;
 }
 
-void WorkGraph::RecursiveCopyAndCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph> newGraph) const {
+void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph> newGraph) const {
   // the input edges into vOld
   boost::graph_traits<Graph>::in_edge_iterator e, e_end;
   for( tie(e, e_end)=in_edges(vOld, *graph); e!=e_end; ++e ) { // loop through the input edges
@@ -320,7 +320,7 @@ void WorkGraph::RecursiveCopyAndCut(const boost::graph_traits<Graph>::vertex_des
     }
 
     // recurse down a step further
-    RecursiveCopyAndCut(v, nextV, newGraph);
+    RecursiveCut(v, nextV, newGraph);
   }
 }
 
@@ -338,9 +338,13 @@ std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) c
   newGraph->graph->operator[](newV) = graph->operator[](*oldV);
 
   // recurse through graph
-  RecursiveCopyAndCut(*oldV, newV, newGraph);
+  RecursiveCut(*oldV, newV, newGraph);
 
   return newGraph;
+}
+
+std::shared_ptr<WorkPiece> WorkGraph::CreateWorkPiece(std::string const& node) const {
+  return nullptr;
 }
 
 class MyVertexWriter {
