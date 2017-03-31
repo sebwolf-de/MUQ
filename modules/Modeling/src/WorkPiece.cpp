@@ -109,9 +109,15 @@ std::vector<boost::any> WorkPiece::Evaluate(std::vector<std::reference_wrapper<c
 
   // make sure the output types are correct
   assert(numOutputs<0 || outputs.size()==numOutputs);
-  assert(outputTypes.size()==0 || outputTypes.size()==outputs.size());
-  for(unsigned int i=0; i<outputTypes.size(); ++i ) {
-    assert(outputTypes[i].compare(outputs[i].type().name())==0);
+  
+  for( unsigned int i=0; i<outputs.size(); ++i ) {
+    // find the output type
+    auto it = outputTypes.find(i);
+
+    if( it!=outputTypes.end() ) { // if we know the output type
+      // check to see that the types match
+      assert(it->second.compare(outputs.at(i).type().name())==0);
+    }
   }
   
   return outputs;

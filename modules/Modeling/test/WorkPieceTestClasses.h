@@ -191,7 +191,7 @@ private:
   }
 };
 
-/// A WorkPiece with a fixed input number and type but niether the number nor type of the output is fixed
+/// A WorkPiece with some of its inputs fixed (but not all)
 class SomeFixedInTypeMod : public muq::Modeling::WorkPiece {
 public:
 
@@ -319,6 +319,47 @@ private:
       outputs[1] = obj->value*boost::any_cast<double>(inputs[2]);
     } else { // if the flag in AnObject is false
       outputs[1] = (double)obj->value;
+    }
+  }
+};
+
+/// A WorkPiece with some of its outputs fixed (but not all)
+class SomeFixedOutTypeMod : public muq::Modeling::WorkPiece {
+public:
+
+  /// Constructor
+  /**
+     @param[in] types A map that fixes some of the input types
+   */
+ SomeFixedOutTypeMod(std::map<unsigned int, std::string> const& types) : WorkPiece(types, WorkPiece::Fix::Outputs) {}
+
+  /// Default destructor
+  virtual ~SomeFixedOutTypeMod() {}
+
+private:
+
+  /// User-defined EvaluateImpl function
+  /**
+     The behavior changes depending on the flag value of the input AnObject
+   */
+  virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override {
+    // the first input must be a string but the parent does not check this
+    const std::string s = boost::any_cast<std::string>(inputs[0]);
+
+    outputs.resize(1);
+
+    // the first output is a string and the parent checks this
+    outputs[0] = s;
+
+    if( inputs.size()>1 ) {
+      // the second input must be a shared pointer to an object but the parent does not check this
+      auto obj = boost::any_cast<std::shared_ptr<AnObject> >(inputs[1]);
+
+      // the second output is a double and the parent checks this
+      outputs.push_back(obj->value*boost::any_cast<double>(inputs[2]));
+	
+      // the parent does not check the type of the third output
+      outputs.push_back(obj->flag);
     }
   }
 };
