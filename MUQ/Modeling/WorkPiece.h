@@ -74,22 +74,114 @@ namespace muq {
       */
       WorkPiece(std::map<unsigned int, std::string> const& types, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
 
-      /// Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types. The number of outputs/inputs (which ever does not have fixed types) is fixed but the types may vary.
+      /// Create a muq::Modeling::WorkPiece where either some of the inputs have specified types or some of the outputs have specified types and either the number of inputs or the number of outputs is fixed
       /**
-	 If the number and type of the inputs is specified then the number of outputs is fixed but the type of the outputs is variable.  The opposite is true if the number and type of the outputs is specified.
-	 @param[in] types A vector of strings, each element is the type of an input or output (the number of inputs or outputs is the size of this vector)
-	 @param[in] num The number of outputs or inputs (which one depends on the third parameter)
-	 @param[in] fix WorkPiece::Fix::Inputs (default): the elements of the first parameter are the types of the inputs and the second parameter is the number of outputs; WorkPiece::Fix::Outputs: the elements of the first parameter are the types of the outputs an the second parameter is the number of inputs
+	 @param[in] types A map from the input/output number to the input/output type
+	 @param[in] num The number of inputs/outputs
+	 @param[in] fixTypes WorkPiece::Fix::Inputs (default): the elements of the first parameter are the types of the inputs; WorkPiece::Fix::Outputs: the elements of the first parameter are the types of the outputs
+	 @param[in] fixNum WorkPiece::Fix::Inputs (default): the second parameter is the number of inputs; WorkPiece::Fix::Outputs: the second parameter is the number of outputs
+       */
+      WorkPiece(std::map<unsigned int, std::string> const& types, unsigned int const num, WorkPiece::Fix const fixTypes = WorkPiece::Fix::Inputs, WorkPiece::Fix const fixNum = WorkPiece::Fix::Inputs);
+
+      /// Create a muq::Modeling::WorkPiece with a fixed number of inputs with specified types and a fixed number of outputs (of uknown type)
+      /**
+	 @param[in] types A vector of strings, each element is the type of an input (the number of inputs is the size of this vector)
+	 @param[in] num The number of outputs
       */
-      WorkPiece(std::vector<std::string> const& types, unsigned int const num, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
-      
+      WorkPiece(std::vector<std::string> const& types, unsigned int const num);
+
+      /// Create a muq::Modeling::WorkPiece with a fixed number of outputs with specified types and a fixed number of inputs (of uknown type)
+      /**
+	 @param[in] num The number of inputs
+	 @param[in] types A vector of strings, each element is the type of an output (the number of outputs is the size of this vector)
+      */
+      WorkPiece(unsigned int const num, std::vector<std::string> const& types);
+
+      /// Create a muq::Modeling::WorkPiece where some of the inputs are known and we know the input and output numbers
+      /**
+	 @param[in] inTypes A map from the input number to the input type
+	 @param[in] numIns The number of inputs
+	 @param[in] numOuts The number of outputs
+      */
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const numIns, unsigned int const numOuts);
+
+      /// Create a muq::Modeling::WorkPiece where some of the outputs are known and we know the input and output numbers
+      /**
+	 @param[in] numIns The number of inputs
+	 @param[in] outTypes A map from the input number to the input type
+	 @param[in] numOuts The number of outputs
+      */
+      WorkPiece(unsigned int const numIns, std::map<unsigned int, std::string> const& outTypes, unsigned int const numOuts);
+
       /// Create a muq::Modeling::WorkPiece with a fixed number of inputs and outputs with specified types
       /**
 	 @param[in] inTypes A vector of strings, each element is the type of an input (the number of inputs is the size of this vector)
 	 @param[in] outTypes A vector of strings, each element is the type of an output (the number of outputs is the size of this vector)
       */
       WorkPiece(std::vector<std::string> const& inTypes, std::vector<std::string> const& outTypes);
+
+      /// Create a muq::Modeling::WorkPiece where some of the inputs are known and all of the outputs have specified types
+      /**
+	 @param[in] inTypes A map from the input number to the input type
+	 @param[in] outTypes A vector of strings, each element is the type of an output (the number of outputs is the size of this vector)
+      */
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::vector<std::string> const& outTypes);
+
+      /// Create a muq::Modeling::WorkPiece where some of the inputs are known with a known number of inputs and all of the outputs have specified types
+      /**
+	 @param[in] inTypes A map from the input number to the input type
+	 @param[in] num The number of inputs
+	 @param[in] outTypes A vector of strings, each element is the type of an output (the number of outputs is the size of this vector)
+      */
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const num, std::vector<std::string> const& outTypes);
       
+      /// Create a muq::Modeling::WorkPiece where some of the outputs and all of the inputs have specified types
+      /**
+	 @param[in] inTypes A vector of strings, each element is the type of an input (the number of inputs is the size of this vector)
+	 @param[in] outTypes A map from the output number to the output type
+      */
+      WorkPiece(std::vector<std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes);
+
+      /// Create a muq::Modeling::WorkPiece where some of the outputs with a known number of outputs and all of the inputs have specified types
+      /**
+	 @param[in] inTypes A vector of strings, each element is the type of an input (the number of inputs is the size of this vector)
+	 @param[in] outTypes A map from the output number to the output type
+	 @param[in] num The number of outputs
+      */
+      WorkPiece(std::vector<std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes, unsigned int const num);
+
+      /// Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types
+      /**
+	 @param[in] inTypes A map from the input number to the input type
+	 @param[in] outTypes A map from the output number to the output type
+      */
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes);
+
+      /// Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types with a fixed number of inputs
+      /**
+	 @param[in] inTypes A map from the input number to the input type
+	 @param[in] numIn The number of inputs
+	 @param[in] outTypes A map from the output number to the output type
+      */
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const numIn, std::map<unsigned int, std::string> const& outTypes);
+
+      /// Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types with a fixed number of outputs
+      /**
+	 @param[in] inTypes A map from the input number to the input type
+	 @param[in] outTypes A map from the output number to the output type
+	 @param[in] outNum The number of outputs
+      */
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes, unsigned int const numOut);
+
+      /// Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types with a fixed number of inputs and outputs
+      /**
+	 @param[in] inTypes A map from the input number to the input type
+	 @param[in] numIn The number of inputs
+	 @param[in] outTypes A map from the output number to the output type
+	 @param[in] outNum The number of outputs
+      */
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const numIn, std::map<unsigned int, std::string> const& outTypes, unsigned int const numOut);
+
       /// Default destructor
       virtual ~WorkPiece() {}
       

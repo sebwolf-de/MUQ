@@ -97,8 +97,8 @@ TEST(WorkGraphTests, FixedInOutType) {
   std::vector<std::string> outTypes({typeid(std::string).name(), typeid(double).name()});
 
   // create the test WorkPiece
-  auto test0 = std::make_shared<FixedTypesMod>(inTypes, outTypes);
-  auto test1 = std::make_shared<FixedTypesMod>(inTypes, outTypes);
+  auto test0 = std::make_shared<FixedInOutMod>(inTypes, outTypes);
+  auto test1 = std::make_shared<FixedInOutMod>(inTypes, outTypes);
   
   // create and empty graph
   auto graph = std::make_shared<WorkGraph>();
