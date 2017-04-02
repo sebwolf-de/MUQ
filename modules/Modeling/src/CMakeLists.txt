@@ -26,4 +26,6 @@ CreateCompileGroup(
     WorkGraphEdge.cpp
 
     WorkGraphPiece.cpp
+
+    ConstantParameters.cpp
 )

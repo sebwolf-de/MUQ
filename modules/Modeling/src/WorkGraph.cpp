@@ -344,6 +344,12 @@ std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) c
 }
 
 std::shared_ptr<WorkPiece> WorkGraph::CreateWorkPiece(std::string const& node) const {
+  // make sure we have the node
+  assert(HasNode(node));
+
+  // trime the extraneous branches from the graph
+  auto newGraph = DependentCut(node);
+  
   return nullptr;
 }
 

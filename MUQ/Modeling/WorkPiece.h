@@ -221,7 +221,7 @@ namespace muq {
 	std::vector<boost::any> Evaluate(Args... args) {
 	
 	// we have new outputs
-	outputs.clear();
+	if( clearOutputs ) { outputs.clear(); }
 	
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
@@ -254,20 +254,43 @@ namespace muq {
       std::string OutputType(unsigned int outputNum) const;
 
       /// The number of inputs
-      const int numInputs;
+      int numInputs;
 	
       /// The number of outputs
-      const int numOutputs;
+      int numOutputs;
       
     protected:
+
+      /// Get the types from a vector of boost::any's 
+      /**
+	 @param[in] vec A vector of boost::any's
+	 \return A vector of the types of the boost::any's
+       */
+      std::vector<std::string> Types(std::vector<boost::any> const& vec) const;
+
+      /// Clear outputs every time Evaluate is called
+      /**
+	 If true, muq::Modeling::WorkPiece::outputs is cleared everytime muq::Modeling::WorkPiece::Evaluate is called.  If false, the outputs are not cleared.  Defaults to true.
+       */
+      bool clearOutputs = true;
       
       /// The outputs
       /**
 	 The outputs of this muq::Modeling::WorkPiece are filled by WorkPiece::EvaluateImpl().  If the number of outputs is specified (i.e., WorkPiece::numOutputs is not -1) then WorkPiece::Evaluate() checks to make sure the size of this vector is equal to WorkPiece::numOutputs after calling WorkPiece::EvaluateImpl().  If the output types are specified (i.e., WorkPiece::outputTypes is not an empty vector) then WorkPiece::Evaluate() checks that the output types match WorkPiece::outputTypes after calling WorkPiece::EvaluateImpl().
       */
       std::vector<boost::any> outputs = std::vector<boost::any>(0);
-	
-    private:
+
+      /// The input types
+      /**
+	 Each element specifies the type of the corresponding input.  This vector must have the same number of elements as WorkPiece::numInputs or it is empty (default), which indicates that the input types are variable.
+      */
+      std::map<unsigned int, std::string> inputTypes;
+      
+      /// The output types
+      /**
+	 Each element specifies the type of the corresponding output.  This vector must have the same number of elements as WorkPiece::numOutputs or it is empty (default), which indicates that the output types are variable.
+      */
+      std::map<unsigned int, std::string> outputTypes;
 
       /// Convert a vector of input types to a map
       /**
@@ -276,6 +299,8 @@ namespace muq {
 	 \return A map of input types
        */
       std::map<unsigned int, std::string> Types(std::vector<std::string> const& typesVec) const;
+
+    private:
             
       /// User-implemented function that determines the behavior of this muq::Modeling::WorkPiece
       /**
@@ -344,18 +369,6 @@ namespace muq {
 	
 	return Evaluate(inputs);
       }
-
-      /// The input types
-      /**
-	 Each element specifies the type of the corresponding input.  This vector must have the same number of elements as WorkPiece::numInputs or it is empty (default), which indicates that the input types are variable.
-      */
-      std::map<unsigned int, std::string> inputTypes;
-      
-      /// The output types
-      /**
-	 Each element specifies the type of the corresponding output.  This vector must have the same number of elements as WorkPiece::numOutputs or it is empty (default), which indicates that the output types are variable.
-      */
-      std::map<unsigned int, std::string> outputTypes;
 
       /// Set the ID number, must be called by the constructor
       unsigned int SetID();

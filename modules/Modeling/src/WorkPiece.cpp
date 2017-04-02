@@ -176,6 +176,22 @@ std::map<unsigned int, std::string> WorkPiece::Types(std::vector<std::string> co
   return typesMap;
 }
 
+std::vector<std::string> WorkPiece::Types(std::vector<boost::any> const& vec) const {
+    // create a vector of the types
+  std::vector<std::string> types;
+  types.reserve(vec.size());
+
+  // populate types with the type of each element of vec
+  for( auto it : vec ) {
+    types.push_back(it.type().name());
+  }
+
+  // the types and vector should be the same size
+  assert(types.size()==vec.size());
+
+  return types;
+}
+
 unsigned int WorkPiece::SetID() {
   static unsigned int workPieceId = 0;
   return ++workPieceId;
@@ -185,7 +201,8 @@ std::vector<boost::any> WorkPiece::Evaluate() {
   // make sure we have the correct number of inputs
   assert(numInputs<=0);
 
-  outputs.clear();
+  // clear the outputs
+  if( clearOutputs ) { outputs.clear(); }
 
   // evaluate the WorkPiece
   std::vector<std::reference_wrapper<const boost::any>> emptyVec;

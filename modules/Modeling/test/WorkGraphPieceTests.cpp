@@ -50,4 +50,7 @@ TEST(WorkGraphPiece, FixedInOutNum) {
   EXPECT_EQ(graph->NumEdges(), 3);
 
   graph->Visualize("modules/Modeling/test/WorkGraphVisualizations/FixedInOutNum_WorkPiece.pdf");
+
+  // create a WorkPiece whose outs are from "test 3"
+  auto work = graph->CreateWorkPiece("test 3");
 }

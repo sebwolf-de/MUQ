@@ -4,6 +4,8 @@ CreateTestGroup(
     WorkPieceTests.cpp
     WorkGraphTests.cpp
     WorkGraphPieceTests.cpp
+
+    ConstantParametersTests.cpp
 )
 
 
