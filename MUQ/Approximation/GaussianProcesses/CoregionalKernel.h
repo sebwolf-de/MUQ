@@ -12,6 +12,8 @@ namespace Approximation
 /** 
 
 @class CoregionalKernel
+@ingroup CovarianceKernels
+
 This kernel supports coregionalization for modeling vector-valued Gaussian processes.
 
  */
@@ -137,7 +139,7 @@ Create a coregional kernel
 @param[in] kernels Covariance kernels for the principal components of the covariance.
  
 */
-template<class KernelType1, class KernelType2, typename typename = std::enable_if<std::is_base_of<KernelBase, KernelType2>::value>, class... KTypes>
+template<class KernelType1, class KernelType2, typename = typename std::enable_if<std::is_base_of<KernelBase, KernelType2>::value>, class... KTypes>
 CoregionalKernel CoregionTie(Eigen::MatrixXd const& coCov, const KernelType1& kernel1, const KernelType2& kernel2, const KTypes&... kernels)
 {
     std::vector<std::shared_ptr<KernelBase>> vec;
