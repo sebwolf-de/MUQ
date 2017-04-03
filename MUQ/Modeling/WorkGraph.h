@@ -74,8 +74,24 @@ namespace muq {
 	 \return A muq::Modeling::WorkPiece whose outputs are the same as the output node
        */
       std::shared_ptr<WorkPiece> CreateWorkPiece(std::string const& node) const;
+
+      /// Check to see if a node is constant?
+      /**
+	 A constant node is nonrandom, has no random dependencies, and either has no inputs or all of its inputs are given by const ant upstream nodes
+	 @param[in] node The name of the node
+	 \return true: the node is constant, false: the node is not constant
+       */
+      bool Constant(std::string const& node) const;
       
     private:
+
+      /// Check to see if a node is constant?
+      /**
+	 A constant node is nonrandom, has no random dependencies, and either has no inputs or all of its inputs are given by const ant upstream nodes
+	 @param[in] node We want to know if this node is constant.
+	 \return true: the node is constant, false: the node is not constant
+       */
+      bool Constant(boost::graph_traits<Graph>::vertex_descriptor node) const;
 
       /// Recursively go upstream from a node, copying nodes 
       /**

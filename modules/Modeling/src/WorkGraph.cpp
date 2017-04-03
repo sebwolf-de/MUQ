@@ -15,6 +15,8 @@
 #include <boost/graph/copy.hpp>
 #include <boost/graph/graphviz.hpp>
 
+#include "MUQ/Modeling/ConstantParameters.h"
+
 using namespace muq::Modeling;
 
 /// A helper struct that determines if a node in the graph has a given name
@@ -488,4 +490,34 @@ void WorkGraph::Visualize(std::string const& filename) const {
     // remove the temporary *.dot file
     std::system(("rm "+tempname).c_str());
   }
+}
+
+bool WorkGraph::Constant(std::string const& node) const {
+  return Constant(*GetNodeIterator(node));
+}
+
+bool WorkGraph::Constant(boost::graph_traits<Graph>::vertex_descriptor node) const {
+  // the WorkPiece associated with this node
+  auto work = graph->operator[](node)->piece;
+  
+  // if the node has no inputs, it is constant
+  if( work->numInputs==0 ) { return true; }
+
+  // if not all of its inputs are set, it is not constant
+  if( in_degree(node, *graph)!=work->numInputs ) { return false; }
+
+  // all of the inputs are given by upstream nodes, it is constant if the upstream nodes are constant
+  bool constant = true;
+
+  // get iterators to the input edges
+  boost::graph_traits<Graph>::in_edge_iterator e, e_end;
+
+  // loop through the input edges
+  for( tie(e, e_end)=in_edges(node, *graph); e!=e_end; ++e ) {
+    // if an upstream node is not constant, then this node is not constant either
+    if( !Constant(boost::source(*e, *graph)) ) { return false; }
+  }
+
+  // all upstream nodes are constant, so this node is alos constant
+  return true;
 }

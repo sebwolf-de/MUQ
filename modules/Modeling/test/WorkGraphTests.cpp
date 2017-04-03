@@ -4,6 +4,8 @@
 
 #include "WorkPieceTestClasses.h"
 
+#include "MUQ/Modeling/ConstantParameters.h"
+
 using namespace muq::Modeling;
 
 TEST(WorkGraphTests, UnfixedInOut) {
@@ -92,7 +94,7 @@ TEST(WorkGraphTests, FixedInOutNum) {
 
 TEST(WorkGraphTests, FixedInOutType) {
   // the input types
-  std::vector<std::string> inTypes({typeid(std::string).name(), typeid(std::shared_ptr<AnObject>).name(), typeid(double).name()});
+  std::vector<std::string> inTypes({typeid(std::string).name(), typeid(double).name(), typeid(std::shared_ptr<AnObject>).name()});
   // the output types
   std::vector<std::string> outTypes({typeid(std::string).name(), typeid(double).name()});
 
@@ -119,7 +121,7 @@ TEST(WorkGraphTests, FixedInOutType) {
   EXPECT_TRUE(graph->HasNode("test 1"));
   
   // connect test0 to test1
-  graph->AddEdge("test 0", 1, "test 1", 2);
+  graph->AddEdge("test 0", 1, "test 1", 1);
   EXPECT_EQ(graph->NumEdges(), 1);
   graph->AddEdge("test 0", 0, "test 1", 0);
   EXPECT_EQ(graph->NumEdges(), 2);
@@ -182,4 +184,79 @@ TEST(WorkGraphTests, DependentCut) {
   EXPECT_EQ(newGraph->NumEdges(), 2);
 
   newGraph->Visualize("modules/Modeling/test/WorkGraphVisualizations/DependentCut.pdf");
+}
+
+TEST(WorkGraphTests, IsConstant) {
+  // the input types
+  std::vector<std::string> inTypes({typeid(std::string).name(), typeid(double).name(), typeid(std::shared_ptr<AnObject>).name()});
+  // the output types
+  std::vector<std::string> outTypes({typeid(std::string).name(), typeid(double).name()});
+
+  // create the test WorkPiece
+  auto test0 = std::make_shared<FixedInOutMod>(inTypes, outTypes);
+  auto test1 = std::make_shared<FixedInOutMod>(2, 2);
+  auto test2 = std::make_shared<FixedInOutMod>(2, 1);
+  auto test3 = std::make_shared<FixedInOutMod>(0, 1);
+  auto test4 = std::make_shared<FixedInOutMod>(1, 1);
+  auto test5 = std::make_shared<ConstantParameters>(1, 2.0);
+  
+  // create and empty graph
+  auto graph = std::make_shared<WorkGraph>();
+  
+  // make sure the graph is empty
+  EXPECT_EQ(graph->NumNodes(), 0);
+  EXPECT_EQ(graph->NumEdges(), 0);
+
+  // add WorkPieces to the graph
+  EXPECT_FALSE(graph->HasNode("test 0"));
+  graph->AddNode(test0, "test 0");
+  EXPECT_EQ(graph->NumNodes(), 1);
+  EXPECT_TRUE(graph->HasNode("test 0"));
+
+  EXPECT_FALSE(graph->HasNode("test 1"));
+  graph->AddNode(test1, "test 1");
+  EXPECT_EQ(graph->NumNodes(), 2);
+  EXPECT_TRUE(graph->HasNode("test 1"));
+
+  EXPECT_FALSE(graph->HasNode("test 2"));
+  graph->AddNode(test2, "test 2");
+  EXPECT_EQ(graph->NumNodes(), 3);
+  EXPECT_TRUE(graph->HasNode("test 2"));
+
+  EXPECT_FALSE(graph->HasNode("test 3"));
+  graph->AddNode(test3, "test 3");
+  EXPECT_EQ(graph->NumNodes(), 4);
+  EXPECT_TRUE(graph->HasNode("test 3"));
+
+  EXPECT_FALSE(graph->HasNode("test 4"));
+  graph->AddNode(test4, "test 4");
+  EXPECT_EQ(graph->NumNodes(), 5);
+  EXPECT_TRUE(graph->HasNode("test 4"));
+
+  EXPECT_FALSE(graph->HasNode("test 5"));
+  graph->AddNode(test5, "test 5");
+  EXPECT_EQ(graph->NumNodes(), 6);
+  EXPECT_TRUE(graph->HasNode("test 5"));
+
+  // connect test0 to test1
+  graph->AddEdge("test 4", 0, "test 1", 0);
+  EXPECT_EQ(graph->NumEdges(), 1);
+  graph->AddEdge("test 0", 1, "test 4", 0);
+  EXPECT_EQ(graph->NumEdges(), 2);
+  graph->AddEdge("test 2", 0, "test 1", 1);
+  EXPECT_EQ(graph->NumEdges(), 3);
+  graph->AddEdge("test 3", 0, "test 2", 0);
+  EXPECT_EQ(graph->NumEdges(), 4);
+  graph->AddEdge("test 5", 0, "test 2", 1);
+  EXPECT_EQ(graph->NumEdges(), 5);
+ 
+  // make sure the nodes are constant (or not)
+  EXPECT_FALSE(graph->Constant("test 0"));
+  EXPECT_FALSE(graph->Constant("test 4"));
+  EXPECT_FALSE(graph->Constant("test 1"));
+  EXPECT_TRUE(graph->Constant("test 2"));
+  EXPECT_TRUE(graph->Constant("test 3"));
+  EXPECT_TRUE(graph->Constant("test 5"));
+  
+  graph->Visualize("modules/Modeling/test/WorkGraphVisualizations/Constant.pdf");
 }
