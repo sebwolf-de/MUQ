@@ -1,5 +1,25 @@
+# USAGE:
+# CreateCompileGroup(
+#     <group name>
+#     <brief description>
+#     <library_name>
+#     <other compile group dependencies>
+#     <required dependencies>
+#     <optional dependencies>
+#     <source file 1>
+#     <source file 2>
+#     ...
+#     <source file N>
+# )
+
 # Specify a group of sources files, as well their dependencies, and ultimate target library.
-function(CreateCompileGroup GROUP_NAME LIBRARY_NAME REQUIRED_DEPENDENCIES OPTIONAL_DEPENDENCIES)
+function(CreateCompileGroup
+         GROUP_NAME
+	 DESCRIPTION
+	 LIBRARY_NAME
+	 GROUP_DEPENDENCIES
+	 REQUIRED_DEPENDENCIES
+	 OPTIONAL_DEPENDENCIES)
 
   option(MUQ_GROUP_${GROUP_NAME} "Should the group ${GROUP_NAME} be compiled?" ON)
   

@@ -39,8 +39,8 @@ INCLUDE(CompileGroup)
 
 message(STATUS "All possible MUQ dependencies = ${POSSIBLE_MUQ_DEPENDENCIES}")
 
+# The ProcesCompileGroups function will add modules/CMakeLists.txt and then process any computed Compile/Test groups
 INCLUDE(ProcessCompileGroups)
-
 
 ###############################################
 # Manage dependencies

@@ -1,9 +1,9 @@
 # USAGE:
 # CreateCompileGroup(
-#     <group_name>
+#     <group name>
 #     <brief description>
-#     <other required groups>
 #     <library_name>
+#     <other compile group dependencies>
 #     <required dependencies>
 #     <optional dependencies>
 #     <source file 1>
@@ -14,7 +14,9 @@
 
 CreateCompileGroup(
     MODELING_CORE
-    muqModelingCore
+    "The basic building blocks of the Modeling library."
+    muqModeling
+    ""
     "EIGEN3;BOOST"
     ""
     WorkPiece.cpp
