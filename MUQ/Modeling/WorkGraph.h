@@ -82,8 +82,22 @@ namespace muq {
 	 \return true: the node is constant, false: the node is not constant
        */
       bool Constant(std::string const& node) const;
+
+      /// Get the output values for a constant node
+      /**
+	 @param[out] outs The output values for the node (returned by reference)
+	 @param[in] node The name of the node
+       */
+      void GetConstantOutputs(std::vector<boost::any>& outs, std::string const& node) const;
       
     private:
+
+      /// Get the output values for a constant node
+      /**
+	 @param[out] outs The output values for the node (returned by reference)
+	 @param[in] node We want the output values of this node
+       */
+      void GetConstantOutputs(std::vector<boost::any>& outs, boost::graph_traits<Graph>::vertex_descriptor const& node) const;
 
       /// Check to see if a node is constant?
       /**
@@ -91,15 +105,16 @@ namespace muq {
 	 @param[in] node We want to know if this node is constant.
 	 \return true: the node is constant, false: the node is not constant
        */
-      bool Constant(boost::graph_traits<Graph>::vertex_descriptor node) const;
+      bool Constant(boost::graph_traits<Graph>::vertex_descriptor const& node) const;
 
       /// Recursively go upstream from a node, copying nodes 
       /**
+	 Copies the upstream nodes into a new graph.  If a node is constant it evaluates it and lumps all of the upstream nodes from that node into a muq::Modeling::ConstantParameters
 	 @param[in] vOld The old vertex, where we beging copying from 
 	 @param[in] vNew The new vertex, a copy of the old one on the new graph
-	 @param[in] newGraph All of the upstreams nodes from vOld will be copied are copied to this new graph
+	 @param[in] newGraph All of the (nonconstant) upstreams nodes from vOld will be copied are copied to this new graph
        */
-      void RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph> newGraph) const;
+      void RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph>& newGraph) const;
 
       /// Is the given node in the graph?
       /**

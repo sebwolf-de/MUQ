@@ -299,3 +299,7 @@ std::string WorkPiece::OutputType(unsigned int outputNum) const {
 
   return "";
 }
+
+unsigned int WorkPiece::ID() const{
+  return id;
+}

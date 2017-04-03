@@ -195,10 +195,16 @@ TEST(WorkGraphTests, IsConstant) {
   // create the test WorkPiece
   auto test0 = std::make_shared<FixedInOutMod>(inTypes, outTypes);
   auto test1 = std::make_shared<FixedInOutMod>(2, 2);
-  auto test2 = std::make_shared<FixedInOutMod>(2, 1);
-  auto test3 = std::make_shared<FixedInOutMod>(0, 1);
+  auto test2 = std::make_shared<FixedInOutMod>(3, 2);
   auto test4 = std::make_shared<FixedInOutMod>(1, 1);
-  auto test5 = std::make_shared<ConstantParameters>(1, 2.0);
+
+    // create a version of "AnObject"
+  auto obj = std::make_shared<AnObject>(2.0);
+  obj->flag = true;
+
+  // make a constant parameter
+  auto test5 = std::make_shared<ConstantParameters>(obj, 1);
+  auto test3 = std::make_shared<ConstantParameters>((std::string)"string", 3.0);
   
   // create and empty graph
   auto graph = std::make_shared<WorkGraph>();
@@ -247,8 +253,10 @@ TEST(WorkGraphTests, IsConstant) {
   EXPECT_EQ(graph->NumEdges(), 3);
   graph->AddEdge("test 3", 0, "test 2", 0);
   EXPECT_EQ(graph->NumEdges(), 4);
-  graph->AddEdge("test 5", 0, "test 2", 1);
+  graph->AddEdge("test 3", 1, "test 2", 1);
   EXPECT_EQ(graph->NumEdges(), 5);
+  graph->AddEdge("test 5", 0, "test 2", 2);
+  EXPECT_EQ(graph->NumEdges(), 6);
  
   // make sure the nodes are constant (or not)
   EXPECT_FALSE(graph->Constant("test 0"));
@@ -257,6 +265,75 @@ TEST(WorkGraphTests, IsConstant) {
   EXPECT_TRUE(graph->Constant("test 2"));
   EXPECT_TRUE(graph->Constant("test 3"));
   EXPECT_TRUE(graph->Constant("test 5"));
+
+  // get the outputs for the ConstantParameters node
+  std::vector<boost::any> outputs;
+  graph->GetConstantOutputs(outputs, "test 5");
+  EXPECT_EQ(outputs.size(), 2);
+  EXPECT_DOUBLE_EQ(boost::any_cast<std::shared_ptr<AnObject> >(outputs[0])->value, 2.0);
+  EXPECT_TRUE(boost::any_cast<std::shared_ptr<AnObject> >(outputs[0])->flag);
+  EXPECT_EQ(boost::any_cast<int>(outputs[1]), 1);
+
+  outputs.clear();
+  graph->GetConstantOutputs(outputs, "test 3");
+  EXPECT_EQ(outputs.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare((std::string)"string")==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs[1]), 3.0);
+ 
+  // get the constant parameters of a down stream node
+  outputs.clear();
+  graph->GetConstantOutputs(outputs, "test 2");
+  EXPECT_EQ(outputs.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare((std::string)"string")==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs[1]), 3.0);
+}
+
+TEST(WorkGraphTests, ConstantDependentCut) {
+  // the input types
+  std::vector<std::string> inTypes({typeid(std::string).name(), typeid(double).name(), typeid(std::shared_ptr<AnObject>).name()});
+  // the output types
+  std::vector<std::string> outTypes({typeid(std::string).name(), typeid(double).name()});
+
+    // create the test WorkPiece
+  auto test0 = std::make_shared<FixedInOutMod>(inTypes, outTypes);
+  auto test1 = std::make_shared<FixedInOutMod>(inTypes, outTypes);
+
+    // create a version of "AnObject"
+  auto obj = std::make_shared<AnObject>(2.0);
+  obj->flag = true;
+
+  // make a constant parameter
+  auto test2 = std::make_shared<ConstantParameters>(obj, 1);
+  auto test3 = std::make_shared<ConstantParameters>((std::string)"string", 3.0);
   
-  graph->Visualize("modules/Modeling/test/WorkGraphVisualizations/Constant.pdf");
+  // create and empty graph
+  auto graph = std::make_shared<WorkGraph>();
+  
+  // add WorkPieces to the graph
+  graph->AddNode(test0, "test 0");
+  graph->AddNode(test1, "test 1");
+  graph->AddNode(test2, "test 2");
+  graph->AddNode(test3, "test 3");
+  EXPECT_EQ(graph->NumNodes(), 4);
+
+  // connect test0 to test1
+  graph->AddEdge("test 1", 0, "test 0", 0);
+  graph->AddEdge("test 1", 1, "test 0", 1);
+  graph->AddEdge("test 2", 0, "test 1", 2);
+  graph->AddEdge("test 3", 0, "test 1", 0);
+  graph->AddEdge("test 3", 1, "test 1", 1);
+  EXPECT_EQ(graph->NumEdges(), 5);
+
+  auto newGraph0 = graph->DependentCut("test 1");
+  
+  EXPECT_EQ(newGraph0->NumNodes(), 1);
+  EXPECT_EQ(newGraph0->NumEdges(), 0);
+  
+  auto newGraph1 = graph->DependentCut("test 0");
+
+  EXPECT_EQ(newGraph1->NumNodes(), 2);
+  EXPECT_EQ(newGraph1->NumEdges(), 2);
+
+  graph->Visualize("modules/Modeling/test/WorkGraphVisualizations/ConstantDependentCut_BeforeCut.pdf");
+  newGraph1->Visualize("modules/Modeling/test/WorkGraphVisualizations/ConstantDependentCut_AfterCut.pdf");
 }

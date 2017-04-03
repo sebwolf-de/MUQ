@@ -253,6 +253,12 @@ namespace muq {
        */
       std::string OutputType(unsigned int outputNum) const;
 
+      /// Get the unique ID number
+      /**
+	 \return The ID number
+       */
+      unsigned int ID() const;
+
       /// The number of inputs
       int numInputs;
 	

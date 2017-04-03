@@ -296,33 +296,75 @@ bool WorkGraph::HasEdge(boost::graph_traits<Graph>::vertex_descriptor const& vOu
   return false;
 }
 
-void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph> newGraph) const {
+void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph>& newGraph) const {
+  // a map from the source ID to a pair: <source vertex, vector of edges from that vertex to this one>
+  std::map<unsigned int, std::pair<boost::graph_traits<Graph>::vertex_descriptor, std::vector<boost::graph_traits<Graph>::in_edge_iterator> > > sources;
+  
   // the input edges into vOld
   boost::graph_traits<Graph>::in_edge_iterator e, e_end;
+  
   for( tie(e, e_end)=in_edges(vOld, *graph); e!=e_end; ++e ) { // loop through the input edges
+    auto v = source(*e, *graph);
+    const unsigned int id = graph->operator[](v)->piece->ID();
+
+    auto it = sources.find(id);
+    if( it==sources.end() ){
+      sources[id] = std::pair<boost::graph_traits<Graph>::vertex_descriptor, std::vector<boost::graph_traits<Graph>::in_edge_iterator> >(v, std::vector<boost::graph_traits<Graph>::in_edge_iterator>(1, e));
+    } else {
+      sources[id].second.push_back(e);
+    }
+  }
+
+  // loop through the sources
+  for( auto it : sources ) {
     // the upstream node iterator
-    auto v = boost::source(*e, *graph);
+    auto v = it.second.first;
     
-    boost::graph_traits<Graph>::vertex_descriptor nextV;
-    boost::graph_traits<Graph>::vertex_iterator ind;
+    if( Constant(v) && std::dynamic_pointer_cast<ConstantParameters>(graph->operator[](v)->piece)==nullptr ) { // if this node is constant but is not already a muq::Modeling::ConstantParameters
+      // get the output values for this node
+      std::vector<boost::any> outputs;
+      GetConstantOutputs(outputs, v);
+      
+      // create a ConstantParameters node for this input
+      auto nextV = boost::add_vertex(*(newGraph->graph));
+      newGraph->graph->operator[](nextV) = std::make_shared<WorkGraphNode>(std::make_shared<ConstantParameters>(outputs), graph->operator[](v)->name+"_fixed");
+      
+      // loop through the edges from the source to this node
+      for( auto e : it.second.second ) {
+	if( !newGraph->HasEdge(nextV, vNew, graph->operator[](*e)->inputDim) ) { // if edge does not exist ...
+	  // ... add the edge from this node to the existing node
+	  auto nextE = boost::add_edge(nextV, vNew, *(newGraph->graph));
+	  newGraph->graph->operator[](nextE.first) = std::make_shared<WorkGraphEdge>(graph->operator[](*e)->outputDim, graph->operator[](*e)->inputDim);
+	}
+      }
 
-    if( newGraph->HasNode(ind, graph->operator[](v)->name) ) { // if the node already exists in the new graph ...
-      // ... the next node is that node
-      nextV = *ind;
-    } else { // if not ...
-      // ... copy the source node over to the new graph and make an edge
-      nextV = boost::add_vertex(*(newGraph->graph));
-      newGraph->graph->operator[](nextV) = graph->operator[](v);
+      // move to the next source
+      continue;      
     }
 
-    if( !HasEdge(nextV, vNew, graph->operator[](*e)->inputDim ) ) { // if the edge does not already exist ...
-      // add the edge from this node to the existing node, 
-      auto nextE = boost::add_edge(nextV, vNew, (*newGraph->graph));
-      newGraph->graph->operator[](nextE.first) = std::make_shared<WorkGraphEdge>(graph->operator[](*e)->outputDim, graph->operator[](*e)->inputDim);
+    // loop through the edges from the (nonconstant) source to this node
+    for( auto e : it.second.second ) {
+      boost::graph_traits<Graph>::vertex_descriptor nextV;
+      boost::graph_traits<Graph>::vertex_iterator ind;
+      
+      if( newGraph->HasNode(ind, graph->operator[](v)->name) ) { // if the node already exists in the new graph ...
+	// ... the next node is that node
+	nextV = *ind;
+      } else { // if not ...
+	// ... copy the source node over to the new graph and make an edge
+	nextV = boost::add_vertex(*(newGraph->graph));
+	newGraph->graph->operator[](nextV) = graph->operator[](v);
+      }
+      
+      if( !newGraph->HasEdge(nextV, vNew, graph->operator[](*e)->inputDim ) ) { // if the edge does not already exist ...
+	// add the edge from this node to the existing node, 
+	auto nextE = boost::add_edge(nextV, vNew, (*newGraph->graph));
+	newGraph->graph->operator[](nextE.first) = std::make_shared<WorkGraphEdge>(graph->operator[](*e)->outputDim, graph->operator[](*e)->inputDim);
+      }
+      
+      // recurse down a step further
+      RecursiveCut(v, nextV, newGraph);
     }
-
-    // recurse down a step further
-    RecursiveCut(v, nextV, newGraph);
   }
 }
 
@@ -332,6 +374,20 @@ std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) c
 
   // the an iterator to the output node
   auto oldV = GetNodeIterator(nameOut);
+
+  // if the desired node is constant
+  if( Constant(nameOut) ) {
+    // get the output values for this node
+    std::vector<boost::any> outputs;
+    GetConstantOutputs(outputs, nameOut);
+
+    // create a ConstantParameters node for this input
+    auto nextV = boost::add_vertex(*(newGraph->graph));
+    newGraph->graph->operator[](nextV) = std::make_shared<WorkGraphNode>(std::make_shared<ConstantParameters>(outputs), graph->operator[](*oldV)->name+"_fixed");
+
+    // return a graph with only one (constant node)
+    return newGraph;
+  }
 
   // add a new node to the output graph
   auto newV = boost::add_vertex(*(newGraph->graph));
@@ -492,18 +548,83 @@ void WorkGraph::Visualize(std::string const& filename) const {
   }
 }
 
+void WorkGraph::GetConstantOutputs(std::vector<boost::any>& outs, std::string const& node) const {
+  // make sure the node indeed cosntant
+  assert(Constant(node));
+
+  GetConstantOutputs(outs, *GetNodeIterator(node));
+}
+
+void WorkGraph::GetConstantOutputs(std::vector<boost::any>& outs, boost::graph_traits<Graph>::vertex_descriptor const& node) const {
+  // make sure the node indeed cosntant
+  assert(Constant(node));
+  
+  // the WorkPiece associated with this node
+  auto work = graph->operator[](node)->piece;
+
+  // make sure we know the number of inputs
+  assert(work->numInputs>=0);
+
+  // if the node has no inputs
+  if( work->numInputs==0 ) { 
+    outs = work->Evaluate();
+    return;
+  }
+
+  // get iterators to the input edges
+  boost::graph_traits<Graph>::in_edge_iterator e, e_end;
+
+  // a map from the WorkPiece ID number to a pair: <upstream vertex descriptor, vector of pairs: <ouput supply, input supplied> >
+  std::map<unsigned int, std::pair<boost::graph_traits<Graph>::vertex_descriptor, std::vector<std::pair<unsigned int, unsigned int> > > > inMap;
+
+  // loop through the input edges
+  for( tie(e, e_end)=in_edges(node, *graph); e!=e_end; ++e ) {
+    // get the WorkPiece id number, the output that it supplies, and the input that receives it
+    const unsigned int id = graph->operator[](source(*e, *graph))->piece->ID(); 
+    const unsigned int inNum = graph->operator[](*e)->inputDim;
+    const unsigned int outNum = graph->operator[](*e)->outputDim;
+
+    // add to the list of inputs supplyed by the WorkPiece with this id
+    auto it = inMap.find(id);
+    if( it==inMap.end() ) {
+      inMap[id] = std::pair<boost::graph_traits<Graph>::vertex_descriptor, std::vector<std::pair<unsigned int, unsigned int> > >(source(*e, *graph), std::vector<std::pair<unsigned int, unsigned int> >(1, std::pair<unsigned int, unsigned int>(outNum, inNum)));
+    } else {
+      inMap[id].second.push_back(std::pair<unsigned int, unsigned int>(outNum, inNum));
+    }
+  }
+
+  // the inputs to this WorkPiece
+  std::vector<boost::any> ins(work->numInputs);
+
+  // loop through the edges again, now we know which outputs supply which inputs
+  for( auto it : inMap ) {
+    // get the outputs of the upstream node
+    std::vector<boost::any> upstreamOutputs;
+    GetConstantOutputs(upstreamOutputs, it.second.first);
+
+    // loop through the inputs supplied by the outputs of this upstream node
+    for( auto out_in : it.second.second ) {
+      // populate the inputs to this WorkPiece
+      ins.at(out_in.second) = upstreamOutputs.at(out_in.first);
+    }
+  }
+
+  // evaluate this node
+  outs = work->Evaluate(ins);
+}
+
 bool WorkGraph::Constant(std::string const& node) const {
   return Constant(*GetNodeIterator(node));
 }
 
-bool WorkGraph::Constant(boost::graph_traits<Graph>::vertex_descriptor node) const {
+bool WorkGraph::Constant(boost::graph_traits<Graph>::vertex_descriptor const& node) const {
   // the WorkPiece associated with this node
   auto work = graph->operator[](node)->piece;
   
   // if the node has no inputs, it is constant
   if( work->numInputs==0 ) { return true; }
 
-  // if not all of its inputs are set, it is not constant
+  // if not all of its inputs are set, it is not constant (this also covers the case that we don't know the number of inputs)
   if( in_degree(node, *graph)!=work->numInputs ) { return false; }
 
   // all of the inputs are given by upstream nodes, it is constant if the upstream nodes are constant
