@@ -12,7 +12,7 @@ print('Click on values below to expand parameter tree and see details.  The "key
 print(' ')
 print('\htmlonly')
 
-f = open(baseFolder+'/MUQdocumentation/doxFiles/listHeader.txt','r')
+f = open(baseFolder+'/documentation/doxFiles/listHeader.txt','r')
 headerLines = f.read()
 print(headerLines)
 f.close()
