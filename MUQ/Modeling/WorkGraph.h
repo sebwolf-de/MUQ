@@ -112,7 +112,7 @@ namespace muq {
 	 Copies the upstream nodes into a new graph.  If a node is constant it evaluates it and lumps all of the upstream nodes from that node into a muq::Modeling::ConstantParameters
 	 @param[in] vOld The old vertex, where we beging copying from 
 	 @param[in] vNew The new vertex, a copy of the old one on the new graph
-	 @param[in] newGraph All of the (nonconstant) upstreams nodes from vOld will be copied are copied to this new graph
+	 @param[in,out] newGraph All of the (nonconstant) upstreams nodes from vOld will be copied are copied to this new graph
        */
       void RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph>& newGraph) const;
 
