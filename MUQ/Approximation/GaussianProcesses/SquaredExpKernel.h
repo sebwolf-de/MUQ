@@ -13,7 +13,7 @@ namespace Approximation
 /**
 
 @class SquaredExpKernel
-
+@ingroup CovarianceKernels
 This class implements a kernel of the form
 \f[
 k(x,y) = \sigma^2 \exp\left(-\frac{1}{2}\frac{|x-y|^2}{L^2}\right)

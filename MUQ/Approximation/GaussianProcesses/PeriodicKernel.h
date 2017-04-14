@@ -12,6 +12,7 @@ namespace Approximation
     /** 
 
 @class PeriodicKernel
+@ingroup CovarianceKernels
 
 \f[
 k(x,y) = \exp\left[-\frac{2}{L^2} \sin^2\left(\frac{\pi}{p}(x-y)\right)\right]

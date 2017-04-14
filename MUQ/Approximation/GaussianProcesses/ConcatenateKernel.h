@@ -12,6 +12,11 @@ namespace Approximation
     /**
        @class ConcatenateKernel
        @ingroup CovarianceKernels
+       @brief Concatenates two kernels together.
+       @details Let \f$k_1(x,x^\prime)\f$ and \f$k_2(x,x^\prime)\f$ be two different covariance kernels with the same inputs.  This class describes a concatenated kernel of the form 
+\f[
+k(x,x^\prime) = \left[\begin{array}{cc}k_1(x,x^\prime) & 0\\ 0 & k_2(x,x^\prime)\end{array}\right].
+\f]
     */
     template<typename KernelType1, typename KernelType2>
     class ConcatenateKernel : public KernelImpl<ConcatenateKernel<KernelType1,KernelType2>>

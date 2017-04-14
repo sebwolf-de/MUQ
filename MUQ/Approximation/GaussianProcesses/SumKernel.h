@@ -12,7 +12,7 @@ namespace Approximation
 /**
 
 @class SumKernel
-
+@ingroup CovarianceKernels
 \f[
 k)x,y) = k_1(x,y) + k_2(x,y)
 \f]

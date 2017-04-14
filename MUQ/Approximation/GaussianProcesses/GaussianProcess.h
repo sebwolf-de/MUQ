@@ -14,7 +14,50 @@ namespace muq
 
     namespace Approximation
     {
-	
+
+
+    /** @defgroup GaussianProcesses Gaussian Processes
+        @ingroup Approximation
+        @brief Tools for defining and working with Gaussian processes.
+        @details This group contains classes for defining Gaussian processes and performing Gaussian process regression.
+
+ @code{.cpp}
+
+    const unsigned numFields = 1;   // The number of components in the GP predictions
+    const unsigned dim       = 1;   // The number of predictor variables (e.g., location)
+    const unsigned numobs    = 100; // The number of observations 
+    const unsigned numPred   = 10;  // The number of locations where we want to evaluate the GP
+
+    Eigen::MatrixXd trainLocs(dim,       numObs);
+    Eigen::MatrixXd trainData(numFields, numObs);
+
+    Eigen::MatrixXd predLocs(dim, numPred);
+
+    // ... Fill in the training locations and data
+    // ... Fill in the prediction locations
+
+    // Create the covariance kernel
+    const double lengthScale = 0.35;
+    const double variance    = 2.0;
+
+    auto kernel = SquaredExpKernel(dim, variance, lengthScael);
+   
+    // Create the Mean function
+    ConstantMean mean(dim, 1);
+
+    // Create the Gaussian Process
+    auto gp = ConstructGP(mean, kernel);
+
+    // Optimize the covariance kernel hyperparameters and store the training data
+    gp.Fit(trainLocs, trainData);
+    
+    // Make a prediction at new locaitons
+    GaussianInformation post = gp.Predict(predLocs);
+
+@endcode
+
+    */
+        
     class GaussianProcess;
 
     
@@ -31,7 +74,12 @@ namespace muq
 
 
 
-    
+    /** @defgroup MeanFunctions Mean Functions
+        @ingroup GaussianProcesses 
+    */
+    /** @class MeanFunctionBase
+        @ingroup MeanFunctions
+    */
     class MeanFunctionBase
     {
     public:
@@ -46,7 +94,10 @@ namespace muq
 	const unsigned coDim;
     };
 
-    
+
+    /** @class ConstantMean
+        @ingroup MeanFunctions
+    */
     class ConstantMean : public MeanFunctionBase
     {
 
@@ -64,7 +115,9 @@ namespace muq
 	}	    
     };
 
-    
+    /** @class LinearTransformMean
+        @ingroup MeanFunctions
+    */
     template<typename LinearOperator>
     class LinearTransformMean : public MeanFunctionBase
     {
@@ -101,7 +154,10 @@ namespace muq
     {
 	return LinearTransformMean<Eigen::MatrixXd>(A,K);
     }
-    
+
+    /** @class SumMean
+        @ingroup MeanFunctions
+    */
     class SumMean : public MeanFunctionBase
     {
 
@@ -136,7 +192,10 @@ namespace muq
 	return SumMean(mu1, mu2);
     }
 
-    
+
+    /** @class GaussianInformation
+        @ingroup GaussianProcesses
+    */
     class GaussianInformation
     {
     public:
@@ -144,7 +203,10 @@ namespace muq
 	Eigen::MatrixXd covariance;
     };
 
-    
+
+    /** @class GaussianProcess
+        @ingroup GaussianProcesses
+    */
     class GaussianProcess
     {
 
@@ -189,7 +251,9 @@ namespace muq
 	
     };// class GaussianProcess
 
-    
+
+    /** @ingroup GaussianProcesses
+     */
     template<typename MeanType, typename KernelType>
     GaussianProcess ConstructGP(MeanType const& mean,
 				KernelType const& kernel)

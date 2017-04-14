@@ -135,7 +135,28 @@ CoregionalKernel k(2, marginalCov, kernels);
 
 
 <h3> Linear Operations </h3>
-Suppose we have a vector-valued Gaussian Process \f$f\sim GP( \mu(x), k(x, x^\prime) )\f$ where \f$\mu(x)\f$ has \f$N\f$ components.
+Suppose we have a vector-valued Gaussian Process \f$f\sim GP( \mu(x), k_f(x, x^\prime) )\f$ where \f$\mu(x)\f$ returns a vector with \f$N\f$ components and \f$k(x,x^\prime)\f$ returns an \f$N\times N\f$ marginal covariance matrix.  Now, let \f$A\f$ be an \f$M\times N\f$ matrix and consider the new Gaussian process \f$g = Af\f$.  The mean function of \f$g\f$ is given by \f$A \mu(x)\f$ and the covariance kernel is given by \f$k_g(x,x^\prime) = A k_f(x, x^\prime) A^T \f$.  Constructing this type of kernel with MUQ is straightforward:
+\code{.cpp}
+
+// First set up a vector-valued kernel (a coregional Kernel in this case)
+Eigen::MatrixXd marginalCov(2,2);
+marginalCov << 1.0, 0.8,
+               0.8, 1.0;
+
+auto k1 = SquaredExpKernel(2, var1, length1);
+auto k2 = SquaredExpKernel(2, var1, length1);
+
+auto kf = CoregionTie(marginalCov, k1, k2);
+
+// Now apply the linear operation
+Eigen::MatrixXd A(3,2);
+A << 1.0, 1.0,
+     0.5, 0.75,
+     1.0, 0.0;
+
+auto kg = A * kf;
+
+\endcode
 
 */
 

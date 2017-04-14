@@ -12,6 +12,7 @@ namespace Approximation
 /**
 
 @class WhiteNoiseKernel
+@ingroup CovarianceKernels
 
 This class implements a kernel of the form
 \f[

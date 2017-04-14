@@ -12,7 +12,7 @@ namespace Approximation
     
 /**
 
-@class LinearTransformNoiseKernel
+@class LinearTransformKernel
 @ingroup CovarianceKernels
 
 Given another kernel $k_2(x,y)$ and a linear transformation $A$, this class implements a kernel of the form

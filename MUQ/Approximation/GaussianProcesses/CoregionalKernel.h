@@ -13,9 +13,16 @@ namespace Approximation
 
 @class CoregionalKernel
 @ingroup CovarianceKernels
-
-This kernel supports coregionalization for modeling vector-valued Gaussian processes.
-
+@brief This kernel supports coregionalization for modeling vector-valued Gaussian processes.
+@details Let \f$v_i\f$ and \f$\lambda_i\f$ be the \f$i^{th}\f$ eigenvector and eigenvalue of an \f$N\times N\f$ covariance matrix \f$\Sigma\f$.  Now, let define the matrix \f$\Phi\f$ as 
+\f[
+\Phi = \left[\sqrt{\lambda_1} v_1, \sqrt{\lambda_2} v_2, \ldots, \sqrt{\lambda_N} v_N \right]
+\f]
+The CoregionalKernels defined by this class take the form
+\f[
+k(x,x^\prime) = \Phi \left[\begin{array}{cccc} k_1(x,x^\prime) & 0 & & 0\\ 0 & k_2(x,x^\prime) & \ddots & \vdots\\ \vdots & & \ddots  & \\ 0 & \cdots & 0 & k_N(x,x^\prime) \end{array}\right] \Phi^T.
+\f]
+Notice that the marginal covariance (i.e., \f$k(x,x)\f$) is \f$\Sigma\f$. 
  */
 class CoregionalKernel : public KernelImpl<CoregionalKernel>
 {

@@ -13,15 +13,13 @@ namespace Approximation
 /**
 
 \class KernelImpl
+\ingroup CovarianceKernels
 \brief Base class in CRTP pattern for covariance kernels
 \details This class provides common functionality (such as computing Covariance matrices) for all covariance kernels.  It uses the curiously recurring template pattern and requires that child classes implement the following functions
-- double operator(VectorType1,VectorType2)
-- unsigned GetDim()
-- unsigned GetCodim()
-- unsigned GetNumParams()
-- unsigned GetNumConstraints()
-- void SetParams(VectorType)
-
+- void EvaluateImpl(VectorType1, VectorType2, MatType)
+- void GetDerivative(VectorType1, VectorType2, MatType)
+- Eigen::VectorXd GetParams()
+- void SetParams(Eigen::VectorXd)
 */
 template<typename ChildType>
 class KernelImpl : public KernelBase

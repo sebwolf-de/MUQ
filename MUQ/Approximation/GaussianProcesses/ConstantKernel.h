@@ -12,6 +12,7 @@ namespace Approximation
 /**
 
 @class ConstantKernel
+@ingroup CovarianceKernels
 
 This class implements a constant kernel of the form
 \f[
