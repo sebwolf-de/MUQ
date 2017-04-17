@@ -10,12 +10,11 @@ INCLUDE(CheckCXXSourceRuns)
 INCLUDE(CheckFunctionExists)
 
 # define the project name
-project (MUQ) 
-set(MUQ_MAJOR_VERSION 1)
-set(MUQ_MINOR_VERSION 0)
-set(MUQ_PATCH_VERSION 0)
-set(MUQ_VERSION ${MUQ_MAJOR_VERSION}.${MUQ_MINOR_VERSION}.${MUQ_PATCH_VERSION})
-
+project(MUQ_PRIVATE) 
+set(${CMAKE_PROJECT_NAME}_MAJOR_VERSION 1)
+set(${CMAKE_PROJECT_NAME}_MINOR_VERSION 0)
+set(${CMAKE_PROJECT_NAME}_PATCH_VERSION 0)
+set(${CMAKE_PROJECT_NAME}_VERSION ${${CMAKE_PROJECT_NAME}_MAJOR_VERSION}.${${CMAKE_PROJECT_NAME}_MINOR_VERSION}.${${CMAKE_PROJECT_NAME}_PATCH_VERSION})
 
 message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
 
@@ -77,24 +76,24 @@ FOREACH(BUILT_LIB ${MUQ_BUILT_LIBRARIES})
 	list(APPEND MUQ_EXPORT_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/${BUILT_LIB})
 ENDFOREACH()
 
-export(PACKAGE MUQ)
+export(PACKAGE ${CMAKE_PROJECT_NAME})
 
 # Create the MUQConfig.cmake file
-configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}/MUQConfig.cmake" @ONLY)
-configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/MUQConfig.cmake" @ONLY)
+configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake" @ONLY)
+configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake" @ONLY)
 
 # Install the MUQConfig.cmake file
-install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/MUQConfig.cmake" 
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/MUQ"
+install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake" 
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/${CMAKE_PROJECT_NAME}"
 	    COMPONENT dev)
   
 # Install the export set for use with the install-tree
-install(EXPORT MUQDepends
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/MUQ"
+install(EXPORT ${CMAKE_PROJECT_NAME}Depends
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/${CMAKE_PROJECT_NAME}"
 	    COMPONENT dev)
   
 # install all the MUQ headers -- may be better off installing for each package individually
-install(DIRECTORY MUQ
+install(DIRECTORY ${CMAKE_PROJECT_NAME}
         DESTINATION "${CMAKE_INSTALL_PREFIX}/include"
 	    FILES_MATCHING PATTERN "*.h")
   

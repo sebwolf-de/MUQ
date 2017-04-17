@@ -17,7 +17,7 @@ foreach(libName ${MUQ_TARGETS})
 
         list(APPEND MUQ_LIBRARIES ${libName})
         install(TARGETS ${libName}
-                EXPORT MUQDepends
+                EXPORT ${CMAKE_PROJECT_NAME}Depends
                 LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
                 ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
     endif()
