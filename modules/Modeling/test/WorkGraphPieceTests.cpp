@@ -1,56 +1,106 @@
 #include "gtest/gtest.h"
 
 #include "MUQ/Modeling/WorkGraph.h"
+#include "MUQ/Modeling/ConstantPiece.h"
+#include "MUQ/Modeling/IdentityPiece.h"
 
 #include "WorkPieceTestClasses.h"
 
 using namespace muq::Modeling;
 
 TEST(WorkGraphPiece, FixedInOutNum) {
-    // create test WorkPieces
-  auto test0 = std::make_shared<FixedInOutMod>(2, 3);
-  auto test1 = std::make_shared<FixedInOutMod>(1, 1);
-  auto test2 = std::make_shared<FixedInOutMod>(2, 0);
-  auto test3 = std::make_shared<FixedInOutMod>(1, 2);
+  // the input types
+  std::vector<std::string> inTypes({typeid(std::string).name(), typeid(double).name(), typeid(std::shared_ptr<AnObject>).name()});
+  // the output types
+  std::vector<std::string> outTypes({typeid(std::string).name(), typeid(double).name()});
 
+  // create the test WorkPiece
+  auto test0 = std::make_shared<FixedInOutMod>(inTypes, outTypes);
+  auto test1 = std::make_shared<FixedInOutMod>(inTypes, outTypes);
+
+  // create a version of "AnObject"
+  auto obj = std::make_shared<AnObject>(2.0);
+  obj->flag = true;
+
+  // make a constant parameter
+  auto test2 = std::make_shared<ConstantPiece>(obj, 1);
+  auto test3 = std::make_shared<IdentityPiece>(outTypes);
+  
   // create and empty graph
   auto graph = std::make_shared<WorkGraph>();
-
-  // make sure the graph is empty
-  EXPECT_EQ(graph->NumNodes(), 0);
-  EXPECT_EQ(graph->NumEdges(), 0);
-
+  
   // add WorkPieces to the graph
-  EXPECT_FALSE(graph->HasNode("test 0"));
   graph->AddNode(test0, "test 0");
-  EXPECT_EQ(graph->NumNodes(), 1);
-  EXPECT_TRUE(graph->HasNode("test 0"));
-
-  EXPECT_FALSE(graph->HasNode("test 1"));
   graph->AddNode(test1, "test 1");
-  EXPECT_EQ(graph->NumNodes(), 2);
-  EXPECT_TRUE(graph->HasNode("test 1"));
-
-  EXPECT_FALSE(graph->HasNode("test 2"));
   graph->AddNode(test2, "test 2");
-  EXPECT_EQ(graph->NumNodes(), 3);
-  EXPECT_TRUE(graph->HasNode("test 2"));
-
-  EXPECT_FALSE(graph->HasNode("test 3"));
   graph->AddNode(test3, "test 3");
   EXPECT_EQ(graph->NumNodes(), 4);
-  EXPECT_TRUE(graph->HasNode("test 3"));
 
-  // connect test0, test1, test2, and test 3
-  graph->AddEdge("test 0", 1, "test 1", 0);
-  EXPECT_EQ(graph->NumEdges(), 1);
-  graph->AddEdge("test 0", 0, "test 2", 1);
-  EXPECT_EQ(graph->NumEdges(), 2);
-  graph->AddEdge("test 1", 0, "test 3", 0);
-  EXPECT_EQ(graph->NumEdges(), 3);
+  // connect test0 to test1
+  graph->AddEdge("test 1", 0, "test 0", 0);
+  graph->AddEdge("test 1", 1, "test 0", 1);
+  graph->AddEdge("test 2", 0, "test 1", 2);
+  graph->AddEdge("test 3", 0, "test 1", 0);
+  graph->AddEdge("test 3", 1, "test 1", 1);
+  EXPECT_EQ(graph->NumEdges(), 5);
 
   graph->Visualize("modules/Modeling/test/WorkGraphVisualizations/FixedInOutNum_WorkPiece.pdf");
 
-  // create a WorkPiece whose outs are from "test 3"
-  auto work = graph->CreateWorkPiece("test 3");
+  // create a WorkPiece whose outs are from "test 0"
+  auto work = graph->CreateWorkPiece("test 0");
+
+  // output of the WorkGraphPiece
+  auto outs = work->Evaluate(obj, (std::string)"string", 2.0);
+
+  // check the outputs
+  EXPECT_EQ(outs.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outs[0]).compare("string")==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outs[1]), 2.0);
 }
+
+/*TEST(WorkGraphPiece, UnfixedInOutNum) {
+  // the input types
+  std::vector<std::string> inTypes({typeid(std::string).name(), typeid(double).name(), typeid(std::shared_ptr<AnObject>).name()});
+  // the output types
+  std::vector<std::string> outTypes({typeid(std::string).name(), typeid(double).name()});
+
+  // create the test WorkPiece
+  auto test0 = std::make_shared<FixedInOutMod>(inTypes, outTypes);
+  auto test1 = std::make_shared<UnfixedMod>();
+
+  // create a version of "AnObject"
+  auto obj = std::make_shared<AnObject>(2.0);
+  obj->flag = true;
+
+  // make a constant parameter
+  auto test2 = std::make_shared<ConstantPiece>(obj, 1);
+  
+  // create and empty graph
+  auto graph = std::make_shared<WorkGraph>();
+  
+  // add WorkPieces to the graph
+  graph->AddNode(test0, "test 0");
+  graph->AddNode(test1, "test 1");
+  graph->AddNode(test2, "test 2");
+  EXPECT_EQ(graph->NumNodes(), 4);
+
+  // connect test0 to test1
+  graph->AddEdge("test 1", 0, "test 0", 0);
+  graph->AddEdge("test 1", 1, "test 0", 1);
+  graph->AddEdge("test 2", 0, "test 1", 2);
+  EXPECT_EQ(graph->NumEdges(), 5);
+
+  graph->Visualize("modules/Modeling/test/WorkGraphVisualizations/FixedInOutNum_WorkPiece.pdf");
+
+  // create a WorkPiece whose outs are from "test 0"
+  auto work = graph->CreateWorkPiece("test 0");
+
+  // output of the WorkGraphPiece
+  auto outs = work->Evaluate(obj, (std::string)"string", 2.0);
+
+  // check the outputs
+  EXPECT_EQ(outs.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outs[0]).compare("string")==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outs[1]), 2.0);
+}
+*/

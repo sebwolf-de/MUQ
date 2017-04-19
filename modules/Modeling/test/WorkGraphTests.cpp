@@ -4,7 +4,7 @@
 
 #include "WorkPieceTestClasses.h"
 
-#include "MUQ/Modeling/ConstantParameters.h"
+#include "MUQ/Modeling/ConstantPiece.h"
 
 using namespace muq::Modeling;
 
@@ -203,8 +203,8 @@ TEST(WorkGraphTests, IsConstant) {
   obj->flag = true;
 
   // make a constant parameter
-  auto test5 = std::make_shared<ConstantParameters>(obj, 1);
-  auto test3 = std::make_shared<ConstantParameters>((std::string)"string", 3.0);
+  auto test5 = std::make_shared<ConstantPiece>(obj, 1);
+  auto test3 = std::make_shared<ConstantPiece>((std::string)"string", 3.0);
   
   // create and empty graph
   auto graph = std::make_shared<WorkGraph>();
@@ -266,7 +266,7 @@ TEST(WorkGraphTests, IsConstant) {
   EXPECT_TRUE(graph->Constant("test 3"));
   EXPECT_TRUE(graph->Constant("test 5"));
 
-  // get the outputs for the ConstantParameters node
+  // get the outputs for the ConstantPiece node
   std::vector<boost::any> outputs;
   graph->GetConstantOutputs(outputs, "test 5");
   EXPECT_EQ(outputs.size(), 2);
@@ -303,8 +303,8 @@ TEST(WorkGraphTests, ConstantDependentCut) {
   obj->flag = true;
 
   // make a constant parameter
-  auto test2 = std::make_shared<ConstantParameters>(obj, 1);
-  auto test3 = std::make_shared<ConstantParameters>((std::string)"string", 3.0);
+  auto test2 = std::make_shared<ConstantPiece>(obj, 1);
+  auto test3 = std::make_shared<ConstantPiece>((std::string)"string", 3.0);
   
   // create and empty graph
   auto graph = std::make_shared<WorkGraph>();

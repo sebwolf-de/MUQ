@@ -15,8 +15,6 @@
 #include <boost/graph/copy.hpp>
 #include <boost/graph/graphviz.hpp>
 
-#include "MUQ/Modeling/ConstantParameters.h"
-
 using namespace muq::Modeling;
 
 /// A helper struct that determines if a node in the graph has a given name
@@ -146,7 +144,7 @@ void WorkGraph::AddEdge(std::string const& nameFrom, unsigned int const outputDi
   // the input/output type
   const std::string inType = graph->operator[](*itTo)->piece->InputType(inputDim);
   const std::string outType = graph->operator[](*itFrom)->piece->OutputType(outputDim);
-
+  
   // either we don't know the input and/or output type or they match
   if(inType.compare("")!=0 && // we don't know the input type
      outType.compare("")!=0 && // we don't know the output type
@@ -320,14 +318,14 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
     // the upstream node iterator
     auto v = it.second.first;
     
-    if( Constant(v) && std::dynamic_pointer_cast<ConstantParameters>(graph->operator[](v)->piece)==nullptr ) { // if this node is constant but is not already a muq::Modeling::ConstantParameters
+    if( Constant(v) && std::dynamic_pointer_cast<ConstantPiece>(graph->operator[](v)->piece)==nullptr ) { // if this node is constant but is not already a muq::Modeling::ConstantPiece
       // get the output values for this node
       std::vector<boost::any> outputs;
       GetConstantOutputs(outputs, v);
       
-      // create a ConstantParameters node for this input
+      // create a ConstantPiece node for this input
       auto nextV = boost::add_vertex(*(newGraph->graph));
-      newGraph->graph->operator[](nextV) = std::make_shared<WorkGraphNode>(std::make_shared<ConstantParameters>(outputs), graph->operator[](v)->name+"_fixed");
+      newGraph->graph->operator[](nextV) = std::make_shared<WorkGraphNode>(std::make_shared<ConstantPiece>(outputs), graph->operator[](v)->name+"_fixed");
       
       // loop through the edges from the source to this node
       for( auto e : it.second.second ) {
@@ -381,9 +379,9 @@ std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) c
     std::vector<boost::any> outputs;
     GetConstantOutputs(outputs, nameOut);
 
-    // create a ConstantParameters node for this input
+    // create a ConstantPiece node for this input
     auto nextV = boost::add_vertex(*(newGraph->graph));
-    newGraph->graph->operator[](nextV) = std::make_shared<WorkGraphNode>(std::make_shared<ConstantParameters>(outputs), graph->operator[](*oldV)->name+"_fixed");
+    newGraph->graph->operator[](nextV) = std::make_shared<WorkGraphNode>(std::make_shared<ConstantPiece>(outputs), graph->operator[](*oldV)->name+"_fixed");
 
     // return a graph with only one (constant node)
     return newGraph;
@@ -401,14 +399,54 @@ std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) c
   return newGraph;
 }
 
-std::shared_ptr<WorkPiece> WorkGraph::CreateWorkPiece(std::string const& node) const {
+std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& node) const {
   // make sure we have the node
   assert(HasNode(node));
 
   // trime the extraneous branches from the graph
   auto newGraph = DependentCut(node);
+  assert(newGraph);
+
+  // get the inputs to the cut graph
+  std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > inputs = newGraph->GraphInputs();
+
+  // the name of each input
+  std::vector<std::string> inputNames;
+  inputNames.reserve(inputs.size()); // reserve the size
+
+  // loop through the input nodes and create each input name
+  for( auto it=inputs.begin(); it!=inputs.end(); ++it ) {
+    std::stringstream temp;
+    temp << newGraph->graph->operator[](it->first)->name << "_";
+    temp << it->second;
+
+    inputNames.push_back(temp.str()); 
+  }
+
+  // the constant pieces that will hold the inputs
+  std::vector<std::shared_ptr<ConstantPiece> > constantPieces(inputs.size());
+
+  // the input types
+  std::map<unsigned int, std::string> inTypes;
+
+  assert(inputNames.size()==inputs.size());
+  assert(constantPieces.size()==inputs.size());
+  for( unsigned int i=0; i<inputs.size(); ++i ) { // loop over each input
+    const std::string inType = newGraph->graph->operator[](inputs.at(i).first)->piece->InputType(inputs.at(i).second, false);
+    if( inType.compare("")!=0 ) {
+      inTypes[i] = inType;
+    }
+
+    // create a constant WorkPiece to hold the input (it is empty for now) and add it to the new graph
+    constantPieces[i] = std::make_shared<ConstantPiece>();
+    newGraph->AddNode(constantPieces[i], inputNames[i]);
+    newGraph->AddEdge(inputNames[i], 0, newGraph->graph->operator[](inputs[i].first)->name, inputs[i].second);
+  }
   
-  return nullptr;
+  // the output node
+  auto outNode = GetNodeIterator(node);
+
+  return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inTypes, newGraph->graph->operator[](*outNode)->piece);
 }
 
 class MyVertexWriter {
@@ -587,7 +625,7 @@ void WorkGraph::GetConstantOutputs(std::vector<boost::any>& outs, boost::graph_t
     // add to the list of inputs supplyed by the WorkPiece with this id
     auto it = inMap.find(id);
     if( it==inMap.end() ) {
-      inMap[id] = std::pair<boost::graph_traits<Graph>::vertex_descriptor, std::vector<std::pair<unsigned int, unsigned int> > >(source(*e, *graph), std::vector<std::pair<unsigned int, unsigned int> >(1, std::pair<unsigned int, unsigned int>(outNum, inNum)));
+      inMap[id] = std::pair<boost::graph_traits<Graph>::vertex_descriptor, std::vector<std::pair<unsigned int, unsigned int> > >(boost::source(*e, *graph), std::vector<std::pair<unsigned int, unsigned int> >(1, std::pair<unsigned int, unsigned int>(outNum, inNum)));
     } else {
       inMap[id].second.push_back(std::pair<unsigned int, unsigned int>(outNum, inNum));
     }

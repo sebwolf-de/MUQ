@@ -1,17 +1,10 @@
 #ifndef WORKGRAPH_H_
 #define WORKGRAPH_H_
 
-#include <boost/graph/adjacency_list.hpp>
-
-#include "MUQ/Modeling/WorkGraphNode.h"
-#include "MUQ/Modeling/WorkGraphEdge.h"
 #include "MUQ/Modeling/WorkGraphPiece.h"
 
 namespace muq {
   namespace Modeling { 
-    // Define a directed graph type
-    typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, std::shared_ptr<WorkGraphNode>, std::shared_ptr<WorkGraphEdge> > Graph;
-
     /// A graph of connected muq::Modeling::WorkPiece's 
     class WorkGraph {
     public:
@@ -73,7 +66,7 @@ namespace muq {
 	 @param[in] node The name of the output node
 	 \return A muq::Modeling::WorkPiece whose outputs are the same as the output node
        */
-      std::shared_ptr<WorkPiece> CreateWorkPiece(std::string const& node) const;
+      std::shared_ptr<WorkGraphPiece> CreateWorkPiece(std::string const& node) const;
 
       /// Check to see if a node is constant?
       /**

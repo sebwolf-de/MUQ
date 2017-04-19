@@ -27,5 +27,6 @@ CreateCompileGroup(
 
     WorkGraphPiece.cpp
 
-    ConstantParameters.cpp
+    ConstantPiece.cpp
+    IdentityPiece.cpp
 )

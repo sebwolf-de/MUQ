@@ -11,14 +11,14 @@ WorkPiece::WorkPiece() :
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
-WorkPiece::WorkPiece(unsigned int const num, WorkPiece::Fix const fix) : 
+WorkPiece::WorkPiece(int const num, WorkPiece::Fix const fix) : 
   numInputs(fix==WorkPiece::Fix::Inputs? num : -1), // possibly fix the number of inputs 
   numOutputs(fix==WorkPiece::Fix::Outputs? num : -1), // possibly fix the number of outputs
   id(SetID()) // the unique id of this WorkPiece
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
-WorkPiece::WorkPiece(unsigned int const numIns, unsigned int const numOuts) : 
+WorkPiece::WorkPiece(int const numIns, int const numOuts) : 
   numInputs(numIns), // fix the number of inputs
   numOutputs(numOuts), // fix the number of outputs
   id(SetID()) // the unique id of this WorkPiece
@@ -43,7 +43,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& types, WorkPiece
 {}
 
 // Create a muq::Modeling::WorkPiece where either some of the inputs have specified types or some of the outputs have specified types and either the number of inputs or the number of outputs is fixed
-WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& types, unsigned int const num, WorkPiece::Fix const fixTypes, WorkPiece::Fix const fixNum) :
+WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& types, int const num, WorkPiece::Fix const fixTypes, WorkPiece::Fix const fixNum) :
   numInputs(fixNum==WorkPiece::Fix::Inputs? num : -1), // possibly fix the number of inputs 
   numOutputs(fixNum==WorkPiece::Fix::Outputs? num : -1), // possibly fix the number of outputs 
   inputTypes(fixTypes==WorkPiece::Fix::Inputs? types : std::map<unsigned int, std::string>()), // possibly fix the input types
@@ -52,7 +52,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& types, unsigned 
 {}  
 
 // Create a muq::Modeling::WorkPiece with a fixed number of inputs with specified types and a fixed number of outputs (of uknown type)
-WorkPiece::WorkPiece(std::vector<std::string> const& types, unsigned int const num) : 
+WorkPiece::WorkPiece(std::vector<std::string> const& types, int const num) : 
   numInputs(types.size()), // fix the number of inputs 
   numOutputs(num), // fix the number of outputs 
   inputTypes(Types(types)), // fix the input types
@@ -60,7 +60,7 @@ WorkPiece::WorkPiece(std::vector<std::string> const& types, unsigned int const n
 {}
 
 // Create a muq::Modeling::WorkPiece with a fixed number of outputs with specified types and a fixed number of inputs (of uknown type)
-WorkPiece::WorkPiece(unsigned int const num, std::vector<std::string> const& types) : 
+WorkPiece::WorkPiece(int const num, std::vector<std::string> const& types) : 
   numInputs(num), // fix the number of inputs 
   numOutputs(types.size()), // fix the number of outputs 
   outputTypes(Types(types)), // fix the input types
@@ -68,7 +68,7 @@ WorkPiece::WorkPiece(unsigned int const num, std::vector<std::string> const& typ
 {}
 
 // Create a muq::Modeling::WorkPiece where some of the inputs are known and we know the input and output numbers
-WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const numIns, unsigned int const numOuts) :
+WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, int const numIns, int const numOuts) :
   numInputs(numIns), // fix the number inputs
   numOutputs(numOuts), // fix the number of outputs
   inputTypes(inTypes), // fix the input types
@@ -76,7 +76,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigne
 {}
 
 // Create a muq::Modeling::WorkPiece where some of the outputs are known and we know the input and output numbers
-WorkPiece::WorkPiece(unsigned int const numIns, std::map<unsigned int, std::string> const& outTypes, unsigned int const numOuts) :
+WorkPiece::WorkPiece(int const numIns, std::map<unsigned int, std::string> const& outTypes, int const numOuts) :
   numInputs(numIns), // fix the number inputs
   numOutputs(numOuts), // fix the number of outputs
   outputTypes(outTypes), // fix the output types
@@ -102,7 +102,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::ve
 {}
 
 // Create a muq::Modeling::WorkPiece where some of the inputs are known with a known number of inputs and all of the outputs have specified types
-WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const num, std::vector<std::string> const& outTypes) :
+WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, int const num, std::vector<std::string> const& outTypes) :
   numInputs(num), // fix the number of inputs
   numOutputs(outTypes.size()), // fix the number of outputs
   inputTypes(inTypes), // fix the inputs types
@@ -120,7 +120,7 @@ WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::map<unsigned 
 {}
 
 // Create a muq::Modeling::WorkPiece where some of the outputs with a known number of outputs and all of the inputs have specified types
-WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes, unsigned int const num) :
+WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes, int const num) :
   numInputs(inTypes.size()), // fix the number of inputs
   numOutputs(num), // fix the number of outputs
   inputTypes(Types(inTypes)), // fix the inputs types
@@ -138,7 +138,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::ma
 {}
 
 // Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types with a fixed number of inputs
-WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const numIn, std::map<unsigned int, std::string> const& outTypes) :
+WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, int const numIn, std::map<unsigned int, std::string> const& outTypes) :
   numInputs(numIn), // fix the number of inputs
   numOutputs(-1), // the number of outputs is unfixed
   inputTypes(inTypes), // fix the input types
@@ -147,7 +147,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigne
 {}
 
 // Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types with a fixed number of outputs
-WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes, unsigned int const numOut) :
+WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes, int const numOut) :
   numInputs(-1), // the number of inputs is unfixed
   numOutputs(numOut), // fix the number of outputs
   inputTypes(inTypes), // fix the input types
@@ -156,7 +156,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::ma
 {}
 
 // Create a muq::Modeling::WorkPiece where some of the inputs and some of the outputs have specified types with a fixed number of inputs and outputs
-WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const numIn, std::map<unsigned int, std::string> const& outTypes, unsigned int const numOut) :
+WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, int const numIn, std::map<unsigned int, std::string> const& outTypes, int const numOut) :
   numInputs(numIn), // fix the number of inputs
   numOutputs(numOut), // fix the number of outputs
   inputTypes(inTypes), // fix the input types
@@ -274,32 +274,57 @@ std::string WorkPiece::Name() const {
   return ss.str();
 }
 
-std::string WorkPiece::InputType(unsigned int inputNum) const {
+std::string WorkPiece::InputType(unsigned int inputNum, bool const demangle) const {
   // make sure the inputNum is less than the number of inputs or that we don't know the number of inputs
   assert(numInputs<0 || inputNum<numInputs);
 
-  if( inputTypes.size()>0 ) { // if we know the input types ...
-    int status;
-    // ... returned the demangled name
-    return abi::__cxa_demangle(inputTypes.at(inputNum).c_str(), 0, 0, &status);
+  // an iterator to the input type
+  auto it = inputTypes.find(inputNum);
+
+  // we don't know the input type
+  if( it==inputTypes.end() ) {
+    return "";
   }
 
-  return "";
+  // make it human readable
+  if( demangle ) {
+    return boost::core::demangle(it->second.c_str());
+  }
+
+  // return the input type
+  return it->second;
 }
 
-std::string WorkPiece::OutputType(unsigned int outputNum) const {
-  // make sure the inputNum is less than the number of inputs or that we don't know the number of inputs
+std::string WorkPiece::OutputType(unsigned int outputNum, bool const demangle) const {
+  // make sure the outputNum is less than the number of outputs or that we don't know the number of outputs
   assert(numOutputs<0 || outputNum<numOutputs);
 
-  if( outputTypes.size()>0 ) { // if we know the input types ...
-    int status;
-    // ... returned the demangled name
-    return abi::__cxa_demangle(outputTypes.at(outputNum).c_str(), 0, 0, &status);
+  // an iterator to the output type
+  auto it = outputTypes.find(outputNum);
+
+  // we don't know the output type
+  if( it==outputTypes.end() ) {
+    return "";
   }
 
-  return "";
+  // make it human readable
+  if( demangle ) {
+    return boost::core::demangle(it->second.c_str());
+  }
+
+  // return the output type
+  return it->second;
 }
 
 unsigned int WorkPiece::ID() const{
   return id;
 }
+
+std::map<unsigned int, std::string> WorkPiece::OutputTypes() const {
+  return outputTypes;
+}
+
+std::map<unsigned int, std::string> WorkPiece::InputTypes() const {
+  return inputTypes;
+}
+

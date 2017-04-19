@@ -36,24 +36,52 @@ private:
     switch( inputs.size() ) {
     case 0 : { // there are no inputs
       const std::string hi = "hello!";
-
+      
       // the output size is 3 
       outputs.resize(3);
-
+      
       outputs[0] = hi;
       outputs[1] = 3.0;
       outputs[2] = 6;
-
+      
       return;
     } case 1: { // there is one input
+	
+	// the output size is 1
+	outputs.resize(1);
+	// first input and first ouptut must be a string but the parent does not check this
+	outputs[0] = boost::any_cast<std::string>(inputs[0]);
+	
+	return;
+      } case 3: {  // there are three inputs
+	  // the first input must be a string (the parent does not check this)
+	  const std::string s = boost::any_cast<std::string>(inputs[0]);
 
-      // the output size is 1
-      outputs.resize(1);
-      // first input and first ouptut must be a string but the parent does not check this
-      outputs[0] = boost::any_cast<std::string>(inputs[0]);
-
-      return;
-      } default: // there is more than one input (there are no outputs)
+	  bool flag = false;
+	  if( inputs.size()>1 ) {
+	    // the third input must be a shared pointer to AnObject (the parent does not check this)
+	    auto obj = boost::any_cast<std::shared_ptr<AnObject> >(inputs[2]);
+	    flag = obj->flag;
+	  }
+	  
+	  // the output size is 2
+	  outputs.resize(2);
+	  
+	  // the first output is a string
+	  outputs[0] = s;
+	  
+	  if( flag ) { // if the flag in AnObject is true ...
+	    // the second input and output must a double (the parent does not check either of these)
+	    outputs[1] = boost::any_cast<double>(inputs[1]);
+	    
+	    return;
+	  }
+	  
+	  // if the flag in AnObject is false
+	  outputs[1] = 1.0;
+	  
+	  return;
+	} default: // by default don't do anything      
       return;
     }
   }    

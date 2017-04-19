@@ -38,14 +38,14 @@ namespace muq {
 	 @param[in] num The number of inputs or outputs (which one depends on the second parameter)
 	 @param[in] fix WorkPiece::Fix::Inputs (default): the first parameter is the number of inputs; WorkPiece::Fix::Outputs: the first parameter is the number of outputs
       */
-      WorkPiece(unsigned int const num, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
+      WorkPiece(int const num, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
       
       /// Create a muq::Modeling::WorkPiece with a fixed number of inputs and outputs but variable input/output types
       /**
 	 @param[in] numIns The number of inputs
 	 @param[in] numOuts The number of outputs
       */
-      WorkPiece(unsigned int const numIns, unsigned int const numOuts);
+      WorkPiece(int const numIns, int const numOuts);
       
       /// Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types
       /**
@@ -81,21 +81,21 @@ namespace muq {
 	 @param[in] fixTypes WorkPiece::Fix::Inputs (default): the elements of the first parameter are the types of the inputs; WorkPiece::Fix::Outputs: the elements of the first parameter are the types of the outputs
 	 @param[in] fixNum WorkPiece::Fix::Inputs (default): the second parameter is the number of inputs; WorkPiece::Fix::Outputs: the second parameter is the number of outputs
        */
-      WorkPiece(std::map<unsigned int, std::string> const& types, unsigned int const num, WorkPiece::Fix const fixTypes = WorkPiece::Fix::Inputs, WorkPiece::Fix const fixNum = WorkPiece::Fix::Inputs);
+      WorkPiece(std::map<unsigned int, std::string> const& types, int const num, WorkPiece::Fix const fixTypes = WorkPiece::Fix::Inputs, WorkPiece::Fix const fixNum = WorkPiece::Fix::Inputs);
 
       /// Create a muq::Modeling::WorkPiece with a fixed number of inputs with specified types and a fixed number of outputs (of uknown type)
       /**
 	 @param[in] types A vector of strings, each element is the type of an input (the number of inputs is the size of this vector)
 	 @param[in] num The number of outputs
       */
-      WorkPiece(std::vector<std::string> const& types, unsigned int const num);
+      WorkPiece(std::vector<std::string> const& types, int const num);
 
       /// Create a muq::Modeling::WorkPiece with a fixed number of outputs with specified types and a fixed number of inputs (of uknown type)
       /**
 	 @param[in] num The number of inputs
 	 @param[in] types A vector of strings, each element is the type of an output (the number of outputs is the size of this vector)
       */
-      WorkPiece(unsigned int const num, std::vector<std::string> const& types);
+      WorkPiece(int const num, std::vector<std::string> const& types);
 
       /// Create a muq::Modeling::WorkPiece where some of the inputs are known and we know the input and output numbers
       /**
@@ -103,7 +103,7 @@ namespace muq {
 	 @param[in] numIns The number of inputs
 	 @param[in] numOuts The number of outputs
       */
-      WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const numIns, unsigned int const numOuts);
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, int const numIns, int const numOuts);
 
       /// Create a muq::Modeling::WorkPiece where some of the outputs are known and we know the input and output numbers
       /**
@@ -111,7 +111,7 @@ namespace muq {
 	 @param[in] outTypes A map from the input number to the input type
 	 @param[in] numOuts The number of outputs
       */
-      WorkPiece(unsigned int const numIns, std::map<unsigned int, std::string> const& outTypes, unsigned int const numOuts);
+      WorkPiece(int const numIns, std::map<unsigned int, std::string> const& outTypes, int const numOuts);
 
       /// Create a muq::Modeling::WorkPiece with a fixed number of inputs and outputs with specified types
       /**
@@ -133,7 +133,7 @@ namespace muq {
 	 @param[in] num The number of inputs
 	 @param[in] outTypes A vector of strings, each element is the type of an output (the number of outputs is the size of this vector)
       */
-      WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const num, std::vector<std::string> const& outTypes);
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, int const num, std::vector<std::string> const& outTypes);
       
       /// Create a muq::Modeling::WorkPiece where some of the outputs and all of the inputs have specified types
       /**
@@ -148,7 +148,7 @@ namespace muq {
 	 @param[in] outTypes A map from the output number to the output type
 	 @param[in] num The number of outputs
       */
-      WorkPiece(std::vector<std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes, unsigned int const num);
+      WorkPiece(std::vector<std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes, int const num);
 
       /// Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types
       /**
@@ -163,7 +163,7 @@ namespace muq {
 	 @param[in] numIn The number of inputs
 	 @param[in] outTypes A map from the output number to the output type
       */
-      WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const numIn, std::map<unsigned int, std::string> const& outTypes);
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, int const numIn, std::map<unsigned int, std::string> const& outTypes);
 
       /// Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types with a fixed number of outputs
       /**
@@ -171,7 +171,7 @@ namespace muq {
 	 @param[in] outTypes A map from the output number to the output type
 	 @param[in] outNum The number of outputs
       */
-      WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes, unsigned int const numOut);
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::map<unsigned int, std::string> const& outTypes, int const numOut);
 
       /// Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types with a fixed number of inputs and outputs
       /**
@@ -180,7 +180,7 @@ namespace muq {
 	 @param[in] outTypes A map from the output number to the output type
 	 @param[in] outNum The number of outputs
       */
-      WorkPiece(std::map<unsigned int, std::string> const& inTypes, unsigned int const numIn, std::map<unsigned int, std::string> const& outTypes, unsigned int const numOut);
+      WorkPiece(std::map<unsigned int, std::string> const& inTypes, int const numIn, std::map<unsigned int, std::string> const& outTypes, int const numOut);
 
       /// Default destructor
       virtual ~WorkPiece() {}
@@ -241,18 +241,26 @@ namespace muq {
       /**
 	 The return input type name is "demangled" so it is more human readable.
 	 @param[in] inputNum The input we want the name of 
+	 @param[in] demangle true (default): demangle the input so it is human-readable, false: do not demangle the input
 	 \return If we know the input types, the input type name is returned.  If we do not know the input types, return ""
        */
-      std::string InputType(unsigned int inputNum) const;
+      std::string InputType(unsigned int inputNum, bool const demangle = true) const;
 
       /// Get the output type (if we know it) for a specific output
       /**
 	 The return output type name is "demangled" so it is more human readable.
 	 @param[in] outputNum The output we want the name of 
+	 @param[in] demangle true (default): demangle the input so it is human-readable, false: do not demangle the input
 	 \return If we know the output types, the output type name is returned.  If we do not know the output types, return ""
        */
-      std::string OutputType(unsigned int outputNum) const;
+      std::string OutputType(unsigned int outputNum, bool const demangle = true) const;
 
+      /// Get the output types
+      std::map<unsigned int, std::string> OutputTypes() const;
+
+      /// Get the input types
+      std::map<unsigned int, std::string> InputTypes() const;      
+      
       /// Get the unique ID number
       /**
 	 \return The ID number
@@ -336,7 +344,10 @@ namespace muq {
 
 	if( it!=inputTypes.end() ) { // if we know the input type
 	  // check to see that the types match
-	  assert(it->second.compare(typeid(in).name())==0);
+	  if( it->second.compare(typeid(in).name())!=0 ) {
+	    std::cerr << std::endl << "ERROR: Input types do not match." << std::endl << "\tGiven input: " << boost::core::demangle(typeid(in).name()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
+	    assert(it->second.compare(typeid(in).name())==0);
+	  }
 	}
 	
 	// add the last input to the input vector
@@ -366,7 +377,10 @@ namespace muq {
 
 	if( it!=inputTypes.end() ) { // if we know the input type
 	  // check to see that the types match
-	  assert(it->second.compare(typeid(in).name())==0);
+	  if( it->second.compare(typeid(in).name())!=0 ) {
+	    std::cerr << std::endl << "ERROR: Input types do not match." << std::endl << "\tGiven input: " << boost::core::demangle(typeid(in).name()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
+	    assert(it->second.compare(typeid(in).name())==0);
+	  }
 	}
 	
 	// add the last input to the input vector

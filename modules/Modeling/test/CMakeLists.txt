@@ -5,7 +5,8 @@ CreateTestGroup(
     WorkGraphTests.cpp
     WorkGraphPieceTests.cpp
 
-    ConstantParametersTests.cpp
+    ConstantPieceTests.cpp
+    IdentityPieceTests.cpp
 )
 
 
