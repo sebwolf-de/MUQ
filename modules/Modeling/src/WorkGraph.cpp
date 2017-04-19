@@ -416,6 +416,13 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
 
   // loop through the input nodes and create each input name
   for( auto it=inputs.begin(); it!=inputs.end(); ++it ) {
+    // make sure the input number is known
+    if( newGraph->graph->operator[](it->first)->piece->numInputs<0 ) {
+      std::cerr << std::endl << "ERROR: Cannot create WorkGraphPiece if one of the nodes has an unknown number of inputs" << std::endl << std::endl;
+      
+      assert(newGraph->graph->operator[](it->first)->piece->numInputs>=0);
+    }
+    
     std::stringstream temp;
     temp << newGraph->graph->operator[](it->first)->name << "_";
     temp << it->second;
