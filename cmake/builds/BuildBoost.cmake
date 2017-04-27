@@ -91,6 +91,32 @@ endif()
 message(STATUS "BOOST_LINK_FLAGS = ${BOOST_LINK_FLAGS}")
 message(STATUS "BOOST_CXX_FLAGS = ${BOOST_CXX_FLAGS}")
 
+if(MUQ_USE_LIBC11)
+          ExternalProject_Add(
+            BOOST
+            PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost
+            URL ${BOOST_EXTERNAL_SOURCE}
+            #PATCH_COMMAND cp ${CMAKE_SOURCE_DIR}/external/boost/shared_ptr_helper.hpp ${CMAKE_CURRENT_BINARY_DIR}/external/boost/src/Boost/boost/serialization/shared_ptr_helper.hpp
+            UPDATE_COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/user-config.jam ${BOOST_BUILD_DIR}/user-config.jam 
+            CONFIGURE_COMMAND ${BOOST_BUILD_DIR}/bootstrap.sh --prefix=${Boost_INSTALL_DIR}
+            BUILD_COMMAND ${BOOST_BUILD_DIR}/b2 cxxflags=${BOOST_CXX_FLAGS} linkflags=${BOOST_LINK_FLAGS} variant=release -d+2 --user-config=${BOOST_BUILD_DIR}/user-config.jam toolset=${BOOST_TOOLSET_NAME}-muq --with-filesystem --with-graph --with-serialization --with-system --with-timer --with-math install
+            BUILD_IN_SOURCE 1
+            INSTALL_COMMAND ""
+            )
+		else(MUQ_USE_LIBC11)
+            ExternalProject_Add(
+              BOOST
+              PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/boost
+              URL ${BOOST_EXTERNAL_SOURCE}
+              #PATCH_COMMAND cp ${CMAKE_SOURCE_DIR}/external/boost/shared_ptr_helper.hpp ${CMAKE_CURRENT_BINARY_DIR}/external/boost/src/Boost/boost/serialization/shared_ptr_helper.hpp
+              UPDATE_COMMAND mv ${CMAKE_CURRENT_BINARY_DIR}/user-config.jam ${BOOST_BUILD_DIR}/user-config.jam 
+              CONFIGURE_COMMAND ${BOOST_BUILD_DIR}/bootstrap.sh --prefix=${Boost_INSTALL_DIR}
+              BUILD_COMMAND ${BOOST_BUILD_DIR}/b2 cxxflags=${BOOST_CXX_FLAGS} variant=release -d+2 --user-config=${BOOST_BUILD_DIR}/user-config.jam toolset=${BOOST_TOOLSET_NAME}-muq --with-filesystem --with-graph --with-serialization --with-system --with-timer --with-math install
+              BUILD_IN_SOURCE 1
+              INSTALL_COMMAND ""
+              )
+endif(MUQ_USE_LIBC11)
+
 set_property( TARGET BOOST PROPERTY FOLDER "Externals")
 
 set( Boost_INCLUDE_DIRS ${Boost_INSTALL_DIR}/include )
