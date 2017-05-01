@@ -113,6 +113,7 @@ fi
 cd "$BUILD_DIR"
 rm CMakeCache.txt
 rm -rf CMakeFiles
+rm -rf modules
 
 #######################################
 ##### RUN CMAKE
