@@ -51,7 +51,7 @@ TEST(WorkGraphPiece, FixedInOutNum) {
 
   // output of the WorkGraphPiece
   auto outs = work->Evaluate(obj, (std::string)"string", 2.0);
-
+ 
   // check the outputs
   EXPECT_EQ(outs.size(), 2);
   EXPECT_TRUE(boost::any_cast<std::string>(outs[0]).compare("string")==0);

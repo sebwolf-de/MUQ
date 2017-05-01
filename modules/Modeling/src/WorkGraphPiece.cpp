@@ -67,6 +67,8 @@ void WorkGraphPiece::EvaluateImpl(ref_vector<boost::any> const& inputs) {
 
   // store the result in the output vector
   outputs.resize(valMap[outputID].size());
-  std::copy(valMap[outputID].begin(), valMap[outputID].end(), outputs.begin());
+  for(int i=0; i<outputs.size(); ++i)
+      outputs.at(i) = valMap[outputID].at(i).get();
+  
 }
 

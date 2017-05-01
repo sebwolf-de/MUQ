@@ -273,16 +273,17 @@ TEST(WorkGraphTests, IsConstant) {
   EXPECT_TRUE(boost::any_cast<std::shared_ptr<AnObject> >(outputs[0])->flag);
   EXPECT_EQ(boost::any_cast<int>(outputs[1]), 1);
 
-  outputs = graph->GetConstantOutputs("test 3");
-  EXPECT_EQ(outputs.size(), 2);
-  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare((std::string)"string")==0);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs[1]), 3.0);
- 
+  std::vector<boost::any>& outputs2 = graph->GetConstantOutputs("test 3");
+  EXPECT_EQ(outputs2.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs2[0]).compare((std::string)"string")==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs2[1]), 3.0);
+
   // get the constant parameters of a down stream node
-  outputs = graph->GetConstantOutputs("test 2");
-  EXPECT_EQ(outputs.size(), 2);
-  EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare((std::string)"string")==0);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs[1]), 3.0);
+  std::vector<boost::any>& outputs3 = graph->GetConstantOutputs("test 2");
+ 
+  EXPECT_EQ(outputs3.size(), 2);
+  EXPECT_TRUE(boost::any_cast<std::string>(outputs3[0]).compare((std::string)"string")==0);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double>(outputs3[1]), 3.0);
 }
 
 TEST(WorkGraphTests, ConstantDependentCut) {

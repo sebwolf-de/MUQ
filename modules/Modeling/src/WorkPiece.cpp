@@ -236,7 +236,10 @@ std::vector<boost::any> WorkPiece::Evaluate(std::vector<std::reference_wrapper<c
 
     if( it!=outputTypes.end() ) { // if we know the output type
       // check to see that the types match
-      assert(it->second.compare(outputs.at(i).type().name())==0);
+      if(it->second.compare(outputs.at(i).type().name())!=0){
+        std::cerr << "ERROR: Expected output of type " << it->second << " but received output of type " << outputs.at(i).type().name() << std::endl;
+        assert(it->second.compare(outputs.at(i).type().name())==0);
+      }
     }
   }
   

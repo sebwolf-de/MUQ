@@ -320,7 +320,7 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
     
     if( Constant(v) && std::dynamic_pointer_cast<ConstantPiece>(graph->operator[](v)->piece)==nullptr ) { // if this node is constant but is not already a muq::Modeling::ConstantPiece
       // get the output values for this node
-      std::vector<boost::any>& outputs = GetConstantOutputs(v);
+      const std::vector<boost::any>& outputs = GetConstantOutputs(v);
       
       // create a ConstantPiece node for this input
       auto nextV = boost::add_vertex(*(newGraph->graph));
@@ -375,7 +375,7 @@ std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) c
   // if the desired node is constant
   if( Constant(nameOut) ) {
     // get the output values for this node
-    std::vector<boost::any>& outputs = GetConstantOutputs(nameOut);
+    const std::vector<boost::any>& outputs = GetConstantOutputs(nameOut);
 
     // create a ConstantPiece node for this input
     auto nextV = boost::add_vertex(*(newGraph->graph));
