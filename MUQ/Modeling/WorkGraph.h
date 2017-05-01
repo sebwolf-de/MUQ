@@ -81,7 +81,7 @@ namespace muq {
 	 @param[out] outs The output values for the node (returned by reference)
 	 @param[in] node The name of the node
        */
-      void GetConstantOutputs(std::vector<boost::any>& outs, std::string const& node) const;
+      std::vector<boost::any>& GetConstantOutputs(std::string const& node) const;
       
     private:
 
@@ -90,7 +90,7 @@ namespace muq {
 	 @param[out] outs The output values for the node (returned by reference)
 	 @param[in] node We want the output values of this node
        */
-      void GetConstantOutputs(std::vector<boost::any>& outs, boost::graph_traits<Graph>::vertex_descriptor const& node) const;
+      std::vector<boost::any>& GetConstantOutputs(boost::graph_traits<Graph>::vertex_descriptor const& node) const;
 
       /// Check to see if a node is constant?
       /**

@@ -320,8 +320,7 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
     
     if( Constant(v) && std::dynamic_pointer_cast<ConstantPiece>(graph->operator[](v)->piece)==nullptr ) { // if this node is constant but is not already a muq::Modeling::ConstantPiece
       // get the output values for this node
-      std::vector<boost::any> outputs;
-      GetConstantOutputs(outputs, v);
+      std::vector<boost::any>& outputs = GetConstantOutputs(v);
       
       // create a ConstantPiece node for this input
       auto nextV = boost::add_vertex(*(newGraph->graph));
@@ -376,8 +375,7 @@ std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) c
   // if the desired node is constant
   if( Constant(nameOut) ) {
     // get the output values for this node
-    std::vector<boost::any> outputs;
-    GetConstantOutputs(outputs, nameOut);
+    std::vector<boost::any>& outputs = GetConstantOutputs(nameOut);
 
     // create a ConstantPiece node for this input
     auto nextV = boost::add_vertex(*(newGraph->graph));
@@ -593,14 +591,14 @@ void WorkGraph::Visualize(std::string const& filename) const {
   }
 }
 
-void WorkGraph::GetConstantOutputs(std::vector<boost::any>& outs, std::string const& node) const {
+std::vector<boost::any>& WorkGraph::GetConstantOutputs(std::string const& node) const {
   // make sure the node indeed cosntant
   assert(Constant(node));
 
-  GetConstantOutputs(outs, *GetNodeIterator(node));
+  return GetConstantOutputs( *GetNodeIterator(node));
 }
 
-void WorkGraph::GetConstantOutputs(std::vector<boost::any>& outs, boost::graph_traits<Graph>::vertex_descriptor const& node) const {
+std::vector<boost::any>& WorkGraph::GetConstantOutputs(boost::graph_traits<Graph>::vertex_descriptor const& node) const {
   // make sure the node indeed cosntant
   assert(Constant(node));
   
@@ -612,8 +610,8 @@ void WorkGraph::GetConstantOutputs(std::vector<boost::any>& outs, boost::graph_t
 
   // if the node has no inputs
   if( work->numInputs==0 ) { 
-    outs = work->Evaluate();
-    return;
+    work->Evaluate();
+    return work->outputs;
   }
 
   // get iterators to the input edges
@@ -639,13 +637,13 @@ void WorkGraph::GetConstantOutputs(std::vector<boost::any>& outs, boost::graph_t
   }
 
   // the inputs to this WorkPiece
-  std::vector<boost::any> ins(work->numInputs);
+  boost::any empty(nullptr);
+  ref_vector<boost::any> ins(work->numInputs, std::cref(empty));
 
   // loop through the edges again, now we know which outputs supply which inputs
   for( auto it : inMap ) {
     // get the outputs of the upstream node
-    std::vector<boost::any> upstreamOutputs;
-    GetConstantOutputs(upstreamOutputs, it.second.first);
+    std::vector<boost::any>& upstreamOutputs = GetConstantOutputs(it.second.first);
 
     // loop through the inputs supplied by the outputs of this upstream node
     for( auto out_in : it.second.second ) {
@@ -655,7 +653,8 @@ void WorkGraph::GetConstantOutputs(std::vector<boost::any>& outs, boost::graph_t
   }
 
   // evaluate this node
-  outs = work->Evaluate(ins);
+  work->Evaluate(ins);
+  return work->outputs;
 }
 
 bool WorkGraph::Constant(std::string const& node) const {

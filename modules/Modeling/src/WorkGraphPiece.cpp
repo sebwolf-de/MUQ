@@ -18,7 +18,7 @@ void WorkGraphPiece::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   }
 
   // a map from the WorkPiece ID to its outputs
-  std::map<unsigned int, std::vector<boost::any> > valMap;
+  std::map<unsigned int, ref_vector<boost::any> > valMap;
 
   // loop over the run order
   for( auto it : runOrder ) {
@@ -49,7 +49,8 @@ void WorkGraphPiece::EvaluateImpl(ref_vector<boost::any> const& inputs) {
     }
 
     // the inputs to this WorkPiece
-    std::vector<boost::any> ins(numIns);
+    boost::any empty(nullptr);
+    ref_vector<boost::any> ins(numIns, std::cref(empty));
 
     // loop through the edges again, now we know which outputs supply which inputs
     for( auto edge : inMap ) {
@@ -60,7 +61,8 @@ void WorkGraphPiece::EvaluateImpl(ref_vector<boost::any> const& inputs) {
     }
 
     // evaluate the current map and store the value
-    valMap[graph->operator[](it)->piece->ID()] = graph->operator[](it)->piece->Evaluate(ins);
+    graph->operator[](it)->piece->Evaluate(ins);
+    valMap[graph->operator[](it)->piece->ID()] = ToRefVector(graph->operator[](it)->piece->outputs);
   }
 
   // store the result in the output vector

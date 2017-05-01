@@ -253,15 +253,7 @@ std::vector<boost::any> WorkPiece::Evaluate(std::vector<boost::any> const& ins) 
     assert(inputTypes[i].compare(ins[i].type().name())==0);
   }
   
-  // create the input vector and reserve enough space
-  ref_vector<const boost::any> in_refs;
-  in_refs.reserve(ins.size());
-  // populate the input vector
-  for(int i=0; i<ins.size(); ++i)
-    in_refs.push_back(std::cref(ins.at(i)));
-  
-  // the inputs are set, so call evaluate with no inputs
-  return Evaluate(in_refs);
+  return Evaluate(ToRefVector(ins));
 }
 
 std::string WorkPiece::Name() const {
@@ -328,3 +320,14 @@ std::map<unsigned int, std::string> WorkPiece::InputTypes() const {
   return inputTypes;
 }
 
+ref_vector<const boost::any> WorkPiece::ToRefVector(std::vector<boost::any> const& anyVec) const {
+           
+  ref_vector<const boost::any> refs;
+  refs.reserve(anyVec.size());
+
+  // populate the input vector
+  for(int i=0; i<anyVec.size(); ++i)
+    refs.push_back(std::cref(anyVec.at(i)));
+
+  return refs;
+}

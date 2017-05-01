@@ -13,12 +13,22 @@
 
 namespace muq {
   namespace Modeling {
+
+    // Forward declaration of WorkGraphPiece
+    class WorkGraphPiece;
+    class WorkGraph;
+
     /// A vector of references to something ... 
     template <typename T>
       using ref_vector = std::vector<std::reference_wrapper<const T>>;
     
     /// Base class for MUQ's modelling envronment
     class WorkPiece {
+
+      // Make WorkGraphPiece a friend so it can access WorkPiece's outputs directly
+      friend class WorkGraphPiece;
+      friend class WorkGraph;
+
     protected:
       
       /// Does the constructor fix the inputs or the outputs?
@@ -274,6 +284,9 @@ namespace muq {
       int numOutputs;
       
     protected:
+
+      /// Create vector of references from a vector of boost::any's
+      ref_vector<const boost::any> ToRefVector(std::vector<boost::any> const& anyVec) const;
 
       /// Get the types from a vector of boost::any's 
       /**
