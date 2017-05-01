@@ -111,7 +111,8 @@ fi
 
 # cd into build directory and remove all previous files
 cd "$BUILD_DIR"
-rm -rf *
+rm CMakeCache.txt
+rm -rf CMakeFiles
 
 #######################################
 ##### RUN CMAKE
@@ -130,7 +131,8 @@ $dir
 #######################################
 ##### BUILD MUQ
 #######################################
-make install > OutputFromeMake.txt
+make install > OutputFromMake.txt
+tail -200 OutputFromMake.txt
 
 cd $dir
 
