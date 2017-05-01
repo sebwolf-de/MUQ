@@ -130,7 +130,7 @@ $dir
 #######################################
 ##### BUILD MUQ
 #######################################
-make install
+make install > OutputFromeMake.txt
 
 cd $dir
 
