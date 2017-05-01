@@ -10,6 +10,8 @@
 #       TAG += value [value, ...]
 # Values that contain spaces should be placed between quotes (" ")
 
+USE_MATHJAX = YES
+
 #---------------------------------------------------------------------------
 # Project related configuration options
 #---------------------------------------------------------------------------
