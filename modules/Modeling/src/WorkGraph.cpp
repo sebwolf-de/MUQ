@@ -591,7 +591,7 @@ void WorkGraph::Visualize(std::string const& filename) const {
   }
 }
 
-std::vector<boost::any>& WorkGraph::GetConstantOutputs(std::string const& node) const {
+std::vector<boost::any> const& WorkGraph::GetConstantOutputs(std::string const& node) const {
   // make sure the node indeed cosntant
   assert(Constant(node));
 

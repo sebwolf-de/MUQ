@@ -81,7 +81,7 @@ namespace muq {
 	 @param[out] outs The output values for the node (returned by reference)
 	 @param[in] node The name of the node
        */
-      std::vector<boost::any>& GetConstantOutputs(std::string const& node) const;
+      std::vector<boost::any> const& GetConstantOutputs(std::string const& node) const;
       
     private:
 
