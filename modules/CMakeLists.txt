@@ -1,4 +1,5 @@
 # begin accumulating the tests
 set(all_gtest_sources RunTests.cpp)
 
-add_subdirectory(Modelling)
+add_subdirectory(Modeling)
+add_subdirectory(Approximation)

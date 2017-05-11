@@ -118,12 +118,8 @@ endmacro(PrintOptional)
 
 # print glog status
 FILE(APPEND ${_log_summary} "#  Optional dependencies:\n")
-PrintOptional(GLOG " -----")
 PrintOptional(GTEST " ----")
-PrintOptional(SACADO " ---")
-PrintOptional(LIBMESH " --")
 PrintOptional(NLOPT " ----")
-PrintOptional(ARMADILLO " ")
 FILE(APPEND ${_log_summary} "#\n")
   
 FILE(APPEND ${_log_summary}

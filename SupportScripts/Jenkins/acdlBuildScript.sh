@@ -15,24 +15,6 @@ else
   build_type="Debug"
 fi
 
-#######################################
-##### DECIDE TO BUILD WITH PYTHON OR NOT
-#######################################
-if echo $bin_dir| grep -q "PYTHON"; then
-  with_python="ON"
-else
-  with_python="OFF"
-fi
-
-#######################################
-##### DECIDE TO BUILD WITH NLOPT OR NOT
-#######################################
-if echo $bin_dir| grep -q "NLOPT"; then
-  with_nlopt="ON"
-else
-  with_nlopt="OFF"
-fi
-
 ####################################
 ##### SET MACHINE SPECIFIC PATHS
 ####################################
@@ -49,8 +31,6 @@ if [[ `hostname` == "reynolds" ]]; then
     echo "Using gtest compiled with gcc in ${GTEST_DIR}"
   fi
 
-  NLOPT_DIR=/home1/jenkins/util/NLOPT/nlopt-2.4.2/install
-
 elif [[ `hostname` == "macys.mit.edu" ]]; then
 
   BOOST_SOURCE=/Users/mparno/util/boost_1_63_0.tar.gz
@@ -59,12 +39,9 @@ elif [[ `hostname` == "macys.mit.edu" ]]; then
   export PATH=/usr/local/bin:/usr/local/sbin:$PATH
 
   GTEST_DIR=/Users/jenkins/util/gtest/
-  NLOPT_DIR=/usr/local/Cellar/nlopt/2.4.2/
-
 else
 
   # if not on macys or reynolds, assume I'm on Matt's macbook for testing
-  NLOPT_DIR=/Users/mparno/Desktop/NLOPT_CLANG
   GTEST_DIR=/Users/mparno/Documents/Repositories/gtest_clang/
 
 fi
@@ -134,7 +111,9 @@ fi
 
 # cd into build directory and remove all previous files
 cd "$BUILD_DIR"
-rm -rf *
+rm CMakeCache.txt
+rm -rf CMakeFiles
+rm -rf modules
 
 #######################################
 ##### RUN CMAKE
@@ -146,9 +125,6 @@ cmake \
 -DCMAKE_C_COMPILER=$my_cc_compiler \
 -DMUQ_USE_GTEST=ON \
 -DMUQ_GTEST_DIR=$GTEST_DIR \
--DMUQ_USE_PYTHON=$with_python \
--DMUQ_USE_NLOPT=$with_nlopt \
--DMUQ_NLOPT_DIR=$NLOPT_DIR \
 -DMUQ_USE_OPENMPI=OFF \
 -DBOOST_EXTERNAL_SOURCE=$BOOST_SOURCE \
 $dir
@@ -156,7 +132,8 @@ $dir
 #######################################
 ##### BUILD MUQ
 #######################################
-make install
+make install > OutputFromMake.txt
+tail -200 OutputFromMake.txt
 
 cd $dir
 
