@@ -10,16 +10,14 @@ INCLUDE(CheckCXXSourceRuns)
 INCLUDE(CheckFunctionExists)
 
 # define the project name
-project (MUQ) 
-set(MUQ_MAJOR_VERSION 0)
-set(MUQ_MINOR_VERSION 1)
-set(MUQ_PATCH_VERSION 0)
-set(MUQ_VERSION ${MUQ_MAJOR_VERSION}.${MUQ_MINOR_VERSION}.${MUQ_PATCH_VERSION})
-
+project(MUQ_PRIVATE) 
+set(${CMAKE_PROJECT_NAME}_MAJOR_VERSION 1)
+set(${CMAKE_PROJECT_NAME}_MINOR_VERSION 0)
+set(${CMAKE_PROJECT_NAME}_PATCH_VERSION 0)
+set(${CMAKE_PROJECT_NAME}_VERSION ${${CMAKE_PROJECT_NAME}_MAJOR_VERSION}.${${CMAKE_PROJECT_NAME}_MINOR_VERSION}.${${CMAKE_PROJECT_NAME}_PATCH_VERSION})
 
 message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
 
-  
 ###############################################
 # Compiler configuration
 ###############################################
@@ -31,6 +29,17 @@ include_directories(.)
 # User options
 ###############################################
 INCLUDE(OptionsSetup)
+
+###############################################
+# Find source files and calculate required dependencies
+###############################################
+INCLUDE(GetPossibleDependencyList)
+INCLUDE(CompileGroup)
+
+message(STATUS "All possible MUQ dependencies = ${POSSIBLE_MUQ_DEPENDENCIES}")
+
+# The ProcesCompileGroups function will add modules/CMakeLists.txt and then process any computed Compile/Test groups
+INCLUDE(ProcessCompileGroups)
 
 ###############################################
 # Manage dependencies
@@ -48,11 +57,10 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/MUQ/config.h.in ${CMAKE_CURRENT_SOURC
 INCLUDE(DependencyCheck)
 
 ###############################################
-# Set up project
+# Create BUILD targets for cmake
 ###############################################
-
-# Go compile everything
-add_subdirectory(modules)
+INCLUDE(SetupCompileTargets)
+INCLUDE(SetupTestTargets)
 
 # Create the list of libraries we just built
 INCLUDE(BuiltLibrarySetup)
@@ -68,24 +76,24 @@ FOREACH(BUILT_LIB ${MUQ_BUILT_LIBRARIES})
 	list(APPEND MUQ_EXPORT_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/${BUILT_LIB})
 ENDFOREACH()
 
-export(PACKAGE MUQ)
+export(PACKAGE ${CMAKE_PROJECT_NAME})
 
 # Create the MUQConfig.cmake file
-configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}/MUQConfig.cmake" @ONLY)
-configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/MUQConfig.cmake" @ONLY)
+configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake" @ONLY)
+configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake" @ONLY)
 
 # Install the MUQConfig.cmake file
-install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/MUQConfig.cmake" 
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/MUQ"
+install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake" 
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/${CMAKE_PROJECT_NAME}"
 	    COMPONENT dev)
   
 # Install the export set for use with the install-tree
-install(EXPORT MUQDepends
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/MUQ"
+install(EXPORT ${CMAKE_PROJECT_NAME}Depends
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/${CMAKE_PROJECT_NAME}"
 	    COMPONENT dev)
   
 # install all the MUQ headers -- may be better off installing for each package individually
-install(DIRECTORY MUQ
+install(DIRECTORY ${CMAKE_PROJECT_NAME}
         DESTINATION "${CMAKE_INSTALL_PREFIX}/include"
 	    FILES_MATCHING PATTERN "*.h")
   
@@ -104,6 +112,7 @@ include(MakeSummaryFile)
 FILE(READ ${CMAKE_BINARY_DIR}/summary.log MUQ_LOG_SUMMARY)
 MESSAGE("${MUQ_LOG_SUMMARY}")
 
+
 ###############################################
 # Add a target to build documentation
 ###############################################
@@ -115,16 +124,16 @@ if(DOXYGEN_FOUND)
 	option(MUQDOC_INCLUDE_ANALYTICS OFF)
 	if(MUQDOC_INCLUDE_ANALYTICS)
 		message(STATUS "Will include google analytics header information in doxygen output.")
-		set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/analytics_header.html)
+		set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/analytics_header.html)
 	endif()
 	  
   message(STATUS "Extracting parameter values from cpp files.  Results are stored in ${CMAKE_BINARY_DIR}/ExtractedParameters.dox")
-  message(STATUS "python ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}")
-  execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}
+  message(STATUS "python ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}")
+  execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}
                   OUTPUT_FILE "${CMAKE_BINARY_DIR}/ParameterDescriptions.dox")
     
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/muq.doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile @ONLY)
-    #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/ParameterDescriptions.dox.in ${CMAKE_CURRENT_BINARY_DIR}/ParameterDescriptions.dox @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/muq.doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile @ONLY)
+    #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/ParameterDescriptions.dox.in ${CMAKE_CURRENT_BINARY_DIR}/ParameterDescriptions.dox @ONLY)
     add_custom_target(doc
         ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
