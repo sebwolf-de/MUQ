@@ -217,37 +217,14 @@ endif()
 ########################################
 
 if(MUQ_USE_PYTHON)
+    set(PYBIND11_CPP_STANDARD -std=c++11)    
 
-  if(DEFINED MUQ_PYTHON_VERSION)
-
-    FIND_PACKAGE(PythonLibs ${MUQ_PYTHON_VERSION} EXACT REQUIRED)
-
-    if(NOT PYTHON_LIBRARY)
-    message(WARNING "Could not find an exact version match for Python${MUQ_PYTHON_VERSION}.  MUQ will not be compiled with Python support.") 
-      set(MUQ_USE_PYTHON OFF)
-    else()
-      include_directories(${PYTHON_INCLUDE_DIR})
-      LIST(APPEND MUQ_EXTERNAL_INCLUDES ${PYTHON_INCLUDE_DIR})
-      LIST(APPEND MUQ_LINK_LIBS ${PYTHON_LIBRARY})
-      LIST(APPEND MUQ_LINK_LIBS_STATIC ${PYTHON_LIBRARY_STATIC})
+    FIND_PACKAGE(pybind11)
+    
+    if(NOT pybind11_FOUND)
+           add_subdirectory(${CMAKE_SOURCE_DIR}/external/pybind11)
     endif()
     
-  else()
-    FIND_PACKAGE(PythonLibs 2.7)
-    
-    if(NOT PYTHON_LIBRARY)
-    message(WARNING "Could not find a Python Library.  MUQ will not be compiled with Python support.") 
-      set(MUQ_USE_PYTHON OFF)
-    else()
-      message("PYTHON_INCLUDE_DIR = ${PYTHON_INCLUDE_DIR}")
-      include_directories(${PYTHON_INCLUDE_DIR})
-      LIST(APPEND MUQ_EXTERNAL_INCLUDES ${PYTHON_INCLUDE_DIR})
-      LIST(APPEND MUQ_LINK_LIBS ${PYTHON_LIBRARY})
-      LIST(APPEND MUQ_LINK_LIBS_STATIC ${PYTHON_LIBRARY_STATIC})
-    endif()
-   
-  endif()
-
 endif()
 
 ########################################

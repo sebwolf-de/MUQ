@@ -128,13 +128,19 @@ FILE(APPEND ${_log_summary}
 #        OpenMP: --------------> ${MUQ_USE_OPENMP}
 #        CUDA: ----------------> ${MUQ_USE_CUDA}
 #        MKL: -----------------> ${MUQ_USE_MKL}
-#        Python: --------------> ${MUQ_USE_PYTHON}
-#
 "
 )
+if(pybind11_FOUND AND MUQ_USE_PYTHON)
+    FILE(APPEND ${_log_summary} "#        Python: --------------> ${MUQ_USE_PYTHON} -- Found pybind11 in ${pybind11_INCLUDE_DIR}.\n")
+elseif(MUQ_USE_PYTHON)
+    FILE(APPEND ${_log_summary} "#        Python: --------------> ${MUQ_USE_PYTHON} -- Building pybind11 from source.\n")
+else()
+    FILE(APPEND ${_log_summary} "#        Python: --------------> ${MUQ_USE_PYTHON}\n")     
+endif()
 
 FILE(APPEND ${_log_summary}
-"#  MUQ Modules:   
+"#
+#  MUQ Modules:   
 #        Utilities:              (BUILD=${UtilitiesAndModelling_build},TESTS=${UtilitiesAndModelling_tests})
 #        Modelling:              (BUILD=${UtilitiesAndModelling_build},TESTS=${UtilitiesAndModelling_tests})
 #        Inference:              (BUILD=${Inference_build},TESTS=${Inference_tests})
