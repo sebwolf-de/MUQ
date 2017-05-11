@@ -1,3 +1,4 @@
+
 ########################################
 ##### LOOK FOR GTEST              ######
 ########################################
@@ -36,7 +37,45 @@ IF(Inference_tests OR Optimization_tests OR IncrementalApproximation_tests OR Ge
 endif()
 
 ########################################
+##### LOOK FOR NLOPT              ######
+########################################
+if(MUQ_USE_NLOPT)
+        FIND_PACKAGE(NLOPT)
+	
+	IF (NLOPT_FOUND)
+		add_definitions(-DMUQ_USE_NLOPT)
+		# include the sacado library for linking
+		LIST(APPEND MUQ_LINK_LIBS ${NLOPT_LIBRARIES})
+		LIST(APPEND MUQ_LINK_LIBS_STATIC ${NLOPT_LIBRARIES_STATIC})
+		
+		include_directories(${NLOPT_INCLUDE_DIRS})
+		LIST(APPEND MUQ_EXTERNAL_INCLUDES ${NLOPT_INCLUDE_DIRS})
+		
+    ELSE()
+		set(MUQ_USE_NLOPT OFF)
+    ENDIF()
+
+endif(MUQ_USE_NLOPT)
+
+
+########################################
+##### LOOK FOR MKL                ######
+########################################
+if(MUQ_USE_MKL)
+    # include the mkl library for linking
+    if(MUQ_USE_OPENMP)
+	  LIST(APPEND MUQ_LINK_LIBS ${MUQ_MKL_DIR}/lib/intel64/libmkl_intel_lp64${CMAKE_SHARED_LIBRARY_SUFFIX} ${MUQ_MKL_DIR}/lib/intel64/libmkl_core${CMAKE_SHARED_LIBRARY_SUFFIX} ${MUQ_MKL_DIR}/lib/intel64/libmkl_gnu_thread${CMAKE_SHARED_LIBRARY_SUFFIX})
+    else()
+	  LIST(APPEND MUQ_LINK_LIBS ${MUQ_MKL_DIR}/lib/intel64/libmkl_intel_lp64${CMAKE_SHARED_LIBRARY_SUFFIX} ${MUQ_MKL_DIR}/lib/intel64/libmkl_core${CMAKE_SHARED_LIBRARY_SUFFIX} ${MUQ_MKL_DIR}/lib/intel64/libmkl_sequential${CMAKE_SHARED_LIBRARY_SUFFIX})
+    endif()
+		
+    include_directories(${MUQ_MKL_DIR}/include)
+    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${MUQ_MKL_DIR}/include)
+    add_definitions(-DEIGEN_USE_MKL_ALL)
+
+endif()
+
+########################################
 ##### REMOVE DUPLICATE INCLUDES   ######
 ########################################
-
 list( REMOVE_DUPLICATES MUQ_LINK_LIBS)

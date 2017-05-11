@@ -119,11 +119,16 @@ endmacro(PrintOptional)
 # print glog status
 FILE(APPEND ${_log_summary} "#  Optional dependencies:\n")
 PrintOptional(GTEST " ----")
+PrintOptional(NLOPT " ----")
 FILE(APPEND ${_log_summary} "#\n")
   
 FILE(APPEND ${_log_summary}
 "#  Optional tools:   
 #        MPI: -----------------> ${MUQ_USE_OPENMPI}
+#        OpenMP: --------------> ${MUQ_USE_OPENMP}
+#        CUDA: ----------------> ${MUQ_USE_CUDA}
+#        MKL: -----------------> ${MUQ_USE_MKL}
+#        Python: --------------> ${MUQ_USE_PYTHON}
 #
 "
 )
