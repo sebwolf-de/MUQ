@@ -20,4 +20,13 @@ CreateCompileGroup(
     "EIGEN3;BOOST"
     ""
     WorkPiece.cpp
+
+    WorkGraph.cpp
+    WorkGraphNode.cpp
+    WorkGraphEdge.cpp
+
+    WorkGraphPiece.cpp
+
+    ConstantPiece.cpp
+    IdentityPiece.cpp
 )

@@ -1,6 +1,5 @@
 # define a macro to look for a package and install a local copy if we can't find it
 macro (GetDependency name)
-
         # check to see if this dependency is required by any group
         list (FIND MUQ_REQUIRES ${name} dindex)
         if (${dindex} GREATER -1)
@@ -27,11 +26,11 @@ macro (GetDependency name)
 	
 	    # store include directory information
 	    include_directories(${${name}_INCLUDE_DIRS})
-	    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${${name}_INCLUDE_DIRS})
+	    LIST(APPEND ${CMAKE_PROJECT_NAME}_EXTERNAL_INCLUDES ${${name}_INCLUDE_DIRS})
 
 	    # store library information
-	    LIST(APPEND MUQ_LINK_LIBS ${${name}_LIBRARIES})
-	    LIST(APPEND MUQ_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
+	    LIST(APPEND ${CMAKE_PROJECT_NAME}_LINK_LIBS ${${name}_LIBRARIES})
+	    LIST(APPEND ${CMAKE_PROJECT_NAME}_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
 
         else()
             set(MUQ_NEEDS_${name} OFF)   
@@ -62,9 +61,9 @@ GetDependency(HDF5HL)
 if(MUQ_USE_OPENMPI)
 	find_package(ZLIB)
 	include_directories(${ZLIB_INCLUDE_DIRS})
-	LIST(APPEND MUQ_LINK_LIBS ${ZLIB_LIBRARIES})
-	LIST(APPEND MUQ_LINK_LIBS_STATIC ${ZLIB_LIBRARIES_STATIC})
-	LIST(APPEND MUQ_EXTERNAL_INCLUDES ${ZLIB_INCLUDE_DIRS})
+	LIST(APPEND ${CMAKE_PROJECT_NAME}_LINK_LIBS ${ZLIB_LIBRARIES})
+	LIST(APPEND ${CMAKE_PROJECT_NAME}_LINK_LIBS_STATIC ${ZLIB_LIBRARIES_STATIC})
+	LIST(APPEND ${CMAKE_PROJECT_NAME}_EXTERNAL_INCLUDES ${ZLIB_INCLUDE_DIRS})
 	message("ZLIB_LIBRARIES" ${ZLIB_LIBRARIES})
 	
 endif()
@@ -72,11 +71,13 @@ endif()
 ########################################
 ##### LOOK FOR AND/OR BUILD FLANN ######
 ########################################
+
 GetDependency(FLANN)
 
 ###############################################
 ##### LOOK FOR BOOST                     ######
 ###############################################
+
 list (FIND MUQ_REQUIRES BOOST dindex)
 if (${dindex} GREATER -1)
     set(MUQ_NEEDS_BOOST ON)
@@ -141,6 +142,7 @@ endif()
 ########################################
 ##### REMOVE DUPLICATE INCLUDES   ######
 ########################################
-list( REMOVE_DUPLICATES MUQ_EXTERNAL_INCLUDES)
+
+list( REMOVE_DUPLICATES ${CMAKE_PROJECT_NAME}_EXTERNAL_INCLUDES)
 
 
