@@ -295,6 +295,7 @@ bool WorkGraph::HasEdge(boost::graph_traits<Graph>::vertex_descriptor const& vOu
 }
 
 void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph>& newGraph) const {
+    
   // a map from the source ID to a pair: <source vertex, vector of edges from that vertex to this one>
   std::map<unsigned int, std::pair<boost::graph_traits<Graph>::vertex_descriptor, std::vector<boost::graph_traits<Graph>::in_edge_iterator> > > sources;
   
@@ -329,6 +330,13 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
       // loop through the edges from the source to this node
       for( auto e : it.second.second ) {
 	if( !newGraph->HasEdge(nextV, vNew, graph->operator[](*e)->inputDim) ) { // if edge does not exist ...
+
+          // Check the dimensions before adding the edge
+          if((graph->operator[](*e)->outputDim != -1) && (graph->operator[](*e)->inputDim !=-1) && (graph->operator[](*e)->outputDim != graph->operator[](*e)->inputDim)){
+            std::cerr << "\nERROR: Number of argument mismatch" << std::endl << std::endl;
+            assert(graph->operator[](*e)->outputDim == graph->operator[](*e)->inputDim);
+          }
+          
 	  // ... add the edge from this node to the existing node
 	  auto nextE = boost::add_edge(nextV, vNew, *(newGraph->graph));
 	  newGraph->graph->operator[](nextE.first) = std::make_shared<WorkGraphEdge>(graph->operator[](*e)->outputDim, graph->operator[](*e)->inputDim);
@@ -451,7 +459,13 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
   // the output node
   auto outNode = GetNodeIterator(node);
 
-  return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inTypes, newGraph->graph->operator[](*outNode)->piece);
+  std::cout << "just before constructor..." << std::endl;
+  std::cout << newGraph->graph << std::endl;
+  std::cout << &inTypes << std::endl;
+  std::cout << "call" << std::endl;
+  auto test = std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inTypes, newGraph->graph->operator[](*outNode)->piece);
+  std::cout << "done with call" << std::endl;
+  return test;
 }
 
 class MyVertexWriter {
