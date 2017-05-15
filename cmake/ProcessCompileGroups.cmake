@@ -17,10 +17,22 @@ set(MUQ_REQUIRES )
 set(MUQ_DESIRES )
 foreach(group ${MUQ_GROUPS})
 
+    # Make sure all upstream dependency groups are enabled  
+    message(STATUS "Configuring compile group ${group}")
+    foreach(depend ${${group}_REQUIRES_GROUPS})
+        if(MUQ_ENABLEGROUP_${group} AND NOT MUQ_ENABLEGROUP_${depend})
+            message(STATUS "    The ${group} group depends on the ${depend} group, but the ${depend} group was not enabled.")
+            message(STATUS "    Turning the ${depend} group on.")
+            set(MUQ_ENABLEGROUP_${depend} ON)
+        endif()
+    endforeach()
+
+    # Add to the list of required external libraries
     foreach(depend ${${group}_REQUIRES})
         list(APPEND MUQ_REQUIRES ${depend})
     endforeach()
 
+    # Add to the list of desired (i.e., optional) external libraries
     foreach(depend ${${group}_DESIRES})
         list(APPEND MUQ_DESIRES ${depend})
     endforeach()
@@ -45,7 +57,7 @@ foreach(target ${MUQ_TARGETS})
     set(${target}_SOURCES )
 
     foreach(group ${MUQ_GROUPS})
-        if(MUQ_GROUP_${group})
+        if(MUQ_ENABLEGROUP_${group})
 	    if(${${group}_LIBRARY} MATCHES ${target})
 
                 # Check to see if a group has any source (e.g., *.cpp) files.  Flag it as something that will be built if it does.
