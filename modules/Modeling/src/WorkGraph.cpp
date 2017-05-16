@@ -172,7 +172,7 @@ boost::graph_traits<Graph>::vertex_iterator WorkGraph::GetNodeIterator(std::stri
 
   // return the iterator with this name (it is end if that node does not exist)
   return std::find_if(v, v_end, NodeNameFinder(name, graph));
-}
+  }
 
 std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > WorkGraph::GraphOutputs() const {
   // create an empty vector to hold outputs
@@ -455,17 +455,18 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
     newGraph->AddNode(constantPieces[i], inputNames[i]);
     newGraph->AddEdge(inputNames[i], 0, newGraph->graph->operator[](inputs[i].first)->name, inputs[i].second);
   }
-  
-  // the output node
-  auto outNode = GetNodeIterator(node);
 
-  std::cout << "just before constructor..." << std::endl;
-  std::cout << newGraph->graph << std::endl;
-  std::cout << &inTypes << std::endl;
-  std::cout << "call" << std::endl;
-  auto test = std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inTypes, newGraph->graph->operator[](*outNode)->piece);
-  std::cout << "done with call" << std::endl;
-  return test;
+  // Look for the original node name
+  auto outNode = newGraph->GetNodeIterator(node);
+
+  // If we didn't find the original node, look for the fixed one
+  if(outNode == vertices(*newGraph->graph).second){
+      std::string node_fixed = node + "_fixed";
+      outNode = newGraph->GetNodeIterator(node_fixed);
+      assert(outNode != vertices(*newGraph->graph).second);
+  }
+  
+  return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inTypes, newGraph->graph->operator[](*outNode)->piece);
 }
 
 class MyVertexWriter {
