@@ -2,60 +2,54 @@
 ########################################
 ##### LOOK FOR GTEST              ######
 ########################################
-IF(Inference_tests OR Optimization_tests OR IncrementalApproximation_tests OR Geostats_tests 
-  OR UtilitiesAndModelling_tests OR polychaos_tests OR Regression_tests)
-  
-  IF(MUQ_USE_GTEST)
-	find_package(GTEST)
+IF(MUQ_USE_GTEST)
+  find_package(GTEST)
+
+  IF(GTEST_FOUND)
+    include(CheckGTEST)	
+  ENDIF()
 	
-	IF(GTEST_FOUND)
-		include(CheckGTEST)	
-	Endif()
-	
-	IF(GTEST_FOUND AND NOT GTEST_TEST_FAIL)
+  IF(GTEST_FOUND AND NOT GTEST_TEST_FAIL)
+    set(MUQ_BUILD_TESTS ON)
+    include_directories(${GTEST_INCLUDE_DIRS})
+    LIST(APPEND test_link_libs ${GTEST_LIBRARIES})
 
-		set(MUQ_BUILD_TESTS ON)
-		
-		include_directories(${GTEST_INCLUDE_DIRS})
-		LIST(APPEND test_link_libs ${GTEST_LIBRARIES})
+  ELSE()
 
-	else()
-
-		message(WARNING "Could not find GTEST.  No tests can be compiled!")
-	    	set(MUQ_BUILD_TESTS OFF)
-	
-	
-
-	ENDIF(GTEST_FOUND AND NOT GTEST_TEST_FAIL)
-
-    else(MUQ_USE_GTEST)
+    message(WARNING "Could not find GTEST.  No tests can be compiled!")
+    set(MUQ_BUILD_TESTS OFF)
     
-        message(WARNING “Tried to compile tests, but MUQ_USE_GTEST is OFF.  Turning off tests.”)
-	set(MUQ_BUILD_TESTS OFF)
-		
-    endif(MUQ_USE_GTEST)
-endif()
+  ENDIF(GTEST_FOUND AND NOT GTEST_TEST_FAIL)
+
+ELSE(MUQ_USE_GTEST)
+
+    message(WARNING “Tried to compile tests, but MUQ_USE_GTEST is OFF.  Turning off tests.”)
+    set(MUQ_BUILD_TESTS OFF)
+    
+ENDIF(MUQ_USE_GTEST)
+
 
 ########################################
 ##### LOOK FOR NLOPT              ######
 ########################################
-if(MUQ_USE_NLOPT)
-        FIND_PACKAGE(NLOPT)
-	
-	IF (NLOPT_FOUND)
-		add_definitions(-DMUQ_USE_NLOPT)
-		# include the sacado library for linking
-		LIST(APPEND MUQ_LINK_LIBS ${NLOPT_LIBRARIES})
-		LIST(APPEND MUQ_LINK_LIBS_STATIC ${NLOPT_LIBRARIES_STATIC})
-		
-		include_directories(${NLOPT_INCLUDE_DIRS})
-		LIST(APPEND MUQ_EXTERNAL_INCLUDES ${NLOPT_INCLUDE_DIRS})
-		
-    ELSE()
-		set(MUQ_USE_NLOPT OFF)
-    ENDIF()
+IF(MUQ_USE_NLOPT)
+  FIND_PACKAGE(NLOPT)
 
-endif(MUQ_USE_NLOPT)
+  IF (NLOPT_FOUND)
+    add_definitions(-DMUQ_USE_NLOPT)
+
+    # include the sacado library for linking
+    LIST(APPEND MUQ_LINK_LIBS ${NLOPT_LIBRARIES})
+    LIST(APPEND MUQ_LINK_LIBS_STATIC ${NLOPT_LIBRARIES_STATIC})
+		
+    include_directories(${NLOPT_INCLUDE_DIRS})
+    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${NLOPT_INCLUDE_DIRS})
+		
+  ELSE()
+    set(MUQ_USE_NLOPT OFF)
+  ENDIF()
+
+ENDIF(MUQ_USE_NLOPT)
 
 
 ########################################

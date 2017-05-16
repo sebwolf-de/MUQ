@@ -6,6 +6,8 @@ include(CheckCXXCompilerFlag)
 set(CMAKE_CXX_FLAGS_DEBUG  "-O0") #-O0 works better for memcheck
 set(CMAKE_CXX_FLAGS_RELEASE  "-O3") #full optimization with debug symbols for profiling
 
+set(CMAKE_CXX_FLAGS "-g")
+
 # default to a release build
 message(STATUS "User defined build type = " ${CMAKE_BUILD_TYPE})
 if(NOT CMAKE_BUILD_TYPE)
