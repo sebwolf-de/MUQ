@@ -10,6 +10,7 @@
 #include<memory>
 
 #include "boost/any.hpp"
+#include "boost/optional.hpp"
 
 namespace muq {
   namespace Modeling {
@@ -229,16 +230,110 @@ namespace muq {
       */
       template<typename... Args>			
 	std::vector<boost::any> Evaluate(Args... args) {
-	
-	// we have new outputs
-	if( clearOutputs ) { outputs.clear(); }
+	// clear the outputs
+	Clear();
 	
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
 	inputs.reserve(numInputs<0? 0 : numInputs);
 	
-	// begin calling the EvaluateMulti with the first input
+	// begin calling the EvaluateRecursive with the first input
 	return EvaluateRecursive(inputs, args...);
+      }
+
+      /// Evaluate the Jacobian of this muq::Modeling::WorkPiece using references to the inputs
+      /**
+	 This function takes a vector of inputs to the muq::Modeling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if they are specified.  It then calls WorkPiece::JacobianImpl(), which computes the Jacobian.  The Jacobian must be implemented by a child class, unless both the input and the output are Eigen::VectorXd's.  In this case, we default to finite difference.
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] ins A vector of inputs 
+	 \return The Jacobian of this muq::Modeling::WorkPiece 
+      */
+      boost::any Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, std::vector<boost::any> const& ins);
+
+      /// Evaluate the Jacobian of this muq::Modeling::WorkPiece using references to the inputs
+      /**
+	 This function takes the references to the inputs to the muq::Modeling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if they are specified.  It then calls WorkPiece::JacobianImpl(), which computes the Jacobian.  The Jacobian must be implemented by a child class, unless both the input and the output are Eigen::VectorXd's.  In this case, we default to finite difference.
+	 
+	 References are used for efficiency in the muq::Modeling::WorkGraph.
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] ins A vector of references to the inputs 
+	 \return The Jacobian of this muq::Modeling::WorkPiece 
+      */
+      boost::any Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& ins);
+
+      /// Evaluate the Jacobian of this muq::Modeling::WorkPiece using multiple arguments
+      /**
+	 This function allows the user to compute the Jacobian of an output with respect to one of the inputs.  If both the input and the output type is an Eigen::VectorXd and the user has not implemented the Jacobian, we default to finite difference.
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] args The inputs (may be more than one)
+	 \return The Jacobian of this muq::Modeling::WorkPiece 
+       */
+      template<typename... Args>
+	boost::any Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, Args... args) {
+	// make sure the input and output number are valid
+	assert(numInputs<0 || wrtIn<numInputs);
+	assert(numOutputs<0 || wrtOut<numOutputs);
+
+	// clear the outputs and derivative information
+	Clear();
+	
+	// create the reference input vector
+	ref_vector<boost::any> inputs;
+	inputs.reserve(numInputs<0? 0 : numInputs);
+
+	// begin calling the JacobianMulti with the first input
+	return JacobianRecursive(wrtIn, wrtOut, inputs, args...);
+      }
+
+      /// Evaluate the action of the Jacobian of this muq::Modeling::WorkPiece using references to the inputs
+      /**
+	 This function takes a vector of inputs to the muq::Modeling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if they are specified.  It then calls WorkPiece::JacobianActionImpl(), which computes the action of the Jacobian.  The Jacobian must be implemented by a child class, unless the input and the output and the vector the Jacobian is action on are Eigen::VectorXd's.  In this case, we call WorkPiece::Jacobian() and apply it to the vector.
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] vec We want to apply the Jacobian to this vector
+	 @param[in] ins A vector of inputs 
+	 \return The Jacobian of this muq::Modeling::WorkPiece 
+      */
+      boost::any JacobianAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, std::vector<boost::any> const& ins);
+
+      /// Evaluate the action of the Jacobian of this muq::Modeling::WorkPiece using references to the inputs
+      /**
+	 References are used for efficiency in the muq::Modeling::WorkGraph.
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] vec We want to apply the Jacobian to this vector
+	 @param[in] ins A vector of references to the inputs 
+	 \return The Jacobian of this muq::Modeling::WorkPiece 
+      */
+      boost::any JacobianAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& ins);
+
+      /// Evaluate the action of the Jacobian of this muq::Modeling::WorkPiece using multiple arguments
+      /**
+	 This function allows the user to compute the action of the Jacobian of an output with respect to one of the inputs.  If the vector given to this function, the input type and the output type is an Eigen::VectorXd and the user has not implemented the Jacobian action, we call muq::Modeling::Jacobian and apply it to the given vector
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] vec We want to apply the Jacobian to this vector
+	 @param[in] args The inputs (may be more than one)
+	 \return The action of the Jacobian of this muq::Modeling::WorkPiece on vec
+       */
+      template<typename... Args>
+	boost::any JacobianAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, Args... args) {
+	// make sure the input and output number are valid
+	assert(numInputs<0 || wrtIn<numInputs);
+	assert(numOutputs<0 || wrtOut<numOutputs);
+	
+	// clear the outputs and derivative information
+	Clear();
+	
+	// create the reference input vector
+	ref_vector<boost::any> inputs;
+	inputs.reserve(numInputs<0? 0 : numInputs);
+	
+	// begin calling the JacobianMulti with the first input
+	return JacobianActionRecursive(wrtIn, wrtOut, vec, inputs, args...);
       }
 
       /// Get the (unique) name of this work piece
@@ -307,6 +402,18 @@ namespace muq {
       */
       std::vector<boost::any> outputs = std::vector<boost::any>(0);
 
+      /// The Jacobian
+      /**
+	 The Jacobian, which is filled by WorkPiece::JacobianImpl().
+       */
+      boost::optional<boost::any> jacobian;
+
+      /// The action of the Jacobian
+      /**
+	 The action of the Jacobian, which is filled by WorkPiece::JacobianActionImpl().
+       */
+      boost::optional<boost::any> jacobianAction;
+
       /// The input types
       /**
 	 Each element specifies the type of the corresponding input.  This vector must have the same number of elements as WorkPiece::numInputs or it is empty (default), which indicates that the input types are variable.
@@ -339,7 +446,7 @@ namespace muq {
       
       /// Creates WorkPiece::inputs when the WorkPiece::Evaluate is called with multiple arguments
       /**
-	 @param[in] inputNum The current input number (the \f$i^{th}\f$ input)
+	 @param[in] inputs The growing vector of inputs
 	 @param[in] in The input corresponding to the \f$i^{th}\f$ input
 	 @param[in] args The remaining (greater than \f$i\f$) inputs
 	 \return The outputs of this muq::Modeling::WorkPiece
@@ -352,16 +459,8 @@ namespace muq {
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
 	assert(numInputs<0 || inputNum+1<numInputs);
 
-	// find the input type
-	auto it = inputTypes.find(inputNum);
-
-	if( it!=inputTypes.end() ) { // if we know the input type
-	  // check to see that the types match
-	  if( it->second.compare(typeid(in).name())!=0 ) {
-	    std::cerr << std::endl << "ERROR: Input types do not match." << std::endl << "\tGiven input: " << boost::core::demangle(typeid(in).name()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
-	    assert(it->second.compare(typeid(in).name())==0);
-	  }
-	}
+	// check the input type
+	assert(CheckInputType(inputNum, typeid(in).name()));
 	
 	// add the last input to the input vector
 	const boost::any in_any(in);
@@ -370,10 +469,10 @@ namespace muq {
 	// call with EvaluateMulti with the remaining inputs
 	return EvaluateRecursive(inputs, args...);
       }								
-      
+
       /// Creates WorkPiece::inputs when the WorkPiece::Evaluate is called with multiple arguments
       /**
-	 @param[in] inputNum The current input number (the last input, should match WorkPiece::numInputs-1 if it is specfied)
+	 @param[in] inputs The growing vector of inputs
 	 @param[in] in The input corresponding to the last input
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
@@ -385,16 +484,8 @@ namespace muq {
 	// this is the last input, the last one should equal the total number of inputs
 	assert(numInputs<0 || inputNum+1==numInputs);
 
-	// find the input type
-	auto it = inputTypes.find(inputNum);
-
-	if( it!=inputTypes.end() ) { // if we know the input type
-	  // check to see that the types match
-	  if( it->second.compare(typeid(in).name())!=0 ) {
-	    std::cerr << std::endl << "ERROR: Input types do not match." << std::endl << "\tGiven input: " << boost::core::demangle(typeid(in).name()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
-	    assert(it->second.compare(typeid(in).name())==0);
-	  }
-	}
+	// check the input type
+	assert(CheckInputType(inputNum, typeid(in).name()));
 	
 	// add the last input to the input vector
 	const boost::any in_any(in);
@@ -402,6 +493,149 @@ namespace muq {
 	
 	return Evaluate(inputs);
       }
+
+      /// User-implemented function that to compute the Jacobian
+      /**
+	 If th user does not implement this function, the Jacobian cannot be computed.  However, if both the input and the output type are Eigen::VectorXd, we default to finite difference.
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] inputs The vector of references to the inputs
+      */
+      virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs);
+
+      /// Creates WorkPiece::inputs when the WorkPiece::Jacobian is called with multiple arguments
+      /**
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] inputs The growing vector of inputs
+	 @param[in] in The input corresponding to the \f$i^{th}\f$ input
+	 @param[in] args The remaining (greater than \f$i\f$) inputs
+	 \return The Jacobian of this muq::Modeling::WorkPiece 
+      */
+      template<typename ith, typename... Args>		       
+	boost::any JacobianRecursive(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> &inputs, ith const& in, Args... args) {
+	const int inputNum = inputs.size();
+	
+	// we have not yet put all of the inputs into the map, the ith should be less than the total number
+	assert(numInputs<0 || inputNum+1<numInputs);
+
+	// check the input type
+	assert(CheckInputType(inputNum, typeid(in).name()));
+	
+	// add the last input to the input vector
+	const boost::any in_any(in);
+	inputs.push_back(std::cref(in_any));
+	
+	// call with EvaluateMulti with the remaining inputs
+	return JacobianRecursive(wrtIn, wrtOut, inputs, args...);
+      }
+
+      /// Creates WorkPiece::inputs when the WorkPiece::Jacobian is called with multiple arguments
+      /**
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] inputs The growing vector of inputs
+	 @param[in] in The input corresponding to the last input
+	 \return The Jacobian of this muq::Modeling::WorkPiece 
+      */
+      template<typename last>			
+	boost::any JacobianRecursive(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> &inputs, last const& in) {
+	const int inputNum = inputs.size();
+	
+	// this is the last input, the last one should equal the total number of inputs
+	assert(numInputs<0 || inputNum+1==numInputs);
+
+	// check the input type
+	assert(CheckInputType(inputNum, typeid(in).name()));
+
+	// add the last input to the input vector
+	const boost::any in_any(in);
+	inputs.push_back(std::cref(in_any));
+	
+	return Jacobian(wrtIn, wrtOut, inputs);
+      }
+
+      /// User-implemented function that to compute the action of the Jacobian
+      /**
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] vec We want to apply the Jacobian to this vector
+	 @param[in] inputs The vector of references to the inputs
+      */
+      virtual void JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs);
+
+      /// Creates WorkPiece::inputs when the WorkPiece::JacobianAction is called with multiple arguments
+      /**
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] vec We want to apply the Jacobian to this vector
+	 @param[in] inputs The growing vector of inputs
+	 @param[in] in The input corresponding to the \f$i^{th}\f$ input
+	 @param[in] args The remaining (greater than \f$i\f$) inputs
+	 \return The action of the Jacobian of this muq::Modeling::WorkPiece on vec
+      */
+      template<typename ith, typename... Args>		       
+	boost::any JacobianActionRecursive(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> &inputs, ith const& in, Args... args) {
+	const int inputNum = inputs.size();
+	
+	// we have not yet put all of the inputs into the map, the ith should be less than the total number
+	assert(numInputs<0 || inputNum+1<numInputs);
+
+	// check the input type
+	assert(CheckInputType(inputNum, typeid(in).name()));
+	
+	// add the last input to the input vector
+	const boost::any in_any(in);
+	inputs.push_back(std::cref(in_any));
+	
+	// call with EvaluateMulti with the remaining inputs
+	return JacobianActionRecursive(wrtIn, wrtOut, inputs, args...);
+      }
+
+      /// Creates WorkPiece::inputs when the WorkPiece::JacobianAction is called with multiple arguments
+      /**
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] vec We want to apply the Jacobian to this vector
+	 @param[in] inputs The growing vector of inputs
+	 @param[in] in The input corresponding to the last input
+	 \return The action of the Jacobian of this muq::Modeling::WorkPiece on vec
+      */
+      template<typename last>			
+	boost::any JacobianActionRecursive(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> &inputs, last const& in) {
+	const int inputNum = inputs.size();
+	
+	// this is the last input, the last one should equal the total number of inputs
+	assert(numInputs<0 || inputNum+1==numInputs);
+
+	// check the input type
+	assert(CheckInputType(inputNum, typeid(in).name()));
+
+	// add the last input to the input vector
+	const boost::any in_any(in);
+	inputs.push_back(std::cref(in_any));
+	
+	return JacobianAction(wrtIn, wrtOut, vec, inputs);
+      }
+
+      /// Clear the output (and possible derivatives) when Evaluate (or a derivative) is called with new inputs
+      void Clear();
+
+      /// Check the input type
+      /**
+	 @param[in] inputNum The input number --- we are check that the type has the same type as this input
+	 @param[in] type The type of the input
+	 \return true: The input matches the specified type or no input type is specified, false: the input type does not match the specified type
+       */
+      bool CheckInputType(unsigned int const inputNum, std::string const& type) const;
+
+      /// Check the output type
+      /**
+	 @param[in] outputNum The output number --- we are check that the computed type has the same type as this output
+	 @param[in] type The type of the output
+	 \return true: The output matches the specified type or no output type is specified, false: the output type does not match the specified type
+       */
+      bool CheckOutputType(unsigned int const outputNum, std::string const& type) const;
 
       /// Set the ID number, must be called by the constructor
       unsigned int SetID();
