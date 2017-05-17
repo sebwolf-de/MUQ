@@ -2,6 +2,7 @@
 # It defines the following variables
 #  MUQ_INCLUDE_DIRS - include directories for MUQ
 #  MUQ_LIBRARIES    - MUQ libraries to link against
+#  MUQ_PYTHON_LIBRARIES - Libraries with compiled python wrappers (if any)
 #  MUQ_LINK_LIBRARIES - libraries MUQ links against
 #  MUQ_INCLUDE_DIRS   - Include directories that MUQ uses
 #  MUQ_COMPILE_DEFINITIONS -Definitions used during compilation (i.e. variables added with add_definitions)
@@ -13,6 +14,7 @@ set(@CMAKE_PROJECT_NAME@_EXTERNAL_LIBRARY_DIR @CMAKE_INSTALL_PREFIX@/muq_externa
 
 # These are IMPORTED targets created by MUQDepends.cmake
 set(@CMAKE_PROJECT_NAME@_LIBRARIES @MUQ_EXPORT_LIBRARIES@)
+set(@CMAKE_PROJECT_NAME@_PYTHON_LIBRARIES @MUQ_PYTHON_LIBRARIES@)
 set(@CMAKE_PROJECT_NAME@_LINK_LIBRARIES @MUQ_LINK_LIBS@)
 set(@CMAKE_PROJECT_NAME@_LINK_LIBRARIES_STATIC @MUQ_LINK_LIBS_STATIC@)
 
