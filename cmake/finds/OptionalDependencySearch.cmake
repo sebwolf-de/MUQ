@@ -81,6 +81,7 @@ if(MUQ_USE_PYTHON)
     
     if(NOT pybind11_FOUND)
            add_subdirectory(${CMAKE_SOURCE_DIR}/external/pybind11)
+           include_directories(${CMAKE_SOURCE_DIR}/external/pybind11/include)
     endif()
 
 endif()

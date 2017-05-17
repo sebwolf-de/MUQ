@@ -8,6 +8,7 @@
 
 # Initially, we have no targets to build
 set(MUQ_TARGETS "" CACHE INTERNAL "List of MUQ libraries to build.")
+set(MUQ_GROUPS "" CACHE INTERNAL "List of MUQ compile groups.")
 
 # Go compile everything
 add_subdirectory(modules)
@@ -58,7 +59,7 @@ foreach(target ${MUQ_TARGETS})
 
     foreach(group ${MUQ_GROUPS})
         if(MUQ_ENABLEGROUP_${group})
-	    if(${${group}_LIBRARY} MATCHES ${target})
+	    if(${${group}_LIBRARY} STREQUAL ${target})
 
                 # Check to see if a group has any source (e.g., *.cpp) files.  Flag it as something that will be built if it does.
 	        list(LENGTH ${group}_SOURCES sources_length)

@@ -4,9 +4,9 @@
 #include "MUQ/Modeling/WorkGraphPiece.h"
 #include "MUQ/Modeling/WorkGraph.h"
 
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
-#include "pybind11/eigen.h"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/eigen.h>
 
 #include <string>
 
@@ -23,8 +23,8 @@ void AnyFunction(boost::any x)
 }
 
 
-PYBIND11_PLUGIN(muqModeling) {
-    py::module m("muqModeling", "Python bindings for the muqModeling library.");
+PYBIND11_PLUGIN(pymuqModeling) {
+    py::module m("pymuqModeling", "Python bindings for the muqModeling library.");
     
     m.def("AnyFunction", &AnyFunction);
 
