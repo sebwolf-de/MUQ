@@ -48,6 +48,17 @@ private:
     jacobianAction = (2.0*in.transpose()*Q*appvec + a.transpose()*appvec) (0);
   }
 
+  virtual void JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override {
+    // constant reference to the input vector
+    const Eigen::VectorXd& in = boost::any_cast<Eigen::VectorXd>(inputs[0]);
+
+    // constant reference to the vector we are applying the Jacobian to 
+    const Eigen::VectorXd& appvec = boost::any_cast<Eigen::VectorXd>(vec);
+
+    // compute the Jacobian
+    jacobianTransposeAction = (Eigen::VectorXd)(2.0*Q.transpose()*in*appvec + a*appvec);
+  }
+
   /// Matrix for the quadratic part
   const Eigen::MatrixXd Q;
 
@@ -126,15 +137,33 @@ TEST_F(WorkPieceDerivativesTests, QuadraticFunction) {
   }
 
   // a random vector to apply the Jacobian to
-  const Eigen::VectorXd vec = Eigen::VectorXd::Random(N);
+  const Eigen::VectorXd vec0 = Eigen::VectorXd::Random(N);
 
   // evaluate the jacobian action
-  auto jacAction = poly->JacobianAction(0, 0, vec, in);
+  auto jacAction = poly->JacobianAction(0, 0, vec0, in);
 
   // compute the expected jacobian action
-  const double jacActionExpected = (2.0*in.transpose()*Q*vec + a.transpose()*vec) (0);
+  const double jacActionExpected = (2.0*in.transpose()*Q*vec0 + a.transpose()*vec0) (0);
 
   // make sure the jacobian action matches
   EXPECT_DOUBLE_EQ(boost::any_cast<double>(jacActionExpected), jacActionExpected);
 
+  // a random vector to apply the Jacobian transpose to
+  const Eigen::VectorXd vec1 = Eigen::VectorXd::Random(1);
+
+  // evaluate the jacobian action
+  auto jacTransposeActionBoost = poly->JacobianTransposeAction(0, 0, vec1, in);
+  const Eigen::VectorXd& jacTransposeAction = boost::any_cast<Eigen::VectorXd>(jacTransposeActionBoost);
+
+  // compute the expected jacobian action
+  const Eigen::VectorXd jacTransposeActionExpected = 2.0*Q.transpose()*in*vec1 + a*vec1;
+
+  // make sure the jacobian action matches
+  EXPECT_EQ(jacTransposeAction.rows(), N);
+  EXPECT_EQ(jacTransposeActionExpected.rows(), N);
+  EXPECT_EQ(jacTransposeAction.cols(), 1);
+  EXPECT_EQ(jacTransposeActionExpected.cols(), 1);
+  for( unsigned int i=0; i<N; ++i ) {
+    EXPECT_DOUBLE_EQ(jacTransposeAction(i,0), jacTransposeActionExpected(i,0));
+  }
 }

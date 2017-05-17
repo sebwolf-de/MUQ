@@ -257,9 +257,13 @@ std::vector<boost::any> WorkPiece::Evaluate(std::vector<boost::any> const& ins) 
 }
 
 boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, std::vector<boost::any> const& ins) {
-    // make sure we have the correct number of inputs
+  // make sure we have the correct number of inputs
   assert(numInputs<0 || ins.size()==numInputs);
 
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
+  
   // make sure the input types are correct
   assert(inputTypes.size()==0 || inputTypes.size()==ins.size());
   for(unsigned int i=0; i<inputTypes.size(); ++i ) {
@@ -272,6 +276,10 @@ boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtO
 boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& ins) {
   // make sure we have the correct number of inputs
   assert(numInputs<0 || ins.size()==numInputs);
+
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
 
   // clear the outputs and derivative information
   Clear();
@@ -307,6 +315,10 @@ boost::any WorkPiece::JacobianAction(unsigned int const wrtIn, unsigned int cons
   // make sure we have the correct number of inputs
   assert(numInputs<0 || ins.size()==numInputs);
 
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
+
   // clear the outputs and derivative information
   Clear();
 
@@ -322,6 +334,10 @@ boost::any WorkPiece::JacobianAction(unsigned int const wrtIn, unsigned int cons
 boost::any WorkPiece::JacobianAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& ins) {
   // make sure we have the correct number of inputs
   assert(numInputs<0 || ins.size()==numInputs);
+
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
   
   // the inputs are set, so call evaluate with no inputs
   JacobianActionImpl(wrtIn, wrtOut, vec, ins);
@@ -347,6 +363,61 @@ void WorkPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int const 
 
   // invalid! The user has not implemented the JacobianAction
   std::cerr << std::endl << "ERROR: No JacobianActionImpl function for muq::Modeling::WorkPiece implemented, cannot compute the action of the Jacobian" << std::endl << std::endl;
+  assert(false);
+}
+
+boost::any WorkPiece::JacobianTransposeAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, std::vector<boost::any> const& ins) {
+  // make sure we have the correct number of inputs
+  assert(numInputs<0 || ins.size()==numInputs);
+
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
+
+  // clear the outputs and derivative information
+  Clear();
+
+  // make sure the input types are correct
+  assert(inputTypes.size()==0 || inputTypes.size()==ins.size());
+  for(unsigned int i=0; i<inputTypes.size(); ++i ) {
+    assert(CheckInputType(i, ins[i].type().name()));
+  }
+  
+  return JacobianTransposeAction(wrtIn, wrtOut, vec, ToRefVector(ins));
+}
+
+boost::any WorkPiece::JacobianTransposeAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& ins) {
+  // make sure we have the correct number of inputs
+  assert(numInputs<0 || ins.size()==numInputs);
+
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
+  
+  // the inputs are set, so call evaluate with no inputs
+  JacobianTransposeActionImpl(wrtIn, wrtOut, vec, ins);
+  
+  // make sure the jacobian was computed (the optional jacobian member has a value)
+  if( !jacobianTransposeAction ) {
+    std::cerr << std::endl << "ERROR: The Jacobian was not computed properly, make sure JacobianTransposeActionImpl gives muq::Modeling::WorkPiece::jacobianTransposeAction a value" << std::endl << std::endl;
+    assert(jacobianTransposeAction);
+  }
+
+  // return the jacobian action (use the * operator because it is a boost::optional)
+  return *jacobianTransposeAction;
+}
+
+void WorkPiece::JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
+  // the name of the Eigen::VectorXd's
+  const std::string eigenType = typeid(Eigen::VectorXd).name();
+
+  // if both the input and output type is Eigen::VectorXd, default to finite difference
+  if( eigenType.compare(vec.type().name())==0 && InputType(wrtIn, false).compare(eigenType)==0 && OutputType(wrtOut, false).compare(eigenType)==0 ) {
+    std::cout << "USE FINITE DIFFERENCE" << std::endl;
+  }
+
+  // invalid! The user has not implemented the JacobianAction
+  std::cerr << std::endl << "ERROR: No JacobianTransposeActionImpl function for muq::Modeling::WorkPiece implemented, cannot compute the action of the Jacobian transpose" << std::endl << std::endl;
   assert(false);
 }
 
