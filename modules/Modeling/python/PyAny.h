@@ -30,8 +30,8 @@ namespace pybind11 { namespace detail {
                     value = it->second(source);
                     return true;
                 }else{
-                    std::cerr << "ERROR: Did not know how to handle type " << typeStr << std::endl;
-                    return false;
+                    value = boost::any(src.cast<pybind11::object>());
+                    return true;
                 }
             }
 
@@ -55,10 +55,7 @@ namespace pybind11 { namespace detail {
             if(it != toPythonMap.end()){
                 return it->second(src);
             }else{
-            
-                std::cerr << "ERROR: haven't implemented the boost::any->python conversion for type " << src.type().name() << std::endl;
-                assert(false);
-                return PyLong_FromLong(1);
+                return boost::any_cast<pybind11::object>(src);
             }
         }
 
