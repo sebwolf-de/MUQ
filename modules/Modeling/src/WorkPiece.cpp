@@ -409,12 +409,30 @@ void WorkPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int const 
 
   // if both the input and output type is Eigen::VectorXd, default to finite difference
   if( eigenType.compare(vec.type().name())==0 && InputType(wrtIn, false).compare(eigenType)==0 && OutputType(wrtOut, false).compare(eigenType)==0 ) {
-    std::cout << "USE FINITE DIFFERENCE" << std::endl;
+    // compute the action of the jacobian using finite differences
+    JacobianActionByFD(wrtIn, wrtOut, vec, inputs);
+    
+    return;
   }
 
   // invalid! The user has not implemented the JacobianAction
   std::cerr << std::endl << "ERROR: No JacobianActionImpl function for muq::Modeling::WorkPiece implemented, cannot compute the action of the Jacobian" << std::endl << std::endl;
   assert(false);
+}
+
+void WorkPiece::JacobianActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs, double const relTol, const double minTol) {
+  // compute the jacobian matrix with finite differences
+  JacobianByFD(wrtIn, wrtOut, inputs, relTol, minTol);
+  
+  // get a reference to the jacobian and the input vector
+  const Eigen::MatrixXd& jac = boost::any_cast<const Eigen::MatrixXd&>(*jacobian); // * operator because it is a boost::optional
+  const Eigen::VectorXd& vecref = boost::any_cast<const Eigen::VectorXd&>(vec);
+  
+  // check input sizes
+  assert(jac.cols()==vecref.size());
+  
+  // apply the jacobian to the input vector
+  jacobianAction = (Eigen::VectorXd)(jac*vecref);
 }
 
 boost::any WorkPiece::JacobianTransposeAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, std::vector<boost::any> const& ins) {
@@ -464,12 +482,30 @@ void WorkPiece::JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned i
 
   // if both the input and output type is Eigen::VectorXd, default to finite difference
   if( eigenType.compare(vec.type().name())==0 && InputType(wrtIn, false).compare(eigenType)==0 && OutputType(wrtOut, false).compare(eigenType)==0 ) {
-    std::cout << "USE FINITE DIFFERENCE" << std::endl;
+    // compute the action of the jacobian transpose using finite differences
+    JacobianTransposeActionByFD(wrtIn, wrtOut, vec, inputs);
+
+    return;
   }
 
   // invalid! The user has not implemented the JacobianAction
   std::cerr << std::endl << "ERROR: No JacobianTransposeActionImpl function for muq::Modeling::WorkPiece implemented, cannot compute the action of the Jacobian transpose" << std::endl << std::endl;
   assert(false);
+}
+
+void WorkPiece::JacobianTransposeActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs, double const relTol, const double minTol) {
+  // compute the jacobian matrix with finite differences
+  JacobianByFD(wrtIn, wrtOut, inputs, relTol, minTol);
+  
+  // get a reference to the jacobian and the input vector
+  const Eigen::MatrixXd& jac = boost::any_cast<const Eigen::MatrixXd&>(*jacobian); // * operator because it is a boost::optional
+  const Eigen::VectorXd& vecref = boost::any_cast<const Eigen::VectorXd&>(vec);
+  
+  // check input sizes
+  assert(jac.rows()==vecref.size());
+  
+  // apply the jacobian to the input vector
+  jacobianTransposeAction = (Eigen::VectorXd)(jac.transpose()*vecref);
 }
 
 std::string WorkPiece::Name() const {

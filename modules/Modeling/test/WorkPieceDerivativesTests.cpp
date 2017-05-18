@@ -159,33 +159,70 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
   const Eigen::VectorXd in = Eigen::VectorXd::Random(N);
   const double scalar = 3.5;
 
-  // evaluate 
-  auto result = lin->Evaluate(scalar, in);
-
-  // make sure we get the expected result
-  EXPECT_EQ(result.size(), 2);
-  EXPECT_EQ(boost::any_cast<std::string>(result[0]).compare("string"), 0);
-  const Eigen::VectorXd& vec = boost::any_cast<Eigen::VectorXd>(result[1]);
-
-  // the expected vector
-  const Eigen::VectorXd expectedVec = Q*in+a;
-  
-  EXPECT_EQ(vec.size(), N);
-  EXPECT_EQ(expectedVec.size(), N);
-  for( unsigned int i=0; i<N; ++i ) {
-    EXPECT_DOUBLE_EQ(vec(i), expectedVec(i));
+  { // test evaluate
+    // evaluate 
+    auto result = lin->Evaluate(scalar, in);
+    
+    // make sure we get the expected result
+    EXPECT_EQ(result.size(), 2);
+    EXPECT_EQ(boost::any_cast<std::string>(result[0]).compare("string"), 0);
+    const Eigen::VectorXd& vec = boost::any_cast<Eigen::VectorXd>(result[1]);
+    
+    // the expected vector
+    const Eigen::VectorXd expectedVec = Q*in+a;
+    
+    EXPECT_EQ(vec.size(), N);
+    EXPECT_EQ(expectedVec.size(), N);
+    for( unsigned int i=0; i<N; ++i ) {
+      EXPECT_DOUBLE_EQ(vec(i), expectedVec(i));
+    }
   }
 
-  // compute the Jacobian and get a reference to it
-  auto jac = lin->Jacobian(1, 1, scalar, in);
-  const Eigen::MatrixXd& jacref = boost::any_cast<const Eigen::MatrixXd&>(jac);
+  { // test the jacobian 
+    // compute the Jacobian and get a reference to it
+    auto jac = lin->Jacobian(1, 1, scalar, in);
+    const Eigen::MatrixXd& jacref = boost::any_cast<const Eigen::MatrixXd&>(jac);
+    
+    EXPECT_EQ(jacref.rows(), N);
+    EXPECT_EQ(jacref.cols(), N);
+    for( unsigned int i=0; i<N; ++i ) {
+      for( unsigned int j=0; j<N; ++j ) {
+	// its linear so FD should be exact, but the error is very small ...
+	EXPECT_NEAR(jacref(i,j), Q(i,j), 1.0e-9);
+      }
+    }
+  }
 
-  EXPECT_EQ(jacref.rows(), N);
-  EXPECT_EQ(jacref.cols(), N);
-  for( unsigned int i=0; i<N; ++i ) {
-    for( unsigned int j=0; j<N; ++j ) {
+  // a vector to apply the jacobian to
+  const Eigen::VectorXd apply = Eigen::VectorXd::Random(N);
+
+  { // test the action of the jacobian
+    // compute the action of the jacobian and get a references to it
+    auto jacAction = lin->JacobianAction(1, 1, apply, scalar, in);
+    const Eigen::VectorXd& jacActionref = boost::any_cast<const Eigen::VectorXd&>(jacAction);
+    
+    // compute the exected action of the jacobian
+    const Eigen::VectorXd expectedJacAction = Q*apply;
+    
+    EXPECT_EQ(jacActionref.size(), N);
+    for( unsigned int i=0; i<N; ++i ) {
       // its linear so FD should be exact, but the error is very small ...
-      EXPECT_NEAR(jacref(i,j), Q(i,j), 1.0e-9);
+      EXPECT_NEAR(jacActionref(i), expectedJacAction(i), 1.0e-9);
+    }
+  }
+
+  { // test the action of the jacobian transpose
+    // compute the action of the jacobian transpose and get a references to it
+    auto jacTransAction = lin->JacobianTransposeAction(1, 1, apply, scalar, in);
+    const Eigen::VectorXd& jacTransActionref = boost::any_cast<const Eigen::VectorXd&>(jacTransAction);
+    
+    // compute the exected action of the jacobian transpose
+    const Eigen::VectorXd expectedJacTransAction = Q.transpose()*apply;
+    
+    EXPECT_EQ(jacTransActionref.size(), N);
+    for( unsigned int i=0; i<N; ++i ) {
+      // its linear so FD should be exact, but the error is very small ...
+      EXPECT_NEAR(jacTransActionref(i), expectedJacTransAction(i), 1.0e-9);
     }
   }
 }
@@ -198,54 +235,62 @@ TEST_F(WorkPieceDerivativesTests, QuadraticFunction) {
   // choose random inputs
   const Eigen::VectorXd in = Eigen::VectorXd::Random(N);
 
-  // evaluate and make sure we get the expected result
-  auto result = quad->Evaluate(in);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double>(result[0]), (in.transpose()*Q*in + a.transpose()*in + b) (0));
-
-  // evaluate the jacobian 
-  auto jacBoost = quad->Jacobian(0, 0, in);
-  const Eigen::MatrixXd& jac = boost::any_cast<Eigen::MatrixXd>(jacBoost);
-
-  // compute the expected jacobian
-  const Eigen::MatrixXd jacExpected = 2.0*in.transpose()*Q + a.transpose();
-
-  // make sure the jacobians match
-  EXPECT_EQ(jac.rows(), 1);
-  EXPECT_EQ(jacExpected.rows(), 1);
-  EXPECT_EQ(jac.cols(), N);
-  EXPECT_EQ(jacExpected.cols(), N);
-  for( unsigned int i=0; i<N; ++i ) {
-    EXPECT_DOUBLE_EQ(jac(0,i), jacExpected(0,i));
+  { // test evaluate 
+    // evaluate and make sure we get the expected result
+    auto result = quad->Evaluate(in);
+    EXPECT_DOUBLE_EQ(boost::any_cast<double>(result[0]), (in.transpose()*Q*in + a.transpose()*in + b) (0));
   }
 
-  // a random vector to apply the Jacobian to
-  const Eigen::VectorXd vec0 = Eigen::VectorXd::Random(N);
+  { // test jacobian
+    // evaluate the jacobian 
+    auto jacBoost = quad->Jacobian(0, 0, in);
+    const Eigen::MatrixXd& jac = boost::any_cast<Eigen::MatrixXd>(jacBoost);
+    
+    // compute the expected jacobian
+    const Eigen::MatrixXd jacExpected = 2.0*in.transpose()*Q + a.transpose();
+    
+    // make sure the jacobians match
+    EXPECT_EQ(jac.rows(), 1);
+    EXPECT_EQ(jacExpected.rows(), 1);
+    EXPECT_EQ(jac.cols(), N);
+    EXPECT_EQ(jacExpected.cols(), N);
+    for( unsigned int i=0; i<N; ++i ) {
+      EXPECT_DOUBLE_EQ(jac(0,i), jacExpected(0,i));
+    }
+  }
 
-  // evaluate the jacobian action
-  auto jacAction = quad->JacobianAction(0, 0, vec0, in);
+  { // test jacobian action 
+    // a random vector to apply the Jacobian to
+    const Eigen::VectorXd vec = Eigen::VectorXd::Random(N);
+    
+    // evaluate the jacobian action
+    auto jacAction = quad->JacobianAction(0, 0, vec, in);
 
-  // compute the expected jacobian action
-  const double jacActionExpected = (2.0*in.transpose()*Q*vec0 + a.transpose()*vec0) (0);
+    // compute the expected jacobian action
+    const double jacActionExpected = (2.0*in.transpose()*Q*vec + a.transpose()*vec) (0);
+    
+    // make sure the jacobian action matches
+    EXPECT_DOUBLE_EQ(boost::any_cast<double>(jacActionExpected), jacActionExpected);
+  }
 
-  // make sure the jacobian action matches
-  EXPECT_DOUBLE_EQ(boost::any_cast<double>(jacActionExpected), jacActionExpected);
+  { // test jacobian action transpose 
+    // a random vector to apply the Jacobian transpose to
+    const Eigen::VectorXd vec = Eigen::VectorXd::Random(1);
 
-  // a random vector to apply the Jacobian transpose to
-  const Eigen::VectorXd vec1 = Eigen::VectorXd::Random(1);
+    // evaluate the jacobian action
+    auto jacTransposeActionBoost = quad->JacobianTransposeAction(0, 0, vec, in);
+    const Eigen::VectorXd& jacTransposeAction = boost::any_cast<Eigen::VectorXd>(jacTransposeActionBoost);
 
-  // evaluate the jacobian action
-  auto jacTransposeActionBoost = quad->JacobianTransposeAction(0, 0, vec1, in);
-  const Eigen::VectorXd& jacTransposeAction = boost::any_cast<Eigen::VectorXd>(jacTransposeActionBoost);
+    // compute the expected jacobian action
+    const Eigen::VectorXd jacTransposeActionExpected = 2.0*Q.transpose()*in*vec + a*vec;
 
-  // compute the expected jacobian action
-  const Eigen::VectorXd jacTransposeActionExpected = 2.0*Q.transpose()*in*vec1 + a*vec1;
-
-  // make sure the jacobian action matches
-  EXPECT_EQ(jacTransposeAction.rows(), N);
-  EXPECT_EQ(jacTransposeActionExpected.rows(), N);
-  EXPECT_EQ(jacTransposeAction.cols(), 1);
-  EXPECT_EQ(jacTransposeActionExpected.cols(), 1);
-  for( unsigned int i=0; i<N; ++i ) {
-    EXPECT_DOUBLE_EQ(jacTransposeAction(i,0), jacTransposeActionExpected(i,0));
+    // make sure the jacobian action matches
+    EXPECT_EQ(jacTransposeAction.rows(), N);
+    EXPECT_EQ(jacTransposeActionExpected.rows(), N);
+    EXPECT_EQ(jacTransposeAction.cols(), 1);
+    EXPECT_EQ(jacTransposeActionExpected.cols(), 1);
+    for( unsigned int i=0; i<N; ++i ) {
+      EXPECT_DOUBLE_EQ(jacTransposeAction(i,0), jacTransposeActionExpected(i,0));
+    }
   }
 }

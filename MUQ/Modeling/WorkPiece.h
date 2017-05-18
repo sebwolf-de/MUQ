@@ -347,6 +347,18 @@ namespace muq {
 	return JacobianActionRecursive(wrtIn, wrtOut, vec, inputs, args...);
       }
 
+      /// Compute the action of the Jacobian using finite differences
+      /**
+	 Assume the input and output type are Eigen::VectorXd.
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] vec We want to apply the Jacobian to this vector
+	 @param[in] args The inputs (may be more than one)
+	 @param[in] refTol Scaled value for the finite difference step size (defaults to 1e-4)
+	 @param[in] minTol Minimum value for the finite difference step size (defaults to 1e-6)
+       */
+      void JacobianActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs, double const relTol = 1.0e-4, const double minTol = 1.0e-6);
+
       /// Evaluate the action of the Jacobian transpose of this muq::Modeling::WorkPiece using references to the inputs
       /**
 	 This function takes a vector of inputs to the muq::Modeling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if they are specified.  It then calls WorkPiece::JacobianTransposeActionImpl(), which computes the action of the Jacobian transpose.  The Jacobian must be implemented by a child class, unless the input and the output and the vector the Jacobian transpose is action on are Eigen::VectorXd's.  In this case, we call WorkPiece::Jacobian() and apply it to the vector.
@@ -394,6 +406,18 @@ namespace muq {
 	// begin calling the JacobianTransposeActionRecursive with the first input
 	return JacobianTransposeActionRecursive(wrtIn, wrtOut, vec, inputs, args...);
       }
+
+      /// Compute the action of the Jacobian transpose using finite differences
+      /**
+	 Assume the input and output type are Eigen::VectorXd.
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] vec We want to apply the Jacobian transpose to this vector
+	 @param[in] args The inputs (may be more than one)
+	 @param[in] refTol Scaled value for the finite difference step size (defaults to 1e-4)
+	 @param[in] minTol Minimum value for the finite difference step size (defaults to 1e-6)
+       */
+      void JacobianTransposeActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs, double const relTol = 1.0e-4, const double minTol = 1.0e-6);
 
       /// Get the (unique) name of this work piece
       /**
@@ -654,7 +678,7 @@ namespace muq {
 	inputs.push_back(std::cref(in_any));
 	
 	// call with JacobianActionRecursive with the remaining inputs
-	return JacobianActionRecursive(wrtIn, wrtOut, inputs, args...);
+	return JacobianActionRecursive(wrtIn, wrtOut, vec, inputs, args...);
       }
 
       /// Creates WorkPiece::inputs when the WorkPiece::JacobianAction is called with multiple arguments
@@ -717,7 +741,7 @@ namespace muq {
 	inputs.push_back(std::cref(in_any));
 	
 	// call with JacobianTransposeActionRecursive with the remaining inputs
-	return JacobianTransposeActionRecursive(wrtIn, wrtOut, inputs, args...);
+	return JacobianTransposeActionRecursive(wrtIn, wrtOut, vec, inputs, args...);
       }
 
       /// Creates WorkPiece::inputs when the WorkPiece::JacobianTransposeAction is called with multiple arguments
