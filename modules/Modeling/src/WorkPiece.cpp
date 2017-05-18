@@ -282,7 +282,7 @@ boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtO
   assert(numOutputs<0 || wrtOut<numOutputs);
 
   // clear the outputs and derivative information
-  Clear();
+  ClearDerivatives();
 
   // the inputs are set, so call evaluate with no inputs
   JacobianImpl(wrtIn, wrtOut, ins);
@@ -303,12 +303,63 @@ void WorkPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut
 
   // if both the input and output type is Eigen::VectorXd, default to finite difference
   if( InputType(wrtIn, false).compare(eigenType)==0 && OutputType(wrtOut, false).compare(eigenType)==0 ) {
-    std::cout << "USE FINITE DIFFERENCE" << std::endl;
+    // compute the jacobian with finite difference
+    JacobianByFD(wrtIn, wrtOut, inputs);
+
+    return;
   }
 
   // invalid! The user has not implemented the Jacobian
   std::cerr << std::endl << "ERROR: No JacobianImpl function for muq::Modeling::WorkPiece implemented, cannot compute Jacobian" << std::endl << std::endl;
   assert(false);
+}
+
+void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs, double const relTol, double const minTol) {      
+  // constant reference to the input we are computing the derivative wrt
+  const Eigen::VectorXd& tempref = boost::any_cast<const Eigen::VectorXd&>(inputs[wrtIn]);
+
+  // the input we are computing the derivative wrt (the value will change so we need a hard copy)
+  boost::any in = inputs[wrtIn];
+
+  // a reference to the input that we can change
+  Eigen::VectorXd& inref = boost::any_cast<Eigen::VectorXd&>(in);
+
+  // get a copy of the inputs (note, we are only copying the references)
+  ref_vector<const boost::any> tempIns = inputs;
+
+  // compute the base result
+  const auto base = Evaluate(tempIns);
+
+  // const reference to the output of interest
+  const Eigen::VectorXd& outbase = boost::any_cast<const Eigen::VectorXd&>(base[wrtOut]);
+
+  // initalize the jacobian and a reference that we can change
+  jacobian = Eigen::MatrixXd(outbase.size(), tempref.size());
+  Eigen::MatrixXd& jac = boost::any_cast<Eigen::MatrixXd&>(*jacobian); // use * operator because it is a boost::optional
+
+  // loop thorugh the inputs (columns of the Jacobian)
+  for( unsigned int col=0; col<tempref.size(); ++col ) {
+    // compute the step length
+    const double dx = std::fmax(minTol, relTol*inref(col));
+
+    // increment the col's input (change the reference to the boost any)
+    inref(col) += dx;
+
+    // replace the value in the tempIns
+    tempIns[wrtIn] = std::cref(in);
+
+    // compute the perturbed result
+    const auto plus = Evaluate(tempIns);
+
+    // const reference to the output of interest
+    const Eigen::VectorXd& outplus = boost::any_cast<const Eigen::VectorXd&>(plus[wrtOut]);
+
+    // compute the Jacobian for this column
+    jac.col(col) = (outplus-outbase)/dx;
+
+    // reset the the col's input
+    inref(col) = tempref(col);
+  }
 }
 
 boost::any WorkPiece::JacobianAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, std::vector<boost::any> const& ins) {
@@ -320,7 +371,7 @@ boost::any WorkPiece::JacobianAction(unsigned int const wrtIn, unsigned int cons
   assert(numOutputs<0 || wrtOut<numOutputs);
 
   // clear the outputs and derivative information
-  Clear();
+  ClearDerivatives();
 
   // make sure the input types are correct
   assert(inputTypes.size()==0 || inputTypes.size()==ins.size());
@@ -375,7 +426,7 @@ boost::any WorkPiece::JacobianTransposeAction(unsigned int const wrtIn, unsigned
   assert(numOutputs<0 || wrtOut<numOutputs);
 
   // clear the outputs and derivative information
-  Clear();
+  ClearDerivatives();
 
   // make sure the input types are correct
   assert(inputTypes.size()==0 || inputTypes.size()==ins.size());
@@ -500,12 +551,20 @@ ref_vector<const boost::any> WorkPiece::ToRefVector(std::vector<boost::any> cons
 void WorkPiece::Clear() {
   // we have new outputs --- some WorkPiece's have the outputs stored in a child class so we don't always want to clear them
   if( clearOutputs ) { outputs.clear(); }
+}
 
+void WorkPiece::ClearDerivatives() {
+  // clear the outputs
+  Clear();
+  
   // clear the jacobian
   jacobian = boost::none;
 
   // clear the jacobian action
   jacobianAction = boost::none;
+
+  // clear the jacobian transpose action
+  jacobianTransposeAction = boost::none;
 }
 
 bool WorkPiece::CheckInputType(unsigned int const inputNum, std::string const& type) const {

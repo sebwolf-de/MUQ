@@ -65,7 +65,7 @@ namespace muq {
 	 @param[in] fix WorkPiece::Fix::Inputs (default): the elements of the first parameter are the types of the inputs; WorkPiece::Fix::Outputs: the elements of the first parameter are the types of the outputs
       */
       WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
-
+  
       /// Create a muq::Modeling::WorkPiece where either some of the inputs have specified types or some of the outputs have specified types
       /**
 	 If the inputs are specified, then the outputs are not (and vice versa).  The number of in/outputs is variable but some of them have specified type.  For example, if the first input is a string and the third input is a double then
@@ -278,7 +278,7 @@ namespace muq {
 	assert(numOutputs<0 || wrtOut<numOutputs);
 
 	// clear the outputs and derivative information
-	Clear();
+	ClearDerivatives();
 	
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
@@ -287,6 +287,17 @@ namespace muq {
 	// begin calling the JacobianRecursive with the first input
 	return JacobianRecursive(wrtIn, wrtOut, inputs, args...);
       }
+
+      /// Compute the Jacobian using finite differences
+      /**
+	 Assume the input and output type are Eigen::VectorXd.
+	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
+	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
+	 @param[in] args The inputs (may be more than one)
+	 @param[in] refTol Scaled value for the finite difference step size (defaults to 1e-4)
+	 @param[in] minTol Minimum value for the finite difference step size (defaults to 1e-6)
+       */
+      void JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs, double const relTol = 1.0e-4, const double minTol = 1.0e-6);
 
       /// Evaluate the action of the Jacobian of this muq::Modeling::WorkPiece using references to the inputs
       /**
@@ -326,7 +337,7 @@ namespace muq {
 	assert(numOutputs<0 || wrtOut<numOutputs);
 	
 	// clear the outputs and derivative information
-	Clear();
+	ClearDerivatives();
 	
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
@@ -374,7 +385,7 @@ namespace muq {
 	assert(numOutputs<0 || wrtOut<numOutputs);
 	
 	// clear the outputs and derivative information
-	Clear();
+	ClearDerivatives();
 	
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
@@ -735,8 +746,11 @@ namespace muq {
 	return JacobianTransposeAction(wrtIn, wrtOut, vec, inputs);
       }
 
-      /// Clear the output (and possible derivatives) when Evaluate (or a derivative) is called with new inputs
+      /// Clear muq::Modeling::WorkPiece::outputs when muq::Modeling::Evaluate is called
       void Clear();
+
+      /// Clear muq::Modeling::WorkPiece::outputs and muq::Modeling::WorkPiece::jacobian, muq::Modeling::WorkPiece::jacobianAction, and muq::Modeling::WorkPiece::jacobianTransposeAction when muq::Modeling::Jacobian, muq::Modeling::JacobianAction, or muq::Modeling::JacobianTransposeAction() is called
+      void ClearDerivatives();
 
       /// Check the input type
       /**

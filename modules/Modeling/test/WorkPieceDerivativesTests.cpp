@@ -26,7 +26,7 @@ private:
     const double a = boost::any_cast<double>(inputs[0]);
 
     // constant reference to the input vector
-    const Eigen::VectorXd& in = boost::any_cast<Eigen::VectorXd>(inputs[1]);
+    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[1]);
 
     // the first output is a string
     outputs[0] = (std::string)"string";
@@ -66,7 +66,7 @@ private:
 
   virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override {
     // constant reference to the input vector
-    const Eigen::VectorXd& in = boost::any_cast<Eigen::VectorXd>(inputs[0]);
+    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[0]);
 
     // compute the Jacobian
     jacobian = (Eigen::MatrixXd)(2.0*in.transpose()*Q + a.transpose());
@@ -74,10 +74,10 @@ private:
 
   virtual void JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override {
     // constant reference to the input vector
-    const Eigen::VectorXd& in = boost::any_cast<Eigen::VectorXd>(inputs[0]);
+    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[0]);
 
     // constant reference to the vector we are applying the Jacobian to 
-    const Eigen::VectorXd& appvec = boost::any_cast<Eigen::VectorXd>(vec);
+    const Eigen::VectorXd& appvec = boost::any_cast<const Eigen::VectorXd&>(vec);
 
     // compute the Jacobian
     jacobianAction = (2.0*in.transpose()*Q*appvec + a.transpose()*appvec) (0);
@@ -85,10 +85,10 @@ private:
 
   virtual void JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override {
     // constant reference to the input vector
-    const Eigen::VectorXd& in = boost::any_cast<Eigen::VectorXd>(inputs[0]);
+    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[0]);
 
     // constant reference to the vector we are applying the Jacobian to 
-    const Eigen::VectorXd& appvec = boost::any_cast<Eigen::VectorXd>(vec);
+    const Eigen::VectorXd& appvec = boost::any_cast<const Eigen::VectorXd&>(vec);
 
     // compute the Jacobian
     jacobianTransposeAction = (Eigen::VectorXd)(2.0*Q.transpose()*in*appvec + a*appvec);
@@ -159,7 +159,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
   const Eigen::VectorXd in = Eigen::VectorXd::Random(N);
   const double scalar = 3.5;
 
-  // evaluate a
+  // evaluate 
   auto result = lin->Evaluate(scalar, in);
 
   // make sure we get the expected result
@@ -174,6 +174,19 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
   EXPECT_EQ(expectedVec.size(), N);
   for( unsigned int i=0; i<N; ++i ) {
     EXPECT_DOUBLE_EQ(vec(i), expectedVec(i));
+  }
+
+  // compute the Jacobian and get a reference to it
+  auto jac = lin->Jacobian(1, 1, scalar, in);
+  const Eigen::MatrixXd& jacref = boost::any_cast<const Eigen::MatrixXd&>(jac);
+
+  EXPECT_EQ(jacref.rows(), N);
+  EXPECT_EQ(jacref.cols(), N);
+  for( unsigned int i=0; i<N; ++i ) {
+    for( unsigned int j=0; j<N; ++j ) {
+      // its linear so FD should be exact, but the error is very small ...
+      EXPECT_NEAR(jacref(i,j), Q(i,j), 1.0e-9);
+    }
   }
 }
 
