@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 
-#include "MUQ/Modeling/WorkPiece.h"
+#include "MUQ/Modeling/WorkGraph.h"
 
 using namespace muq::Modeling;
 
@@ -32,7 +32,7 @@ private:
     outputs[0] = (std::string)"string";
 
     // compute the linear function
-    outputs[1] = (Eigen::VectorXd)(Q*in + b);
+    outputs[1] = (Eigen::VectorXd)(a*Q*in + b);
   }
 
   /// Matrix for the linear part
@@ -169,7 +169,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
     const Eigen::VectorXd& vec = boost::any_cast<Eigen::VectorXd>(result[1]);
     
     // the expected vector
-    const Eigen::VectorXd expectedVec = Q*in+a;
+    const Eigen::VectorXd expectedVec = scalar*Q*in+a;
     
     EXPECT_EQ(vec.size(), N);
     EXPECT_EQ(expectedVec.size(), N);
@@ -188,7 +188,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
     for( unsigned int i=0; i<N; ++i ) {
       for( unsigned int j=0; j<N; ++j ) {
 	// its linear so FD should be exact, but the error is very small ...
-	EXPECT_NEAR(jacref(i,j), Q(i,j), 1.0e-9);
+	EXPECT_NEAR(jacref(i,j), scalar*Q(i,j), 1.0e-9);
       }
     }
   }
@@ -202,7 +202,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
     const Eigen::VectorXd& jacActionref = boost::any_cast<const Eigen::VectorXd&>(jacAction);
     
     // compute the exected action of the jacobian
-    const Eigen::VectorXd expectedJacAction = Q*apply;
+    const Eigen::VectorXd expectedJacAction = scalar*Q*apply;
     
     EXPECT_EQ(jacActionref.size(), N);
     for( unsigned int i=0; i<N; ++i ) {
@@ -217,7 +217,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
     const Eigen::VectorXd& jacTransActionref = boost::any_cast<const Eigen::VectorXd&>(jacTransAction);
     
     // compute the exected action of the jacobian transpose
-    const Eigen::VectorXd expectedJacTransAction = Q.transpose()*apply;
+    const Eigen::VectorXd expectedJacTransAction = scalar*Q.transpose()*apply;
     
     EXPECT_EQ(jacTransActionref.size(), N);
     for( unsigned int i=0; i<N; ++i ) {
@@ -294,3 +294,275 @@ TEST_F(WorkPieceDerivativesTests, QuadraticFunction) {
     }
   }
 }
+
+
+
+/// A 1D polynomial 
+class Polynomial : public WorkPiece {
+public:
+
+  /**
+     @param[in] coefficients Coefficients for the polynomial, the first is the constant coefficient, second is linear, ect...
+   */
+  Polynomial(std::vector<double> const& coefficients) : WorkPiece(std::vector<std::string>({typeid(double).name()}), std::vector<std::string>({typeid(double).name()})), coefficients(coefficients) {
+    // needs to be at least constant
+    assert(coefficients.size()>0);
+  }
+
+  virtual ~Polynomial() {}
+  
+private:
+
+  virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override {
+    // get the variable
+    const double x = boost::any_cast<double>(inputs[0]);
+
+    // resize the outputs
+    outputs.resize(1);
+
+    // compute the polynomial
+    outputs[0] = coefficients[0];
+    double& result = boost::any_cast<double&>(outputs[0]);
+    for( unsigned int i=1; i<coefficients.size(); ++i ) {
+      result += coefficients[i]*std::pow(x, (double)i);
+    }
+  }
+
+  virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override {
+    // get the variable
+    const double x = boost::any_cast<double>(inputs[0]);
+
+    // compute the polynomial's derivative
+    jacobian = 0.0;
+    double& jac = boost::any_cast<double&>(*jacobian); // * operator because it is boost::optional
+    for( unsigned int i=1; i<coefficients.size(); ++i ) {
+      jac += (double)i*coefficients[i]*std::pow(x, (double)i-1.0);
+    }
+  }
+
+  virtual void JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override {
+    // get the variable
+    const double x = boost::any_cast<double>(inputs[0]);
+
+    // get the vector we are applying the jacobian to (scalar since this is a 1D function)
+    const double v = boost::any_cast<double>(vec);
+
+    // compute the polynomial's derivative
+    jacobianAction = 0.0;
+    double& jac = boost::any_cast<double&>(*jacobianAction); // * operator because it is boost::optional
+    for( unsigned int i=1; i<coefficients.size(); ++i ) {
+      jac += (double)i*coefficients[i]*std::pow(x, (double)i-1.0);
+    }
+
+    // multiply by the vector
+    jac *= v;
+  }
+
+  virtual void JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override {
+    // get the variable
+    const double x = boost::any_cast<double>(inputs[0]);
+
+    // get the vector we are applying the jacobian transpose to (scalar since this is a 1D function)
+    const double v = boost::any_cast<double>(vec);
+
+    // compute the polynomial's derivative
+    jacobianTransposeAction = 0.0;
+    double& jac = boost::any_cast<double&>(*jacobianTransposeAction); // * operator because it is boost::optional
+    for( unsigned int i=1; i<coefficients.size(); ++i ) {
+      jac += (double)i*coefficients[i]*std::pow(x, (double)i-1.0);
+    }
+
+    // multiply by the vector
+    jac *= v;
+  }
+
+  /// Coefficients for the polynomial, the first is the constant coefficient, second is linear, ect...
+  std::vector<double> coefficients;
+};
+
+/// A model 
+class Model : public WorkPiece {
+public:
+
+  Model() : WorkPiece(std::vector<std::string>(2, typeid(double).name()), std::vector<std::string>({typeid(Eigen::VectorXd).name(), typeid(double).name()})) {}
+
+  virtual ~Model() {}
+  
+private:
+
+  virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override {
+    // get the double inputs
+    const double a0 = boost::any_cast<double>(inputs[0]);
+    const double a1 = boost::any_cast<double>(inputs[1]);
+
+    // resize the outputs
+    outputs.resize(2);
+
+    outputs[0] = (Eigen::VectorXd)(a0*Eigen::VectorXd::LinSpaced(4, 0.0, 1.0));
+    outputs[1] = a0*a1;
+  }
+
+  virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override {
+    // get the double inputs
+    const double a0 = boost::any_cast<double>(inputs[0]);
+    const double a1 = boost::any_cast<double>(inputs[1]);
+
+    if( wrtIn==0 ) {
+      if( wrtOut==0 ) {
+	jacobian = (Eigen::MatrixXd)Eigen::VectorXd::LinSpaced(4, 0.0, 1.0);
+	std::cout << boost::any_cast<Eigen::MatrixXd>(*jacobian) << std::endl;
+      } else if( wrtOut==1 ) {
+	jacobian = a1;
+	std::cout << boost::any_cast<double>(*jacobian) << std::endl;
+      }
+    } else if( wrtIn==1 ) {
+      if( wrtOut==0 ) {
+	jacobian = (Eigen::MatrixXd)Eigen::MatrixXd::Zero(4, 1);
+	std::cout << boost::any_cast<Eigen::MatrixXd>(*jacobian) << std::endl;
+      } else if( wrtOut==1 ) {
+	jacobian = a0;
+	std::cout << boost::any_cast<double>(*jacobian) << std::endl;
+      }
+    }
+  }
+
+  virtual void JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override {
+    // get the double inputs
+    const double a0 = boost::any_cast<double>(inputs[0]);
+    const double a1 = boost::any_cast<double>(inputs[1]);
+
+    // the vector the jacobian is acting on (the input dimension is always 1 since both inputs are scalar)
+    const double v = boost::any_cast<double>(vec);
+
+    if( wrtIn==0 ) {
+      if( wrtOut==0 ) {	
+	jacobianAction = (Eigen::VectorXd)(Eigen::VectorXd::LinSpaced(4, 0.0, 1.0)*v);
+      } else if( wrtOut==1 ) {
+	jacobianAction = a1*v;
+      }
+    } else if( wrtIn==1 ) {
+      if( wrtOut==0 ) {
+	jacobianAction = (Eigen::VectorXd)Eigen::VectorXd::Zero(4);
+      } else if( wrtOut==1 ) {
+	jacobianAction = a0*v;
+      }
+    }
+  }
+
+  virtual void JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override {
+    // get the double inputs
+    const double a0 = boost::any_cast<double>(inputs[0]);
+    const double a1 = boost::any_cast<double>(inputs[1]);
+
+    if( wrtIn==0 ) {
+      if( wrtOut==0 ) {
+	// the vector the jacobian is acting on (the output dimension is 4)
+	const Eigen::VectorXd& v = boost::any_cast<const Eigen::VectorXd&>(vec);
+	assert(v.size()==4);
+
+	jacobianTransposeAction = (Eigen::VectorXd::LinSpaced(4, 0.0, 1.0).transpose()*v) (0);
+      } else if( wrtOut==1 ) {
+	// the vector the jacobian is acting on (the output dimension is 1)
+	const double v = boost::any_cast<double>(vec);
+
+	jacobianTransposeAction = a1*v;
+      }
+    } else if( wrtIn==1 ) {
+      if( wrtOut==0 ) {
+	jacobianTransposeAction = 0.0;
+      } else if( wrtOut==1 ) {
+	// the vector the jacobian is acting on (the output dimension is 1)
+	const double v = boost::any_cast<double>(vec);
+
+	jacobianTransposeAction = a0*v;
+      }
+    }
+  }
+};
+
+TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
+  // the size of the system
+  const unsigned int N = 5;
+
+  // a random matrix (for the quadratic term)
+  const Eigen::MatrixXd Q = Eigen::MatrixXd::Random(N, N);
+  
+  // a random vector (for the linear term)
+  const Eigen::VectorXd a = Eigen::VectorXd::Random(N);
+  
+  // a random vector (for the constant term)
+  const Eigen::VectorXd b = Eigen::VectorXd::Random(1);
+
+  // create a quadratic polynomial
+  const auto quad = std::make_shared<Quadratic>(Q, a, b);
+
+  // create a linear polynomial
+  const auto lin = std::make_shared<Linear>(Q, a);
+
+  // create polynomial models
+  std::vector<double> coeff0({1.0, 2.0, 3.0, 4.0, 5.0});
+  const auto poly0 = std::make_shared<Polynomial>(coeff0);
+  std::vector<double> coeff1({4.0, 3.0, 2.0});
+  const auto poly1 = std::make_shared<Polynomial>(coeff1);
+
+  // create a model
+  const auto mod = std::make_shared<Model>();
+
+  // create a work graph
+  auto graph = std::make_shared<WorkGraph>();
+
+  // add the models
+  graph->AddNode(quad, "model 0");
+  graph->AddNode(lin, "model 1");
+  graph->AddNode(poly0, "model 2");
+  graph->AddNode(poly1, "model 3");
+  graph->AddNode(mod, "model 4");
+
+  // connect the models
+  graph->AddEdge("model 1", 1, "model 0", 0);
+  graph->AddEdge("model 0", 0, "model 2", 0);
+  graph->AddEdge("model 0", 0, "model 3", 0);
+  graph->AddEdge("model 2", 0, "model 4", 0);
+  graph->AddEdge("model 3", 0, "model 4", 1);
+
+  // create the model we want to take the derivative of
+  const auto graphmod = graph->CreateWorkPiece("model 4");
+
+  // inputs to the model
+  const double scalar = 2.5;
+  const Eigen::VectorXd invec = Eigen::VectorXd::Random(N);
+
+  { // test evaluate
+    const auto result = graphmod->Evaluate(scalar, invec);
+    const Eigen::VectorXd& resultVec = boost::any_cast<const Eigen::VectorXd&>(result[0]);
+
+    // linear 
+    const Eigen::VectorXd l = scalar*Q*invec+a;
+
+    // quadradic
+    const double q = (l.transpose()*Q*l + a.transpose()*l + b) (0);
+
+    // polynomials
+    double d0 = coeff0[0];
+    for( unsigned int i=1; i<coeff0.size(); ++i ) {
+      d0 += coeff0[i]*std::pow(q, (double)i);
+    }
+
+    double d1 = coeff1[0];
+    for( unsigned int i=1; i<coeff1.size(); ++i ) {
+      d1 += coeff1[i]*std::pow(q, (double)i);
+    }
+
+    // expected graphmod result
+    const Eigen::VectorXd expectedVec = d0*Eigen::VectorXd::LinSpaced(4, 0.0, 1.0);
+    const double expectedDouble = d0*d1;
+
+    // make sure the results match
+    EXPECT_EQ(resultVec.size(), 4);
+    for( unsigned int i=0; i<4; ++i ) {
+      EXPECT_DOUBLE_EQ(resultVec(i), expectedVec(i));
+    }
+    EXPECT_DOUBLE_EQ(boost::any_cast<double>(result[1]), expectedDouble);
+  }
+}
+

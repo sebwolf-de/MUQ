@@ -449,7 +449,7 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
   }
   
   // the output node
-  auto outNode = GetNodeIterator(node);
+  auto outNode = newGraph->GetNodeIterator(node);
 
   return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inTypes, newGraph->graph->operator[](*outNode)->piece);
 }

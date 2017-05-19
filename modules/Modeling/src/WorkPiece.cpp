@@ -420,9 +420,10 @@ void WorkPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int const 
   assert(false);
 }
 
-void WorkPiece::JacobianActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs, double const relTol, const double minTol) {
-  // compute the jacobian matrix with finite differences
-  JacobianByFD(wrtIn, wrtOut, inputs, relTol, minTol);
+void WorkPiece::JacobianActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
+  // compute the jacobian matrix with finite differences (if the jacobian is implemented then this is actually exact)
+  Jacobian(wrtIn, wrtOut, inputs);
+  assert(jacobian);
   
   // get a reference to the jacobian and the input vector
   const Eigen::MatrixXd& jac = boost::any_cast<const Eigen::MatrixXd&>(*jacobian); // * operator because it is a boost::optional
@@ -493,9 +494,10 @@ void WorkPiece::JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned i
   assert(false);
 }
 
-void WorkPiece::JacobianTransposeActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs, double const relTol, const double minTol) {
-  // compute the jacobian matrix with finite differences
-  JacobianByFD(wrtIn, wrtOut, inputs, relTol, minTol);
+void WorkPiece::JacobianTransposeActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
+  // compute the jacobian matrix with finite differences (if the jacobian is implemented this is exact)
+  Jacobian(wrtIn, wrtOut, inputs);
+  assert(jacobian);
   
   // get a reference to the jacobian and the input vector
   const Eigen::MatrixXd& jac = boost::any_cast<const Eigen::MatrixXd&>(*jacobian); // * operator because it is a boost::optional

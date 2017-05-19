@@ -354,10 +354,8 @@ namespace muq {
 	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
 	 @param[in] vec We want to apply the Jacobian to this vector
 	 @param[in] args The inputs (may be more than one)
-	 @param[in] refTol Scaled value for the finite difference step size (defaults to 1e-4)
-	 @param[in] minTol Minimum value for the finite difference step size (defaults to 1e-6)
        */
-      void JacobianActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs, double const relTol = 1.0e-4, const double minTol = 1.0e-6);
+      void JacobianActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& input);
 
       /// Evaluate the action of the Jacobian transpose of this muq::Modeling::WorkPiece using references to the inputs
       /**
@@ -414,10 +412,8 @@ namespace muq {
 	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
 	 @param[in] vec We want to apply the Jacobian transpose to this vector
 	 @param[in] args The inputs (may be more than one)
-	 @param[in] refTol Scaled value for the finite difference step size (defaults to 1e-4)
-	 @param[in] minTol Minimum value for the finite difference step size (defaults to 1e-6)
        */
-      void JacobianTransposeActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs, double const relTol = 1.0e-4, const double minTol = 1.0e-6);
+      void JacobianTransposeActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs);
 
       /// Get the (unique) name of this work piece
       /**
