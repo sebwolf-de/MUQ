@@ -237,7 +237,7 @@ std::vector<boost::any> WorkPiece::Evaluate(ref_vector<boost::any> const& ins) {
 
   // check the output types
   for( unsigned int i=0; i<outputs.size(); ++i ) {
-    assert(CheckOutputType(i, outputs.at(i).type().name()));
+    assert(CheckOutputType(i, outputs[i].type().name()));
   }
   
   return outputs;
@@ -273,7 +273,7 @@ boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtO
   return Jacobian(wrtIn, wrtOut, ToRefVector(ins));
 }
 
-boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& ins) {
+boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& ins) {  
   // make sure we have the correct number of inputs
   assert(numInputs<0 || ins.size()==numInputs);
 
@@ -281,7 +281,7 @@ boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtO
   assert(numInputs<0 || wrtIn<numInputs);
   assert(numOutputs<0 || wrtOut<numOutputs);
 
-  // clear the outputs and derivative information
+  // clear the derivative information
   ClearDerivatives();
 
   // the inputs are set, so call evaluate with no inputs
@@ -293,8 +293,13 @@ boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtO
     assert(jacobian);
   }
 
-  // return the jacobian (use the * operator because it is a boost::optional)
-  return *jacobian;
+  if( jacobian ) {
+    // return the jacobian (use the * operator because it is a boost::optional)
+    return *jacobian;
+  }
+
+  // jacobian has not been computed --- return an empty boost optional
+  return jacobian;
 }
 
 void WorkPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) {
@@ -308,6 +313,8 @@ void WorkPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut
 
     return;
   }
+
+  jacobian = boost::none;
 
   // invalid! The user has not implemented the Jacobian
   std::cerr << std::endl << "ERROR: No JacobianImpl function for muq::Modeling::WorkPiece implemented, cannot compute Jacobian" << std::endl << std::endl;
@@ -370,7 +377,7 @@ boost::any WorkPiece::JacobianAction(unsigned int const wrtIn, unsigned int cons
   assert(numInputs<0 || wrtIn<numInputs);
   assert(numOutputs<0 || wrtOut<numOutputs);
 
-  // clear the outputs and derivative information
+  // clear the derivative information
   ClearDerivatives();
 
   // make sure the input types are correct
@@ -444,7 +451,7 @@ boost::any WorkPiece::JacobianTransposeAction(unsigned int const wrtIn, unsigned
   assert(numInputs<0 || wrtIn<numInputs);
   assert(numOutputs<0 || wrtOut<numOutputs);
 
-  // clear the outputs and derivative information
+  // clear the derivative information
   ClearDerivatives();
 
   // make sure the input types are correct
@@ -592,9 +599,6 @@ void WorkPiece::Clear() {
 }
 
 void WorkPiece::ClearDerivatives() {
-  // clear the outputs
-  Clear();
-  
   // clear the jacobian
   jacobian = boost::none;
 

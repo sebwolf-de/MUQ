@@ -500,9 +500,10 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
   const auto lin = std::make_shared<Linear>(Q, a);
 
   // create polynomial models
-  std::vector<double> coeff0({1.0, 2.0, 3.0, 4.0, 5.0});
+  //std::vector<double> coeff0({1.0, 2.0, 3.0, 4.0, 5.0});
+  std::vector<double> coeff0({1.0e-1, 2.0e-2, 3.0e-3, 4.0e-4, 4.0e-5});
   const auto poly0 = std::make_shared<Polynomial>(coeff0);
-  std::vector<double> coeff1({4.0, 3.0, 2.0});
+  std::vector<double> coeff1({4.0e-1, 3.0e-2, 2.0e-3});
   const auto poly1 = std::make_shared<Polynomial>(coeff1);
 
   // create a model
@@ -519,7 +520,7 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
   graph->AddNode(mod, "model 4");
 
   // connect the models
-  graph->AddEdge("model 1", 1, "model 0", 0);
+  //graph->AddEdge("model 1", 1, "model 0", 0);
   graph->AddEdge("model 0", 0, "model 2", 0);
   graph->AddEdge("model 0", 0, "model 3", 0);
   graph->AddEdge("model 2", 0, "model 4", 0);
@@ -533,7 +534,8 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
   const Eigen::VectorXd invec = Eigen::VectorXd::Random(N);
 
   { // test evaluate
-    const auto result = graphmod->Evaluate(scalar, invec);
+    //const auto result = graphmod->Evaluate(scalar, invec);
+    const auto result = graphmod->Evaluate((Eigen::VectorXd)(scalar*Q*invec+a));
     const Eigen::VectorXd& resultVec = boost::any_cast<const Eigen::VectorXd&>(result[0]);
 
     // linear 
@@ -563,6 +565,67 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
       EXPECT_DOUBLE_EQ(resultVec(i), expectedVec(i));
     }
     EXPECT_DOUBLE_EQ(boost::any_cast<double>(result[1]), expectedDouble);
+  }
+
+  { // test Jacobian
+    // note: we can not take the derivative of with resepct to input 0 because it is a double input to class "Linear".  There is no JacobianImpl implemented and no default finite difference for this case...
+    //const auto jacBoost1 = graphmod->Jacobian(1, 1, scalar, invec);
+    const auto jacBoost1 = graphmod->Jacobian(0, 1, (Eigen::VectorXd)(scalar*Q*invec+a));
+    const Eigen::MatrixXd& jac1 = boost::any_cast<const Eigen::MatrixXd&>(jacBoost1);
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << jac1 << std::endl;
+
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+
+    // linear 
+    const Eigen::VectorXd l = scalar*Q*invec+a; // result
+    //const Eigen::MatrixXd l_jac = scalar*Q; // jacobian
+    auto l_jac_ref = lin->Jacobian(1, 1, scalar, invec); // jacobian
+    const Eigen::MatrixXd& l_jac = boost::any_cast<const Eigen::MatrixXd&>(l_jac_ref);
+    //const Eigen::MatrixXd& l_jac = boost::any_cast<const Eigen::MatrixXd&>(lin->Jacobian(1, 1, scalar, invec)); // jacobian
+
+    //std::cout << l_jac << std::endl << std::endl;
+    //std::cout << scalar*Q << std::endl << std::endl;
+
+    // quadratic 
+    const double q = (l.transpose()*Q*l + a.transpose()*l + b) (0); // result
+    //const Eigen::MatrixXd q_jac = (2.0*l.transpose()*Q + a.transpose())*l_jac; // jacobian
+    const Eigen::MatrixXd q_jac = 2.0*l.transpose()*Q + a.transpose(); // jacobian
+
+    // polynomial (model 2)
+    double p_m2 = coeff0[0]; // result
+    double p_m2_jac = 0.0; // jacobian
+    for( unsigned int i=1; i<coeff0.size(); ++i ) {
+      p_m2 += coeff0[i]*std::pow(q, (double)i);
+      p_m2_jac += (double)i*coeff0[i]*std::pow(q, (double)i-1);
+    }
+
+    // polynomial (model 3)
+    double p_m3 = coeff1[0]; // result
+    double p_m3_jac = 0.0; // jacobian
+    for( unsigned int i=1; i<coeff1.size(); ++i ) {
+      p_m3 += coeff1[i]*std::pow(q, (double)i);
+      p_m3_jac += (double)i*coeff1[i]*std::pow(q, (double)i-1);
+    }
+
+    // Model
+    const double model = p_m2*p_m3;
+    const Eigen::MatrixXd model_jac= (p_m2*p_m3_jac + p_m3*p_m2_jac)*q_jac;
+
+    //std::cout << std::endl;
+    //std::cout << l_jac << std::endl;
+    std::cout << std::endl;
+    std::cout << q_jac << std::endl;
+    std::cout << std::endl;
+    std::cout << p_m2_jac*q_jac << std::endl;
+    std::cout << std::endl;
+    std::cout << p_m3_jac*q_jac << std::endl;
+    std::cout << std::endl;
+    std::cout << model_jac << std::endl;
+    std::cout << std::endl;
+
   }
 }
 
