@@ -88,7 +88,8 @@ private:
     const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[0]);
 
     // constant reference to the vector we are applying the Jacobian to 
-    const Eigen::VectorXd& appvec = boost::any_cast<const Eigen::VectorXd&>(vec);
+    //const Eigen::VectorXd& appvec = boost::any_cast<const Eigen::VectorXd&>(vec);
+    const double appvec = boost::any_cast<const double>(vec);
 
     // compute the Jacobian
     jacobianTransposeAction = (Eigen::VectorXd)(2.0*Q.transpose()*in*appvec + a*appvec);
@@ -278,7 +279,7 @@ TEST_F(WorkPieceDerivativesTests, QuadraticFunction) {
     const Eigen::VectorXd vec = Eigen::VectorXd::Random(1);
 
     // evaluate the jacobian action
-    auto jacTransposeActionBoost = quad->JacobianTransposeAction(0, 0, vec, in);
+    auto jacTransposeActionBoost = quad->JacobianTransposeAction(0, 0, vec(0), in);
     const Eigen::VectorXd& jacTransposeAction = boost::any_cast<Eigen::VectorXd>(jacTransposeActionBoost);
 
     // compute the expected jacobian action
@@ -359,8 +360,14 @@ private:
   }
 
   virtual void JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override {
+    std::cout << "HI" << std::endl;
+
+    std::cout << vec.type().name() << std::endl;
+    
     // get the variable
     const double x = boost::any_cast<double>(inputs[0]);
+
+    std::cout << "OKAY" << std::endl;
 
     // get the vector we are applying the jacobian transpose to (scalar since this is a 1D function)
     const double v = boost::any_cast<double>(vec);
@@ -624,6 +631,57 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
 
     EXPECT_EQ(model_jacAction1.size(), 1);
     EXPECT_DOUBLE_EQ(jacAction1, model_jacAction1(0));
+  }
+
+    { // test JacobianAction
+    // apply the Jacobian tranpose to this vector
+    const Eigen::VectorXd vec0 = Eigen::VectorXd::Random(4);
+
+    std::cout << Eigen::VectorXd::LinSpaced(4, 0.0, 1.0).transpose()*vec0 << std::endl << std::endl;
+
+    std::cout << d0_jac*Eigen::VectorXd::LinSpaced(4, 0.0, 1.0).transpose()*vec0 << std::endl << std::endl;
+    
+    std::cout << d1_jac*Eigen::VectorXd::LinSpaced(4, 0.0, 1.0).transpose()*vec0 << std::endl << std::endl;
+
+    std::cout << q_jac.transpose()*(d0_jac*Eigen::VectorXd::LinSpaced(4, 0.0, 1.0).transpose()*vec0) << std::endl << std::endl;
+
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    
+    // check first JacobianTransposeAction
+    const auto jacTransActionBoost0 = graphmod->JacobianTransposeAction(0, 0, vec0, l);
+    const Eigen::VectorXd& jacTransAction0 = boost::any_cast<const Eigen::VectorXd&>(jacTransActionBoost0);
+
+    const Eigen::VectorXd model_jacTransAction0 = model_jac0.transpose()*vec0;
+
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+
+    std::cout << jacTransAction0 << std::endl << std::endl;
+    std::cout << model_jacTransAction0 << std::endl << std::endl;
+
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+    
+    /*EXPECT_EQ(jacAction0.size(), 4);
+    EXPECT_EQ(model_jacAction0.size(), 4);
+    for( unsigned int i=0; i<4; ++i ) {
+      EXPECT_DOUBLE_EQ(jacAction0(i), model_jacAction0(i));
+      }*/
+
+    // apply the Jacobian tranpose to this vector
+    const Eigen::VectorXd vec1 = Eigen::VectorXd::Random(1);
+    
+    // check second JacobianAction
+    const auto jacTransActionBoost1 = graphmod->JacobianTransposeAction(0, 1, vec1(0), l);
+    const Eigen::VectorXd& jacTransAction1 = boost::any_cast<const Eigen::VectorXd&>(jacTransActionBoost1);
+
+    const Eigen::VectorXd model_jacTransAction1 = model_jac1.transpose()*vec1;
+
+    std::cout << "~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+
+    std::cout << jacTransAction1 << std::endl << std::endl;
+    std::cout << model_jacTransAction1 << std::endl << std::endl;
+
+    /*EXPECT_EQ(model_jacAction1.size(), 1);
+    EXPECT_DOUBLE_EQ(jacAction1, model_jacAction1(0));*/
   }
 }
 

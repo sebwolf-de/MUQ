@@ -109,7 +109,7 @@ void WorkGraphPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const w
     const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
     
     // get the outputs of this node that depend on the specified input
-    const std::vector<unsigned int>& requiredOuts = RequiredOutputs(node, wrtIn, wrtOut);
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > & requiredOuts = RequiredOutputs(node, wrtIn, wrtOut);
 
     // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
     const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
@@ -121,18 +121,18 @@ void WorkGraphPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const w
     for( auto out : requiredOuts ) {
       if( requiredIns.size()==0 ) {
 	// if there are no inputs, it is the input so set the Jacobian to the identity
-	jacMap[nodeID][out] = algebra->IdentityBase(valMap[nodeID][out]);
+	jacMap[nodeID][get<1>(out)] = algebra->IdentityBase(valMap[nodeID][get<1>(out)]);
       } else { 
 	// initize the jacobian to nothing
-	jacMap[nodeID][out] = boost::none;
+	jacMap[nodeID][get<1>(out)] = boost::none;
 
 	for( auto in : requiredIns ) {
 	  // compute the Jacobian with respect to each required input
-	  graph->operator[](node)->piece->Jacobian(std::get<2>(in), out, ins);
+	  graph->operator[](node)->piece->Jacobian(std::get<2>(in), get<1>(out), ins);
 	  
 	  // use chain rule to get the jacobian wrt to the required input
 	  const boost::any& tempJac = algebra->MultiplyBase(*(graph->operator[](node)->piece->jacobian), jacMap[std::get<0>(in)][std::get<1>(in)]);
-	  jacMap[nodeID][out] = algebra->AddBase(jacMap[nodeID][out], tempJac);
+	  jacMap[nodeID][get<1>(out)] = algebra->AddBase(jacMap[nodeID][get<1>(out)], tempJac);
 	}
       }
     }
@@ -158,7 +158,7 @@ void WorkGraphPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int c
     const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
 
     // get the outputs of this node that depend on the specified input
-    const std::vector<unsigned int>& requiredOuts = RequiredOutputs(node, wrtIn, wrtOut);
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredOuts = RequiredOutputs(node, wrtIn, wrtOut);
 
     // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
     const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
@@ -170,17 +170,17 @@ void WorkGraphPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int c
     for( auto out : requiredOuts ) {
       if( requiredIns.size()==0 ) {
 	// if there are no inputs, it is the input so set the Jacobian to the identity
-	jacActionMap[nodeID][out] = vec;
+	jacActionMap[nodeID][get<1>(out)] = vec;
       } else { 
 	// initize the jacobian to nothing
-	jacActionMap[nodeID][out] = boost::none;
+	jacActionMap[nodeID][get<1>(out)] = boost::none;
 
 	for( auto in : requiredIns ) {
 	  // compute the Jacobian with respect to each required input
-	  graph->operator[](node)->piece->JacobianAction(std::get<2>(in), out, jacActionMap[std::get<0>(in)][std::get<1>(in)], ins);
+	  graph->operator[](node)->piece->JacobianAction(std::get<2>(in), get<1>(out), jacActionMap[std::get<0>(in)][std::get<1>(in)], ins);
 	  
 	  // use chain rule to get the jacobian wrt to the required input
-	  jacActionMap[nodeID][out] = algebra->AddBase(jacActionMap[nodeID][out], *(graph->operator[](node)->piece->jacobianAction));
+	  jacActionMap[nodeID][get<1>(out)] = algebra->AddBase(jacActionMap[nodeID][get<1>(out)], *(graph->operator[](node)->piece->jacobianAction));
 	}
       }
     }
@@ -188,6 +188,72 @@ void WorkGraphPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int c
 
   // set the action of the Jacobian for this WorkPiece
   jacobianAction = jacActionMap[outputID][wrtOut];
+}
+
+void WorkGraphPiece::JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
+    // set the inputs
+  SetInputs(inputs);
+
+  // fill the map from the WorkPiece ID to its outputs
+  OutputMap();
+  
+  // a map from the WorkPiece ID a map from the output number to the action of the jacobian of that output wrt the specified input
+  std::map<unsigned int, std::map<unsigned int, boost::any> > jacTransActionMap;
+
+  // loop through each downstream node
+  for( auto node : derivRunOrders[wrtIn] ) {
+    // the ID of the current node
+    const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
+
+    // get the outputs of this node that depend on the specified input
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredOuts = RequiredOutputs(node, wrtIn, wrtOut);
+
+    // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
+
+    std::cout << std::endl << filtered_graphs[wrtIn]->operator[](node)->piece->Name() << std::endl << std::endl;
+    std::cout << requiredOuts.size() << std::endl;
+    // the inputs to this WorkPiece
+    const ref_vector<boost::any>& ins = Inputs(node);
+    
+    for( auto in : requiredIns ) {
+      if( nodeID==outputID ) {
+	assert(requiredOuts.size()==1);
+	assert(get<1>(requiredOuts[0])==wrtOut);
+
+	std::cout << "blah: " << get<2>(in) << " " << wrtOut << std::endl;
+	graph->operator[](node)->piece->JacobianTransposeAction(std::get<2>(in), wrtOut, vec, ins);
+	jacTransActionMap[nodeID][get<2>(in)] = *(graph->operator[](node)->piece->jacobianTransposeAction);
+	std::cout << boost::any_cast<double>(jacTransActionMap[nodeID][get<2>(in)]) << std::endl;
+      } else {
+	std::cout << requiredOuts.size() << std::endl;
+	jacTransActionMap[nodeID][get<2>(in)] = boost::none;
+
+	for( auto out : requiredOuts ) {
+	  graph->operator[](node)->piece->JacobianTransposeAction(std::get<2>(in), get<1>(out), jacTransActionMap[get<0>(out)][get<2>(out)], ins);
+	  jacTransActionMap[nodeID][get<2>(in)] = algebra->AddBase(jacTransActionMap[nodeID][get<2>(in)], *(graph->operator[](node)->piece->jacobianTransposeAction));
+	}
+
+	if( filtered_graphs[wrtIn]->operator[](node)->piece->Name().compare("Quadratic_30")==0 ) {
+	  std::cout << boost::any_cast<Eigen::VectorXd>(jacTransActionMap[nodeID][get<2>(in)]) << std::endl;
+	} else {
+	  std::cout << boost::any_cast<double>(jacTransActionMap[nodeID][get<2>(in)]) << std::endl;
+	}
+      }
+    }
+
+    if( requiredIns.size()==0 ) {
+      for( auto out : requiredOuts ) {
+	if( jacobianTransposeAction ) {
+	  *jacobianTransposeAction = algebra->AddBase(*jacobianTransposeAction, jacTransActionMap[get<0>(out)][get<1>(out)]);
+	} else {
+	  jacobianTransposeAction = jacTransActionMap[get<0>(out)][get<1>(out)];
+	}
+      }
+    }
+  }
+
+  //jacobianTransposeAction = (Eigen::VectorXd)Eigen::VectorXd::Random(2);
 }
 
 void WorkGraphPiece::SetInputs(ref_vector<boost::any> const& inputs) {
@@ -262,16 +328,16 @@ ref_vector<boost::any> WorkGraphPiece::Inputs(boost::graph_traits<Graph>::vertex
   return ins;
 }
 
-std::vector<unsigned int> WorkGraphPiece::RequiredOutputs(boost::graph_traits<FilteredGraph>::vertex_descriptor const& node, unsigned int const wrtIn, unsigned int const wrtOut) const {
+std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > WorkGraphPiece::RequiredOutputs(boost::graph_traits<FilteredGraph>::vertex_descriptor const& node, unsigned int const wrtIn, unsigned int const wrtOut) const {
   // the ID of the current node
   const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
   
   // get the outputs of this node that depend on the specified input
-  std::vector<unsigned int> requiredOuts;
+  std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > requiredOuts;
   
   if( nodeID==outputID ) { // if it is the output node ...
     // ... the user specifies the output derivative
-    requiredOuts.push_back(wrtOut);
+    requiredOuts.push_back(std::tuple<unsigned int, unsigned int, unsigned int>(nodeID, wrtOut, wrtIn));
 
     return requiredOuts;
   }
@@ -279,13 +345,15 @@ std::vector<unsigned int> WorkGraphPiece::RequiredOutputs(boost::graph_traits<Fi
   // loop though the output nodes
   boost::graph_traits<FilteredGraph>::out_edge_iterator eout, eout_end;
   for( tie(eout, eout_end)=boost::out_edges(node, *filtered_graphs[wrtIn]); eout!=eout_end; ++eout ) {
-    // get the output number 
+    // get the output number
+    const unsigned int id = graph->operator[](boost::target(*eout, *filtered_graphs[wrtIn]))->piece->ID();
     const unsigned int outNum = filtered_graphs[wrtIn]->operator[](*eout)->outputDim;
-    
+    const unsigned int inNum = filtered_graphs[wrtIn]->operator[](*eout)->inputDim;
+
     // if we have not already required this output, save it
-    auto it = std::find(requiredOuts.begin(), requiredOuts.end(), outNum);
+    auto it = std::find(requiredOuts.begin(), requiredOuts.end(), std::tuple<unsigned int, unsigned int, unsigned int>(id, outNum, inNum));
     if( it==requiredOuts.end() ) {
-      requiredOuts.push_back(outNum);
+      requiredOuts.push_back(std::tuple<unsigned int, unsigned int, unsigned int>(id, outNum, inNum));
     }
   }
   
@@ -303,7 +371,7 @@ std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > WorkGraphPiec
   boost::graph_traits<FilteredGraph>::in_edge_iterator ein, ein_end;
   for( tie(ein, ein_end)=boost::in_edges(node, *filtered_graphs[wrtIn]); ein!=ein_end; ++ein ) {
     // get the WorkPiece id number, the output that it supplies, and the input that receives it
-    const unsigned int id = graph->operator[](boost::source(*ein, *graph))->piece->ID();
+    const unsigned int id = graph->operator[](boost::source(*ein, *filtered_graphs[wrtIn]))->piece->ID();
     const unsigned int outNum = filtered_graphs[wrtIn]->operator[](*ein)->outputDim;
     const unsigned int inNum = filtered_graphs[wrtIn]->operator[](*ein)->inputDim;
     

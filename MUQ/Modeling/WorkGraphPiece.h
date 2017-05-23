@@ -113,14 +113,23 @@ namespace muq {
        */
       virtual void JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override;
 
+      /// Compute the action of the Jacobian transpose for this muq::Modeling::WorkGraphPiece using the chain rule
+      /**
+	 @param[in] wrtIn We are taking the Jacobian with respect to this input
+	 @param[in] wrtOut We are taking the Jacobian of this output
+	 @param[in] vec We are applying the Jacobian transpose to this object
+	 @param[in] inputs Inputs to the muq::Modeling::WorkGraphPiece
+       */
+      virtual void JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override;
+
       /// Get the required outputs for a node in one of the filtered graphs
       /**
 	 @param[in] node We want the outputs of this node
 	 @param[in] wrtIn The input whose downstream nodes we care about
 	 @param[in] wrtOut The output we are ultimately trying to differentiate wrt
-	 \return The output nodes 
+	 \return The output nodes --- tuple: the output WorkPiece ID, the output number, and the input number
        */
-      std::vector<unsigned int> RequiredOutputs(boost::graph_traits<FilteredGraph>::vertex_descriptor const& node, unsigned int const wrtIn, unsigned int wrtOut) const;
+      std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > RequiredOutputs(boost::graph_traits<FilteredGraph>::vertex_descriptor const& node, unsigned int const wrtIn, unsigned int wrtOut) const;
 
       /// Get the required inputs for a node in one of the filtered graphs
       /**
