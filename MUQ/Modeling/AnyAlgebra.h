@@ -25,17 +25,6 @@ namespace muq {
 	 \return An identity of some type
        */
       boost::any IdentityBase(std::reference_wrapper<const boost::any> const& in) const;
-
-      /// Compute a zero object for boost::any
-      /**
-	 For example, if the underlying type is a double this would return 0.0, if the underlying type is an Eigen::VectorXd this would return Eigen::VectorXd::Zero(N).
-
-	 If both the in type and the out time are Eigen::VectorXd's, we'd expect the return type to be an Eigen::MatrixXd.
-	 @param[in] inType The input type 
-	 @param[in] outType The output type
-	 \return A zero of some type
-       */
-      boost::any ZeroBase(std::reference_wrapper<const boost::any> const& in, std::reference_wrapper<const boost::any> const& out) const;
       
       /// Add two objects together
       /**
@@ -54,15 +43,6 @@ namespace muq {
       boost::any MultiplyBase(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const;
 
     private:
-
-      /// Compute a zero object boost::any
-      /**
-	 MUQ automatically checks for some common input/output pairs.  However, the user may need to check 
-	 @param[in] inType The input type 
-	 @param[in] outType The output type
-	 \return A zero of some type
-       */
-      virtual boost::any Zero(std::reference_wrapper<const boost::any> const& in, std::reference_wrapper<const boost::any> const& out) const;
 
       /// Compute an identity object for boost::any
       /**
