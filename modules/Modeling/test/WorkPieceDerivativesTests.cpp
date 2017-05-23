@@ -410,18 +410,14 @@ private:
     if( wrtIn==0 ) {
       if( wrtOut==0 ) {
 	jacobian = (Eigen::MatrixXd)Eigen::VectorXd::LinSpaced(4, 0.0, 1.0);
-	std::cout << boost::any_cast<Eigen::MatrixXd>(*jacobian) << std::endl;
       } else if( wrtOut==1 ) {
 	jacobian = a1;
-	std::cout << boost::any_cast<double>(*jacobian) << std::endl;
       }
     } else if( wrtIn==1 ) {
       if( wrtOut==0 ) {
 	jacobian = (Eigen::MatrixXd)Eigen::MatrixXd::Zero(4, 1);
-	std::cout << boost::any_cast<Eigen::MatrixXd>(*jacobian) << std::endl;
       } else if( wrtOut==1 ) {
 	jacobian = a0;
-	std::cout << boost::any_cast<double>(*jacobian) << std::endl;
       }
     }
   }
