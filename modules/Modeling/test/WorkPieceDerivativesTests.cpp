@@ -568,13 +568,13 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
     EXPECT_DOUBLE_EQ(boost::any_cast<double>(result[1]), expectedDouble);
   }
 
-  { // test Jacobian
-    // expected modle Jacobians
-    const Eigen::MatrixXd model_jac0 = Eigen::VectorXd::LinSpaced(4, 0.0, 1.0)*d0_jac*q_jac;
-    const Eigen::MatrixXd model_jac1 = (d0*d1_jac + d1*d0_jac)*q_jac;
+  // expected model Jacobians
+  const Eigen::MatrixXd model_jac0 = Eigen::VectorXd::LinSpaced(4, 0.0, 1.0)*d0_jac*q_jac;
+  const Eigen::MatrixXd model_jac1 = (d0*d1_jac + d1*d0_jac)*q_jac;
 
+  { // test Jacobian
     // check first Jacobian
-    const auto jacBoost0 = graphmod->Jacobian(0, 0, (Eigen::VectorXd)(scalar*Q*invec+a));
+    const auto jacBoost0 = graphmod->Jacobian(0, 0, l);
     const Eigen::MatrixXd& jac0 = boost::any_cast<const Eigen::MatrixXd&>(jacBoost0);
 
     EXPECT_EQ(jac0.rows(), 4);
@@ -598,6 +598,32 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
     for( unsigned int i=0; i<N; ++i ) {
       EXPECT_DOUBLE_EQ(jac1(0,i), model_jac1(0,i));
     }
+  }
+
+  { // test JacobianAction
+    // apply the Jacobians to this vector
+    const Eigen::VectorXd vec = Eigen::VectorXd::Random(N);
+    
+    // check first JacobianAction
+    const auto jacActionBoost0 = graphmod->JacobianAction(0, 0, vec, l);
+    const Eigen::VectorXd& jacAction0 = boost::any_cast<const Eigen::VectorXd&>(jacActionBoost0);
+
+    const Eigen::VectorXd model_jacAction0 = model_jac0*vec;
+
+    EXPECT_EQ(jacAction0.size(), 4);
+    EXPECT_EQ(model_jacAction0.size(), 4);
+    for( unsigned int i=0; i<4; ++i ) {
+      EXPECT_DOUBLE_EQ(jacAction0(i), model_jacAction0(i));
+    }
+
+    // check second JacobianAction
+    const auto jacActionBoost1 = graphmod->JacobianAction(0, 1, vec, l);
+    const double jacAction1 = boost::any_cast<const double>(jacActionBoost1);
+
+    const Eigen::VectorXd model_jacAction1 = model_jac1*vec;
+
+    EXPECT_EQ(model_jacAction1.size(), 1);
+    EXPECT_DOUBLE_EQ(jacAction1, model_jacAction1(0));
   }
 }
 

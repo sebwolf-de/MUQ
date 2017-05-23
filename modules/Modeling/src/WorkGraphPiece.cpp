@@ -100,7 +100,7 @@ void WorkGraphPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const w
   // fill the map from the WorkPiece ID to its outputs
   OutputMap();
   
-  // a map from the WorkPiece ID a map from the output number to the jacobian of that out wrt the specified input
+  // a map from the WorkPiece ID a map from the output number to the jacobian of that output wrt the specified input
   std::map<unsigned int, std::map<unsigned int, boost::any> > jacMap;
 
   // loop through each downstream node
@@ -109,44 +109,10 @@ void WorkGraphPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const w
     const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
     
     // get the outputs of this node that depend on the specified input
-    std::vector<unsigned int> requiredOuts;
-
-    if( nodeID==outputID ) { // if it is the output node ...
-      // ... the user specifies the output derivative
-      requiredOuts.push_back(wrtOut);
-    } else {
-      // loop though the output nodes
-      boost::graph_traits<FilteredGraph>::out_edge_iterator eout, eout_end;
-      for( tie(eout, eout_end)=boost::out_edges(node, *filtered_graphs[wrtIn]); eout!=eout_end; ++eout ) {
-	// get the output number 
-	const unsigned int outNum = filtered_graphs[wrtIn]->operator[](*eout)->outputDim;
-	
-	// if we have not already required this output, save it
-	auto it = std::find(requiredOuts.begin(), requiredOuts.end(), outNum);
-	if( it==requiredOuts.end() ) {
-	  requiredOuts.push_back(outNum);
-	}
-      }
-    }
-
-    // how many inputs does this node require?
-    const int numIns = filtered_graphs[wrtIn]->operator[](node)->piece->numInputs;
+    const std::vector<unsigned int>& requiredOuts = RequiredOutputs(node, wrtIn, wrtOut);
 
     // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
-    std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > requiredIns;
-    requiredIns.reserve(numIns);
-
-    // loop though the output nodes
-    boost::graph_traits<FilteredGraph>::in_edge_iterator ein, ein_end;
-    for( tie(ein, ein_end)=boost::in_edges(node, *filtered_graphs[wrtIn]); ein!=ein_end; ++ein ) {
-      // get the WorkPiece id number, the output that it supplies, and the input that receives it
-      const unsigned int id = graph->operator[](boost::source(*ein, *graph))->piece->ID();
-      const unsigned int outNum = filtered_graphs[wrtIn]->operator[](*ein)->outputDim;
-      const unsigned int inNum = filtered_graphs[wrtIn]->operator[](*ein)->inputDim;
-
-      // store the requried input
-      requiredIns.push_back(std::tuple<unsigned int, unsigned int, unsigned int>(id, outNum, inNum));
-    }
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
 
     // the inputs to this WorkPiece
     const ref_vector<boost::any>& ins = Inputs(node);
@@ -174,6 +140,54 @@ void WorkGraphPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const w
 
   // set the Jacobian for this WorkPiece
   jacobian = jacMap[outputID][wrtOut];
+}
+
+void WorkGraphPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
+  // set the inputs
+  SetInputs(inputs);
+
+  // fill the map from the WorkPiece ID to its outputs
+  OutputMap();
+  
+  // a map from the WorkPiece ID a map from the output number to the action of the jacobian of that output wrt the specified input
+  std::map<unsigned int, std::map<unsigned int, boost::any> > jacActionMap;
+
+  // loop through each downstream node
+  for( auto node : boost::adaptors::reverse(derivRunOrders[wrtIn]) ) {
+    // the ID of the current node
+    const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
+
+    // get the outputs of this node that depend on the specified input
+    const std::vector<unsigned int>& requiredOuts = RequiredOutputs(node, wrtIn, wrtOut);
+
+    // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
+
+    // the inputs to this WorkPiece
+    const ref_vector<boost::any>& ins = Inputs(node);
+
+    // compute the jacobian of each required output wrt each input
+    for( auto out : requiredOuts ) {
+      if( requiredIns.size()==0 ) {
+	// if there are no inputs, it is the input so set the Jacobian to the identity
+	jacActionMap[nodeID][out] = vec;
+      } else { 
+	// initize the jacobian to nothing
+	jacActionMap[nodeID][out] = boost::none;
+
+	for( auto in : requiredIns ) {
+	  // compute the Jacobian with respect to each required input
+	  graph->operator[](node)->piece->JacobianAction(std::get<2>(in), out, jacActionMap[std::get<0>(in)][std::get<1>(in)], ins);
+	  
+	  // use chain rule to get the jacobian wrt to the required input
+	  jacActionMap[nodeID][out] = algebra->AddBase(jacActionMap[nodeID][out], *(graph->operator[](node)->piece->jacobianAction));
+	}
+      }
+    }
+  }
+
+  // set the action of the Jacobian for this WorkPiece
+  jacobianAction = jacActionMap[outputID][wrtOut];
 }
 
 void WorkGraphPiece::SetInputs(ref_vector<boost::any> const& inputs) {
@@ -246,4 +260,56 @@ ref_vector<boost::any> WorkGraphPiece::Inputs(boost::graph_traits<Graph>::vertex
   }
 
   return ins;
+}
+
+std::vector<unsigned int> WorkGraphPiece::RequiredOutputs(boost::graph_traits<FilteredGraph>::vertex_descriptor const& node, unsigned int const wrtIn, unsigned int const wrtOut) const {
+  // the ID of the current node
+  const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
+  
+  // get the outputs of this node that depend on the specified input
+  std::vector<unsigned int> requiredOuts;
+  
+  if( nodeID==outputID ) { // if it is the output node ...
+    // ... the user specifies the output derivative
+    requiredOuts.push_back(wrtOut);
+
+    return requiredOuts;
+  }
+  
+  // loop though the output nodes
+  boost::graph_traits<FilteredGraph>::out_edge_iterator eout, eout_end;
+  for( tie(eout, eout_end)=boost::out_edges(node, *filtered_graphs[wrtIn]); eout!=eout_end; ++eout ) {
+    // get the output number 
+    const unsigned int outNum = filtered_graphs[wrtIn]->operator[](*eout)->outputDim;
+    
+    // if we have not already required this output, save it
+    auto it = std::find(requiredOuts.begin(), requiredOuts.end(), outNum);
+    if( it==requiredOuts.end() ) {
+      requiredOuts.push_back(outNum);
+    }
+  }
+  
+  return requiredOuts;
+}
+
+std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > WorkGraphPiece::RequiredInputs(boost::graph_traits<FilteredGraph>::vertex_descriptor const& node, unsigned int const wrtIn) const {
+  // how many inputs does this node require?
+  const int numIns = filtered_graphs[wrtIn]->operator[](node)->piece->numInputs;
+  
+  std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > requiredIns;
+  requiredIns.reserve(numIns);
+  
+  // loop though the output nodes
+  boost::graph_traits<FilteredGraph>::in_edge_iterator ein, ein_end;
+  for( tie(ein, ein_end)=boost::in_edges(node, *filtered_graphs[wrtIn]); ein!=ein_end; ++ein ) {
+    // get the WorkPiece id number, the output that it supplies, and the input that receives it
+    const unsigned int id = graph->operator[](boost::source(*ein, *graph))->piece->ID();
+    const unsigned int outNum = filtered_graphs[wrtIn]->operator[](*ein)->outputDim;
+    const unsigned int inNum = filtered_graphs[wrtIn]->operator[](*ein)->inputDim;
+    
+    // store the requried input
+    requiredIns.push_back(std::tuple<unsigned int, unsigned int, unsigned int>(id, outNum, inNum));
+  }
+
+  return requiredIns;
 }
