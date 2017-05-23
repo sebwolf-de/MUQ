@@ -533,27 +533,32 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
   const double scalar = 2.5;
   const Eigen::VectorXd invec = Eigen::VectorXd::Random(N);
 
+  // linear 
+  const Eigen::VectorXd l = scalar*Q*invec+a;
+  
+  // quadradic
+  const double q = (l.transpose()*Q*l + a.transpose()*l + b) (0);
+  const Eigen::MatrixXd q_jac = 2.0*l.transpose()*Q + a.transpose(); // jacobian
+  
+    // polynomials
+  double d0 = coeff0[0];
+  double d0_jac = 0.0; // jacobian
+  for( unsigned int i=1; i<coeff0.size(); ++i ) {
+    d0 += coeff0[i]*std::pow(q, (double)i);
+    d0_jac += (double)i*coeff0[i]*std::pow(q, (double)i-1);
+  }
+  
+  double d1 = coeff1[0];
+  double d1_jac = 0.0; // jacobian
+  for( unsigned int i=1; i<coeff1.size(); ++i ) {
+    d1 += coeff1[i]*std::pow(q, (double)i);
+    d1_jac += (double)i*coeff1[i]*std::pow(q, (double)i-1);
+  }
+
   { // test evaluate
     //const auto result = graphmod->Evaluate(scalar, invec);
     const auto result = graphmod->Evaluate((Eigen::VectorXd)(scalar*Q*invec+a));
     const Eigen::VectorXd& resultVec = boost::any_cast<const Eigen::VectorXd&>(result[0]);
-
-    // linear 
-    const Eigen::VectorXd l = scalar*Q*invec+a;
-
-    // quadradic
-    const double q = (l.transpose()*Q*l + a.transpose()*l + b) (0);
-
-    // polynomials
-    double d0 = coeff0[0];
-    for( unsigned int i=1; i<coeff0.size(); ++i ) {
-      d0 += coeff0[i]*std::pow(q, (double)i);
-    }
-
-    double d1 = coeff1[0];
-    for( unsigned int i=1; i<coeff1.size(); ++i ) {
-      d1 += coeff1[i]*std::pow(q, (double)i);
-    }
 
     // expected graphmod result
     const Eigen::VectorXd expectedVec = d0*Eigen::VectorXd::LinSpaced(4, 0.0, 1.0);
@@ -568,64 +573,35 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
   }
 
   { // test Jacobian
-    // note: we can not take the derivative of with resepct to input 0 because it is a double input to class "Linear".  There is no JacobianImpl implemented and no default finite difference for this case...
-    //const auto jacBoost1 = graphmod->Jacobian(1, 1, scalar, invec);
-    const auto jacBoost1 = graphmod->Jacobian(0, 1, (Eigen::VectorXd)(scalar*Q*invec+a));
+    // expected modle Jacobians
+    const Eigen::MatrixXd model_jac0 = Eigen::VectorXd::LinSpaced(4, 0.0, 1.0)*d0_jac*q_jac;
+    const Eigen::MatrixXd model_jac1 = (d0*d1_jac + d1*d0_jac)*q_jac;
+
+    // check first Jacobian
+    const auto jacBoost0 = graphmod->Jacobian(0, 0, (Eigen::VectorXd)(scalar*Q*invec+a));
+    const Eigen::MatrixXd& jac0 = boost::any_cast<const Eigen::MatrixXd&>(jacBoost0);
+
+    EXPECT_EQ(jac0.rows(), 4);
+    EXPECT_EQ(jac0.cols(), N);
+    EXPECT_EQ(model_jac0.rows(), 4);
+    EXPECT_EQ(model_jac0.cols(), N);
+    for( unsigned int i=0; i<4; ++i ) {
+      for( unsigned int j=0; j<N; ++j ) {
+	EXPECT_DOUBLE_EQ(jac0(i,j), model_jac0(i,j));
+      }
+    }
+
+    // check second Jacobian
+    const auto jacBoost1 = graphmod->Jacobian(0, 1, l);
     const Eigen::MatrixXd& jac1 = boost::any_cast<const Eigen::MatrixXd&>(jacBoost1);
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << jac1 << std::endl;
-
-    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
-
-    // linear 
-    const Eigen::VectorXd l = scalar*Q*invec+a; // result
-    //const Eigen::MatrixXd l_jac = scalar*Q; // jacobian
-    auto l_jac_ref = lin->Jacobian(1, 1, scalar, invec); // jacobian
-    const Eigen::MatrixXd& l_jac = boost::any_cast<const Eigen::MatrixXd&>(l_jac_ref);
-    //const Eigen::MatrixXd& l_jac = boost::any_cast<const Eigen::MatrixXd&>(lin->Jacobian(1, 1, scalar, invec)); // jacobian
-
-    //std::cout << l_jac << std::endl << std::endl;
-    //std::cout << scalar*Q << std::endl << std::endl;
-
-    // quadratic 
-    const double q = (l.transpose()*Q*l + a.transpose()*l + b) (0); // result
-    //const Eigen::MatrixXd q_jac = (2.0*l.transpose()*Q + a.transpose())*l_jac; // jacobian
-    const Eigen::MatrixXd q_jac = 2.0*l.transpose()*Q + a.transpose(); // jacobian
-
-    // polynomial (model 2)
-    double p_m2 = coeff0[0]; // result
-    double p_m2_jac = 0.0; // jacobian
-    for( unsigned int i=1; i<coeff0.size(); ++i ) {
-      p_m2 += coeff0[i]*std::pow(q, (double)i);
-      p_m2_jac += (double)i*coeff0[i]*std::pow(q, (double)i-1);
+    EXPECT_EQ(jac1.rows(), 1);
+    EXPECT_EQ(jac1.cols(), N);
+    EXPECT_EQ(model_jac1.rows(), 1);
+    EXPECT_EQ(model_jac1.cols(), N);
+    for( unsigned int i=0; i<N; ++i ) {
+      EXPECT_DOUBLE_EQ(jac1(0,i), model_jac1(0,i));
     }
-
-    // polynomial (model 3)
-    double p_m3 = coeff1[0]; // result
-    double p_m3_jac = 0.0; // jacobian
-    for( unsigned int i=1; i<coeff1.size(); ++i ) {
-      p_m3 += coeff1[i]*std::pow(q, (double)i);
-      p_m3_jac += (double)i*coeff1[i]*std::pow(q, (double)i-1);
-    }
-
-    // Model
-    const double model = p_m2*p_m3;
-    const Eigen::MatrixXd model_jac= (p_m2*p_m3_jac + p_m3*p_m2_jac)*q_jac;
-
-    //std::cout << std::endl;
-    //std::cout << l_jac << std::endl;
-    std::cout << std::endl;
-    std::cout << q_jac << std::endl;
-    std::cout << std::endl;
-    std::cout << p_m2_jac*q_jac << std::endl;
-    std::cout << std::endl;
-    std::cout << p_m3_jac*q_jac << std::endl;
-    std::cout << std::endl;
-    std::cout << model_jac << std::endl;
-    std::cout << std::endl;
-
   }
 }
 
