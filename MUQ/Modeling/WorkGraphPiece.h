@@ -113,6 +113,13 @@ namespace muq {
        */
       void SetInputs(ref_vector<boost::any> const& inputs);
 
+      /// Get the inputs from muq::Modeling::WorkGraphPiece::valMap to a specified node in the graph
+      /**
+	 @param[in] id The ID of the node of interest
+	 \return A reference vector of inputs to that node
+       */
+      ref_vector<boost::any> Inputs(boost::graph_traits<Graph>::vertex_descriptor node) const;
+
       /// Get a the input nodes for a node
       /**
 	 @param[in] node We want the input nodes for this node
