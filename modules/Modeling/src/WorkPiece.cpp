@@ -340,6 +340,8 @@ void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut
   // compute the base result
   const auto base = Evaluate(tempIns);
 
+  std::cout << "Base eval" << std::endl;
+
   // const reference to the output of interest
   const Eigen::VectorXd& outbase = boost::any_cast<const Eigen::VectorXd&>(base[wrtOut]);
 
