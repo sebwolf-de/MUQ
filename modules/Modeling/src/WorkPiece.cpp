@@ -323,7 +323,7 @@ void WorkPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut
 
 void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs, double const relTol, double const minTol) {      
   // constant reference to the input we are computing the derivative wrt
-  const Eigen::VectorXd& tempref = boost::any_cast<const Eigen::VectorXd&>(inputs[wrtIn]);
+  //const Eigen::VectorXd& tempref = boost::any_cast<const Eigen::VectorXd&>(inputs[wrtIn]);
 
   // the input we are computing the derivative wrt (the value will change so we need a hard copy)
   boost::any in = inputs[wrtIn];
@@ -336,9 +336,11 @@ void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut
 
   // get a copy of the inputs (note, we are only copying the references)
   ref_vector<const boost::any> tempIns = inputs;
+  tempIns[wrtIn] = in;
 
   // compute the base result
-  const auto base = Evaluate(tempIns);
+  //const auto base = Evaluate(tempIns);
+  const auto base = Evaluate(inputs);
 
   std::cout << "Base eval" << std::endl;
 
@@ -346,23 +348,31 @@ void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut
   const Eigen::VectorXd& outbase = boost::any_cast<const Eigen::VectorXd&>(base[wrtOut]);
 
   // initalize the jacobian and a reference that we can change
-  jacobian = Eigen::MatrixXd(outbase.size(), tempref.size());
+  jacobian = (Eigen::MatrixXd)Eigen::MatrixXd::Zero(outbase.size(), inref.size());
   Eigen::MatrixXd& jac = boost::any_cast<Eigen::MatrixXd&>(*jacobian); // use * operator because it is a boost::optional
 
   // loop thorugh the inputs (columns of the Jacobian)
-  for( unsigned int col=0; col<tempref.size(); ++col ) {
+  for( unsigned int col=0; col<inref.size(); ++col ) {
+    std::cout << "in loop" << std::endl;
     // compute the step length
     const double dx = std::fmax(minTol, relTol*inref(col));
+
+    std::cout << "dx: " << dx << std::endl;
 
     // increment the col's input (change the reference to the boost any)
     //const double dum = inref(col);
     inref(col) += dx;
 
+    std::cout << "incremented" << std::endl;
+
     // replace the value in the tempIns
-    tempIns[wrtIn] = std::cref(in);
+    //tempIns[wrtIn] = std::cref(in);
+
+    //std::cout << " 
 
     // compute the perturbed result
     const auto plus = Evaluate(tempIns);
+    //const auto plus = Evaluate(inputs);
 
     // const reference to the output of interest
     const Eigen::VectorXd& outplus = boost::any_cast<const Eigen::VectorXd&>(plus[wrtOut]);
