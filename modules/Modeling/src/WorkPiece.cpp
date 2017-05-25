@@ -325,17 +325,17 @@ void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut
   // constant reference to the input we are computing the derivative wrt
   const Eigen::VectorXd& tempref = boost::any_cast<const Eigen::VectorXd&>(inputs[wrtIn]);
 
+  // get a copy of the inputs (note, we are only copying the references)
+  ref_vector<const boost::any> tempIns = inputs;
+
   // the input we are computing the derivative wrt (the value will change so we need a hard copy)
-  boost::any in = inputs[wrtIn];
+  boost::any in = tempIns[wrtIn];
 
   // a reference to the input that we can change
   Eigen::VectorXd& inref = boost::any_cast<Eigen::VectorXd&>(in);
 
   std::cout << "inref for FD" << std::endl;
   std::cout << inref << std::endl;
-
-  // get a copy of the inputs (note, we are only copying the references)
-  ref_vector<const boost::any> tempIns = inputs;
 
   // compute the base result
   const auto base = Evaluate(tempIns);
