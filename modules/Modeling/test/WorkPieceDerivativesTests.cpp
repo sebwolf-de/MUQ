@@ -28,6 +28,13 @@ private:
     // constant reference to the input vector
     const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[1]);
 
+    std::cout << "Q: " << std::endl;
+    std::cout << Q << std::endl;
+    std::cout << "a: " << std::endl;
+    std::cout << b << std::endl;
+    std::cout << "in: " << std::endl;
+    std::cout << in << std::endl;
+    
     // the first output is a string
     outputs[0] = (std::string)"string";
 
@@ -159,6 +166,13 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
   // choose random inputs
   const Eigen::VectorXd in = Eigen::VectorXd::Random(N);
   const double scalar = 3.5;
+
+  std::cout << "Q: " << std::endl;
+  std::cout << Q << std::endl;
+  std::cout << "a: " << std::endl;
+  std::cout << a << std::endl;
+  std::cout << "in: " << std::endl;
+  std::cout << in << std::endl;
 
   { // test evaluate
     // evaluate 
