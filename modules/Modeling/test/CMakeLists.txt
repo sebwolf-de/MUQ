@@ -2,7 +2,7 @@ CreateTestGroup(
     MODELING_CORE
     
     WorkPieceTests.cpp
-    WorkPiecederivativesTests.cpp
+    WorkPieceDerivativesTests.cpp
     WorkGraphTests.cpp
     WorkGraphPieceTests.cpp
 
