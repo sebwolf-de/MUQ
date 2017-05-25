@@ -26,8 +26,9 @@ private:
     const double a = boost::any_cast<double>(inputs[0]);
 
     // constant reference to the input vector
-    std::reference_wrapper<const boost::any> inany = inputs[1];
-    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inany);
+    //std::reference_wrapper<const boost::any> inany = inputs[1];
+    //const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inany);
+    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd>(inputs[1]);
     // node: for some reason boost::any_cast<const Eigen::VectorXd&>(inputs[1]); doesn't work on all compilers
 
     // the first output is a string
