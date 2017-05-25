@@ -338,7 +338,7 @@ void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut
   const auto base = Evaluate(tempIns);
 
   // const reference to the output of interest
-  const Eigen::VectorXd& outbase = boost::any_cast<const Eigen::VectorXd&>(base[wrtOut]);
+  const Eigen::VectorXd outbase = boost::any_cast<const Eigen::VectorXd>(base[wrtOut]);
 
   // initalize the jacobian and a reference that we can change
   jacobian = Eigen::MatrixXd(outbase.size(), tempref.size());
@@ -359,7 +359,7 @@ void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut
     const auto plus = Evaluate(tempIns);
 
     // const reference to the output of interest
-    const Eigen::VectorXd& outplus = boost::any_cast<const Eigen::VectorXd&>(plus[wrtOut]);
+    const Eigen::VectorXd outplus = boost::any_cast<const Eigen::VectorXd>(plus[wrtOut]);
 
     // compute the Jacobian for this column
     jac.col(col) = (outplus-outbase)/dx;
