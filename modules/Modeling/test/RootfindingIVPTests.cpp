@@ -8,14 +8,15 @@ using namespace muq::Modeling;
 
 // define the names of constant types
 extern const std::string scalarID = typeid(double).name(); // scalar ID
-extern const std::string vecID = typeid(Eigen::VectorXd).name(); // vector ID
+extern const std::string vec2ID = typeid(Eigen::Vector2d).name(); // 2D vector ID
+extern const std::string vec3ID = typeid(Eigen::Vector3d).name(); // 3D vector ID
 
 /// The right hand side for a chemical kenetics ODE (from Sundials example)
 class KineticsRHS : public WorkPiece {
 public:
 
   /// Constructor
-  inline KineticsRHS() : WorkPiece(std::vector<std::string>({vecID, vecID, scalarID}), std::vector<std::string>(1, vecID)) {}
+  inline KineticsRHS() : WorkPiece(std::vector<std::string>({vec3ID, vec2ID, scalarID}), std::vector<std::string>(1, vec3ID)) {}
 
   inline virtual ~KineticsRHS() {}
   
@@ -25,15 +26,15 @@ private:
     outputs.resize(1);
     
     // dependent variables
-    const Eigen::VectorXd& y = boost::any_cast<const Eigen::VectorXd>(inputs[0]);
+    const Eigen::Vector3d& y = boost::any_cast<const Eigen::Vector3d>(inputs[0]);
 
     // parameters
-    const Eigen::VectorXd& a = boost::any_cast<const Eigen::VectorXd>(inputs[1]);
+    const Eigen::Vector2d& a = boost::any_cast<const Eigen::Vector2d>(inputs[1]);
     const double b = boost::any_cast<const double>(inputs[2]);
 
     // derivative wrt time
-    outputs[0] = Eigen::VectorXd(3);
-    Eigen::VectorXd& refout = boost::any_cast<Eigen::VectorXd&>(outputs[0]);
+    outputs[0] = Eigen::Vector3d(3);
+    Eigen::Vector3d& refout = boost::any_cast<Eigen::Vector3d&>(outputs[0]);
     refout(0) = a(0)*y(0); // dy1dt
     refout(1) = a(1)*y(0)*y(1); // dy2dt
     refout(2) = b*b; // dy3dt
@@ -41,10 +42,10 @@ private:
 
   inline virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override {
     // dependent variables
-    const Eigen::VectorXd& y = boost::any_cast<const Eigen::VectorXd>(inputs[0]);
+    const Eigen::Vector3d& y = boost::any_cast<const Eigen::Vector3d>(inputs[0]);
 
     // parameters
-    const Eigen::VectorXd& a = boost::any_cast<const Eigen::VectorXd>(inputs[1]);
+    const Eigen::Vector2d& a = boost::any_cast<const Eigen::Vector2d>(inputs[1]);
     const double b = boost::any_cast<const double>(inputs[2]);
 
     assert(wrtOut==0);
@@ -79,7 +80,7 @@ class RootFunction : public WorkPiece {
 public:
 
   /// Constructor
-  inline RootFunction() : WorkPiece(std::vector<std::string>(2, vecID), std::vector<std::string>(2, scalarID)) {}
+  inline RootFunction() : WorkPiece(std::vector<std::string>({vec3ID, vec2ID}), std::vector<std::string>(2, scalarID)) {}
 
   inline virtual ~RootFunction() {}
   
@@ -87,10 +88,10 @@ private:
 
   inline virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override {
     // dependent variables
-    const Eigen::VectorXd& y = boost::any_cast<const Eigen::VectorXd>(inputs[0]);
+    const Eigen::Vector3d& y = boost::any_cast<const Eigen::Vector3d>(inputs[0]);
 
     // parameters
-    const Eigen::VectorXd& p = boost::any_cast<const Eigen::VectorXd>(inputs[1]);
+    const Eigen::Vector2d& p = boost::any_cast<const Eigen::Vector2d>(inputs[1]);
 
     // compute the root function
     outputs.resize(2);
@@ -100,10 +101,10 @@ private:
 
   inline virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override {
     // dependent variables
-    const Eigen::VectorXd& y = boost::any_cast<const Eigen::VectorXd>(inputs[0]);
+    const Eigen::Vector3d& y = boost::any_cast<const Eigen::Vector3d>(inputs[0]);
 
     // parameters
-    const Eigen::VectorXd& p = boost::any_cast<const Eigen::VectorXd>(inputs[1]);
+    const Eigen::Vector2d& p = boost::any_cast<const Eigen::Vector2d>(inputs[1]);
 
     // compute the jacobian 
     if( wrtIn==0 ) { // wrt the state y
@@ -137,13 +138,13 @@ TEST(KineticsProblemTest, RHS) {
   auto rhs = std::make_shared<KineticsRHS>();
 
   // inputs
-  const Eigen::VectorXd y = Eigen::VectorXd::Random(3);
-  const Eigen::VectorXd a = Eigen::VectorXd::Random(2);
+  const Eigen::Vector3d y = Eigen::Vector3d::Random(3);
+  const Eigen::Vector2d a = Eigen::Vector2d::Random(2);
   const double b = 3.5;
 
   { // test evaluate
     const std::vector<boost::any>& result = rhs->Evaluate(y, a, b);
-    const Eigen::VectorXd& rhs = boost::any_cast<const Eigen::VectorXd>(result[0]);
+    const Eigen::Vector3d& rhs = boost::any_cast<const Eigen::Vector3d>(result[0]);
 
     // check result
     EXPECT_DOUBLE_EQ(rhs(0), a(0)*y(0));
@@ -206,8 +207,8 @@ TEST(KineticsProblemTest, Root) {
   auto root = std::make_shared<RootFunction>();
 
   // inputs
-  const Eigen::VectorXd y = Eigen::VectorXd::Random(3);
-  const Eigen::VectorXd p = Eigen::VectorXd::Random(2);
+  const Eigen::Vector3d y = Eigen::Vector3d::Random(3);
+  const Eigen::Vector2d p = Eigen::Vector2d::Random(2);
 
   { // test evaluate
     const std::vector<boost::any>& result = root->Evaluate(y, p);
@@ -273,6 +274,27 @@ TEST(KineticsProblemTest, Root) {
 TEST(RootfindingIVP, KineticsProblem) {
   // the right hand side of the ODE
   auto rhs = std::make_shared<KineticsRHS>();
-  
-  auto rootfinder = std::make_shared<RootfindingIVP>();
+
+  // integrate the ode until we find the root of this function
+  auto root = std::make_shared<RootFunction>();
+
+  // the root finder
+  auto rootfinder = std::make_shared<RootfindingIVP>(rhs, root);
+
+  // the input and output number is unknown
+  EXPECT_EQ(rootfinder->numInputs, -1); // there is an optional input so even though the inputs to rhs and root are known, this is -1
+  EXPECT_EQ(rootfinder->numOutputs, -1); // there is an optional output that depends on the optional input
+
+  // initial condition
+  const Eigen::Vector3d ic(1.0, 1.0, 1.0);
+
+  // rhs parameters
+  const Eigen::Vector2d a(1.0, 2.0);
+  const double b = 1.0;
+
+  // root parameters
+  const Eigen::Vector2d p(5.0, 2.0);
+
+  // evaluate the rootfinder
+  const std::vector<boost::any>& result = rootfinder->Evaluate(ic, a, b, p);
 }
