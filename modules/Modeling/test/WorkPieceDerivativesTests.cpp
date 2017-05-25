@@ -27,6 +27,7 @@ private:
 
     // constant reference to the input vector
     const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[1]);
+    std::cout << "in: " << in.transpose() << std::endl;
 
     // the first output is a string
     outputs[0] = (std::string)"string";
