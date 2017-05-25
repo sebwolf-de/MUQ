@@ -492,11 +492,7 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
   // create a quadratic polynomial
   const auto quad = std::make_shared<Quadratic>(Q, a, b);
 
-  // create a linear polynomial
-  const auto lin = std::make_shared<Linear>(Q, a);
-
   // create polynomial models
-  //std::vector<double> coeff0({1.0, 2.0, 3.0, 4.0, 5.0});
   std::vector<double> coeff0({1.0e-1, 2.0e-2, 3.0e-3, 4.0e-4, 4.0e-5});
   const auto poly0 = std::make_shared<Polynomial>(coeff0);
   std::vector<double> coeff1({4.0e-1, 3.0e-2, 2.0e-3});
@@ -510,13 +506,11 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
 
   // add the models
   graph->AddNode(quad, "model 0");
-  graph->AddNode(lin, "model 1");
   graph->AddNode(poly0, "model 2");
   graph->AddNode(poly1, "model 3");
   graph->AddNode(mod, "model 4");
 
   // connect the models
-  //graph->AddEdge("model 1", 1, "model 0", 0);
   graph->AddEdge("model 0", 0, "model 2", 0);
   graph->AddEdge("model 0", 0, "model 3", 0);
   graph->AddEdge("model 2", 0, "model 4", 0);
@@ -613,7 +607,7 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
     EXPECT_EQ(jacAction0.size(), 4);
     EXPECT_EQ(model_jacAction0.size(), 4);
     for( unsigned int i=0; i<4; ++i ) {
-      EXPECT_DOUBLE_EQ(jacAction0(i), model_jacAction0(i));
+      EXPECT_NEAR(jacAction0(i), model_jacAction0(i), 1.0e-12);
     }
 
     // check second JacobianAction
@@ -623,7 +617,7 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
     const Eigen::VectorXd model_jacAction1 = model_jac1*vec;
 
     EXPECT_EQ(model_jacAction1.size(), 1);
-    EXPECT_DOUBLE_EQ(jacAction1, model_jacAction1(0));
+    EXPECT_NEAR(jacAction1, model_jacAction1(0), 1.0e-12);
   }
 
     { // test JacobianAction
