@@ -325,17 +325,17 @@ void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut
   // constant reference to the input we are computing the derivative wrt
   const Eigen::VectorXd& tempref = boost::any_cast<const Eigen::VectorXd&>(inputs[wrtIn]);
 
-  // get a copy of the inputs (note, we are only copying the references)
-  ref_vector<const boost::any> tempIns = inputs;
-
   // the input we are computing the derivative wrt (the value will change so we need a hard copy)
-  boost::any in = tempIns[wrtIn];
+  boost::any in = inputs[wrtIn];
 
   // a reference to the input that we can change
   Eigen::VectorXd& inref = boost::any_cast<Eigen::VectorXd&>(in);
 
   std::cout << "inref for FD" << std::endl;
   std::cout << inref << std::endl;
+
+  // get a copy of the inputs (note, we are only copying the references)
+  ref_vector<const boost::any> tempIns = inputs;
 
   // compute the base result
   const auto base = Evaluate(tempIns);
@@ -353,6 +353,7 @@ void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut
     const double dx = std::fmax(minTol, relTol*inref(col));
 
     // increment the col's input (change the reference to the boost any)
+    //const double dum = inref(col);
     inref(col) += dx;
 
     // replace the value in the tempIns
@@ -368,7 +369,8 @@ void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut
     jac.col(col) = (outplus-outbase)/dx;
 
     // reset the the col's input
-    inref(col) = tempref(col);
+    inref(col) -= dx;
+    //inref(col) = tempref(col);
   }
 }
 
