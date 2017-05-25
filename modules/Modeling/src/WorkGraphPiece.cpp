@@ -140,7 +140,7 @@ void WorkGraphPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const w
 	  graph->operator[](node)->piece->Jacobian(std::get<2>(in), out, ins);
 	  
 	  // use chain rule to get the jacobian wrt to the required input
-	  const boost::any& tempJac = algebra->MultiplyBase(*(graph->operator[](node)->piece->jacobian), jacMap[std::get<0>(in)][std::get<1>(in)]);
+	  const boost::any tempJac = algebra->MultiplyBase(*(graph->operator[](node)->piece->jacobian), jacMap[std::get<0>(in)][std::get<1>(in)]);
 	  std::string str = tempJac.type().name();
 	  if( str.compare(typeid(Eigen::MatrixXd).name())==0 ) {
 	    std::cout << "in mat: " << std::endl << boost::any_cast<const Eigen::MatrixXd&>(tempJac) << std::endl;
