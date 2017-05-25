@@ -33,3 +33,13 @@ CreateCompileGroup(
     ConstantPiece.cpp
     IdentityPiece.cpp
 )
+
+CreateCompileGroup(
+    SUNDIALS_MODELS
+    "ODE integrators using Sundials"
+    muqModeling
+    ""
+    "EIGEN3;BOOST"
+    ""
+    RootfindingIVP.cpp
+)
