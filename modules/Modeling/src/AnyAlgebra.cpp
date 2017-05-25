@@ -46,8 +46,8 @@ boost::any AnyAlgebra::AddBase(std::reference_wrapper<const boost::any> const& i
 
   // both in/out are Eigen::MatrixXd
   if( eigenMatType.compare(in0.get().type().name())==0 && eigenMatType.compare(in1.get().type().name())==0 ) {
-    const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd&>(in0);
-    const Eigen::MatrixXd& in1Mat = boost::any_cast<const Eigen::MatrixXd&>(in1);
+    const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd>(in0);
+    const Eigen::MatrixXd& in1Mat = boost::any_cast<const Eigen::MatrixXd>(in1);
 
     // make sure the sizes match
     assert(in0Mat.rows()==in1Mat.rows());
@@ -58,8 +58,8 @@ boost::any AnyAlgebra::AddBase(std::reference_wrapper<const boost::any> const& i
 
   // both in/out are Eigen::VectorXd
   if( eigenVecType.compare(in0.get().type().name())==0 && eigenVecType.compare(in1.get().type().name())==0 ) {
-    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd&>(in0);
-    const Eigen::VectorXd& in1Vec = boost::any_cast<const Eigen::VectorXd&>(in1);
+    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in0);
+    const Eigen::VectorXd& in1Vec = boost::any_cast<const Eigen::VectorXd>(in1);
 
     // make sure the sizes match
     assert(in0Vec.size()==in1Vec.size());
@@ -82,8 +82,8 @@ boost::any AnyAlgebra::Add(std::reference_wrapper<const boost::any> const& in0, 
 boost::any AnyAlgebra::MultiplyBase(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const {
   // both in/out are Eigen::MatrixXd
   if( eigenMatType.compare(in0.get().type().name())==0 && eigenMatType.compare(in1.get().type().name())==0 ) {
-    const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd&>(in0);
-    const Eigen::MatrixXd& in1Mat = boost::any_cast<const Eigen::MatrixXd&>(in1);
+    const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd>(in0);
+    const Eigen::MatrixXd& in1Mat = boost::any_cast<const Eigen::MatrixXd>(in1);
 
     // make sure the sizes match
     assert(in0Mat.cols()==in1Mat.rows());
@@ -106,7 +106,7 @@ boost::any AnyAlgebra::MultiplyBase(std::reference_wrapper<const boost::any> con
 
   // Eigen::MatrixXd times double 
   if( eigenMatType.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
-    const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd&>(in1);
+    const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd>(in1);
     const double in1Mat = boost::any_cast<double>(in0);
     
     // make sure the sizes match
