@@ -95,6 +95,8 @@ boost::any AnyAlgebra::MultiplyBase(std::reference_wrapper<const boost::any> con
   if( doubleType.compare(in0.get().type().name())==0 && eigenMatType.compare(in1.get().type().name())==0 ) {
     const double in0Mat = boost::any_cast<double>(in0);
     const Eigen::MatrixXd& in1Mat = boost::any_cast<const Eigen::MatrixXd&>(in1);
+
+    std::cout << "mat: " << std::endl << in1Mat << std::endl << std::endl;
     
     // make sure the sizes match
     assert(in1Mat.rows()==1);
