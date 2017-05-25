@@ -68,7 +68,9 @@ private:
 
   virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override {
     // constant reference to the input vector
-    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[0]);
+    std::reference_wrapper<const boost::any> inany = inputs[0];
+    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inany);
+    // node: for some reason boost::any_cast<const Eigen::VectorXd&>(inputs[1]); doesn't work on all compilers
     std::cout << "in: " << in.transpose() << std::endl;
 
     // compute the Jacobian
