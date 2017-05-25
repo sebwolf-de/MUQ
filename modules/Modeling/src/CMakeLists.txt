@@ -39,7 +39,7 @@ CreateCompileGroup(
     "ODE integrators using Sundials"
     muqModeling
     ""
-    "EIGEN3;BOOST"
+    "EIGEN3;BOOST;SUNDIALS"
     ""
     RootfindingIVP.cpp
 )

@@ -10,4 +10,10 @@ CreateTestGroup(
     IdentityPieceTests.cpp
 )
 
+CreateTestGroup(
+    SUNDIALS_MODELS
+
+    RootfindingIVPTests.cpp
+)
+
 
