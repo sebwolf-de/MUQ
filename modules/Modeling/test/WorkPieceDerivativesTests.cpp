@@ -26,18 +26,8 @@ private:
     const double a = boost::any_cast<double>(inputs[0]);
 
     // constant reference to the input vector
-    //const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[1]);
-    const Eigen::VectorXd in = boost::any_cast<const Eigen::VectorXd>(inputs[1]);
+    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[1]);
 
-    std::cout << "eval " << std::endl;
-    std::cout << "Q: " << std::endl;
-    std::cout << Q << std::endl;
-    std::cout << "a: " << std::endl;
-    std::cout << b << std::endl;
-    std::cout << "in: " << std::endl;
-    std::cout << in << std::endl;
-    std::cout << "~~~~~~~~~~ " << std::endl;
-    
     // the first output is a string
     outputs[0] = (std::string)"string";
 
@@ -170,15 +160,6 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
   const Eigen::VectorXd in = Eigen::VectorXd::Random(N);
   const double scalar = 3.5;
 
-  std::cout << "test " << std::endl;
-  std::cout << "Q: " << std::endl;
-  std::cout << Q << std::endl;
-  std::cout << "a: " << std::endl;
-  std::cout << a << std::endl;
-  std::cout << "in: " << std::endl;
-  std::cout << in << std::endl;
-  std::cout << "~~~~~~~~~~ " << std::endl;
-
   { // test evaluate
     // evaluate 
     auto result = lin->Evaluate(scalar, in);
@@ -197,18 +178,11 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
       EXPECT_DOUBLE_EQ(vec(i), expectedVec(i));
     }
   }
-  std::cout << "FINISHED EVAL" << std::endl;
+
   { // test the jacobian 
     // compute the Jacobian and get a reference to it
     auto jac = lin->Jacobian(1, 1, scalar, in);
     const Eigen::MatrixXd& jacref = boost::any_cast<const Eigen::MatrixXd&>(jac);
-
-    std::cout << "~~~~~~~~~~ " << std::endl;
-    std::cout << "jacref: " << std::endl;
-    std::cout << jacref << std::endl;
-    std::cout << "expected jac: " << std::endl;
-    std::cout << scalar*Q << std::endl;
-    std::cout << "~~~~~~~~~~ " << std::endl;
 
     EXPECT_EQ(jacref.rows(), N);
     EXPECT_EQ(jacref.cols(), N);
@@ -222,7 +196,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
 
   // a vector to apply the jacobian to
   const Eigen::VectorXd apply = Eigen::VectorXd::Random(N);
-  std::cout << "FINISHED JAC" << std::endl;
+
   { // test the action of the jacobian
     // compute the action of the jacobian and get a references to it
     auto jacAction = lin->JacobianAction(1, 1, apply, scalar, in);
@@ -237,7 +211,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
       EXPECT_NEAR(jacActionref(i), expectedJacAction(i), 1.0e-9);
     }
   }
-  std::cout << "FINISHED JAC ACTION" << std::endl;
+
   { // test the action of the jacobian transpose
     // compute the action of the jacobian transpose and get a references to it
     auto jacTransAction = lin->JacobianTransposeAction(1, 1, apply, scalar, in);
@@ -252,7 +226,6 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
       EXPECT_NEAR(jacTransActionref(i), expectedJacTransAction(i), 1.0e-9);
     }
   }
-  std::cout << "FINISHED JAC TRANSPOSE ACTION" << std::endl;
 }
 
 TEST_F(WorkPieceDerivativesTests, QuadraticFunction) {

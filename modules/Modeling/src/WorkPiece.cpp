@@ -322,27 +322,18 @@ void WorkPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut
 }
 
 void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs, double const relTol, double const minTol) {      
-  // constant reference to the input we are computing the derivative wrt
-  //const Eigen::VectorXd& tempref = boost::any_cast<const Eigen::VectorXd&>(inputs[wrtIn]);
-
   // the input we are computing the derivative wrt (the value will change so we need a hard copy)
   boost::any in = inputs[wrtIn];
 
   // a reference to the input that we can change
   Eigen::VectorXd& inref = boost::any_cast<Eigen::VectorXd&>(in);
 
-  std::cout << "inref for FD" << std::endl;
-  std::cout << inref << std::endl;
-
   // get a copy of the inputs (note, we are only copying the references)
   ref_vector<const boost::any> tempIns = inputs;
   tempIns[wrtIn] = in;
 
   // compute the base result
-  //const auto base = Evaluate(tempIns);
-  const auto base = Evaluate(inputs);
-
-  std::cout << "Base eval" << std::endl;
+  const std::vector<boost::any>& base = Evaluate(inputs);
 
   // const reference to the output of interest
   const Eigen::VectorXd& outbase = boost::any_cast<const Eigen::VectorXd&>(base[wrtOut]);
@@ -353,26 +344,14 @@ void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut
 
   // loop thorugh the inputs (columns of the Jacobian)
   for( unsigned int col=0; col<inref.size(); ++col ) {
-    std::cout << "in loop" << std::endl;
     // compute the step length
     const double dx = std::fmax(minTol, relTol*inref(col));
 
-    std::cout << "dx: " << dx << std::endl;
-
     // increment the col's input (change the reference to the boost any)
-    //const double dum = inref(col);
     inref(col) += dx;
 
-    std::cout << "incremented" << std::endl;
-
-    // replace the value in the tempIns
-    //tempIns[wrtIn] = std::cref(in);
-
-    //std::cout << " 
-
     // compute the perturbed result
-    const auto plus = Evaluate(tempIns);
-    //const auto plus = Evaluate(inputs);
+    const std::vector<boost::any>& plus = Evaluate(tempIns);
 
     // const reference to the output of interest
     const Eigen::VectorXd& outplus = boost::any_cast<const Eigen::VectorXd&>(plus[wrtOut]);
@@ -382,7 +361,6 @@ void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut
 
     // reset the the col's input
     inref(col) -= dx;
-    //inref(col) = tempref(col);
   }
 }
 
