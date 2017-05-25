@@ -201,8 +201,8 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
   { // test the jacobian 
     // compute the Jacobian and get a reference to it
     auto jac = lin->Jacobian(1, 1, scalar, in);
-    const Eigen::MatrixXd& jacref = boost::any_cast<const Eigen::MatrixXd&>(jac);
-    
+    const Eigen::MatrixXd jacref = boost::any_cast<const Eigen::MatrixXd>(jac);
+
     EXPECT_EQ(jacref.rows(), N);
     EXPECT_EQ(jacref.cols(), N);
     for( unsigned int i=0; i<N; ++i ) {
