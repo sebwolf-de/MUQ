@@ -70,8 +70,7 @@ private:
     // constant reference to the input vector
     std::reference_wrapper<const boost::any> inany = inputs[0];
     const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inany);
-    // node: for some reason boost::any_cast<const Eigen::VectorXd&>(inputs[1]); doesn't work on all compilers
-    std::cout << "in: " << in.transpose() << std::endl;
+    // node: for some reason boost::any_cast<const Eigen::VectorXd&>(inputs[0]); doesn't work on all compilers
 
     // compute the Jacobian
     jacobian = (Eigen::MatrixXd)(2.0*in.transpose()*Q + a.transpose());
@@ -79,7 +78,9 @@ private:
 
   virtual void JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override {
     // constant reference to the input vector
-    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[0]);
+    std::reference_wrapper<const boost::any> inany = inputs[0];
+    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inany);
+    // node: for some reason boost::any_cast<const Eigen::VectorXd&>(inputs[0]); doesn't work on all compilers
 
     // constant reference to the vector we are applying the Jacobian to 
     const Eigen::VectorXd& appvec = boost::any_cast<const Eigen::VectorXd&>(vec);
@@ -90,10 +91,11 @@ private:
 
   virtual void JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override {
     // constant reference to the input vector
-    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inputs[0]);
+    std::reference_wrapper<const boost::any> inany = inputs[0];
+    const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd&>(inany);
+    // node: for some reason boost::any_cast<const Eigen::VectorXd&>(inputs[0]); doesn't work on all compilers
 
     // constant reference to the vector we are applying the Jacobian to 
-    //const Eigen::VectorXd& appvec = boost::any_cast<const Eigen::VectorXd&>(vec);
     const double appvec = boost::any_cast<const double>(vec);
 
     // compute the Jacobian
