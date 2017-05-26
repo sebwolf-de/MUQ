@@ -1,8 +1,19 @@
 #include "MUQ/Modeling/ODEBase.h"
 
+#include <cvodes/cvodes.h> // prototypes for CVODE fcts. and consts. 
+#include <cvodes/cvodes_spgmr.h> // prototypes & constants for CVSPGMR solver 
+#include <cvodes/cvodes_spbcgs.h> // prototypes & constants for CVSPBCG solver 
+#include <cvodes/cvodes_sptfqmr.h> // prototypes & constants for SPTFQMR solver 
+#include <cvodes/cvodes_dense.h> // prototype for CVDense 
+
+#include <sundials/sundials_dense.h> // definitions DlsMat DENSE_ELEM 
+#include <sundials/sundials_types.h> // definition of type 
+#include <sundials/sundials_math.h>  // contains the macros ABS, SQR, and EXP 
+
+namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 
-ODEBase::ODEBase(std::shared_ptr<WorkPiece> rhs) : WorkPiece(), rhs(rhs) {
+ODEBase::ODEBase(std::shared_ptr<WorkPiece> rhs, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : WorkPiece(), rhs(rhs), algebra(algebra), multiStep(pt.get<std::string>("ODESolver.MultistepMethod", "BDF")), nonlinSolver(pt.get<std::string>("ODESolver.Solver", "Newton")) {
   // we must know the number of inputs for the rhs and it must have at least one (the state)
   assert(rhs->numInputs>0);
 
@@ -60,4 +71,28 @@ bool ODEBase::CheckFlag(void* flagvalue, std::string const& funcname, unsigned i
   
   // return success
   return true;
+}
+
+void ODEBase::InitializeState(N_Vector& state, boost::any const& ic, unsigned int const dim) const {
+  // initialize the state (set the initial conditions)
+  state = N_VNew_Serial(dim);
+  assert(CheckFlag((void*)state, "N_VNew_Serial", 0)); // make sure state was properly initialized
+
+  // set the values to the initial conditions
+  for( unsigned int i=0; i<dim; ++i ) {
+    // NV_Ith_S references the ith component of the vector v
+    NV_Ith_S(state, i) = boost::any_cast<double>(algebra->AccessElementBase(i, ic));
+  }
+}
+
+void ODEBase::CreateSolverMemory(void* cvode_mem) const {
+  // determine the multistep method and the nonlinear solver
+  assert(multiStep.compare("Adams")==0 || multiStep.compare("BDF")==0);
+  const int multMethod = (multiStep.compare("BDF")==0) ? CV_BDF : CV_ADAMS;
+  assert(nonlinSolver.compare("Iter")==0 || nonlinSolver.compare("Newton")==0);
+  const int solveMethod = (nonlinSolver.compare("Newton")==0) ? CV_NEWTON : CV_FUNCTIONAL;
+
+  // create the memory
+  cvode_mem = CVodeCreate(multMethod, solveMethod);
+  assert(CheckFlag((void*)cvode_mem, "CVodeCreate", 0));
 }

@@ -4,6 +4,7 @@
 
 #include "MUQ/Modeling/ODE.h"
 
+namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 
 class RHS : public WorkPiece {
@@ -119,13 +120,41 @@ public:
   /// Default destructor
   virtual ~ODETests() {}
 
+  /// The right hand side
   std::shared_ptr<RHS> rhs;
+
+  /// Options for the ODE integrator
+  pt::ptree pt;
+
+  /// The initial condition
+  const Eigen::Vector2d ic = Eigen::Vector2d(1.0, 0.0);
+
+  /// The spring constant
+  const double k = 0.12;
+
+  /// The output times 
+  const Eigen::VectorXd outTimes0 = Eigen::VectorXd::LinSpaced(10, 0.0, 2.0);
 
 private:
 };
 
 TEST_F(ODETests, DenseSolver) {
+  pt.put<std::string>("ODESolver.MultistepMethod", "BDF");
+  pt.put<std::string>("ODESolver.Solver", "Newton");
+  
   // create the ODE integrator
-  auto ode = std::make_shared<ODE>(rhs);
+  auto ode = std::make_shared<ODE>(rhs, pt);
+
+  // the input/output number are unknown
+  EXPECT_EQ(ode->numInputs, -1); // some of the inputs are the times where we need the state's value
+  EXPECT_EQ(ode->numInputs, -1); // the outputs are the states at the specified times
+
+  // we need the state at these times
+  const Eigen::Vector3d outTimes1(0.0, 0.5, 1.0);
+  const double t0 = 1.0;
+  const double t1 = 2.0;
+
+  // integrate the ODE
+  const std::vector<boost::any>& result = ode->Evaluate(ic, k, outTimes0, outTimes1, t0, t1);
 }
 

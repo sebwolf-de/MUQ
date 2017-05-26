@@ -4,6 +4,7 @@
 
 #include "MUQ/Modeling/RootfindingIVP.h"
 
+namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 
 /// The right hand side for a chemical kenetics ODE (from Sundials example)
@@ -273,8 +274,11 @@ TEST(RootfindingIVP, KineticsProblem) {
   // integrate the ode until we find the root of this function
   auto root = std::make_shared<RootFunction>();
 
+  /// Options for the ODE integrator
+  pt::ptree pt;
+
   // the root finder
-  auto rootfinder = std::make_shared<RootfindingIVP>(rhs, root);
+  auto rootfinder = std::make_shared<RootfindingIVP>(rhs, root, pt);
 
   // the input and output number is unknown
   EXPECT_EQ(rootfinder->numInputs, -1); // there is an optional input so even though the inputs to rhs and root are known, this is -1

@@ -1,10 +1,6 @@
 #ifndef ROOTFINDINGIVP_H_
 #define ROOTFINDINGIVP_H_
 
-// Sundials includes
-#include <nvector/nvector_serial.h>
-
-#include "MUQ/Modeling/AnyAlgebra.h"
 #include "MUQ/Modeling/ODEBase.h"
 
 namespace muq {
@@ -29,9 +25,10 @@ namespace muq {
 	 The third output exists if the user gives muq::Modeling::RootfinderIVP times to save the state (optional final input).  This output is a vector --- std::vector<StateType> --- of states at the specified times.
 	 @param[in] rhs A muq::Modeling::WorkPiece that evaluates the right hand side of the ODE
 	 @param[in] root A muq::Modeling::WorkPiece whose outputs are double's --- we integrate the ODE until we find the first root of one of these outputs
+	 @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
 	 @param[in] algebra A muq::Modeling::AnyAlgebra used to manipulate the state and input parameters (defaults to the MUQ default)
        */
-      RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, std::shared_ptr<AnyAlgebra> algebra = std::make_shared<AnyAlgebra>());
+      RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, boost::property_tree::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra = std::make_shared<AnyAlgebra>());
 
       virtual ~RootfindingIVP();
       
@@ -43,19 +40,11 @@ namespace muq {
       */
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 
-      /// Initialize the state vector to the initial conditions
-      /**
-	 @param[out] state The state vector (to be initialized)
-	 @param[in] ic The initial conditions 
-	 @param[in] dim The dimension of the state
-       */
-      void InitializeState(N_Vector& state, boost::any const& ic, unsigned int const dim) const;
-
       /// Run the CVODES integrator
       /**
 	 @param[in] inputs The inputs (first: state, next group: rhs inputs, next group: root inputs, final: eval times (optional))
        */
-      void CVODES(ref_vector<boost::any> const& inputs) const;
+      void FindRoot(ref_vector<boost::any> const& inputs) const;
 
       /// Update the input and output types based on the rhs and root muq::Modeling::WorkPiece's
       /**
@@ -65,9 +54,6 @@ namespace muq {
 
       /// The root function
       std::shared_ptr<WorkPiece> root;
-
-      /// An algebra to manipulate the state and parameters
-      std::shared_ptr<AnyAlgebra> algebra;
     };
   } // namespace Modeling
 } // namespace muq
