@@ -38,8 +38,10 @@ CreateCompileGroup(
     SUNDIALS_MODELS
     "ODE integrators using Sundials"
     muqModeling
-    ""
+    "MODELING_CORE"
     "EIGEN3;BOOST;SUNDIALS"
     ""
+    ODEBase.cpp
+    ODE.cpp
     RootfindingIVP.cpp
 )

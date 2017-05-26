@@ -6,17 +6,12 @@
 
 using namespace muq::Modeling;
 
-// define the names of constant types
-extern const std::string scalarID = typeid(double).name(); // scalar ID
-extern const std::string vec2ID = typeid(Eigen::Vector2d).name(); // 2D vector ID
-extern const std::string vec3ID = typeid(Eigen::Vector3d).name(); // 3D vector ID
-
 /// The right hand side for a chemical kenetics ODE (from Sundials example)
 class KineticsRHS : public WorkPiece {
 public:
 
   /// Constructor
-  inline KineticsRHS() : WorkPiece(std::vector<std::string>({vec3ID, vec2ID, scalarID}), std::vector<std::string>(1, vec3ID)) {}
+  inline KineticsRHS() : WorkPiece(std::vector<std::string>({typeid(Eigen::Vector3d).name(), typeid(Eigen::Vector2d).name(), typeid(double).name()}), std::vector<std::string>(1, typeid(Eigen::Vector3d).name())) {}
 
   inline virtual ~KineticsRHS() {}
   
@@ -80,7 +75,7 @@ class RootFunction : public WorkPiece {
 public:
 
   /// Constructor
-  inline RootFunction() : WorkPiece(std::vector<std::string>({vec3ID, vec2ID}), std::vector<std::string>(2, scalarID)) {}
+  inline RootFunction() : WorkPiece(std::vector<std::string>({typeid(Eigen::Vector3d).name(), typeid(Eigen::Vector2d).name()}), std::vector<std::string>(2, typeid(double).name())) {}
 
   inline virtual ~RootFunction() {}
   

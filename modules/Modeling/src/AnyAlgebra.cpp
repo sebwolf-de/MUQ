@@ -4,6 +4,111 @@ using namespace muq::Modeling;
 
 AnyAlgebra::AnyAlgebra() {}
 
+unsigned int AnyAlgebra::VectorDimensionBase(boost::any const& vec) const {
+  if( doubleType.compare(vec.type().name())==0 ) { // the type is a double
+    return 1;
+  }
+
+  if( eigenVec2Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector2d
+    // return the size
+    return 2;
+  }
+
+  if( eigenVec3Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector3d
+    // return the size
+    return 3;
+  }
+
+  if( eigenVec4Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector4d
+    // return the size
+    return 4;
+  }
+
+  if( eigenVecType.compare(vec.type().name())==0 ) { // the type is an Eigen::VectorXd
+    // get a constant reference to the Eigen::VectorXd
+    const Eigen::VectorXd& vecref = boost::any_cast<const Eigen::VectorXd&>(vec);
+    
+    // return the size
+    return vecref.size();
+  }
+
+  return VectorDimension(vec);
+}
+
+unsigned int AnyAlgebra::VectorDimension(boost::any const& vec) const {
+  std::cerr << std::endl << "ERROR: No way to compute the dimension of a vector with type " << boost::core::demangle(vec.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::VectorDimension()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::VectorDimension()" << std::endl << std::endl;
+  assert(false);
+  
+  return 0;
+}
+
+boost::any AnyAlgebra::AccessElementBase(unsigned int i, boost::any const& vec) const {
+  if( doubleType.compare(vec.type().name())==0 ) { // the type is a double
+    // check the size
+    assert(i==0);
+
+    // return the value (it is actually a scalar)
+    return vec;
+  }
+
+  if( eigenVec2Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector2d
+    // check the size
+    assert(i<2);
+
+    // get a constant reference to the Eigen::Vector2d
+    const Eigen::Vector2d& vecref = boost::any_cast<const Eigen::Vector2d&>(vec);
+
+    // return ith element
+    return vecref(i);
+  }
+
+  if( eigenVec3Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector3d
+    // check the size
+    assert(i<3);
+
+    // get a constant reference to the Eigen::Vector3d
+    const Eigen::Vector3d& vecref = boost::any_cast<const Eigen::Vector3d&>(vec);
+
+    // return ith element
+    return vecref(i);
+  }
+
+  if( eigenVec4Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector4d
+    // check the size
+    assert(i<4);
+
+    // get a constant reference to the Eigen::Vector4d
+    const Eigen::Vector4d& vecref = boost::any_cast<const Eigen::Vector4d&>(vec);
+
+    // return ith element
+    return vecref(i);
+  }
+
+  if( eigenVecType.compare(vec.type().name())==0 ) { // the type is an Eigen::VectorXd
+    // get a constant reference to the Eigen::VectorXd
+    const Eigen::VectorXd& vecref = boost::any_cast<const Eigen::VectorXd&>(vec);
+
+    // check the size
+    assert(i<vecref.size());
+    
+    // return the ith element
+    return vecref(i);
+  }
+  
+  return AccessElement(i, vec);
+}
+
+boost::any AnyAlgebra::AccessElement(unsigned int i, boost::any const& vec) const {
+  std::cerr << std::endl << "ERROR: No way to access element " << i << " of a vector with type " << boost::core::demangle(vec.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::AccessElement()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::AccessElement()" << std::endl << std::endl;
+  assert(false);
+
+  return boost::none;
+}
+
 boost::any AnyAlgebra::IdentityBase(std::reference_wrapper<const boost::any> const& in) const {
   // Eigen::VectorXd type
   if( eigenVecType.compare(in.get().type().name())==0 ) {

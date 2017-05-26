@@ -1,18 +1,20 @@
 #ifndef ROOTFINDINGIVP_H_
 #define ROOTFINDINGIVP_H_
 
-#include <cvodes/cvodes.h> // prototypes for CVODE fcts. and consts.
+// Sundials includes
+#include <nvector/nvector_serial.h>
 
-#include "MUQ/Modeling/WorkPiece.h"
+#include "MUQ/Modeling/AnyAlgebra.h"
+#include "MUQ/Modeling/ODEBase.h"
 
 namespace muq {
   namespace Modeling {
     /// A rootfinding initial value problem --- find the root of a function along an orbit of an ODE
-    class RootfindingIVP : public WorkPiece {
+    class RootfindingIVP : public ODEBase {
     public:
 
       /**
-	 The first input is the initial state (at \f$t=0\f$).  It is also the first input to the both right hand side and the root muq::Modeling::WorkPiece.  The type must be the same in both sub-models (if it is known). 
+	 The first input is the initial state (at \f$t=0\f$).  It is also the first input to the both right hand side and the root muq::Modeling::WorkPiece.  The type must be the same in both sub-models (if it is known).  This must either be a double (state size is one) or a vector of doubles.
 
 	 The next set of inputs are the inputs to the right hand side muq::Modeling::WorkPiece.  If the right hand side input takes 2 inputs besides the state, these correspond to inputs 2 and 3 of the root finder.   Their types are known if the types are known by the rhs muq::Modeling::WorkPiece.
 
@@ -27,24 +29,45 @@ namespace muq {
 	 The third output exists if the user gives muq::Modeling::RootfinderIVP times to save the state (optional final input).  This output is a vector --- std::vector<StateType> --- of states at the specified times.
 	 @param[in] rhs A muq::Modeling::WorkPiece that evaluates the right hand side of the ODE
 	 @param[in] root A muq::Modeling::WorkPiece whose outputs are double's --- we integrate the ODE until we find the first root of one of these outputs
+	 @param[in] algebra A muq::Modeling::AnyAlgebra used to manipulate the state and input parameters (defaults to the MUQ default)
        */
-      RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root);
+      RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, std::shared_ptr<AnyAlgebra> algebra = std::make_shared<AnyAlgebra>());
 
       virtual ~RootfindingIVP();
       
     private:
 
+      /// Integrate the ODE until we find a root
+      /**
+	 @param[in] inputs The inputs (first: state, next group: rhs inputs, next group: root inputs, final: eval times (optional))
+      */
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 
-      /// Set the input and output types based on the rhs and root muq::Modeling::WorkPiece's
-      void SetInputOutputTypes();
+      /// Initialize the state vector to the initial conditions
+      /**
+	 @param[out] state The state vector (to be initialized)
+	 @param[in] ic The initial conditions 
+	 @param[in] dim The dimension of the state
+       */
+      void InitializeState(N_Vector& state, boost::any const& ic, unsigned int const dim) const;
 
-      /// The right hand side of the ODE
-      std::shared_ptr<WorkPiece> rhs;
+      /// Run the CVODES integrator
+      /**
+	 @param[in] inputs The inputs (first: state, next group: rhs inputs, next group: root inputs, final: eval times (optional))
+       */
+      void CVODES(ref_vector<boost::any> const& inputs) const;
+
+      /// Update the input and output types based on the rhs and root muq::Modeling::WorkPiece's
+      /**
+	 Add the root input types to the inputs and set the second output type.  Note the (optional) third output (the vector of state's at specified times) is std::vector<StateType> but we can't set this.
+       */
+      void UpdateInputOutputTypes();
 
       /// The root function
       std::shared_ptr<WorkPiece> root;
-      
+
+      /// An algebra to manipulate the state and parameters
+      std::shared_ptr<AnyAlgebra> algebra;
     };
   } // namespace Modeling
 } // namespace muq

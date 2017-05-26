@@ -18,6 +18,22 @@ namespace muq {
       /// Default constructor
       AnyAlgebra();
 
+      /// The dimension of a vector
+      /**
+	 @param[in] vec We need the size/dimension of this vector
+	 \return The dimension of the input vector
+       */
+      unsigned int VectorDimensionBase(boost::any const& vec) const;
+
+      /// Access an element of a vector
+      /**
+	 The return type is whatever the elements of the vector are (doubles, ints, ect ...)
+	 @param[in] i We want to access the \f$i^{th}\f$ element of a vector
+	 @param[in] vec The vector whose data we want to access
+	 \return The \f$i^{th}\f$ element of the vector
+       */
+      boost::any AccessElementBase(unsigned int i, boost::any const& vec) const;
+
       /// Compute an identity object for boost::any
       /**
 	 For example, if the underlying type is a double this would return 1.0, if the underlying type is an Eigen::VectorXd this would return Eigen::MatrixXd::Zero(N).
@@ -43,6 +59,23 @@ namespace muq {
       boost::any MultiplyBase(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const;
 
     private:
+
+      /// The dimension of a vector
+      /**
+	 MUQ automatically checks for some common input types.  However, the user may need to overload this function for special types.
+	 @param[in] vec We need the size/dimension of this vector
+	 \return The dimension of the input vector
+       */
+      virtual unsigned int VectorDimension(boost::any const& vec) const;
+
+      /// Access an element of a vector
+      /**
+	 MUQ automatically checks for some common input types.  However, the user may need to overload this function for special types.
+	 @param[in] i We want to access the \f$i^{th}\f$ element of a vector
+	 @param[in] vec The vector whose data we want to access
+	 \return The \f$i^{th}\f$ element of the vector
+       */
+      virtual boost::any AccessElement(unsigned int i, boost::any const& vec) const;
 
       /// Compute an identity object for boost::any
       /**
@@ -70,12 +103,25 @@ namespace muq {
        */
       boost::any Multiply(std::reference_wrapper<const boost::any> const& in, std::reference_wrapper<const boost::any> const& out) const;
 
+      /// The name of a (2 dimensional) Eigen::Vector2d
+      const std::string eigenVec2Type = typeid(Eigen::Vector2d).name();
+
+      /// The name of a (3 dimensional) Eigen::Vector3d
+      const std::string eigenVec3Type = typeid(Eigen::Vector3d).name();
+
+      /// The name of a (4 dimensional) Eigen::Vector4d
+      const std::string eigenVec4Type = typeid(Eigen::Vector4d).name();
+
+      /// The name of a Eigen::VectorXd
       const std::string eigenVecType = typeid(Eigen::VectorXd).name();
 
+      /// The name of a Eigen::MatrixXd
       const std::string eigenMatType = typeid(Eigen::MatrixXd).name();
-      
+
+      /// The name of a double
       const std::string doubleType = typeid(double).name();
 
+      /// The name of a boost::none
       const std::string noneType = typeid(boost::none).name();
     };
   } // namespace Modeling

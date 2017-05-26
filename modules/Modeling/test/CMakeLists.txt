@@ -13,6 +13,7 @@ CreateTestGroup(
 CreateTestGroup(
     SUNDIALS_MODELS
 
+    ODETests.cpp
     RootfindingIVPTests.cpp
 )
 
