@@ -39,4 +39,4 @@ endif()
 ##### REMOVE DUPLICATE INCLUDES   ######
 ########################################
 
-list( REMOVE_DUPLICATES MUQ_LINK_LIBS)
+list( REMOVE_DUPLICATES ${CMAKE_PROJECT_NAME}_LINK_LIBS)

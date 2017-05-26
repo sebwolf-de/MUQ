@@ -13,7 +13,7 @@ foreach(libName ${MUQ_TARGETS})
     if(${strLength} GREATER 0)
     
         ADD_LIBRARY(${libName} ${${libName}_SOURCES})
-        TARGET_LINK_LIBRARIES(${libName} ${MUQ_LINK_LIBS})
+        TARGET_LINK_LIBRARIES(${libName} ${${CMAKE_PROJECT_NAME}_LINK_LIBS})
 
         list(APPEND MUQ_LIBRARIES ${libName})
         install(TARGETS ${libName}

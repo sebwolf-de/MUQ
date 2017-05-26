@@ -1,6 +1,5 @@
-#only build the tests if some of them should be built
+# only build the tests if some of them should be built
 IF(MUQ_USE_GTEST)
-
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DGTEST_USE_OWN_TR1_TUPLE=1")
   
     CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_PTHREAD)
@@ -33,7 +32,7 @@ IF(MUQ_USE_GTEST)
         add_dependencies(RunAllTests ${target})
     endforeach()
 
-    message("MUQ_LINK_LIBS = ${MUQ_LINK_LIBS}")
-    TARGET_LINK_LIBRARIES(RunAllTests ${MUQ_LIBRARIES} ${MUQ_LINK_LIBS} ${GTEST_LIBRARY})
+    message("MUQ_LINK_LIBS = ${${CMAKE_PROJECT_NAME}_LINK_LIBS}")
+    TARGET_LINK_LIBRARIES(RunAllTests ${MUQ_LIBRARIES} /Users/andy/software/install-muq-private/muq_external/lib/libsundials_cvodes.2.dylib ${${CMAKE_PROJECT_NAME}_LINK_LIBS} ${GTEST_LIBRARY})
 
 ENDIF()
