@@ -23,6 +23,9 @@ RootfindingIVP::RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<W
 RootfindingIVP::~RootfindingIVP() {}
 
 void RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs) {
+  // the number of inputs must be at leastthan the number of inputs required by the rhs and the root
+  assert(inputs.size()>=rhs->numInputs+root->numInputs-1);
+
   // create the state vector (have to do a hard copy --- N_Vector is a pointer to the data, the pointer has been declared const, not the data)
   const N_Vector& ic = boost::any_cast<N_Vector>(inputs[0]);
   N_Vector state = N_VNew_Serial(NV_LENGTH_S(ic));

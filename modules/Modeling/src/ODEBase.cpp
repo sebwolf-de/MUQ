@@ -129,6 +129,10 @@ void ODEBase::CreateSolverMemory(void* cvode_mem, N_Vector const& state, std::sh
   flag = CVodeSStolerances(cvode_mem, reltol, abstol);
   assert(CheckFlag(&flag, "CVodeSStolerances", 1));
 
+  // set the maximum time step size
+  flag = CVodeSetMaxStep(cvode_mem, maxStepSize);
+  assert(CheckFlag(&flag, "CVodeSetMaxStep", 1));
+
   // determine which linear solver to use
   switch( slvr ) {
   case LinearSolver::Dense: { // dense linear solver
@@ -161,59 +165,6 @@ void ODEBase::CreateSolverMemory(void* cvode_mem, N_Vector const& state, std::sh
     assert(CheckFlag(&flag, "CVSpilsSetJacTimesVecFn", 1));
   }
   }
-
-  /*
-  // create the memory
-  cvode_mem = CVodeCreate(multMethod, solveMethod);
-  assert(CheckFlag((void*)cvode_mem, "CVodeCreate", 0));
-
-  // set the pointer to user-defined data
-  assert(data);
-  int flag = CVodeSetUserData(cvode_mem, data.get());
-  assert(CheckFlag(&flag, "CVodeSetUserData", 1));
-
-  // set the pointer to user-defined data 
-  flag = CVodeSetErrHandlerFn(cvode_mem, ErrorHandler, data.get());
-  assert(CheckFlag(&flag, "CVodeSetErrHandlerFun", 1));
-  
-  // initialize the solver
-  InitializeSolver(cvode_mem, state);
-
-  // call CVodeSStolerances to specify the relative and absolute tolerances
-  flag = CVodeSStolerances(cvode_mem, reltol, abstol);
-  assert(CheckFlag(&flag, "CVodeSStolerances", 1));
-
-  // set the maximum time step size
-  flag = CVodeSetMaxStep(cvode_mem, maxStepSize);
-  assert(CheckFlag(&flag, "CVodeSetMaxStep", 1));
-
-  if( linSolver.compare("Dense")==0 ) {
-    // Call CVDense to specify the CVDENSE dense linear solver 
-    flag = CVDense(cvode_mem, NV_LENGTH_S(state));
-    assert(CheckFlag(&flag, "CVDense", 1));
-
-    // Set the Jacobian routine to Jac (user-supplied) 
-    flag = CVDlsSetDenseJacFn(cvode_mem, RHSJacobian);
-    assert(CheckFlag(&flag, "CVDlsSetDenseJacFn", 1));
-  } else {
-    if( linSolver.compare("SPGMR")==0 ) {
-      flag = CVSpgmr(cvode_mem, 0, 0);
-      assert(CheckFlag(&flag, "CVSpgmr", 1));
-    } else if( linSolver.compare("SPBCG")==0 ) {
-      flag = CVSpbcg(cvode_mem, 0, 0);
-      assert(CheckFlag(&flag, "CVSpbcg", 1));
-    } else if( linSolver.compare("SPTFQMR")==0 ) {
-      flag = CVSptfqmr(cvode_mem, 0, 0);
-      assert(CheckFlag(&flag, "CVSptfqmr", 1));
-    } else {
-      std::cerr << "\nInvalid CVODES linear solver type.  Options are Dense, SPGMR, SPBCG, or SPTFQMR\n\n";
-      assert(false);
-    }
-
-    // set the Jacobian-times-vector function 
-    flag = CVSpilsSetJacTimesVecFn(cvode_mem, RHSJacobianAction);
-    assert(CheckFlag(&flag, "CVSpilsSetJacTimesVecFn", 1));
-    }*/
 }
 
 int ODEBase::EvaluateRHS(realtype time, N_Vector state, N_Vector statedot, void *user_data) {
