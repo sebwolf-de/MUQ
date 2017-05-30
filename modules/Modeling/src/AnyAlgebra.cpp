@@ -32,6 +32,16 @@ unsigned int AnyAlgebra::VectorDimensionBase(boost::any const& vec) const {
     return vecref.size();
   }
 
+#if MUQ_HAS_SUNDIALS==1
+  if( N_VectorType.compare(vec.type().name())==0 ) { // the type is a N_Vector
+    // get a constant reference to the N_Vector
+    const N_Vector& vecref = boost::any_cast<const N_Vector&>(vec);
+    
+    // return the size
+    return NV_LENGTH_S(vecref);
+  }
+#endif
+
   return VectorDimension(vec);
 }
 
@@ -96,6 +106,19 @@ boost::any AnyAlgebra::AccessElementBase(unsigned int i, boost::any const& vec) 
     // return the ith element
     return vecref(i);
   }
+
+#if MUQ_HAS_SUNDIALS==1
+  if( N_VectorType.compare(vec.type().name())==0 ) { // the type is a N_Vector
+    // get a constant reference to the N_Vector
+    const N_Vector& vecref = boost::any_cast<const N_Vector&>(vec);
+
+    // check the size
+    assert(i<NV_LENGTH_S(vecref));
+
+    // return the ith element
+    return NV_Ith_S(vecref, i);
+  }
+#endif
   
   return AccessElement(i, vec);
 }

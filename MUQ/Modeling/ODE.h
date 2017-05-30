@@ -8,7 +8,7 @@ namespace muq {
     class ODE : public ODEBase {
     public:
       /**
-	 The first input is the initial state (at \f$t=0\f$).  It is also the first input to the right hand side muq::Modeling::WorkPiece.  This must either be a double (state size is one) or a vector of doubles.
+	 The first input is the initial state (at \f$t=0\f$).  It is also the first input to the right hand side muq::Modeling::WorkPiece.  This must a N_Vector type (the vectors that Sundials uses).
 
 	 The next set of inputs are the inputs to the right hand side muq::Modeling::WorkPiece.  If the right hand side input takes 2 inputs besides the state, these correspond to inputs 2 and 3 of the muq::Modeling::ODEBase.   Their types are known if the types are known by the rhs muq::Modeling::WorkPiece.
 
@@ -25,7 +25,7 @@ namespace muq {
 
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 
-      void Integrate(ref_vector<boost::any> const& inputs) const;
+      void Integrate(ref_vector<boost::any> const& inputs);
 
       /// Compute the next time to integrate to
       /**

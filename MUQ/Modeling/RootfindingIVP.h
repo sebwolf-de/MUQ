@@ -10,7 +10,7 @@ namespace muq {
     public:
 
       /**
-	 The first input is the initial state (at \f$t=0\f$).  It is also the first input to the both right hand side and the root muq::Modeling::WorkPiece.  The type must be the same in both sub-models (if it is known).  This must either be a double (state size is one) or a vector of doubles.
+	 The first input is the initial state (at \f$t=0\f$).  It is also the first input to the both right hand side and the root muq::Modeling::WorkPiece.  The type must be the same in both sub-models (if it is known).  This must a N_Vector type (the vectors that Sundials uses).
 
 	 The next set of inputs are the inputs to the right hand side muq::Modeling::WorkPiece.  If the right hand side input takes 2 inputs besides the state, these correspond to inputs 2 and 3 of the root finder.   Their types are known if the types are known by the rhs muq::Modeling::WorkPiece.
 
@@ -44,13 +44,15 @@ namespace muq {
       /**
 	 @param[in] inputs The inputs (first: state, next group: rhs inputs, next group: root inputs, final: eval times (optional))
        */
-      void FindRoot(ref_vector<boost::any> const& inputs) const;
+      void FindRoot(ref_vector<boost::any> const& inputs);
 
       /// Update the input and output types based on the rhs and root muq::Modeling::WorkPiece's
       /**
 	 Add the root input types to the inputs and set the second output type.  Note the (optional) third output (the vector of state's at specified times) is std::vector<StateType> but we can't set this.
        */
       void UpdateInputOutputTypes();
+
+      static int EvaluateRoot(realtype t, N_Vector state, realtype *root, void *user_data);
 
       /// The root function
       std::shared_ptr<WorkPiece> root;

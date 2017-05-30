@@ -1,3 +1,7 @@
-#ifndef HAVE_GTEST
-#define HAVE_GTEST @HAVE_GTEST@
+#ifndef MUQ_HAS_GTEST
+#define MUQ_HAS_GTEST @MUQ_HAS_GTEST@
+#endif
+
+#ifndef MUQ_HAS_SUNDIALS
+#define MUQ_HAS_SUNDIALS @MUQ_HAS_SUNDIALS@
 #endif

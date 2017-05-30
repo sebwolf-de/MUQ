@@ -9,6 +9,14 @@
 
 #include <Eigen/Core>
 
+#include "MUQ/config.h"
+
+#if MUQ_HAS_SUNDIALS==1
+// Sundials includes
+#include <nvector/nvector_serial.h>
+#include <sundials/sundials_dense.h> // definitions DlsMat DENSE_ELEM
+#endif
+
 namespace muq {
   namespace Modeling {
     /// Implement a generic way to do algebric operations on boost::any's
@@ -123,6 +131,11 @@ namespace muq {
 
       /// The name of a boost::none
       const std::string noneType = typeid(boost::none).name();
+
+#if MUQ_HAS_SUNDIALS==1
+      /// The name of a N_Vector
+      const std::string N_VectorType = typeid(N_Vector).name();
+#endif
     };
   } // namespace Modeling
 } // namespace muq

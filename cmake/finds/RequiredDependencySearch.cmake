@@ -4,6 +4,8 @@ macro (GetDependency name)
         list (FIND MUQ_REQUIRES ${name} dindex)
         if (${dindex} GREATER -1)
 	    set(MUQ_NEEDS_${name} ON)
+
+            set(MUQ_HAS_${name} 1)
 	
 	    find_package(${name})
 	    if(${name}_FOUND)
@@ -33,7 +35,8 @@ macro (GetDependency name)
 	    LIST(APPEND ${CMAKE_PROJECT_NAME}_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
 
         else()
-            set(MUQ_NEEDS_${name} OFF)   
+            set(MUQ_NEEDS_${name} OFF)
+	    set(MUQ_HAS_${name} 1)
         endif()
 	
 endmacro(GetDependency)
