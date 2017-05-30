@@ -193,8 +193,8 @@ public:
 
     // set the intial conditions
     ic = N_VNew_Serial(2);
-    NV_Ith_S(ic, 0) = 1.0;
-    NV_Ith_S(ic, 1) = 0.0;
+    NV_Ith_S(ic, 0) = ic0;
+    NV_Ith_S(ic, 1) = ic1;
 
     // solver options
     pt.put<double>("ODESolver.RelativeTolerance", 1.0e-8);
@@ -216,8 +216,46 @@ public:
     // check the result for the first vector of times
     const std::vector<N_Vector>& times0_state = boost::any_cast<const std::vector<N_Vector>&>(result[0]);
     EXPECT_EQ(times0_state.size(), outTimes0.size());
+
+    // forward sensitivity
+    const boost::any& jac0 = ode->Jacobian(0, 0, ic, k, outTimes0);
+    const std::vector<DlsMat>& jac0ref = boost::any_cast<const std::vector<DlsMat>&>(jac0);
+    EXPECT_EQ(jac0ref.size(), outTimes0.size());
+    
+    const boost::any& jac1 = ode->Jacobian(1, 0, ic, k, outTimes0);
+    const std::vector<DlsMat>& jac1ref = boost::any_cast<const std::vector<DlsMat>&>(jac1);
+    EXPECT_EQ(jac1ref.size(), outTimes0.size());
+
+    const boost::any& jac2 = ode->Jacobian(2, 0, ic, k, outTimes0);
+    const std::vector<DlsMat>& jac2ref = boost::any_cast<const std::vector<DlsMat>&>(jac2);
+    EXPECT_EQ(jac2ref.size(), outTimes0.size());
+
     for( unsigned int i=0; i<outTimes0.size(); ++i ) {
-      EXPECT_NEAR(NV_Ith_S(times0_state[i], 0), cos(sqrt(k)*outTimes0(i)), 1.0e-6);
+      const double time = outTimes0(i);
+
+      // check evaluate values
+      EXPECT_NEAR(NV_Ith_S(times0_state[i], 0), ic0*std::cos(std::sqrt(k)*time)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
+      EXPECT_NEAR(NV_Ith_S(times0_state[i], 1), -std::sqrt(k)*ic0*std::sin(std::sqrt(k)*time)+ic1*std::cos(std::sqrt(k)*time), 1.0e-6);
+
+      // check jacobian wrt initial conditions
+      EXPECT_EQ(jac0ref[i]->M, 2); // rows
+      EXPECT_EQ(jac0ref[i]->N, 2); // cols
+      EXPECT_NEAR(DENSE_ELEM(jac0ref[i], 0, 0), std::cos(std::sqrt(k)*time), 1.0e-6);
+      EXPECT_NEAR(DENSE_ELEM(jac0ref[i], 0, 1), std::sin(std::sqrt(k)*time)/std::sqrt(k), 1.0e-6);
+      EXPECT_NEAR(DENSE_ELEM(jac0ref[i], 1, 0), -std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
+      EXPECT_NEAR(DENSE_ELEM(jac0ref[i], 1, 1), std::cos(std::sqrt(k)*time), 1.0e-6);
+
+      // check jacobian wrt spring constant
+      EXPECT_EQ(jac1ref[i]->M, 2); // rows
+      EXPECT_EQ(jac1ref[i]->N, 1); // cols
+      EXPECT_NEAR(DENSE_ELEM(jac1ref[i], 0, 0), 0.5*(-ic0/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)+ic1/k*time*std::cos(std::sqrt(k)*time)-ic1/std::pow(k, 1.5)*std::sin(std::sqrt(k)*time)), 1.0e-6);
+      EXPECT_NEAR(DENSE_ELEM(jac1ref[i], 1, 0), 0.5*(-ic0*time*std::cos(std::sqrt(k)*time)-ic0/std::sqrt(k)*std::sin(std::sqrt(k)*time)-ic1/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)), 1.0e-6);
+
+      // check jacobian wrt output times --- which should just return the right hand side (derivative of state wrt time)
+      EXPECT_EQ(jac2ref[i]->M, 2); // rows
+      EXPECT_EQ(jac2ref[i]->N, 1); // cols
+      EXPECT_DOUBLE_EQ(DENSE_ELEM(jac2ref[i], 0, 0), NV_Ith_S(times0_state[i], 1));
+      EXPECT_DOUBLE_EQ(DENSE_ELEM(jac2ref[i], 1, 0), -k*NV_Ith_S(times0_state[i], 0));
     }
   }
 
@@ -232,6 +270,12 @@ public:
 
   /// The initial condition
   N_Vector ic;
+
+  /// Initial condition for y0
+  const double ic0 = 2.0;
+
+  /// Initial condition for y1
+  const double ic1 = 0.5;
 
   /// The spring constant
   const double k = 0.12;
@@ -258,27 +302,127 @@ TEST_F(ODETests, BDFNewtonMethod) {
   // integrate the ODE
   const std::vector<boost::any>& result = ode->Evaluate(ic, k, outTimes0, outTimes1, t0, t1);
 
+  // compute jacobians of the first output
+  const boost::any& jac00 = ode->Jacobian(0, 0, ic, k, outTimes0, outTimes1, t0, t1);
+  const std::vector<DlsMat>& jac00ref = boost::any_cast<const std::vector<DlsMat>&>(jac00);
+  EXPECT_EQ(jac00ref.size(), outTimes0.size());
+  const boost::any& jac10 = ode->Jacobian(1, 0, ic, k, outTimes0, outTimes1, t0, t1);
+  const std::vector<DlsMat>& jac10ref = boost::any_cast<const std::vector<DlsMat>&>(jac10);
+  EXPECT_EQ(jac10ref.size(), outTimes0.size());
+
   // check the result for the first vector of times
   const std::vector<N_Vector>& times0_state = boost::any_cast<const std::vector<N_Vector>&>(result[0]);
   EXPECT_EQ(times0_state.size(), outTimes0.size());
   for( unsigned int i=0; i<outTimes0.size(); ++i ) {
-    EXPECT_NEAR(NV_Ith_S(times0_state[i], 0), cos(sqrt(k)*outTimes0(i)), 1.0e-6);
+    const double time = outTimes0(i);
+
+    // check evaluate values
+    EXPECT_NEAR(NV_Ith_S(times0_state[i], 0), ic0*std::cos(std::sqrt(k)*time)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
+    EXPECT_NEAR(NV_Ith_S(times0_state[i], 1), -std::sqrt(k)*ic0*std::sin(std::sqrt(k)*time)+ic1*std::cos(std::sqrt(k)*time), 1.0e-6);
+
+    // check jacobian wrt initial conditions
+    EXPECT_EQ(jac00ref[i]->M, 2); // rows
+    EXPECT_EQ(jac00ref[i]->N, 2); // cols
+    EXPECT_NEAR(DENSE_ELEM(jac00ref[i], 0, 0), std::cos(std::sqrt(k)*time), 1.0e-6);
+    EXPECT_NEAR(DENSE_ELEM(jac00ref[i], 0, 1), std::sin(std::sqrt(k)*time)/std::sqrt(k), 1.0e-6);
+    EXPECT_NEAR(DENSE_ELEM(jac00ref[i], 1, 0), -std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
+    EXPECT_NEAR(DENSE_ELEM(jac00ref[i], 1, 1), std::cos(std::sqrt(k)*time), 1.0e-6);
+    
+    // check jacobian wrt spring constant
+    EXPECT_EQ(jac10ref[i]->M, 2); // rows
+    EXPECT_EQ(jac10ref[i]->N, 1); // cols
+    EXPECT_NEAR(DENSE_ELEM(jac10ref[i], 0, 0), 0.5*(-ic0/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)+ic1/k*time*std::cos(std::sqrt(k)*time)-ic1/std::pow(k, 1.5)*std::sin(std::sqrt(k)*time)), 1.0e-6);
+    EXPECT_NEAR(DENSE_ELEM(jac10ref[i], 1, 0), 0.5*(-ic0*time*std::cos(std::sqrt(k)*time)-ic0/std::sqrt(k)*std::sin(std::sqrt(k)*time)-ic1/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)), 1.0e-6);
   }
+
+  // compute jacobians of the second output
+  const boost::any& jac01 = ode->Jacobian(0, 1, ic, k, outTimes0, outTimes1, t0, t1);
+  const std::vector<DlsMat>& jac01ref = boost::any_cast<const std::vector<DlsMat>&>(jac01);
+  EXPECT_EQ(jac01ref.size(), outTimes1.size());
+  const boost::any& jac11 = ode->Jacobian(1, 1, ic, k, outTimes0, outTimes1, t0, t1);
+  const std::vector<DlsMat>& jac11ref = boost::any_cast<const std::vector<DlsMat>&>(jac11);
+  EXPECT_EQ(jac11ref.size(), outTimes1.size());
 
   // check the result for the second vector of times
   const std::vector<N_Vector>& times1_state = boost::any_cast<const std::vector<N_Vector>&>(result[1]);
   EXPECT_EQ(times1_state.size(), outTimes1.size());
   for( unsigned int i=0; i<outTimes1.size(); ++i ) {
-    EXPECT_NEAR(NV_Ith_S(times1_state[i], 0), cos(sqrt(k)*outTimes1(i)), 1.0e-6);
-  }
+    const double time = outTimes1(i);
+    
+    EXPECT_NEAR(NV_Ith_S(times1_state[i], 0), ic0*std::cos(std::sqrt(k)*time)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
+    EXPECT_NEAR(NV_Ith_S(times1_state[i], 1), -std::sqrt(k)*ic0*std::sin(std::sqrt(k)*time)+ic1*std::cos(std::sqrt(k)*time), 1.0e-6);
 
+    // check jacobian wrt initial conditions
+    EXPECT_EQ(jac01ref[i]->M, 2); // rows
+    EXPECT_EQ(jac01ref[i]->N, 2); // cols
+    EXPECT_NEAR(DENSE_ELEM(jac01ref[i], 0, 0), std::cos(std::sqrt(k)*time), 1.0e-6);
+    EXPECT_NEAR(DENSE_ELEM(jac01ref[i], 0, 1), std::sin(std::sqrt(k)*time)/std::sqrt(k), 1.0e-6);
+    EXPECT_NEAR(DENSE_ELEM(jac01ref[i], 1, 0), -std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
+    EXPECT_NEAR(DENSE_ELEM(jac01ref[i], 1, 1), std::cos(std::sqrt(k)*time), 1.0e-6);
+    
+    // check jacobian wrt spring constant
+    EXPECT_EQ(jac11ref[i]->M, 2); // rows
+    EXPECT_EQ(jac11ref[i]->N, 1); // cols
+    EXPECT_NEAR(DENSE_ELEM(jac11ref[i], 0, 0), 0.5*(-ic0/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)+ic1/k*time*std::cos(std::sqrt(k)*time)-ic1/std::pow(k, 1.5)*std::sin(std::sqrt(k)*time)), 1.0e-6);
+    EXPECT_NEAR(DENSE_ELEM(jac11ref[i], 1, 0), 0.5*(-ic0*time*std::cos(std::sqrt(k)*time)-ic0/std::sqrt(k)*std::sin(std::sqrt(k)*time)-ic1/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)), 1.0e-6);
+  }
+  
   // check the result for the first scalar output
   const N_Vector& t0_state = boost::any_cast<const N_Vector&>(result[2]);
-  EXPECT_NEAR(NV_Ith_S(t0_state, 0), cos(sqrt(k)*t0), 1.0e-6);
+  EXPECT_NEAR(NV_Ith_S(t0_state, 0), ic0*std::cos(std::sqrt(k)*t0)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*t0), 1.0e-6);
+  EXPECT_NEAR(NV_Ith_S(t0_state, 1), -std::sqrt(k)*ic0*std::sin(std::sqrt(k)*t0)+ic1*std::cos(std::sqrt(k)*t0), 1.0e-6);
+
+  // compute jacobians of the first scalar output
+  const boost::any& jac02 = ode->Jacobian(0, 2, ic, k, outTimes0, outTimes1, t0, t1);
+  const DlsMat& jac02ref = boost::any_cast<const DlsMat&>(jac02);
+
+  EXPECT_EQ(jac02ref->M, 2); // rows
+  EXPECT_EQ(jac02ref->N, 2); // cols
+  EXPECT_NEAR(DENSE_ELEM(jac02ref, 0, 0), std::cos(std::sqrt(k)*t0), 1.0e-6);
+  EXPECT_NEAR(DENSE_ELEM(jac02ref, 0, 1), std::sin(std::sqrt(k)*t0)/std::sqrt(k), 1.0e-6);
+  EXPECT_NEAR(DENSE_ELEM(jac02ref, 1, 0), -std::sqrt(k)*std::sin(std::sqrt(k)*t0), 1.0e-6);
+  EXPECT_NEAR(DENSE_ELEM(jac02ref, 1, 1), std::cos(std::sqrt(k)*t0), 1.0e-6);
+
+  const boost::any& jac12 = ode->Jacobian(1, 2, ic, k, outTimes0, outTimes1, t0, t1);
+  const DlsMat& jac12ref = boost::any_cast<const DlsMat&>(jac12);
+
+  EXPECT_EQ(jac12ref->M, 2); // rows
+  EXPECT_EQ(jac12ref->N, 1); // cols
+  EXPECT_NEAR(DENSE_ELEM(jac12ref, 0, 0), 0.5*(-ic0/std::sqrt(k)*t0*std::sin(std::sqrt(k)*t0)+ic1/k*t0*std::cos(std::sqrt(k)*t0)-ic1/std::pow(k, 1.5)*std::sin(std::sqrt(k)*t0)), 1.0e-6);
+  EXPECT_NEAR(DENSE_ELEM(jac12ref, 1, 0), 0.5*(-ic0*t0*std::cos(std::sqrt(k)*t0)-ic0/std::sqrt(k)*std::sin(std::sqrt(k)*t0)-ic1/std::sqrt(k)*t0*std::sin(std::sqrt(k)*t0)), 1.0e-6);
 
   // check the result for the second scalar output
   const N_Vector& t1_state = boost::any_cast<const N_Vector&>(result[3]);
-  EXPECT_NEAR(NV_Ith_S(t1_state, 0), cos(sqrt(k)*t1), 1.0e-6);
+  EXPECT_NEAR(NV_Ith_S(t1_state, 0), ic0*std::cos(std::sqrt(k)*t1)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*t1), 1.0e-6);
+  EXPECT_NEAR(NV_Ith_S(t1_state, 1), -std::sqrt(k)*ic0*std::sin(std::sqrt(k)*t1)+ic1*std::cos(std::sqrt(k)*t1), 1.0e-6);
+
+  // compute jacobians of the second scalar output
+  const boost::any& jac03 = ode->Jacobian(0, 3, ic, k, outTimes0, outTimes1, t0, t1);
+  const DlsMat& jac03ref = boost::any_cast<const DlsMat&>(jac03);
+
+  EXPECT_EQ(jac03ref->M, 2); // rows
+  EXPECT_EQ(jac03ref->N, 2); // cols
+  EXPECT_NEAR(DENSE_ELEM(jac03ref, 0, 0), std::cos(std::sqrt(k)*t1), 1.0e-6);
+  EXPECT_NEAR(DENSE_ELEM(jac03ref, 0, 1), std::sin(std::sqrt(k)*t1)/std::sqrt(k), 1.0e-6);
+  EXPECT_NEAR(DENSE_ELEM(jac03ref, 1, 0), -std::sqrt(k)*std::sin(std::sqrt(k)*t1), 1.0e-6);
+  EXPECT_NEAR(DENSE_ELEM(jac03ref, 1, 1), std::cos(std::sqrt(k)*t1), 1.0e-6);
+
+  const boost::any& jac13 = ode->Jacobian(1, 3, ic, k, outTimes0, outTimes1, t0, t1);
+  const DlsMat& jac13ref = boost::any_cast<const DlsMat&>(jac13);
+
+  EXPECT_EQ(jac13ref->M, 2); // rows
+  EXPECT_EQ(jac13ref->N, 1); // cols
+  EXPECT_NEAR(DENSE_ELEM(jac13ref, 0, 0), 0.5*(-ic0/std::sqrt(k)*t1*std::sin(std::sqrt(k)*t1)+ic1/k*t1*std::cos(std::sqrt(k)*t1)-ic1/std::pow(k, 1.5)*std::sin(std::sqrt(k)*t1)), 1.0e-6);
+  EXPECT_NEAR(DENSE_ELEM(jac13ref, 1, 0), 0.5*(-ic0*t1*std::cos(std::sqrt(k)*t1)-ic0/std::sqrt(k)*std::sin(std::sqrt(k)*t1)-ic1/std::sqrt(k)*t1*std::sin(std::sqrt(k)*t1)), 1.0e-6);
+
+  // check jacobian wrt output times (scalar case) --- which should just return the right hand side (derivative of state wrt time)
+  const boost::any& jac23 = ode->Jacobian(2, 3, ic, k, outTimes0, outTimes1, t0, t1);
+  const DlsMat& jac23ref = boost::any_cast<const DlsMat&>(jac23);
+
+  EXPECT_EQ(jac23ref->M, 2); // rows
+  EXPECT_EQ(jac23ref->N, 1); // cols
+  EXPECT_NEAR(DENSE_ELEM(jac23ref, 0, 0), NV_Ith_S(t1_state, 1), 1.0e-6);
+  EXPECT_NEAR(DENSE_ELEM(jac23ref, 1, 0), -k*NV_Ith_S(t1_state, 0), 1.0e-6);
 }
 
 TEST_F(ODETests, BDFIterMethod) {

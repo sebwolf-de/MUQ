@@ -9,6 +9,7 @@
 #include <sundials/sundials_dense.h> /* use generic DENSE solver in preconditioning */
 #include <sundials/sundials_types.h> // definition of type 
 #include <sundials/sundials_math.h>  // contains the macros ABS, SQR, and EXP 
+#include <sundials/sundials_direct.h>
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
@@ -17,19 +18,16 @@ ODE::ODE(std::shared_ptr<WorkPiece> rhs, pt::ptree const& pt, std::shared_ptr<An
 
 ODE::~ODE() {}
 
-void ODE::Integrate(ref_vector<boost::any> const& inputs) {
+void ODE::Integrate(ref_vector<boost::any> const& inputs, int const wrtIn, int const wrtOut) {
   // the number of inputs must be greater than the number of inputs required by the rhs
   assert(inputs.size()>rhs->numInputs);
 
   // create the state vector (have to do a hard copy --- N_Vector is a pointer to the data, the pointer has been declared const, not the data)
-  const N_Vector& ic = boost::any_cast<N_Vector>(inputs[0]);
-  N_Vector state = N_VNew_Serial(NV_LENGTH_S(ic));
-  for( unsigned int i=0; i<NV_LENGTH_S(ic); ++i ) {
-    NV_Ith_S(state, i) = NV_Ith_S(ic, i);
-  }
+  N_Vector state;
+  DeepCopy(state, boost::any_cast<const N_Vector&>(inputs[0]));
 
   // create a data structure to pass around in Sundials
-  auto data = std::make_shared<ODEData>(rhs, inputs);
+  auto data = std::make_shared<ODEData>(rhs, inputs, wrtIn, wrtOut);
 
   // set solver to null
   void* cvode_mem = nullptr;
@@ -41,63 +39,171 @@ void ODE::Integrate(ref_vector<boost::any> const& inputs) {
   // initialize the solver
   CreateSolverMemory(cvode_mem, state, data);
   
-  // each element corresponds to a vector of desired times, first: the current index of that vector, second: the size of that vector
-  std::vector<std::pair<unsigned int, unsigned int> > timeIndices(inputs.size()-rhs->numInputs);
-  const boost::any none = boost::none;
-  outputs.resize(timeIndices.size(), none);
-  for( unsigned int i=0; i<timeIndices.size(); ++i ) { // loop through the desired outputs
-    timeIndices[i].first = 0; // start at the first index
-    timeIndices[i].second = algebra->VectorDimensionBase(inputs[rhs->numInputs+i]); // the size of the vector
-
-    if( timeIndices[i].second>1 ) {
-      outputs[i] = std::vector<N_Vector>();
-      std::vector<N_Vector>& outref = boost::any_cast<std::vector<N_Vector>&>(outputs[i]);
-      outref.reserve(timeIndices[i].second);
+  if( wrtIn>=0 && wrtOut>=0 ) { // we are computing the forward sensitivity
+    unsigned int paramSize = 0;
+    if( wrtIn<rhs->numInputs ) {
+      paramSize = algebra->VectorDimensionBase(inputs[wrtIn]);
     }
+      
+    ForwardSensitivity(cvode_mem, state, paramSize, wrtIn, inputs[rhs->numInputs+wrtOut], ref_vector<boost::any>(inputs.begin(), inputs.begin()+rhs->numInputs));
+
+    return;
   }
+
+  // integrate forward in time
+  ForwardIntegration(cvode_mem, state, ref_vector<boost::any>(inputs.begin()+rhs->numInputs, inputs.end()));
+}
+
+void ODE::ForwardIntegration(void *cvode_mem, N_Vector& state, ref_vector<boost::any> const& outputTimes) {
+  // each element corresponds to a vector of desired times, first: the current index of that vector, second: the size of that vector
+  std::vector<std::pair<unsigned int, unsigned int> > timeIndices = TimeIndices(outputTimes);
 
   // first: the next time to integrate to, second: the output index
   std::pair<double, int> nextTime;
 
   double tcurrent = 0.0;
-  while( NextTime(nextTime, timeIndices, ref_vector<boost::any>(inputs.begin()+rhs->numInputs, inputs.end())) ) {
-    if( fabs(nextTime.first-tcurrent)>1.0e-14 ) { // we have to move forward in time
+  while( NextTime(nextTime, timeIndices, outputTimes) ) {
+    if( std::fabs(nextTime.first-tcurrent)>1.0e-14 ) { // we have to move forward in time
       int flag = CVode(cvode_mem, nextTime.first, state, &tcurrent, CV_NORMAL);
       assert(CheckFlag(&flag, "CVode", 1));
-
-      if( timeIndices[nextTime.second].second>1 ) {
-	std::vector<N_Vector>& outref = boost::any_cast<std::vector<N_Vector>&>(outputs[nextTime.second]);
-
-	outref.push_back(N_VNew_Serial(NV_LENGTH_S(state)));
-	for( unsigned int i=0; i<NV_LENGTH_S(state); ++i ) {
-	  NV_Ith_S(outref[outref.size()-1], i) = NV_Ith_S(state, i);
-	}
-      } else {
-	outputs[nextTime.second] = N_VNew_Serial(NV_LENGTH_S(state));
-	N_Vector& outref = boost::any_cast<N_Vector&>(outputs[nextTime.second]);
-
-	for( unsigned int i=0; i<NV_LENGTH_S(state); ++i ) {
-	  NV_Ith_S(outref, i) = NV_Ith_S(state, i);
-	}
-      }
+    }
+    
+    if( timeIndices[nextTime.second].second>1 ) {
+      DeepCopy(boost::any_cast<std::vector<N_Vector>&>(outputs[nextTime.second]) [timeIndices[nextTime.second].first-1], state);
     } else {
-      if( timeIndices[nextTime.second].second>1 ) {
-	std::vector<N_Vector>& outref = boost::any_cast<std::vector<N_Vector>&>(outputs[nextTime.second]);
-
-	outref.push_back(N_VNew_Serial(NV_LENGTH_S(state)));
-	for( unsigned int i=0; i<NV_LENGTH_S(state); ++i ) {
-	  NV_Ith_S(outref[outref.size()-1], i) = NV_Ith_S(state, i);
-	}
-      } else {
-	outputs[nextTime.second] = N_VNew_Serial(NV_LENGTH_S(state));
-	N_Vector& outref = boost::any_cast<N_Vector&>(outputs[nextTime.second]);
-
-	for( unsigned int i=0; i<NV_LENGTH_S(state); ++i ) {
-	  NV_Ith_S(outref, i) = NV_Ith_S(state, i);
-	}
-      }
+      DeepCopy(boost::any_cast<N_Vector&>(outputs[nextTime.second]), state);
     }
   }
+}
+
+void ODE::ForwardSensitivity(void *cvode_mem, N_Vector& state, unsigned int const paramSize, unsigned int const wrtIn, boost::any const& outputTimes, ref_vector<boost::any> const& rhsInputs) {
+  // sensState will hold several N_Vectors (because it's a Jacobian)
+  N_Vector *sensState = nullptr;
+
+  if( wrtIn<rhs->numInputs ) {
+    // set up sensitivity vector
+    sensState = N_VCloneVectorArray_Serial(paramSize, state);
+    assert(CheckFlag((void *)sensState, "N_VCloneVectorArray_Serial", 0));
+    
+    // initialize the sensitivies to zero
+    for( int is=0; is<paramSize; ++is ) {
+      N_VConst(0.0, sensState[is]);
+    }
+    
+    // set up solver for sensitivity
+    SetUpSensitivity(cvode_mem, paramSize, sensState);
+  }
+  
+  // number of output times
+  const unsigned int ntimes = algebra->VectorDimensionBase(outputTimes);
+
+  // initialize the jacobian
+  if( ntimes==1 ) {
+    jacobian = NewDenseMat(NV_LENGTH_S(state), paramSize);
+  } else {
+    jacobian = std::vector<DlsMat>(ntimes);
+  }
+
+  double tcurrent = 0.0;
+  for( unsigned int i=0; i<ntimes; ++i ) {
+    // the next time 
+    const double time = boost::any_cast<double>(algebra->AccessElementBase(i, outputTimes));
+    
+    if( std::fabs(time-tcurrent)>1.0e-14 ) {
+      // integrate until we hit the next time
+      int flag = CVode(cvode_mem, time, state, &tcurrent, CV_NORMAL);
+      assert(CheckFlag(&flag, "CVode", 1));
+
+      if( wrtIn<rhs->numInputs ) {
+	// get the sensitivities
+	flag = CVodeGetSens(cvode_mem, &tcurrent, sensState);
+	assert(CheckFlag(&flag, "CVodeGetSense", 1));
+      }
+    }
+    
+    // save the jacobian at this time
+    if( ntimes==1 ) {
+      SaveJacobian(boost::any_cast<DlsMat&>(*jacobian), NV_LENGTH_S(state), paramSize, wrtIn, sensState, state, rhsInputs);
+    } else {
+      SaveJacobian(boost::any_cast<std::vector<DlsMat>&>(*jacobian) [i], NV_LENGTH_S(state), paramSize, wrtIn, sensState, state, rhsInputs);
+    }
+  }
+}
+
+void ODE::SetUpSensitivity(void *cvode_mem, unsigned int const paramSize, N_Vector *sensState) const {
+  // initialze the forward sensitivity solver
+  int flag = CVodeSensInit(cvode_mem, paramSize, CV_SIMULTANEOUS, ForwardSensitivityRHS, sensState);
+  assert(CheckFlag(&flag, "CVodeSensInit1", 1));
+
+  // set sensitivity tolerances
+  Eigen::VectorXd absTolVec = abstol * Eigen::VectorXd::Ones(paramSize);
+  flag = CVodeSensSStolerances(cvode_mem, reltol, absTolVec.data());
+  assert(CheckFlag(&flag, "CVodeSensSStolerances", 1));
+
+  // error control strategy should test the sensitivity variables
+  flag = CVodeSetSensErrCon(cvode_mem, true);
+  assert(CheckFlag(&flag, "CVodeSetSensErrCon", 1));
+}
+
+void ODE::SaveJacobian(DlsMat& jac, unsigned int const nrows, unsigned int const ncols, unsigned int const wrtIn, N_Vector *sensState, N_Vector const& state, ref_vector<boost::any> rhsInputs) const {
+  if( wrtIn>=rhs->numInputs ) {
+    // set the state input
+    const boost::any& anyref = state;
+    rhsInputs[0] = anyref;
+
+    const std::vector<boost::any>& eval = rhs->Evaluate(rhsInputs);
+
+    jac = NewDenseMat(nrows, 1);
+    DENSE_COL(jac, 0) = NV_DATA_S(boost::any_cast<const N_Vector&>(eval[0]));
+
+    return; 
+  }
+  
+  // create a new jacobian
+  jac = NewDenseMat(nrows, ncols);
+
+  // populate the jacobian
+  for( unsigned int col=0; col<ncols; ++col ) {
+    // need to do a deep copy
+    for( unsigned int row=0; row<nrows; ++row ) {
+      DENSE_ELEM(jac, row, col) = NV_Ith_S(sensState[col], row);
+    }
+  }
+
+  // if it wrt the initial conditions, add the identity
+  if( wrtIn==0 ) {
+    // the matrix is square
+    assert(jac->M==jac->N);
+    AddIdentity(jac);
+  }
+}
+
+std::vector<std::pair<unsigned int, unsigned int> > ODE::TimeIndices(ref_vector<boost::any> const& outputTimes) {
+  // the number of outputs
+  const unsigned int nOuts = outputTimes.size();
+  
+  // each element corresponds to a vector of desired times, first: the current index of that vector, second: the size of that vector
+  std::vector<std::pair<unsigned int, unsigned int> > timeIndices(nOuts);
+
+  // resize the output vector
+  const boost::any none = boost::none;
+  outputs.resize(nOuts, none);
+
+  // loop through the desired outputs
+  for( unsigned int i=0; i<nOuts; ++i ) { 
+    timeIndices[i].first = 0; // the first index is zero ...
+    timeIndices[i].second = algebra->VectorDimensionBase(outputTimes[i]); // the size of the vector
+
+    // the the size is of this output >1, set the size of that output vector
+    if( timeIndices[i].second>1 ) {
+      outputs[i] = std::vector<N_Vector>(timeIndices[i].second);
+    } else {
+      outputs[i] = N_Vector();
+    }
+  }
+
+  // return as reference
+  return timeIndices;
 }
 
 bool ODE::NextTime(std::pair<double, int>& nextTime, std::vector<std::pair<unsigned int, unsigned int> >& timeIndices, ref_vector<boost::any> const& outputTimes) const {
@@ -138,4 +244,41 @@ bool ODE::NextTime(std::pair<double, int>& nextTime, std::vector<std::pair<unsig
 
 void ODE::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   Integrate(inputs);
+}
+
+void ODE::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) {
+  Integrate(inputs, wrtIn, wrtOut);
+}
+
+int ODE::ForwardSensitivityRHS(int Ns, realtype time, N_Vector y, N_Vector ydot, N_Vector *ys, N_Vector *ySdot, void *user_data, N_Vector tmp1, N_Vector tmp2) {
+  // get the data type
+  ODEData* data = (ODEData*)user_data;
+  assert(data);
+  assert(data->rhs);
+
+  // set the state input
+  const boost::any& anyref = y;
+  data->inputs[0] = anyref;
+
+  // the derivative of the rhs wrt the state
+  const boost::any& dfdy_any = data->rhs->Jacobian(0, 0, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
+  const DlsMat& dfdy = boost::any_cast<const DlsMat&>(dfdy_any);
+
+  // the derivative of the rhs wrt the parameter
+  assert(data->wrtIn>=0);
+  const boost::any& dfdp_any = data->rhs->Jacobian(data->wrtIn, 0, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
+  const DlsMat& dfdp = boost::any_cast<const DlsMat&>(dfdp_any);
+
+  // loop through and fill in the rhs vectors stored in ySdot
+  for( unsigned int i=0; i<Ns; ++i ) {
+    N_Vector vec = N_VNew_Serial(dfdy->M);
+    DenseMatvec(dfdy, NV_DATA_S(ys[i]), NV_DATA_S(vec));
+
+    N_Vector col = N_VNew_Serial(dfdp->M);
+    NV_DATA_S(col) = DENSE_COL(dfdp, i);
+
+    N_VLinearSum(1.0, vec, 1.0, col, ySdot[i]);
+  }
+
+  return 0;
 }

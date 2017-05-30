@@ -27,11 +27,8 @@ void RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs) {
   assert(inputs.size()>=rhs->numInputs+root->numInputs-1);
 
   // create the state vector (have to do a hard copy --- N_Vector is a pointer to the data, the pointer has been declared const, not the data)
-  const N_Vector& ic = boost::any_cast<N_Vector>(inputs[0]);
-  N_Vector state = N_VNew_Serial(NV_LENGTH_S(ic));
-  for( unsigned int i=0; i<NV_LENGTH_S(ic); ++i ) {
-    NV_Ith_S(state, i) = NV_Ith_S(ic, i);
-  }
+  N_Vector state;
+  DeepCopy(state, boost::any_cast<const N_Vector&>(inputs[0]));
 
   // create a data structure to pass around in Sundials
   auto data = std::make_shared<ODEData>(rhs, root, inputs);

@@ -217,3 +217,13 @@ int ODEBase::RHSJacobian(long int N, realtype time, N_Vector state, N_Vector rhs
 
   return 0;
 }
+
+void ODEBase::DeepCopy(N_Vector& copy, N_Vector const& orig) const {
+  // initialize the copy
+  copy = N_VNew_Serial(NV_LENGTH_S(orig));
+
+  // copy each value
+  for( unsigned int i=0; i<NV_LENGTH_S(orig); ++i ) {
+    NV_Ith_S(copy, i) = NV_Ith_S(orig, i);
+  }
+}

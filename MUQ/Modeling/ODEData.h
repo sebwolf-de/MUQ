@@ -8,7 +8,7 @@ namespace muq {
     class ODEData {
     public:
 
-      ODEData(std::shared_ptr<WorkPiece> rhs, ref_vector<boost::any> const& inputs);
+      ODEData(std::shared_ptr<WorkPiece> rhs, ref_vector<boost::any> const& inputs, int const wrtIn, int const wrtOut);
 
       ODEData(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, ref_vector<boost::any> const& inputs);
 
@@ -17,6 +17,10 @@ namespace muq {
       std::shared_ptr<WorkPiece> root;
 
       ref_vector<boost::any> inputs;
+
+      int wrtIn = -1;
+
+      int wrtOut = -1;
       
     private:
     };

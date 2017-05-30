@@ -25,8 +25,22 @@ namespace muq {
 
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 
-      void Integrate(ref_vector<boost::any> const& inputs);
+      virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override;
 
+      void Integrate(ref_vector<boost::any> const& inputs, int const wrtIn = -1, int const wrtOut = -1);
+
+      void ForwardIntegration(void *cvode_mem, N_Vector& state, ref_vector<boost::any> const& outputTimes);
+
+      void ForwardSensitivity(void *cvode_mem, N_Vector& state, unsigned int const paramSize, unsigned int const wrtIn, boost::any const& outputTimes, ref_vector<boost::any> const& rhsInputs);
+
+      void SetUpSensitivity(void *cvode_mem, unsigned int const paramSize, N_Vector *sensState) const;
+
+      void SaveJacobian(DlsMat& jac, unsigned int const nrows, unsigned int const ncols, unsigned int const wrtIn, N_Vector* sensState, N_Vector const& state, ref_vector<boost::any> rhsInputs) const;
+
+      std::vector<std::pair<unsigned int, unsigned int> > TimeIndices(ref_vector<boost::any> const& outputTimes);
+
+      static int ForwardSensitivityRHS(int Ns, realtype time, N_Vector y, N_Vector ydot, N_Vector *ys, N_Vector *ySdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
+      
       /// Compute the next time to integrate to
       /**
 	 @param[out] nextTime first: the next time to integrate to, second: the output index
@@ -34,9 +48,6 @@ namespace muq {
 	 @param[in] outputTimes We want the state at these times 
        */
       bool NextTime(std::pair<double, int>& nextTime, std::vector<std::pair<unsigned int, unsigned int> >& timeIndices, ref_vector<boost::any> const& outputTimes) const;
-
-      //bool KeepIntegrating(std::vector<unsigned int>& timeIndices, ref_vector<boost::any> const& outputTimes) const;
-      
     };
   } // namespace Modeling
 } // namespace muq

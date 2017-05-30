@@ -82,6 +82,25 @@ namespace muq {
 
       void CreateSolverMemory(void* cvode_mem, N_Vector const& state, std::shared_ptr<ODEData> data) const;
 
+      void DeepCopy(N_Vector& copy, N_Vector const& orig) const;
+
+      /// Deal with Sundials errors
+      /**
+	 Sundials will call this function if it runs into a problem
+	 @param[in] error_code Sundials error code
+	 @param[in] module The name of the CVODES module reporting the error
+	 @param[in] function The name of the function in which the error occured
+	 @param[in] msg The error message
+	 @param[in] eh_data A pointer to user data
+       */
+      static void ErrorHandler(int error_code, const char *module, const char *function, char *msg, void *eh_data);
+
+      static int EvaluateRHS(realtype time, N_Vector state, N_Vector deriv, void *user_data);
+
+      static int RHSJacobian(long int N, realtype time, N_Vector state, N_Vector rhs, DlsMat jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+
+      static int RHSJacobianAction(N_Vector v, N_Vector Jv, realtype time, N_Vector state, N_Vector rhs, void *user_data, N_Vector tmp);
+
       /// Which linear solver should we use?
       enum LinearSolver {
 	/// Dense solver
@@ -118,23 +137,6 @@ namespace muq {
       
       /// Nonlinear solver method
       int solveMethod;
-
-      /// Deal with Sundials errors
-      /**
-	 Sundials will call this function if it runs into a problem
-	 @param[in] error_code Sundials error code
-	 @param[in] module The name of the CVODES module reporting the error
-	 @param[in] function The name of the function in which the error occured
-	 @param[in] msg The error message
-	 @param[in] eh_data A pointer to user data
-       */
-      static void ErrorHandler(int error_code, const char *module, const char *function, char *msg, void *eh_data);
-
-      static int EvaluateRHS(realtype time, N_Vector state, N_Vector deriv, void *user_data);
-
-      static int RHSJacobian(long int N, realtype time, N_Vector state, N_Vector rhs, DlsMat jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
-      static int RHSJacobianAction(N_Vector v, N_Vector Jv, realtype time, N_Vector state, N_Vector rhs, void *user_data, N_Vector tmp);
       
     private:
 
