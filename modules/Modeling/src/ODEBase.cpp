@@ -106,7 +106,7 @@ void ODEBase::InitializeState(N_Vector& state, boost::any const& ic, unsigned in
   }
 }
 
-void ODEBase::ErrorHandler(int error_code, const char *module, const char *function, char *msg, void *eh_data) {}
+void ODEBase::ErrorHandler(int error_code, const char *module, const char *function, char *msg, void *user_data) {}
 
 void ODEBase::CreateSolverMemory(void* cvode_mem, N_Vector const& state, std::shared_ptr<ODEData> data) const {
   // a flag used for error checking

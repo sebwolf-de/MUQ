@@ -80,8 +80,19 @@ namespace muq {
        */
       void InitializeState(N_Vector& state, boost::any const& ic, unsigned int const dim) const;
 
+      /// Alloc memory and set up options for the Sundials solver
+      /**
+	 @param[in] cvode_mem The Sundials solver
+	 @param[in] state The initial state
+	 @param[in] data An object that holds the RHS inputs and can evaluate the RHS
+       */
       void CreateSolverMemory(void* cvode_mem, N_Vector const& state, std::shared_ptr<ODEData> data) const;
 
+      /// Copy the values of an N_Vector
+      /**
+	 @param[out] copy A new vector whose size and values are the same as orig
+	 @param[in] orig An existing vector to be copied
+       */
       void DeepCopy(N_Vector& copy, N_Vector const& orig) const;
 
       /// Deal with Sundials errors
@@ -91,14 +102,43 @@ namespace muq {
 	 @param[in] module The name of the CVODES module reporting the error
 	 @param[in] function The name of the function in which the error occured
 	 @param[in] msg The error message
-	 @param[in] eh_data A pointer to user data
+	 @param[in] user_data A pointer to an muq::Modeling::ODEData
        */
-      static void ErrorHandler(int error_code, const char *module, const char *function, char *msg, void *eh_data);
+      static void ErrorHandler(int error_code, const char *module, const char *function, char *msg, void *user_data);
 
+      /// Evaluate the right hand side
+      /**
+	 @param[in] time The current time 
+	 @param[in] state The current state
+	 @param[out] deriv The derivative of the state with respect to time
+	 @param[in] user_data A pointer to an muq::Modeling::ODEData
+       */
       static int EvaluateRHS(realtype time, N_Vector state, N_Vector deriv, void *user_data);
 
+      /// Evaluate the Jacobian of the right hand side
+      /**
+	 @param[in] N
+	 @param[in] time The current time 
+	 @param[in] state The current state
+	 @param[in] rhs The derivative of the state with respect to time
+	 @param[out] jac The Jacobian of the right hand side with respect to the current state
+	 @param[in] user_data A pointer to an muq::Modeling::ODEData
+	 @param[in] tmp1
+	 @param[in] tmp2
+	 @param[in] tmp3
+       */
       static int RHSJacobian(long int N, realtype time, N_Vector state, N_Vector rhs, DlsMat jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
+      /// Evaluate the action of the Jacobian of the right hand side
+      /**
+	 @param[in] v The vector the Jacobian is acting on
+	 @param[out] Jv The action of the Jacobian on v
+	 @param[in] time The current time 
+	 @param[in] state The current state
+	 @param[in] rhs The derivative of the state with respect to time
+	 @param[in] user_data A pointer to an muq::Modeling::ODEData
+	 @param[in] tmp
+       */
       static int RHSJacobianAction(N_Vector v, N_Vector Jv, realtype time, N_Vector state, N_Vector rhs, void *user_data, N_Vector tmp);
 
       /// Which linear solver should we use?
