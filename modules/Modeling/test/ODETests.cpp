@@ -217,7 +217,7 @@ public:
     const std::vector<N_Vector>& times0_state = boost::any_cast<const std::vector<N_Vector>&>(result[0]);
     EXPECT_EQ(times0_state.size(), outTimes0.size());
 
-    // forward sensitivity
+    // Jacobian
     const boost::any& jac0 = ode->Jacobian(0, 0, ic, k, outTimes0);
     const std::vector<DlsMat>& jac0ref = boost::any_cast<const std::vector<DlsMat>&>(jac0);
     EXPECT_EQ(jac0ref.size(), outTimes0.size());
@@ -229,6 +229,38 @@ public:
     const boost::any& jac2 = ode->Jacobian(2, 0, ic, k, outTimes0);
     const std::vector<DlsMat>& jac2ref = boost::any_cast<const std::vector<DlsMat>&>(jac2);
     EXPECT_EQ(jac2ref.size(), outTimes0.size());
+
+    // Jacobian action
+    const Eigen::Vector2d eigenVec2 = Eigen::VectorXd::Random(2);
+    N_Vector vec2 = N_VNew_Serial(2);
+    for( unsigned int i=0; i<2; ++i ) { NV_Ith_S(vec2, i) = eigenVec2(i); }
+    const boost::any& jacact0 = ode->JacobianAction(0, 0, vec2, ic, k, outTimes0);
+    const std::vector<N_Vector>& jacact0ref = boost::any_cast<const std::vector<N_Vector>&>(jacact0);
+    EXPECT_EQ(jacact0ref.size(), outTimes0.size());
+
+    const Eigen::VectorXd eigenVec1 = Eigen::VectorXd::Random(1);
+    N_Vector vec1 = N_VNew_Serial(1);
+    NV_Ith_S(vec1, 0) = eigenVec1(0);
+    const boost::any& jacact1 = ode->JacobianAction(1, 0, vec1, ic, k, outTimes0);
+    const std::vector<N_Vector>& jacact1ref = boost::any_cast<const std::vector<N_Vector>&>(jacact1);
+    EXPECT_EQ(jacact1ref.size(), outTimes0.size());
+
+    const boost::any& jacact2 = ode->JacobianAction(2, 0, vec1, ic, k, outTimes0);
+    const std::vector<N_Vector>& jacact2ref = boost::any_cast<const std::vector<N_Vector>&>(jacact2);
+    EXPECT_EQ(jacact2ref.size(), outTimes0.size());
+
+    // Jacobian transpose action
+    const boost::any& jactransact0 = ode->JacobianTransposeAction(0, 0, vec2, ic, k, outTimes0);
+    const std::vector<N_Vector>& jactransact0ref = boost::any_cast<const std::vector<N_Vector>&>(jactransact0);
+    EXPECT_EQ(jactransact0ref.size(), outTimes0.size());
+
+    const boost::any& jactransact1 = ode->JacobianTransposeAction(1, 0, vec2, ic, k, outTimes0);
+    const std::vector<N_Vector>& jactransact1ref = boost::any_cast<const std::vector<N_Vector>&>(jactransact1);
+    EXPECT_EQ(jactransact1ref.size(), outTimes0.size());
+
+    const boost::any& jactransact2 = ode->JacobianTransposeAction(2, 0, vec2, ic, k, outTimes0);
+    const std::vector<N_Vector>& jactransact2ref = boost::any_cast<const std::vector<N_Vector>&>(jactransact2);
+    EXPECT_EQ(jactransact2ref.size(), outTimes0.size());
 
     for( unsigned int i=0; i<outTimes0.size(); ++i ) {
       const double time = outTimes0(i);
@@ -245,17 +277,45 @@ public:
       EXPECT_NEAR(DENSE_ELEM(jac0ref[i], 1, 0), -std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
       EXPECT_NEAR(DENSE_ELEM(jac0ref[i], 1, 1), std::cos(std::sqrt(k)*time), 1.0e-6);
 
+      // check action of the jacobian wrt initial conditions
+      EXPECT_EQ(NV_LENGTH_S(jacact0ref[i]), 2);
+      EXPECT_NEAR(NV_Ith_S(jacact0ref[i], 0), std::cos(std::sqrt(k)*time)*eigenVec2(0) + std::sin(std::sqrt(k)*time)/std::sqrt(k)*eigenVec2(1), 1.0e-6);
+      EXPECT_NEAR(NV_Ith_S(jacact0ref[i], 1), -std::sqrt(k)*std::sin(std::sqrt(k)*time)*eigenVec2(0) + std::cos(std::sqrt(k)*time)*eigenVec2(1), 1.0e-6);
+
+      // check action of the jacobian transpose wrt initial conditions
+      EXPECT_EQ(NV_LENGTH_S(jactransact0ref[i]), 2);
+      EXPECT_NEAR(NV_Ith_S(jactransact0ref[i], 0), eigenVec2(0)*std::cos(std::sqrt(k)*time)-eigenVec2(1)*std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
+      EXPECT_NEAR(NV_Ith_S(jactransact0ref[i], 1), eigenVec2(0)*std::sin(std::sqrt(k)*time)/std::sqrt(k)+eigenVec2(1)*std::cos(std::sqrt(k)*time), 1.0e-6);
+
       // check jacobian wrt spring constant
       EXPECT_EQ(jac1ref[i]->M, 2); // rows
       EXPECT_EQ(jac1ref[i]->N, 1); // cols
       EXPECT_NEAR(DENSE_ELEM(jac1ref[i], 0, 0), 0.5*(-ic0/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)+ic1/k*time*std::cos(std::sqrt(k)*time)-ic1/std::pow(k, 1.5)*std::sin(std::sqrt(k)*time)), 1.0e-6);
       EXPECT_NEAR(DENSE_ELEM(jac1ref[i], 1, 0), 0.5*(-ic0*time*std::cos(std::sqrt(k)*time)-ic0/std::sqrt(k)*std::sin(std::sqrt(k)*time)-ic1/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)), 1.0e-6);
 
+      // check action of the jacobian wrt spring constant
+      EXPECT_EQ(NV_LENGTH_S(jacact1ref[i]), 2);
+      EXPECT_NEAR(NV_Ith_S(jacact1ref[i], 0), 0.5*eigenVec1(0)*(-ic0/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)+ic1/k*time*std::cos(std::sqrt(k)*time)-ic1/std::pow(k, 1.5)*std::sin(std::sqrt(k)*time)), 1.0e-6);
+      EXPECT_NEAR(NV_Ith_S(jacact1ref[i], 1), 0.5*eigenVec1(0)*(-ic0*time*std::cos(std::sqrt(k)*time)-ic0/std::sqrt(k)*std::sin(std::sqrt(k)*time)-ic1/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)), 1.0e-6);
+
+      // check action of the jacobian transpose wrt spring constant
+      EXPECT_EQ(NV_LENGTH_S(jactransact1ref[i]), 1);
+      EXPECT_NEAR(NV_Ith_S(jactransact1ref[i], 0), 0.5*eigenVec2(0)*(-ic0/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)+ic1/k*time*std::cos(std::sqrt(k)*time)-ic1/std::pow(k, 1.5)*std::sin(std::sqrt(k)*time)) + 0.5*eigenVec2(1)*(-ic0*time*std::cos(std::sqrt(k)*time)-ic0/std::sqrt(k)*std::sin(std::sqrt(k)*time)-ic1/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)), 1.0e-6);
+
       // check jacobian wrt output times --- which should just return the right hand side (derivative of state wrt time)
       EXPECT_EQ(jac2ref[i]->M, 2); // rows
       EXPECT_EQ(jac2ref[i]->N, 1); // cols
       EXPECT_DOUBLE_EQ(DENSE_ELEM(jac2ref[i], 0, 0), NV_Ith_S(times0_state[i], 1));
       EXPECT_DOUBLE_EQ(DENSE_ELEM(jac2ref[i], 1, 0), -k*NV_Ith_S(times0_state[i], 0));
+
+      // check action of the jacobian wrt time
+      EXPECT_EQ(NV_LENGTH_S(jacact2ref[i]), 2);
+      EXPECT_NEAR(NV_Ith_S(jacact2ref[i], 0), eigenVec1(0)*NV_Ith_S(times0_state[i], 1), 1.0e-6);
+      EXPECT_NEAR(NV_Ith_S(jacact2ref[i], 1), -eigenVec1(0)*k*NV_Ith_S(times0_state[i], 0), 1.0e-6);
+
+      // check action of the jacobian transpose wrt time
+      EXPECT_EQ(NV_LENGTH_S(jactransact2ref[i]), 1);
+      EXPECT_NEAR(NV_Ith_S(jactransact2ref[i], 0), eigenVec2(0)*NV_Ith_S(times0_state[i], 1) - eigenVec2(1)*k*NV_Ith_S(times0_state[i], 0), 1.0e-6);
     }
   }
 

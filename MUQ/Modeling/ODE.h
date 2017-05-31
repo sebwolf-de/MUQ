@@ -23,19 +23,43 @@ namespace muq {
 
     private:
 
+      /// Are we computing the Jacobian, the action of the Jacobian, or the action of the Jacobian transpose
+      enum DerivativeMode {
+	/// No derivative is being computing ...
+	NoDeriv,
+	/// The Jacobian
+	Jac,
+	/// The action of the Jacobian
+	JacAction,
+	/// The action of the Jacobian transpose
+	JacTransAction
+      };
+
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 
       virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override;
 
-      void Integrate(ref_vector<boost::any> const& inputs, int const wrtIn = -1, int const wrtOut = -1);
+      virtual void JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override;
+
+      virtual void JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override;
+
+      void Integrate(ref_vector<boost::any> const& inputs, int const wrtIn = -1, int const wrtOut = -1, DerivativeMode const& mode = DerivativeMode::NoDeriv, N_Vector const& vec = nullptr);
 
       void ForwardIntegration(void *cvode_mem, N_Vector& state, ref_vector<boost::any> const& outputTimes);
 
-      void ForwardSensitivity(void *cvode_mem, N_Vector& state, unsigned int const paramSize, unsigned int const wrtIn, boost::any const& outputTimes, ref_vector<boost::any> const& rhsInputs);
+      void ForwardSensitivity(void *cvode_mem, N_Vector& state, unsigned int const paramSize, unsigned int const wrtIn, boost::any const& outputTimes, ref_vector<boost::any> const& rhsInputs, DerivativeMode const& mode, N_Vector const& vec);
 
       void SetUpSensitivity(void *cvode_mem, unsigned int const paramSize, N_Vector *sensState) const;
 
-      void SaveJacobian(DlsMat& jac, unsigned int const nrows, unsigned int const ncols, unsigned int const wrtIn, N_Vector* sensState, N_Vector const& state, ref_vector<boost::any> rhsInputs) const;
+      void InitializeDerivative(unsigned int const ntimes, unsigned int const stateSize, unsigned int const paramSize, DerivativeMode const& mode);
+
+      void SaveDerivative(unsigned int const ntimes, unsigned int const timeIndex, unsigned int const paramSize, unsigned int const wrtIn, N_Vector* sensState, N_Vector const& state, ref_vector<boost::any> rhsInputs, N_Vector const& vec, DerivativeMode const& mode);
+
+      void SaveJacobian(DlsMat& jac, unsigned int const ncols, unsigned int const wrtIn, N_Vector* sensState, N_Vector const& state, ref_vector<boost::any> rhsInputs) const;
+
+      void SaveJacobianAction(N_Vector& jacAct, unsigned int const ncols, unsigned int const wrtIn, N_Vector* sensState, N_Vector const& state, ref_vector<boost::any> rhsInputs, N_Vector const& vec) const;
+
+      void SaveJacobianTransposeAction(N_Vector& jacTransAct, unsigned int const ncols, unsigned int const wrtIn, N_Vector* sensState, N_Vector const& state, ref_vector<boost::any> rhsInputs, N_Vector const& vec) const;
 
       std::vector<std::pair<unsigned int, unsigned int> > TimeIndices(ref_vector<boost::any> const& outputTimes);
 
