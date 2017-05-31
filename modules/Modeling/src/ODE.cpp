@@ -18,7 +18,7 @@ ODE::ODE(std::shared_ptr<WorkPiece> rhs, pt::ptree const& pt, std::shared_ptr<An
 
 ODE::~ODE() {}
 
-void ODE::Integrate(ref_vector<boost::any> const& inputs, int const wrtIn, int const wrtOut, DerivativeMode const& mode, N_Vector const& vec) {
+void ODE::Integrate(ref_vector<boost::any> const& inputs, int const wrtIn, int const wrtOut, N_Vector const& vec, DerivativeMode const& mode) {
   // the number of inputs must be greater than the number of inputs required by the rhs
   assert(inputs.size()>rhs->numInputs);
 
@@ -39,14 +39,14 @@ void ODE::Integrate(ref_vector<boost::any> const& inputs, int const wrtIn, int c
   // initialize the solver
   CreateSolverMemory(cvode_mem, state, data);
   
-  if( mode!=DerivativeMode::NoDeriv ) { // we are computing the forward sensitivity
-    assert(wrtIn>=0 && wrtOut>=0);
-    
-    unsigned int paramSize = 0;
+  if( wrtIn>=0 && wrtOut>=0 ) { // we are computing the forward sensitivity
+    // comptue the parameter size
+    unsigned int paramSize = 1;
     if( wrtIn<rhs->numInputs ) {
       paramSize = algebra->VectorDimensionBase(inputs[wrtIn]);
     }
-      
+
+    // integrate forward in time with dervative information
     ForwardSensitivity(cvode_mem, state, paramSize, wrtIn, inputs[rhs->numInputs+wrtOut], ref_vector<boost::any>(inputs.begin(), inputs.begin()+rhs->numInputs), mode, vec);
 
     return;
@@ -63,16 +63,23 @@ void ODE::ForwardIntegration(void *cvode_mem, N_Vector& state, ref_vector<boost:
   // first: the next time to integrate to, second: the output index
   std::pair<double, int> nextTime;
 
+  // start the clock at t=0
   double tcurrent = 0.0;
+
+  // loop through each time 
   while( NextTime(nextTime, timeIndices, outputTimes) ) {
+    // if we have to move forward --- i.e., not at the initial time or another output does not need the current time
     if( std::fabs(nextTime.first-tcurrent)>1.0e-14 ) { // we have to move forward in time
       int flag = CVode(cvode_mem, nextTime.first, state, &tcurrent, CV_NORMAL);
       assert(CheckFlag(&flag, "CVode", 1));
     }
-    
-    if( timeIndices[nextTime.second].second>1 ) {
+
+    // save the result at this timestep
+    if( timeIndices[nextTime.second].second>1 ) { // the output has more than one compnent ...
+      // .. save the current state as an element in the vector
       DeepCopy(boost::any_cast<std::vector<N_Vector>&>(outputs[nextTime.second]) [timeIndices[nextTime.second].first-1], state);
-    } else {
+    } else { // the out has one component ...
+      // ... save the current state (not inside a vector)
       DeepCopy(boost::any_cast<N_Vector&>(outputs[nextTime.second]), state);
     }
   }
@@ -82,6 +89,7 @@ void ODE::ForwardSensitivity(void *cvode_mem, N_Vector& state, unsigned int cons
   // sensState will hold several N_Vectors (because it's a Jacobian)
   N_Vector *sensState = nullptr;
 
+  // if we are computing the derivative wrt an input to the rhs ...
   if( wrtIn<rhs->numInputs ) {
     // set up sensitivity vector
     sensState = N_VCloneVectorArray_Serial(paramSize, state);
@@ -102,16 +110,21 @@ void ODE::ForwardSensitivity(void *cvode_mem, N_Vector& state, unsigned int cons
   // initialize the derivative information (jacobian jacobianAction, jacobianTransposeAction)
   InitializeDerivative(ntimes, NV_LENGTH_S(state), paramSize, mode);
 
+  // start the clock at t=0
   double tcurrent = 0.0;
+
+  // loop through each time
   for( unsigned int i=0; i<ntimes; ++i ) {
     // the next time 
     const double time = boost::any_cast<double>(algebra->AccessElementBase(i, outputTimes));
-    
+
+    // if we have to move forward --- i.e., not at the initial time
     if( std::fabs(time-tcurrent)>1.0e-14 ) {
       // integrate until we hit the next time
       int flag = CVode(cvode_mem, time, state, &tcurrent, CV_NORMAL);
       assert(CheckFlag(&flag, "CVode", 1));
 
+      // get the sensitivities if we are differentating wrt an input to the rhs
       if( wrtIn<rhs->numInputs ) {
 	// get the sensitivities
 	flag = CVodeGetSens(cvode_mem, &tcurrent, sensState);
@@ -125,35 +138,34 @@ void ODE::ForwardSensitivity(void *cvode_mem, N_Vector& state, unsigned int cons
 }
 
 void ODE::SaveDerivative(unsigned int const ntimes, unsigned int const timeIndex, unsigned int const paramSize, unsigned int const wrtIn, N_Vector* sensState, N_Vector const& state, ref_vector<boost::any> rhsInputs, N_Vector const& vec, DerivativeMode const& mode) {
-  // save the jacobian at this time
   if( ntimes==1 ) {
-    switch( mode ) {
-    case DerivativeMode::Jac: {
+    switch( mode ) { // one output --- matrix or vector
+    case DerivativeMode::Jac: { // save the jacobian
       SaveJacobian(boost::any_cast<DlsMat&>(*jacobian), paramSize, wrtIn, sensState, state, rhsInputs);
       return;
     }
-    case DerivativeMode::JacAction: {
+    case DerivativeMode::JacAction: { // save the action of the jacobian
       SaveJacobianAction(boost::any_cast<N_Vector&>(*jacobianAction), paramSize, wrtIn, sensState, state, rhsInputs, vec);
       return;
     }
-    case DerivativeMode::JacTransAction: {
+    case DerivativeMode::JacTransAction: { // save the action of the jacobian transpose
       SaveJacobianTransposeAction(boost::any_cast<N_Vector&>(*jacobianTransposeAction), paramSize, wrtIn, sensState, state, rhsInputs, vec);
       return;
     }
     default:
       assert(false);
     }
-  } else {
+  } else { // multiple outputs --- vector of matrices or vectors
     switch( mode ) {
-    case DerivativeMode::Jac: {
+    case DerivativeMode::Jac: { // savethe jacobian
      SaveJacobian(boost::any_cast<std::vector<DlsMat>&>(*jacobian) [timeIndex], paramSize, wrtIn, sensState, state, rhsInputs);
      return;
     }
-    case DerivativeMode::JacAction: {
+    case DerivativeMode::JacAction: { // save the action of the jacobian
       SaveJacobianAction(boost::any_cast<std::vector<N_Vector>&>(*jacobianAction) [timeIndex], paramSize, wrtIn, sensState, state, rhsInputs, vec);
       return;
     }
-    case DerivativeMode::JacTransAction: {
+    case DerivativeMode::JacTransAction: { // save the action of the jacobian transpose
       SaveJacobianTransposeAction(boost::any_cast<std::vector<N_Vector>&>(*jacobianTransposeAction) [timeIndex], paramSize, wrtIn, sensState, state, rhsInputs, vec);
       return;
     }
@@ -175,8 +187,10 @@ void ODE::SaveJacobianAction(N_Vector& jacAct, unsigned int const ncols, unsigne
     const boost::any& anyref = state;
     rhsInputs[0] = anyref;
 
+    // evaluate the right had side
     const std::vector<boost::any>& eval = rhs->Evaluate(rhsInputs);
 
+    // multiply by the input vector
     N_VScale(NV_Ith_S(vec, 0), boost::any_cast<const N_Vector&>(eval[0]), jacAct);
 
     return; 
@@ -200,23 +214,22 @@ void ODE::SaveJacobianTransposeAction(N_Vector& jacTransAct, unsigned int const 
   // the number of rows in the Jacobian
   const unsigned int nrows = NV_LENGTH_S(state);
 
+  // create a new jacobian action vector
+  jacTransAct = N_VNew_Serial(ncols);
+
   if( wrtIn>=rhs->numInputs ) {
     // set the state input
     const boost::any& anyref = state;
     rhsInputs[0] = anyref;
 
+    // evaluate the right had side
     const std::vector<boost::any>& eval = rhs->Evaluate(rhsInputs);
 
-    // create a new jacobian action vector
-    jacTransAct = N_VNew_Serial(1);
-
+    // multiply by the input vector
     NV_Ith_S(jacTransAct, 0) = N_VDotProd(vec, boost::any_cast<const N_Vector&>(eval[0]));
 
     return; 
   }
-
-  // create a new jacobian action vector
-  jacTransAct = N_VNew_Serial(ncols);
 
   // populate the jacobian action
   for( unsigned int col=0; col<ncols; ++col ) {
@@ -238,8 +251,10 @@ void ODE::SaveJacobian(DlsMat& jac, unsigned int const ncols, unsigned int const
     const boost::any& anyref = state;
     rhsInputs[0] = anyref;
 
+    // evaluate the right hand side
     const std::vector<boost::any>& eval = rhs->Evaluate(rhsInputs);
 
+    // save as a matrix
     jac = NewDenseMat(nrows, 1);
     DENSE_COL(jac, 0) = NV_DATA_S(boost::any_cast<const N_Vector&>(eval[0]));
 
@@ -282,31 +297,28 @@ void ODE::SetUpSensitivity(void *cvode_mem, unsigned int const paramSize, N_Vect
 
 void ODE::InitializeDerivative(unsigned int const ntimes, unsigned int const stateSize, unsigned int const paramSize, DerivativeMode const& mode) {
   switch( mode ) {
-  case DerivativeMode::Jac: {
-    // initialize the jacobian
-    if( ntimes==1 ) {
+  case DerivativeMode::Jac: { // initialize the jacobian
+    if( ntimes==1 ) { // one output --- matrix
       jacobian = NewDenseMat(stateSize, paramSize);
-    } else {
+    } else { // multiple outputs --- vector of matrices
       jacobian = std::vector<DlsMat>(ntimes);
     }
     
     return;
   }
-  case DerivativeMode::JacAction: {
-    // initialize the action of the jacobian
-    if( ntimes==1 ) {
+  case DerivativeMode::JacAction: { // initialize the action of the jacobian
+    if( ntimes==1 ) { // one output --- vector
       jacobianAction = N_VNew_Serial(stateSize);
-    } else {
+    } else { // multiple outputs --- vector of vectors
       jacobianAction = std::vector<N_Vector>(ntimes);
     }
 
     return;
   }
-  case DerivativeMode::JacTransAction: {
-    // initialize the action of the jacobian transpose
-    if( ntimes==1 ) {
+  case DerivativeMode::JacTransAction: { // initialize the action of the jacobian transpose
+    if( ntimes==1 ) { // one output --- vector
       jacobianTransposeAction = N_VNew_Serial(paramSize);
-    } else {
+    } else { // multiple outputs --- vector of vectors
       jacobianTransposeAction = std::vector<N_Vector>(ntimes);
     }
     
@@ -382,11 +394,13 @@ bool ODE::NextTime(std::pair<double, int>& nextTime, std::vector<std::pair<unsig
 }
 
 void ODE::EvaluateImpl(ref_vector<boost::any> const& inputs) {
+  // integrate forward in time
   Integrate(inputs);
 }
 
 void ODE::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) {
-  Integrate(inputs, wrtIn, wrtOut, DerivativeMode::Jac);
+  // integrate forward in time, using forward senstivities
+  Integrate(inputs, wrtIn, wrtOut);
 }
 
 void ODE::JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
@@ -396,15 +410,17 @@ void ODE::JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut
   } else {
     assert(NV_LENGTH_S(boost::any_cast<const N_Vector&>(vec))==1);
   }
-  
-  Integrate(inputs, wrtIn, wrtOut, DerivativeMode::JacAction, boost::any_cast<N_Vector>(vec));
+
+  // integrate forward in time, using forward senstivities
+  Integrate(inputs, wrtIn, wrtOut, boost::any_cast<N_Vector>(vec), DerivativeMode::JacAction);
 }
 
 void ODE::JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
   // check the size of the vector
   assert(NV_LENGTH_S(boost::any_cast<const N_Vector&>(vec))==NV_LENGTH_S(boost::any_cast<const N_Vector&>(inputs[0])));
-  
-  Integrate(inputs, wrtIn, wrtOut, DerivativeMode::JacTransAction, boost::any_cast<N_Vector>(vec));
+
+  // integrate forward in time, using forward senstivities
+  Integrate(inputs, wrtIn, wrtOut, boost::any_cast<N_Vector>(vec), DerivativeMode::JacTransAction);
 }
 
 int ODE::ForwardSensitivityRHS(int Ns, realtype time, N_Vector y, N_Vector ydot, N_Vector *ys, N_Vector *ySdot, void *user_data, N_Vector tmp1, N_Vector tmp2) {
