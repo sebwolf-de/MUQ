@@ -40,6 +40,12 @@ namespace muq {
       */
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 
+      /// Compute the Jacobian of the state at the root
+      /**
+	 @param[in] wrtIn We are computing the derivative with repsect to this parameter
+	 @param[in] wrtOut We are computing the derivative of this output
+	 @param[in] inputs The inputs (first: state, next group: rhs inputs, next group: root inputs, final: eval times (optional))
+      */
       virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override;
 
       /// Run the CVODES integrator
@@ -58,6 +64,13 @@ namespace muq {
        */
       void UpdateInputOutputTypes();
 
+      /// Evaluate the root function
+      /**
+	 @param[in] t The current time
+	 @param[in] state The state
+	 @param[out] root The roots
+	 @param[in] user_data A pointer to an muq::Modeling::ODEData
+       */
       static int EvaluateRoot(realtype t, N_Vector state, realtype *root, void *user_data);
 
       /// The root function
