@@ -22,7 +22,7 @@ RootfindingIVP::RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<W
 
 RootfindingIVP::~RootfindingIVP() {}
 
-void RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs) {
+Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, int const wrtIn, int const wrtOut, DerivativeMode const& mode) {
   // the number of inputs must be at leastthan the number of inputs required by the rhs and the root
   assert(inputs.size()>=rhs->numInputs+root->numInputs-1);
 
@@ -31,7 +31,7 @@ void RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs) {
   DeepCopy(state, boost::any_cast<const N_Vector&>(inputs[0]));
 
   // create a data structure to pass around in Sundials
-  auto data = std::make_shared<ODEData>(rhs, root, inputs);
+  auto data = std::make_shared<ODEData>(rhs, root, inputs, wrtIn, wrtOut);
 
   // set solver to null
   void* cvode_mem = nullptr;
@@ -43,19 +43,170 @@ void RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs) {
   // initialize the solver
   CreateSolverMemory(cvode_mem, state, data);
 
+  // sensState will hold several N_Vectors (because it's a Jacobian)
+  N_Vector *sensState = nullptr;
+  int paramSize = -1;
+
+  if( wrtIn>=0 && wrtOut==0 && wrtIn<rhs->numInputs ) { // we are computing the derivative wrt one of the rhs parameters
+    paramSize = algebra->VectorDimensionBase(inputs[wrtIn]); // the dimension of the parameter
+
+    // set up sensitivity vector
+    sensState = N_VCloneVectorArray_Serial(paramSize, state);
+    assert(CheckFlag((void *)sensState, "N_VCloneVectorArray_Serial", 0));
+    
+    // initialize the sensitivies to zero
+    for( int is=0; is<paramSize; ++is ) {
+      N_VConst(0.0, sensState[is]);
+    }
+    
+    // set up solver for sensitivity
+    SetUpSensitivity(cvode_mem, paramSize, sensState);
+
+    // initalize the derivative information
+    InitializeDerivative(1, NV_LENGTH_S(state), paramSize, mode);
+  }
+
   // tell the solver how evaluate the root
   int flag = CVodeRootInit(cvode_mem, root->numOutputs, EvaluateRoot);
   assert(CheckFlag(&flag, "CVodeRootInit", 1));
 
-  realtype t=0.0;
-  flag = CVode(cvode_mem, 10.0, state, &t, CV_NORMAL);
+  // set the intial time
+  realtype t = 0.0;
 
+  // integrate forward in time
+  flag = CVode(cvode_mem, 10.0, state, &t, CV_NORMAL);
+  assert(CheckFlag(&flag, "CVode", 1));
+
+  // make sure we found a root
+  assert(flag==CV_ROOT_RETURN); 
+      
   // set the output
   outputs.push_back(state);
+  outputs.push_back(t);
+
+  if( sensState ) {
+    // get the sensitivity
+    flag = CVodeGetSens(cvode_mem, &t, sensState);
+    assert(CheckFlag(&flag, "CVodeGetSens", 1));
+    
+    // create a new jacobian --- shallow copy
+    DlsMat& jac = boost::any_cast<DlsMat&>(*jacobian);
+    for( unsigned int col=0; col<paramSize; ++col ) {
+      DENSE_COL(jac, col) = NV_DATA_S(sensState[col]);
+    }
+    
+    // do not delete sensState --- jacobian now points to that data
+  }
+
+  // retrieve information about the root
+  Eigen::VectorXi rootsfound(root->numOutputs);
+  flag = CVodeGetRootInfo(cvode_mem, rootsfound.data());
+  assert(CheckFlag(&flag, "CVodeGetRootInfo", 1));
+
+  // free integrator memory (don't destory the state --- outputs is a pointer to it)
+  CVodeFree(&cvode_mem);
+
+  return rootsfound;
 }
 
 void RootfindingIVP::EvaluateImpl(ref_vector<boost::any> const& inputs) {
+  // find the first root to one of the root outputs
   FindRoot(inputs);
+}
+
+void RootfindingIVP::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) {
+  if( wrtOut>0 ) {
+    std::cerr << std::endl << "ERROR: Cannot compute derivative infomration of muq::Modeling::RootfindingIVP for outputs other than the state at the root (the first output)" << std::endl << std::endl;
+    
+    assert(wrtOut==0);
+  }
+
+  // find the first root to one of the root outputs
+  const Eigen::VectorXi& rootsfound = FindRoot(inputs, wrtIn, wrtOut);
+  unsigned int ind = 0;
+  for( ; ind<rootsfound.size(); ++ind ) {
+    if( rootsfound(ind)>0 ) { break; } 
+  }
+
+  // the inputs to the rhs function
+  ref_vector<boost::any> rhsIns;
+  rhsIns.push_back(outputs[0]);
+  rhsIns.insert(rhsIns.end(), inputs.begin()+1, inputs.begin()+rhs->numInputs);
+
+  // the inputs to the root function
+  ref_vector<boost::any> rootIns;
+  rootIns.push_back(outputs[0]);
+  rootIns.insert(rootIns.end(), inputs.begin()+rhs->numInputs, inputs.begin()+rhs->numInputs+root->numInputs-1);
+
+  // the derivative of the root function at the final time --  derivative of the root wrt the state
+  const boost::any& dgdy = root->Jacobian(0, ind, rootIns);
+  const DlsMat& dgdyref = boost::any_cast<const DlsMat&>(dgdy); // 1 x stateSize matrix
+
+  // evaluate the right hand side
+  const std::vector<boost::any>& f = rhs->Evaluate(rhsIns); // stateSize x 1 vector
+  const N_Vector& fref = boost::any_cast<N_Vector>(f[0]);
+  assert(NV_LENGTH_S(fref)==dgdyref->N);
+
+  double dum = 0.0;
+  for( unsigned int i=0; i<dgdyref->N; ++i ) {
+    dum += DENSE_ELEM(dgdyref, 0, i)*NV_Ith_S(fref, i);
+  }
+
+  if( wrtIn>=rhs->numInputs ) { // derivative wrt root parameter
+    boost::any dgdpara = root->Jacobian(wrtIn-rhs->numInputs+1, ind, rootIns);
+    const DlsMat& dgdpararef = boost::any_cast<const DlsMat&>(dgdpara); // 1 x paramSize matrix
+    DenseScale(-1.0/dum, dgdpararef);
+
+    jacobian = NewDenseMat(NV_LENGTH_S(fref), dgdpararef->N);
+    DlsMat& jac = boost::any_cast<DlsMat&>(*jacobian); // stateSize x paramSize matrix
+    SetToZero(jac);
+
+    // update the jacobian jac += f.transpose()*dgdpara (outer product)
+    for( unsigned int i=0; i<jac->M; ++i ) {
+      for( unsigned int j=0; j<jac->N; ++j ) {
+	DENSE_ELEM(jac, i, j) = NV_Ith_S(fref, i)*DENSE_ELEM(dgdpararef, 0, j);
+      }
+    }
+
+    N_VDestroy(fref);
+    DestroyMat(dgdyref);
+    DestroyMat(dgdpararef);
+
+    return;
+  }
+
+  // get a reference to the jacobian
+  DlsMat& jac = boost::any_cast<DlsMat&>(*jacobian); // stateSize x paramSize matrix
+  assert(jac->M==dgdyref->N);
+  assert(NV_LENGTH_S(fref)==jac->M);
+  
+  if( wrtIn==0 ) { // derivative wrt the initial conditions
+    // add the identity
+    AddIdentity(jac);
+  }
+
+  DenseScale(-1.0/dum, dgdyref);
+
+  // the derivative of the final time wrt to the parameter; dtfdpara = -jac_{state}(root)*jac/dot(jac_{state}(root), f)
+  N_Vector dtfdic = N_VNew_Serial(jac->N);
+  for( unsigned int i=0; i<jac->N; ++i ) {
+    NV_Ith_S(dtfdic, i) = 0.0;
+    for( unsigned int j=0; j<jac->M; ++j ) {
+      NV_Ith_S(dtfdic, i) += DENSE_ELEM(dgdyref, 0, j)*DENSE_ELEM(jac, j, i);
+    }
+  }
+
+  // update the jacobian jac += f.transpose()*dtfdpara (outer product)
+  for( unsigned int i=0; i<jac->M; ++i ) {
+    for( unsigned int j=0; j<jac->N; ++j ) {
+      DENSE_ELEM(jac, i, j) += NV_Ith_S(fref, i)*NV_Ith_S(dtfdic, j);
+    }
+  }
+  
+  // destroy temp vectors/matrices
+  N_VDestroy(dtfdic);
+  N_VDestroy(fref);
+  DestroyMat(dgdyref);
 }
 
 void RootfindingIVP::UpdateInputOutputTypes() {

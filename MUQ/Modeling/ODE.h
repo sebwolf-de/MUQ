@@ -23,16 +23,6 @@ namespace muq {
 
     private:
 
-      /// Are we computing the Jacobian, the action of the Jacobian, or the action of the Jacobian transpose
-      enum DerivativeMode {
-	/// The Jacobian
-	Jac,
-	/// The action of the Jacobian
-	JacAction,
-	/// The action of the Jacobian transpose
-	JacTransAction
-      };
-
       /// Integrate the ODE forward in time
       /**
 	 \f$M\f$ inputs:
@@ -122,23 +112,6 @@ namespace muq {
        */
       void ForwardSensitivity(void *cvode_mem, N_Vector& state, unsigned int const paramSize, unsigned int const wrtIn, boost::any const& outputTimes, ref_vector<boost::any> const& rhsInputs, DerivativeMode const& mode, N_Vector const& vec);
 
-      /// Set up the solver for sensitivity information
-      /**
-	 @param[in] cvode_mem The Sundials solver 
-	 @param[in] paramSize The size of the input parameter we are differenating wrt
-	 @param[in,out] sensState This will become the 'current' Jacobian 
-       */
-      void SetUpSensitivity(void *cvode_mem, unsigned int const paramSize, N_Vector *sensState) const;
-
-      /// Initialize the derivative output (muq::Modeling::WorkPiece::jacobian, muq::Modeling::WorkPiece::jacobianAction, or muq::Modeling::WorkPiece::jacobianTransposeAction)
-      /**
-	 @param[in] ntimes The number of output times
-	 @param[in] stateSize The size of the state
-	 @param[in] paramSize The size of the input parameter we are differenating wrt
-	 @param[in] mode Are we computing the Jacobian, Jacobian action, or Jacobian transpose action?	 
-       */
-      void InitializeDerivative(unsigned int const ntimes, unsigned int const stateSize, unsigned int const paramSize, DerivativeMode const& mode);
-
       /// Save the derivative information
       /**
 	 @param[in] ntimes The number of output times
@@ -194,18 +167,6 @@ namespace muq {
 	 \return A vector of pairs --- first: the current index of this output vector (starts at 0), second: the size of that output vector
        */
       std::vector<std::pair<unsigned int, unsigned int> > TimeIndices(ref_vector<boost::any> const& outputTimes);
-
-      /// Sundials uses this function to compute the derivative of the state at each timestep
-      /**
-	 @param[in] Ns The number of sensitivities
-	 @param[in] time The current time
-	 @param[in] y The current state
-	 @param[in] ydot The derivative of the current state with respect to time 
-	 @param[in] ys 
-	 @param[in] ySdot The sensitivties 
-	 @param[in] user_data A pointer to an muq::Modeling::ODEData
-       */
-      static int ForwardSensitivityRHS(int Ns, realtype time, N_Vector y, N_Vector ydot, N_Vector *ys, N_Vector *ySdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
       
       /// Compute the next time to integrate to
       /**

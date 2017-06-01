@@ -40,7 +40,7 @@ void ODE::Integrate(ref_vector<boost::any> const& inputs, int const wrtIn, int c
   CreateSolverMemory(cvode_mem, state, data);
   
   if( wrtIn>=0 && wrtOut>=0 ) { // we are computing the forward sensitivity
-    // comptue the parameter size
+    // compute the parameter size
     unsigned int paramSize = 1;
     if( wrtIn<rhs->numInputs ) {
       paramSize = algebra->VectorDimensionBase(inputs[wrtIn]);
@@ -49,11 +49,19 @@ void ODE::Integrate(ref_vector<boost::any> const& inputs, int const wrtIn, int c
     // integrate forward in time with dervative information
     ForwardSensitivity(cvode_mem, state, paramSize, wrtIn, inputs[rhs->numInputs+wrtOut], ref_vector<boost::any>(inputs.begin(), inputs.begin()+rhs->numInputs), mode, vec);
 
+    // free integrator memory
+    CVodeFree(&cvode_mem);
+    N_VDestroy(state);
+  
     return;
   }
 
   // integrate forward in time
   ForwardIntegration(cvode_mem, state, ref_vector<boost::any>(inputs.begin()+rhs->numInputs, inputs.end()));
+
+  // free integrator memory
+  CVodeFree(&cvode_mem);
+  N_VDestroy(state);
 }
 
 void ODE::ForwardIntegration(void *cvode_mem, N_Vector& state, ref_vector<boost::any> const& outputTimes) {
@@ -134,6 +142,11 @@ void ODE::ForwardSensitivity(void *cvode_mem, N_Vector& state, unsigned int cons
 
     // save the derivative information
     SaveDerivative(ntimes, i, paramSize, wrtIn, sensState, state, rhsInputs, vec, mode);
+  }
+
+  // destroy the sensivity
+  if( sensState ) {
+    N_VDestroyVectorArray_Serial(sensState, paramSize);
   }
 }
 
@@ -280,55 +293,6 @@ void ODE::SaveJacobian(DlsMat& jac, unsigned int const ncols, unsigned int const
   }
 }
 
-void ODE::SetUpSensitivity(void *cvode_mem, unsigned int const paramSize, N_Vector *sensState) const {
-  // initialze the forward sensitivity solver
-  int flag = CVodeSensInit(cvode_mem, paramSize, CV_SIMULTANEOUS, ForwardSensitivityRHS, sensState);
-  assert(CheckFlag(&flag, "CVodeSensInit1", 1));
-
-  // set sensitivity tolerances
-  Eigen::VectorXd absTolVec = abstol * Eigen::VectorXd::Ones(paramSize);
-  flag = CVodeSensSStolerances(cvode_mem, reltol, absTolVec.data());
-  assert(CheckFlag(&flag, "CVodeSensSStolerances", 1));
-
-  // error control strategy should test the sensitivity variables
-  flag = CVodeSetSensErrCon(cvode_mem, true);
-  assert(CheckFlag(&flag, "CVodeSetSensErrCon", 1));
-}
-
-void ODE::InitializeDerivative(unsigned int const ntimes, unsigned int const stateSize, unsigned int const paramSize, DerivativeMode const& mode) {
-  switch( mode ) {
-  case DerivativeMode::Jac: { // initialize the jacobian
-    if( ntimes==1 ) { // one output --- matrix
-      jacobian = NewDenseMat(stateSize, paramSize);
-    } else { // multiple outputs --- vector of matrices
-      jacobian = std::vector<DlsMat>(ntimes);
-    }
-    
-    return;
-  }
-  case DerivativeMode::JacAction: { // initialize the action of the jacobian
-    if( ntimes==1 ) { // one output --- vector
-      jacobianAction = N_VNew_Serial(stateSize);
-    } else { // multiple outputs --- vector of vectors
-      jacobianAction = std::vector<N_Vector>(ntimes);
-    }
-
-    return;
-  }
-  case DerivativeMode::JacTransAction: { // initialize the action of the jacobian transpose
-    if( ntimes==1 ) { // one output --- vector
-      jacobianTransposeAction = N_VNew_Serial(paramSize);
-    } else { // multiple outputs --- vector of vectors
-      jacobianTransposeAction = std::vector<N_Vector>(ntimes);
-    }
-    
-    return;
-  }
-  default:
-    assert(false);
-  }
-}
-
 std::vector<std::pair<unsigned int, unsigned int> > ODE::TimeIndices(ref_vector<boost::any> const& outputTimes) {
   // the number of outputs
   const unsigned int nOuts = outputTimes.size();
@@ -421,37 +385,4 @@ void ODE::JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int con
 
   // integrate forward in time, using forward senstivities
   Integrate(inputs, wrtIn, wrtOut, boost::any_cast<N_Vector>(vec), DerivativeMode::JacTransAction);
-}
-
-int ODE::ForwardSensitivityRHS(int Ns, realtype time, N_Vector y, N_Vector ydot, N_Vector *ys, N_Vector *ySdot, void *user_data, N_Vector tmp1, N_Vector tmp2) {
-  // get the data type
-  ODEData* data = (ODEData*)user_data;
-  assert(data);
-  assert(data->rhs);
-
-  // set the state input
-  const boost::any& anyref = y;
-  data->inputs[0] = anyref;
-
-  // the derivative of the rhs wrt the state
-  const boost::any& dfdy_any = data->rhs->Jacobian(0, 0, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
-  const DlsMat& dfdy = boost::any_cast<const DlsMat&>(dfdy_any);
-
-  // the derivative of the rhs wrt the parameter
-  assert(data->wrtIn>=0);
-  const boost::any& dfdp_any = data->rhs->Jacobian(data->wrtIn, 0, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
-  const DlsMat& dfdp = boost::any_cast<const DlsMat&>(dfdp_any);
-
-  // loop through and fill in the rhs vectors stored in ySdot
-  for( unsigned int i=0; i<Ns; ++i ) {
-    N_Vector vec = N_VNew_Serial(dfdy->M);
-    DenseMatvec(dfdy, NV_DATA_S(ys[i]), NV_DATA_S(vec));
-
-    N_Vector col = N_VNew_Serial(dfdp->M);
-    NV_DATA_S(col) = DENSE_COL(dfdp, i);
-
-    N_VLinearSum(1.0, vec, 1.0, col, ySdot[i]);
-  }
-
-  return 0;
 }

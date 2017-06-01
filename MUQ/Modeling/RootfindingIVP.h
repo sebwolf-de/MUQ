@@ -40,11 +40,17 @@ namespace muq {
       */
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 
+      virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override;
+
       /// Run the CVODES integrator
       /**
 	 @param[in] inputs The inputs (first: state, next group: rhs inputs, next group: root inputs, final: eval times (optional))
+	 @param[in] wrtIn We are computing the derivative with repsect to this parameter
+	 @param[in] wrtOut We are computing the derivative of this output
+	 @param[in] mode Are we computing the Jacobian, Jacobian action, or Jacobian transpose action?
+	 \return A vector of length root->numOutputs, 0 indicates that output is not zero (no root found), 1 indicates that output is zero (a root was found)
        */
-      void FindRoot(ref_vector<boost::any> const& inputs);
+      Eigen::VectorXi FindRoot(ref_vector<boost::any> const& inputs, int const wrtIn = -1, int const wrtOut = -1, DerivativeMode const& mode = DerivativeMode::Jac);
 
       /// Update the input and output types based on the rhs and root muq::Modeling::WorkPiece's
       /**

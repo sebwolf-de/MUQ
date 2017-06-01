@@ -26,8 +26,10 @@ namespace muq {
 	 @param[in] rhs A muq::Modeling::WorkPiece that evalautes the right hand side of an ODE
 	 @param[in] root A muq::Modeling::WorkPiece that evalautes a function we are trying to find the root of along an orbit of the ODE
 	 @param[in] inputs The inputs to the rhs --- the first is the state, the rest are constant in time
+	 @param[in] wrtIn The input we are computing the derivative wrt --- negative indicates no derivative is being computed
+	 @param[in] wrtOut The output we are computing the derivative of --- negative indicates no derivative is being computed
        */
-      ODEData(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, ref_vector<boost::any> const& inputs);
+      ODEData(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, ref_vector<boost::any> const& inputs, int const wrtIn, int const wrtOut);
 
       /// The right hand side of the ODE
       std::shared_ptr<WorkPiece> rhs;
@@ -39,10 +41,10 @@ namespace muq {
       ref_vector<boost::any> inputs;
 
       /// The input we are computing the derivative wrt --- negative indicates no derivative is being computed
-      int wrtIn = -1;
+      const int wrtIn = -1;
 
       /// The output we are computing the derivative of --- negative indicates no derivative is being computed
-      int wrtOut = -1;
+      const int wrtOut = -1;
       
     private:
     };

@@ -99,8 +99,8 @@ private:
   }
 
   inline virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override {
-    /*// dependent variables
-    const Eigen::Vector3d& y = boost::any_cast<const Eigen::Vector3d>(inputs[0]);
+    // dependent variables
+    const N_Vector& y = boost::any_cast<const N_Vector>(inputs[0]);
 
     // parameters
     const Eigen::Vector2d& p = boost::any_cast<const Eigen::Vector2d>(inputs[1]);
@@ -108,26 +108,30 @@ private:
     // compute the jacobian 
     if( wrtIn==0 ) { // wrt the state y
       if( wrtOut==0 ) { // first output
-	jacobian = (Eigen::MatrixXd)Eigen::MatrixXd::Zero(1, 3);
+	jacobian = NewDenseMat(1, 3);
+	SetToZero(boost::any_cast<DlsMat&>(*jacobian));
       } else if( wrtOut==1 ) { // second output
-	jacobian = (Eigen::MatrixXd)Eigen::MatrixXd::Zero(1, 3);
-	Eigen::MatrixXd& jac = boost::any_cast<Eigen::MatrixXd&>(*jacobian);
+	jacobian = NewDenseMat(1, 3);
+	DlsMat& jac = boost::any_cast<DlsMat&>(*jacobian);
+	SetToZero(jac);
 
-	jac(0, 2) = 2.0*y(2);
+	DENSE_ELEM(jac, 0, 2) = 2.0*NV_Ith_S(y, 2);
       }
     } else if( wrtIn==1 ) { // wrt the parameters p
       if( wrtOut==0 ) { // first output
-	jacobian = (Eigen::MatrixXd)Eigen::MatrixXd::Zero(1, 2);
-	Eigen::MatrixXd& jac = boost::any_cast<Eigen::MatrixXd&>(*jacobian);
+	jacobian = NewDenseMat(1, 2);
+	DlsMat& jac = boost::any_cast<DlsMat&>(*jacobian);
+	SetToZero(jac);
 
-	jac(0, 0) = 1.0;
+	DENSE_ELEM(jac, 0, 0) = 1.0;
       } else if( wrtOut==1 ) { // second output
-	jacobian = (Eigen::MatrixXd)Eigen::MatrixXd::Zero(1, 2);
-	Eigen::MatrixXd& jac = boost::any_cast<Eigen::MatrixXd&>(*jacobian);
+	jacobian = NewDenseMat(1, 2);
+	DlsMat& jac = boost::any_cast<DlsMat&>(*jacobian);
+	SetToZero(jac);
 
-	jac(0, 1) = -1.0;
+	DENSE_ELEM(jac, 0, 1) = -1.0;
       }
-      }*/
+    }
   }
 };
 
@@ -224,105 +228,309 @@ TEST(KineticsProblemTest, Root) {
     EXPECT_DOUBLE_EQ(boost::any_cast<const double>(result[1]), y(2)*y(2)-p(1));
   }
 
-  /*{ // test jacobian
+  { // test jacobian
     // input 0, output 0
-    const boost::any jac00 = root->Jacobian(0, 0, y, p);
-    const Eigen::MatrixXd& jac00ref = boost::any_cast<const Eigen::MatrixXd>(jac00);
+    const boost::any jac00 = root->Jacobian(0, 0, yvec, p);
+    const DlsMat& jac00ref = boost::any_cast<const DlsMat&>(jac00);
 
-    EXPECT_EQ(jac00ref.rows(), 1);
-    EXPECT_EQ(jac00ref.cols(), 3);
+    EXPECT_EQ(jac00ref->M, 1); // rows
+    EXPECT_EQ(jac00ref->N, 3); // cols
 
     // input 0, output 1
-    const boost::any jac01 = root->Jacobian(0, 1, y, p);
-    const Eigen::MatrixXd& jac01ref = boost::any_cast<const Eigen::MatrixXd>(jac01);
+    const boost::any jac01 = root->Jacobian(0, 1, yvec, p);
+    const DlsMat& jac01ref = boost::any_cast<const DlsMat&>(jac01);
 
     Eigen::MatrixXd expectedJac01 = Eigen::MatrixXd::Zero(1, 3);
     expectedJac01(0, 2) = 2.0*y(2);
 
-    EXPECT_EQ(jac00ref.rows(), 1);
-    EXPECT_EQ(jac00ref.cols(), 3);
+    EXPECT_EQ(jac00ref->M, 1); // rows
+    EXPECT_EQ(jac00ref->N, 3); // cols
 
     // check the values for input 0, output 0 and 1
     for( unsigned int j=0; j<3; ++j ) {
-      EXPECT_DOUBLE_EQ(jac00ref(0,j), 0.0);
+      EXPECT_DOUBLE_EQ(DENSE_ELEM(jac00ref, 0, j), 0.0);
 
-      EXPECT_DOUBLE_EQ(jac01ref(0,j), expectedJac01(0,j));
+      EXPECT_DOUBLE_EQ(DENSE_ELEM(jac01ref, 0, j), expectedJac01(0,j));
     }
 
     //  input 1, output 0
-    const boost::any jac10 = root->Jacobian(1, 0, y, p);
-    const Eigen::MatrixXd& jac10ref = boost::any_cast<const Eigen::MatrixXd>(jac10);
+    const boost::any jac10 = root->Jacobian(1, 0, yvec, p);
+    const DlsMat& jac10ref = boost::any_cast<const DlsMat>(jac10);
 
     Eigen::MatrixXd expectedJac10 = Eigen::MatrixXd::Zero(1, 2);
     expectedJac10(0, 0) = 1.0;
 
-    EXPECT_EQ(jac10ref.rows(), 1);
-    EXPECT_EQ(jac10ref.cols(), 2);
+    EXPECT_EQ(jac10ref->M, 1); // rows
+    EXPECT_EQ(jac10ref->N, 2); // cols
 
     // input 1, output 1
-    const boost::any jac11 = root->Jacobian(1, 1, y, p);
-    const Eigen::MatrixXd& jac11ref = boost::any_cast<const Eigen::MatrixXd>(jac11);
+    const boost::any jac11 = root->Jacobian(1, 1, yvec, p);
+    const DlsMat& jac11ref = boost::any_cast<const DlsMat>(jac11);
 
     Eigen::MatrixXd expectedJac11 = Eigen::MatrixXd::Zero(1, 2);
     expectedJac11(0, 1) = -1.0;
 
-    EXPECT_EQ(jac11ref.rows(), 1);
-    EXPECT_EQ(jac11ref.cols(), 2);
+    EXPECT_EQ(jac11ref->M, 1); // rows
+    EXPECT_EQ(jac11ref->N, 2); // cols
 
     // check the values of input 1, output 0 and 1
     for( unsigned int j=0; j<2; ++j ) {
-      EXPECT_DOUBLE_EQ(jac10ref(0,j), expectedJac10(0,j));
+      EXPECT_DOUBLE_EQ(DENSE_ELEM(jac10ref, 0, j), expectedJac10(0,j));
 
-      EXPECT_DOUBLE_EQ(jac11ref(0,j), expectedJac11(0,j));
+      EXPECT_DOUBLE_EQ(DENSE_ELEM(jac11ref, 0, j), expectedJac11(0,j));
     }
-    }*/
+  }
 }
 
-TEST(RootfindingIVP, KineticsProblem) {
-  // the right hand side of the ODE
-  auto rhs = std::make_shared<KineticsRHS>();
+class RootfindingIVPTests : public::testing::Test {
+public:
 
-  // integrate the ode until we find the root of this function
-  auto root = std::make_shared<RootFunction>();
+  /// Default constructor
+  RootfindingIVPTests() {
+    // the right hand side of the ODE
+    rhs = std::make_shared<KineticsRHS>();
+
+    // integrate the ode until we find the root of this function
+    root = std::make_shared<RootFunction>();
+
+    // options for the ODE integrator
+    pt::ptree pt;
+    pt.put<double>("ODESolver.RelativeTolerance", 1.0e-10);
+    pt.put<double>("ODESolver.AbsoluteTolerance", 1.0e-10);
+    pt.put<double>("ODESolver.MaxStepSize", 1.0);
+
+    // initial condition
+    ic = N_VNew_Serial(3);
+    NV_Ith_S(ic, 0) = 1.0;
+    NV_Ith_S(ic, 1) = 1.0;
+    NV_Ith_S(ic, 2) = 1.0;
+  }
+
+  /// Default destructor
+  virtual ~RootfindingIVPTests() {}
+
+  virtual void TearDown() override {
+    // the input and output number is unknown
+    EXPECT_EQ(rootfinder->numInputs, -1); // there is an optional input so even though the inputs to rhs and root are known
+    EXPECT_EQ(rootfinder->numOutputs, -1); // there is an optional output that depends on the optional input
+    
+    // evaluate the rootfinder
+    const std::vector<boost::any>& result = rootfinder->Evaluate(ic, a, b, p);
+    const N_Vector& rt = boost::any_cast<const N_Vector&>(result[0]);
+
+    // check the state at the root
+    EXPECT_EQ(NV_LENGTH_S(rt), 3);
+    for( unsigned int i=0; i<3; ++i ) {
+      EXPECT_NEAR(NV_Ith_S(rt, i), rtExpected(i), 1.0e-5);
+    }
+
+    // check the time where the root was found
+    EXPECT_NEAR(boost::any_cast<const double>(result[1]), 0.41421356237309931, 1.0e-5);
+
+    // check the rootfinder jacobian
+    const boost::any& jac0 = rootfinder->Jacobian(0, 0, ic, a, b, p);
+    const DlsMat& jac0ref = boost::any_cast<const DlsMat&>(jac0);
+    const Eigen::MatrixXd& jac0FD = JacobianFD(0);
+
+    EXPECT_EQ(jac0ref->M, jac0FD.rows());
+    EXPECT_EQ(jac0ref->N, jac0FD.cols());
+    for( unsigned int i=0; i<jac0ref->M; ++i ) {
+      for( unsigned int j=0; j<jac0ref->N; ++j ) {
+	EXPECT_NEAR(DENSE_ELEM(jac0ref, i, j), jac0FD(i, j), 1.0e-4);
+      }
+    }
+
+    const boost::any& jac1 = rootfinder->Jacobian(1, 0, ic, a, b, p);
+    const DlsMat& jac1ref = boost::any_cast<const DlsMat&>(jac1);
+    const Eigen::MatrixXd& jac1FD = JacobianFD(1);
+
+    EXPECT_EQ(jac1ref->M, jac1FD.rows());
+    EXPECT_EQ(jac1ref->N, jac1FD.cols());
+    for( unsigned int i=0; i<jac1ref->M; ++i ) {
+      for( unsigned int j=0; j<jac1ref->N; ++j ) {
+	EXPECT_NEAR(DENSE_ELEM(jac1ref, i, j), jac1FD(i, j), 1.0e-4);
+      }
+    }
+
+    const boost::any& jac2 = rootfinder->Jacobian(2, 0, ic, a, b, p);
+    const DlsMat& jac2ref = boost::any_cast<const DlsMat&>(jac2);
+    const Eigen::MatrixXd& jac2FD = JacobianFD(2);
+
+    EXPECT_EQ(jac2ref->M, jac2FD.rows());
+    EXPECT_EQ(jac2ref->N, jac2FD.cols());
+    for( unsigned int i=0; i<jac2ref->M; ++i ) {
+      for( unsigned int j=0; j<jac2ref->N; ++j ) {
+	EXPECT_NEAR(DENSE_ELEM(jac2ref, i, j), jac2FD(i, j), 1.0e-4);
+      }
+    }
+
+    const boost::any& jac3 = rootfinder->Jacobian(3, 0, ic, a, b, p);
+    const DlsMat& jac3ref = boost::any_cast<const DlsMat&>(jac3);
+    const Eigen::MatrixXd& jac3FD = JacobianFD(3);
+
+    EXPECT_EQ(jac3ref->M, jac3FD.rows());
+    EXPECT_EQ(jac3ref->N, jac3FD.cols());
+    for( unsigned int i=0; i<jac3ref->M; ++i ) {
+      for( unsigned int j=0; j<jac3ref->N; ++j ) {
+	EXPECT_NEAR(DENSE_ELEM(jac3ref, i, j), jac3FD(i, j), 1.0e-4);
+      }
+    }
+  }
+
+  /// The rhs of the ODE
+  std::shared_ptr<KineticsRHS> rhs;
+
+  /// Integrate the ode until we find the root of this function
+  std::shared_ptr<RootFunction> root;
+
+  /// The rootfinder
+  std::shared_ptr<RootfindingIVP> rootfinder;
 
   /// Options for the ODE integrator
   pt::ptree pt;
-  pt.put<double>("ODESolver.RelativeTolerance", 1.0e-10);
-  pt.put<double>("ODESolver.AbsoluteTolerance", 1.0e-10);
-  pt.put<double>("ODESolver.MaxStepSize", 1.0);
-  pt.put<std::string>("ODESolver.MultistepMethod", "BDF");
-  pt.put<std::string>("ODESolver.LinearSolver", "Dense");
-  pt.put<std::string>("ODESolver.NonlinearSolver", "Newton");
   
-  // the root finder
-  auto rootfinder = std::make_shared<RootfindingIVP>(rhs, root, pt);
-
-  // the input and output number is unknown
-  EXPECT_EQ(rootfinder->numInputs, -1); // there is an optional input so even though the inputs to rhs and root are known
-  EXPECT_EQ(rootfinder->numOutputs, -1); // there is an optional output that depends on the optional input
-
-  // initial condition
-  N_Vector ic = N_VNew_Serial(3);
-  NV_Ith_S(ic, 0) = 1.0;
-  NV_Ith_S(ic, 1) = 1.0;
-  NV_Ith_S(ic, 2) = 1.0;
-
   // rhs parameters
-  const Eigen::Vector2d a(1.0, 2.0);
+  const Eigen::Vector2d a = Eigen::Vector2d(1.0, 2.0);
   const double b = 1.0;
 
   // root parameters
-  const Eigen::Vector2d p(5.0, 2.0);
+  const Eigen::Vector2d p = Eigen::Vector2d(5.0, 2.0);
 
-  // evaluate the rootfinder
-  const std::vector<boost::any>& result = rootfinder->Evaluate(ic, a, b, p);
-  const N_Vector& rt = boost::any_cast<const N_Vector&>(result[0]);
-  
+  /// Initial condition
+  N_Vector ic;
+
   // the expected root
-  const Eigen::VectorXd rtExpected = Eigen::Vector3d(1.5131802509043677, 2.7908899272796677, 1.4142135623730951);
+  const Eigen::Vector3d rtExpected = Eigen::Vector3d(1.5131802694021561, 2.7908921527830426, 1.4142135623730951);
+  
+private:
 
-  EXPECT_EQ(NV_LENGTH_S(rt), 3);
-  for( unsigned int i=0; i<3; ++i ) {
-    EXPECT_NEAR(NV_Ith_S(rt, i), rtExpected(i), 1.0e-8);
+  inline Eigen::MatrixXd JacobianFD(unsigned int const wrtIn) const {
+    // evaluate the base value
+    const std::vector<boost::any>& baseany = rootfinder->Evaluate(ic, a, b, p);
+    const N_Vector& base = boost::any_cast<const N_Vector&>(baseany[0]);
+
+    // step size
+    const double dx = 1.0e-6;
+    
+    switch( wrtIn ) {
+    case 0: { // initial conditions
+      N_Vector ic_plus = N_VNew_Serial(3);
+      for( unsigned int i=0; i<3; ++i ) {
+	NV_Ith_S(ic_plus, i) = NV_Ith_S(ic, i);
+      }
+
+      Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(3, 3);
+
+      for( unsigned int i=0; i<3; ++i ) {
+	NV_Ith_S(ic_plus, i) += dx;
+
+	// evaluate the incremented value
+	const std::vector<boost::any>& plusany  = rootfinder->Evaluate(ic_plus, a, b, p);
+	const N_Vector& plus = boost::any_cast<const N_Vector&>(plusany[0]);
+
+	for( unsigned int j=0; j<3; ++j ) {
+	  jac(j,i) = (NV_Ith_S(plus, j) - NV_Ith_S(base, j))/dx;
+	}
+
+	NV_Ith_S(ic_plus, i) = NV_Ith_S(ic, i);
+      }
+
+      return jac;
+    }
+    case 1: { // parameters a
+      Eigen::Vector2d a_plus = a;
+
+      Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(3, 2);
+
+      for( unsigned int i=0; i<2; ++i ) {
+	a_plus(i) += dx;
+
+	// evaluate the incremented value
+	const std::vector<boost::any>& plusany  = rootfinder->Evaluate(ic, a_plus, b, p);
+	const N_Vector& plus = boost::any_cast<const N_Vector&>(plusany[0]);
+	
+	for( unsigned int j=0; j<3; ++j ) {
+	  jac(j,i) = (NV_Ith_S(plus, j) - NV_Ith_S(base, j))/dx;
+	}
+
+	a_plus(i) = a(i);
+      }
+
+      return jac;
+    }
+    case 2: { // parameters b
+      Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(3, 1);
+
+      // evaluate the incremented value
+      const std::vector<boost::any>& plusany  = rootfinder->Evaluate(ic, a, b+dx, p);
+      const N_Vector& plus = boost::any_cast<const N_Vector&>(plusany[0]);
+      
+      for( unsigned int j=0; j<3; ++j ) {
+	jac(j,0) = (NV_Ith_S(plus, j) - NV_Ith_S(base, j))/dx;
+      }
+
+      return jac;
+    }
+    case 3: { // parameters p
+      Eigen::Vector2d p_plus = p;
+
+      Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(3, 2);
+
+      for( unsigned int i=0; i<2; ++i ) {
+	p_plus(i) += dx;
+
+	// evaluate the incremented value
+	const std::vector<boost::any>& plusany  = rootfinder->Evaluate(ic, a, b, p_plus);
+	const N_Vector& plus = boost::any_cast<const N_Vector&>(plusany[0]);
+	
+	for( unsigned int j=0; j<3; ++j ) {
+	  jac(j,i) = (NV_Ith_S(plus, j) - NV_Ith_S(base, j))/dx;
+	}
+
+	p_plus(i) = p(i);
+      }
+
+      return jac;
+    }
+    default:
+      assert(false);
+    }
   }
+  
+};
+
+TEST_F(RootfindingIVPTests, BDFNewtonMethod) {
+  pt.put<std::string>("ODESolver.MultistepMethod", "BDF");
+  pt.put<std::string>("ODESolver.NonlinearSolver", "Newton");
+  pt.put<std::string>("ODESolver.LinearSolver", "Dense");
+  
+  // the root finder
+  rootfinder = std::make_shared<RootfindingIVP>(rhs, root, pt);
+}
+
+TEST_F(RootfindingIVPTests, BDFIterMethod) {
+  pt.put<std::string>("ODESolver.MultistepMethod", "BDF");
+  pt.put<std::string>("ODESolver.NonlinearSolver", "Iter");
+  pt.put<std::string>("ODESolver.LinearSolver", "Dense");
+  
+  // the root finder
+  rootfinder = std::make_shared<RootfindingIVP>(rhs, root, pt);
+}
+
+TEST_F(RootfindingIVPTests, AdamsNewtonMethod) {
+  pt.put<std::string>("ODESolver.MultistepMethod", "Adams");
+  pt.put<std::string>("ODESolver.NonlinearSolver", "Newton");
+  pt.put<std::string>("ODESolver.LinearSolver", "Dense");
+  
+  // the root finder
+  rootfinder = std::make_shared<RootfindingIVP>(rhs, root, pt);
+}
+
+TEST_F(RootfindingIVPTests, AdamsIterMethod) {
+  pt.put<std::string>("ODESolver.MultistepMethod", "Adams");
+  pt.put<std::string>("ODESolver.NonlinearSolver", "Iter");
+  pt.put<std::string>("ODESolver.LinearSolver", "Dense");
+  
+  // the root finder
+  rootfinder = std::make_shared<RootfindingIVP>(rhs, root, pt);
 }
