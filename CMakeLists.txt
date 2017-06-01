@@ -93,14 +93,12 @@ install(EXPORT ${CMAKE_PROJECT_NAME}Depends
 	    COMPONENT dev)
   
 # install all the MUQ headers -- may be better off installing for each package individually
-install(DIRECTORY ${CMAKE_PROJECT_NAME}
+install(DIRECTORY MUQ
         DESTINATION "${CMAKE_INSTALL_PREFIX}/include"
 	    FILES_MATCHING PATTERN "*.h")
   
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR}) 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR}) 
-
-
 
 ###############################################
 # Write summary to terminal
