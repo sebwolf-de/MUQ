@@ -33,10 +33,7 @@ INCLUDE(OptionsSetup)
 ###############################################
 # Find source files and calculate required dependencies
 ###############################################
-INCLUDE(GetPossibleDependencyList)
 INCLUDE(CompileGroup)
-
-message(STATUS "All possible MUQ dependencies = ${POSSIBLE_MUQ_DEPENDENCIES}")
 
 # The ProcesCompileGroups function will add modules/CMakeLists.txt and then process any computed Compile/Test groups
 INCLUDE(ProcessCompileGroups)
@@ -59,6 +56,11 @@ INCLUDE(DependencyCheck)
 ###############################################
 # Create BUILD targets for cmake
 ###############################################
+
+# Remove any compile groups with unsatisfied dependencies
+INCLUDE(UpdateCompileGroups)
+
+# Set up libraries and test executables based on the compile groups
 INCLUDE(SetupCompileTargets)
 INCLUDE(SetupTestTargets)
 

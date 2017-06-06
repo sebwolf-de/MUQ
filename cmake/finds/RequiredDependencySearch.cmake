@@ -4,7 +4,8 @@ macro (GetDependency name)
         list (FIND MUQ_REQUIRES ${name} dindex)
         if (${dindex} GREATER -1)
 	    set(MUQ_NEEDS_${name} ON)
-	
+	    set(MUQ_USE_${name} ON)
+            
 	    find_package(${name})
 	    if(${name}_FOUND)
 	        # check to make sure the library can be linked to
@@ -81,7 +82,8 @@ GetDependency(FLANN)
 list (FIND MUQ_REQUIRES BOOST dindex)
 if (${dindex} GREATER -1)
     set(MUQ_NEEDS_BOOST ON)
-
+    set(MUQ_USE_BOOST ON)
+    
     find_package(BOOSTMUQ)
     if(NOT DEFINED Boost_FOUND)
 	set(Boost_FOUND ${BOOST_FOUND})

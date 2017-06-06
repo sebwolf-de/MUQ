@@ -4,7 +4,8 @@
 ########################################
 IF(MUQ_USE_GTEST)
   find_package(GTEST)
-
+  set(MUQ_NEEDS_GTEST ON)
+  
   IF(GTEST_FOUND)
     include(CheckGTEST)	
   ENDIF()
@@ -25,32 +26,40 @@ ELSE(MUQ_USE_GTEST)
 
     message(WARNING “Tried to compile tests, but MUQ_USE_GTEST is OFF.  Turning off tests.”)
     set(MUQ_BUILD_TESTS OFF)
-    
+    set(MUQ_NEEDS_GTEST OFF)
 ENDIF(MUQ_USE_GTEST)
 
 
 ########################################
 ##### LOOK FOR NLOPT              ######
 ########################################
-IF(MUQ_USE_NLOPT)
-  FIND_PACKAGE(NLOPT)
+list (FIND MUQ_REQUIRES NLOPT dindex)
+if (${dindex} GREATER -1)
+    set(MUQ_NEEDS_NLOPT ON)
 
-  IF (NLOPT_FOUND)
-    add_definitions(-DMUQ_USE_NLOPT)
+    IF(MUQ_USE_NLOPT)
 
-    # include the sacado library for linking
-    LIST(APPEND MUQ_LINK_LIBS ${NLOPT_LIBRARIES})
-    LIST(APPEND MUQ_LINK_LIBS_STATIC ${NLOPT_LIBRARIES_STATIC})
-		
-    include_directories(${NLOPT_INCLUDE_DIRS})
-    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${NLOPT_INCLUDE_DIRS})
-		
-  ELSE()
-    set(MUQ_USE_NLOPT OFF)
-  ENDIF()
+      FIND_PACKAGE(NLOPT)
 
-ENDIF(MUQ_USE_NLOPT)
+      IF (NLOPT_FOUND)
+        add_definitions(-DMUQ_USE_NLOPT)
 
+        # include the sacado library for linking
+        LIST(APPEND MUQ_LINK_LIBS ${NLOPT_LIBRARIES})
+        LIST(APPEND MUQ_LINK_LIBS_STATIC ${NLOPT_LIBRARIES_STATIC})
+
+        include_directories(${NLOPT_INCLUDE_DIRS})
+        LIST(APPEND MUQ_EXTERNAL_INCLUDES ${NLOPT_INCLUDE_DIRS})
+
+      ELSE()
+        set(MUQ_USE_NLOPT OFF)
+      ENDIF()
+
+    ENDIF(MUQ_USE_NLOPT)
+else()
+    set(MUQ_NEEDS_NLOPT OFF)
+endif()
+    
 
 ########################################
 ##### LOOK FOR MKL                ######
@@ -73,17 +82,53 @@ endif()
 ########################################
 ##### LOOK FOR PYTHON             ######
 ########################################
+list (FIND MUQ_REQUIRES PYTHON dindex)
+if (${dindex} GREATER -1)
+    set(MUQ_NEEDS_PYTHON ON)
 
-if(MUQ_USE_PYTHON)
-    set(PYBIND11_CPP_STANDARD -std=c++11)    
+    if(MUQ_USE_PYTHON)
+        set(PYBIND11_CPP_STANDARD -std=c++11)    
 
-    FIND_PACKAGE(pybind11)
+        FIND_PACKAGE(pybind11)
     
-    if(NOT pybind11_FOUND)
-           add_subdirectory(${CMAKE_SOURCE_DIR}/external/pybind11)
-           include_directories(${CMAKE_SOURCE_DIR}/external/pybind11/include)
+        if(NOT pybind11_FOUND)
+            add_subdirectory(${CMAKE_SOURCE_DIR}/external/pybind11)
+            include_directories(${CMAKE_SOURCE_DIR}/external/pybind11/include)
+        endif()
+
+    endif()
+else()
+    set(MUQ_NEEDS_PYTHON OFF)
+    set(MUQ_USE_PYTHON OFF)
+endif()
+
+########################################
+##### LOOK FOR DOLFIN/Fenics      ######
+########################################
+list (FIND MUQ_REQUIRES DOLFIN dindex)
+message(${MUQ_REQUIRES})
+if (${dindex} GREATER -1)
+    set(MUQ_NEEDS_DOLFIN ON)
+            
+    if(MUQ_USE_DOLFIN AND NOT MUQ_USE_PYTHON)
+        message(WARNING "Requested compilation with Fenics/Dolfin, but not Python.  Building the Fenics/Dolfin bindings requires building MUQ with Python support.")
+        set(MUQ_USE_DOLFIN OFF)
     endif()
 
+    if(MUQ_USE_DOLFIN)
+  
+        find_package(DOLFIN)
+
+        if(DOLFIN_FOUND)
+            include_directories(${DOLFIN_INCLUDE_DIRS})
+            include_directories(SYSTEM ${DOLFIN_3RD_PARTY_INCLUDE_DIRS})
+        else()
+            set(MUQ_USE_DOLFIN OFF)
+        endif()
+    endif()
+else()
+    set(MUQ_NEEDS_DOLFIN OFF)
+    set(MUQ_USE_DOLFIN OFF)
 endif()
 
 ########################################
