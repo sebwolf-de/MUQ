@@ -1,5 +1,7 @@
 #include "MUQ/Modeling/WorkPiece.h"
 
+#include <Eigen/Core>
+
 // define the muq namespace
 using namespace muq::Modeling;
 
@@ -202,7 +204,7 @@ std::vector<boost::any> WorkPiece::Evaluate() {
   assert(numInputs<=0);
 
   // clear the outputs
-  if( clearOutputs ) { outputs.clear(); }
+  Clear();
 
   // evaluate the WorkPiece
   std::vector<std::reference_wrapper<const boost::any>> emptyVec;
@@ -220,27 +222,22 @@ std::vector<boost::any> WorkPiece::Evaluate() {
   return outputs;
 }
 
-std::vector<boost::any> WorkPiece::Evaluate(std::vector<std::reference_wrapper<const boost::any>> const& ins) {
+std::vector<boost::any> WorkPiece::Evaluate(ref_vector<boost::any> const& ins) {
   // make sure we have the correct number of inputs
   assert(numInputs<0 || ins.size()==numInputs);
+
+  // we have new outputs
+  Clear();
 
   // the inputs are set, so call evaluate with no inputs
   EvaluateImpl(ins);
 
   // make sure the output types are correct
   assert(numOutputs<0 || outputs.size()==numOutputs);
-  
-  for( unsigned int i=0; i<outputs.size(); ++i ) {
-    // find the output type
-    auto it = outputTypes.find(i);
 
-    if( it!=outputTypes.end() ) { // if we know the output type
-      // check to see that the types match
-      if(it->second.compare(outputs.at(i).type().name())!=0){
-        std::cerr << "ERROR: Expected output of type " << it->second << " but received output of type " << outputs.at(i).type().name() << std::endl;
-        assert(it->second.compare(outputs.at(i).type().name())==0);
-      }
-    }
+  // check the output types
+  for( unsigned int i=0; i<outputs.size(); ++i ) {
+    assert(CheckOutputType(i, outputs[i].type().name()));
   }
   
   return outputs;
@@ -253,10 +250,266 @@ std::vector<boost::any> WorkPiece::Evaluate(std::vector<boost::any> const& ins) 
   // make sure the input types are correct
   assert(inputTypes.size()==0 || inputTypes.size()==ins.size());
   for(unsigned int i=0; i<inputTypes.size(); ++i ) {
-    assert(inputTypes[i].compare(ins[i].type().name())==0);
+    assert(CheckInputType(i, ins[i].type().name()));
   }
   
   return Evaluate(ToRefVector(ins));
+}
+
+boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, std::vector<boost::any> const& ins) {
+  // make sure we have the correct number of inputs
+  assert(numInputs<0 || ins.size()==numInputs);
+
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
+  
+  // make sure the input types are correct
+  assert(inputTypes.size()==0 || inputTypes.size()==ins.size());
+  for(unsigned int i=0; i<inputTypes.size(); ++i ) {
+    assert(CheckInputType(i, ins[i].type().name()));
+  }
+  
+  return Jacobian(wrtIn, wrtOut, ToRefVector(ins));
+}
+
+boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& ins) {  
+  // make sure we have the correct number of inputs
+  assert(numInputs<0 || ins.size()==numInputs);
+
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
+
+  // clear the derivative information
+  ClearDerivatives();
+
+  // the inputs are set, so call evaluate with no inputs
+  JacobianImpl(wrtIn, wrtOut, ins);
+
+  // make sure the jacobian was computed (the optional jacobian member has a value)
+  if( !jacobian ) {
+    std::cerr << std::endl << "ERROR: The Jacobian was not computed properly, make sure JacobianImpl gives muq::Modeling::WorkPiece::jacobian a value" << std::endl << std::endl;
+    assert(jacobian);
+  }
+
+  if( jacobian ) {
+    // return the jacobian (use the * operator because it is a boost::optional)
+    return *jacobian;
+  }
+
+  // jacobian has not been computed --- return an empty boost optional
+  return jacobian;
+}
+
+void WorkPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) {
+  // the name of the Eigen::VectorXd's
+  const std::string eigenType = typeid(Eigen::VectorXd).name();
+
+  // if both the input and output type is Eigen::VectorXd, default to finite difference
+  if( InputType(wrtIn, false).compare(eigenType)==0 && OutputType(wrtOut, false).compare(eigenType)==0 ) {
+    // compute the jacobian with finite difference
+    JacobianByFD(wrtIn, wrtOut, inputs);
+
+    return;
+  }
+
+  jacobian = boost::none;
+
+  // invalid! The user has not implemented the Jacobian
+  std::cerr << std::endl << "ERROR: No JacobianImpl function for muq::Modeling::WorkPiece implemented, cannot compute Jacobian" << std::endl << std::endl;
+  assert(false);
+}
+
+void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs, double const relTol, double const minTol) {      
+  // the input we are computing the derivative wrt (the value will change so we need a hard copy)
+  boost::any in = inputs[wrtIn];
+
+  // a reference to the input that we can change
+  Eigen::VectorXd& inref = boost::any_cast<Eigen::VectorXd&>(in);
+
+  // get a copy of the inputs (note, we are only copying the references)
+  ref_vector<const boost::any> tempIns = inputs;
+  tempIns[wrtIn] = in;
+
+  // compute the base result
+  const std::vector<boost::any>& base = Evaluate(inputs);
+
+  // const reference to the output of interest
+  const Eigen::VectorXd& outbase = boost::any_cast<const Eigen::VectorXd&>(base[wrtOut]);
+
+  // initalize the jacobian and a reference that we can change
+  jacobian = (Eigen::MatrixXd)Eigen::MatrixXd::Zero(outbase.size(), inref.size());
+  Eigen::MatrixXd& jac = boost::any_cast<Eigen::MatrixXd&>(*jacobian); // use * operator because it is a boost::optional
+
+  // loop thorugh the inputs (columns of the Jacobian)
+  for( unsigned int col=0; col<inref.size(); ++col ) {
+    // compute the step length
+    const double dx = std::fmax(minTol, relTol*inref(col));
+
+    // increment the col's input (change the reference to the boost any)
+    inref(col) += dx;
+
+    // compute the perturbed result
+    const std::vector<boost::any>& plus = Evaluate(tempIns);
+
+    // const reference to the output of interest
+    const Eigen::VectorXd& outplus = boost::any_cast<const Eigen::VectorXd&>(plus[wrtOut]);
+
+    // compute the Jacobian for this column
+    jac.col(col) = (outplus-outbase)/dx;
+
+    // reset the the col's input
+    inref(col) -= dx;
+  }
+}
+
+boost::any WorkPiece::JacobianAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, std::vector<boost::any> const& ins) {
+  // make sure we have the correct number of inputs
+  assert(numInputs<0 || ins.size()==numInputs);
+
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
+
+  // clear the derivative information
+  ClearDerivatives();
+
+  // make sure the input types are correct
+  assert(inputTypes.size()==0 || inputTypes.size()==ins.size());
+  for(unsigned int i=0; i<inputTypes.size(); ++i ) {
+    assert(CheckInputType(i, ins[i].type().name()));
+  }
+  
+  return JacobianAction(wrtIn, wrtOut, vec, ToRefVector(ins));
+}
+
+boost::any WorkPiece::JacobianAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& ins) {
+  // make sure we have the correct number of inputs
+  assert(numInputs<0 || ins.size()==numInputs);
+
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
+  
+  // the inputs are set, so call evaluate with no inputs
+  JacobianActionImpl(wrtIn, wrtOut, vec, ins);
+  
+  // make sure the jacobian was computed (the optional jacobian member has a value)
+  if( !jacobianAction ) {
+  std::cerr << std::endl << "ERROR: The Jacobian was not computed properly, make sure JacobianActionImpl gives muq::Modeling::WorkPiece::jacobianAction a value" << std::endl << std::endl;
+  assert(jacobianAction);
+  }
+
+  // return the jacobian action (use the * operator because it is a boost::optional)
+  return *jacobianAction;
+}
+
+void WorkPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
+   // the name of the Eigen::VectorXd's
+  const std::string eigenType = typeid(Eigen::VectorXd).name();
+
+  // if both the input and output type is Eigen::VectorXd, default to finite difference
+  if( eigenType.compare(vec.type().name())==0 && InputType(wrtIn, false).compare(eigenType)==0 && OutputType(wrtOut, false).compare(eigenType)==0 ) {
+    // compute the action of the jacobian using finite differences
+    JacobianActionByFD(wrtIn, wrtOut, vec, inputs);
+    
+    return;
+  }
+
+  // invalid! The user has not implemented the JacobianAction
+  std::cerr << std::endl << "ERROR: No JacobianActionImpl function for muq::Modeling::WorkPiece implemented, cannot compute the action of the Jacobian" << std::endl << std::endl;
+  assert(false);
+}
+
+void WorkPiece::JacobianActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
+  // compute the jacobian matrix with finite differences (if the jacobian is implemented then this is actually exact)
+  Jacobian(wrtIn, wrtOut, inputs);
+  assert(jacobian);
+  
+  // get a reference to the jacobian and the input vector
+  const Eigen::MatrixXd& jac = boost::any_cast<const Eigen::MatrixXd&>(*jacobian); // * operator because it is a boost::optional
+  const Eigen::VectorXd& vecref = boost::any_cast<const Eigen::VectorXd&>(vec);
+  
+  // check input sizes
+  assert(jac.cols()==vecref.size());
+  
+  // apply the jacobian to the input vector
+  jacobianAction = (Eigen::VectorXd)(jac*vecref);
+}
+
+boost::any WorkPiece::JacobianTransposeAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, std::vector<boost::any> const& ins) {
+  // make sure we have the correct number of inputs
+  assert(numInputs<0 || ins.size()==numInputs);
+
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
+
+  // clear the derivative information
+  ClearDerivatives();
+
+  // make sure the input types are correct
+  assert(inputTypes.size()==0 || inputTypes.size()==ins.size());
+  for(unsigned int i=0; i<inputTypes.size(); ++i ) {
+    assert(CheckInputType(i, ins[i].type().name()));
+  }
+  
+  return JacobianTransposeAction(wrtIn, wrtOut, vec, ToRefVector(ins));
+}
+
+boost::any WorkPiece::JacobianTransposeAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& ins) {
+  // make sure we have the correct number of inputs
+  assert(numInputs<0 || ins.size()==numInputs);
+
+  // make sure the input and output number are valid
+  assert(numInputs<0 || wrtIn<numInputs);
+  assert(numOutputs<0 || wrtOut<numOutputs);
+  
+  // the inputs are set, so call evaluate with no inputs
+  JacobianTransposeActionImpl(wrtIn, wrtOut, vec, ins);
+  
+  // make sure the jacobian was computed (the optional jacobian member has a value)
+  if( !jacobianTransposeAction ) {
+    std::cerr << std::endl << "ERROR: The Jacobian was not computed properly, make sure JacobianTransposeActionImpl gives muq::Modeling::WorkPiece::jacobianTransposeAction a value" << std::endl << std::endl;
+    assert(jacobianTransposeAction);
+  }
+
+  // return the jacobian action (use the * operator because it is a boost::optional)
+  return *jacobianTransposeAction;
+}
+
+void WorkPiece::JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
+  // the name of the Eigen::VectorXd's
+  const std::string eigenType = typeid(Eigen::VectorXd).name();
+
+  // if both the input and output type is Eigen::VectorXd, default to finite difference
+  if( eigenType.compare(vec.type().name())==0 && InputType(wrtIn, false).compare(eigenType)==0 && OutputType(wrtOut, false).compare(eigenType)==0 ) {
+    // compute the action of the jacobian transpose using finite differences
+    JacobianTransposeActionByFD(wrtIn, wrtOut, vec, inputs);
+
+    return;
+  }
+
+  // invalid! The user has not implemented the JacobianAction
+  std::cerr << std::endl << "ERROR: No JacobianTransposeActionImpl function for muq::Modeling::WorkPiece implemented, cannot compute the action of the Jacobian transpose" << std::endl << std::endl;
+  assert(false);
+}
+
+void WorkPiece::JacobianTransposeActionByFD(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
+  // compute the jacobian matrix with finite differences (if the jacobian is implemented this is exact)
+  Jacobian(wrtIn, wrtOut, inputs);
+  assert(jacobian);
+  
+  // get a reference to the jacobian and the input vector
+  const Eigen::MatrixXd& jac = boost::any_cast<const Eigen::MatrixXd&>(*jacobian); // * operator because it is a boost::optional
+  const Eigen::VectorXd& vecref = boost::any_cast<const Eigen::VectorXd&>(vec);
+  
+  // check input sizes
+  assert(jac.rows()==vecref.size());
+  
+  // apply the jacobian to the input vector
+  jacobianTransposeAction = (Eigen::VectorXd)(jac.transpose()*vecref);
 }
 
 std::string WorkPiece::Name() const {
@@ -333,4 +586,46 @@ ref_vector<const boost::any> WorkPiece::ToRefVector(std::vector<boost::any> cons
     refs.push_back(std::cref(anyVec.at(i)));
 
   return refs;
+}
+
+void WorkPiece::Clear() {
+  // we have new outputs --- some WorkPiece's have the outputs stored in a child class so we don't always want to clear them
+  if( clearOutputs ) { outputs.clear(); }
+}
+
+void WorkPiece::ClearDerivatives() {
+  // clear the jacobian
+  jacobian = boost::none;
+
+  // clear the jacobian action
+  jacobianAction = boost::none;
+
+  // clear the jacobian transpose action
+  jacobianTransposeAction = boost::none;
+}
+
+bool WorkPiece::CheckInputType(unsigned int const inputNum, std::string const& type) const {
+  // find the input type
+  auto it = inputTypes.find(inputNum);
+  
+  // check to see that the types match (or that we don't know the type)
+  if( it!=inputTypes.end() && it->second.compare(type)!=0 ) {
+    std::cerr << std::endl << "ERROR: Input types do not match." << std::endl << "\tGiven input: " << boost::core::demangle(type.c_str()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
+    return false;
+  }
+  
+  return true;
+}
+
+bool WorkPiece::CheckOutputType(unsigned int const outputNum, std::string const& type) const {
+  // find the output type
+  auto it = outputTypes.find(outputNum);
+  
+  // check to see that the types match (or that we don't know the type)
+  if( it!=outputTypes.end() && it->second.compare(type)!=0 ) {
+    std::cerr << std::endl << "ERROR: Output types do not match." << std::endl << "\tGiven input: " << boost::core::demangle(type.c_str()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
+    return false;
+  }
+  
+  return true;
 }

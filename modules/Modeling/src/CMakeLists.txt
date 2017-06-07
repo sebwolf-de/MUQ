@@ -21,6 +21,9 @@ CreateCompileGroup(
     ""
     WorkPiece.cpp
 
+    NodeNameFinder.cpp
+    AnyAlgebra.cpp
+
     WorkGraph.cpp
     WorkGraphNode.cpp
     WorkGraphEdge.cpp
