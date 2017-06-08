@@ -286,7 +286,7 @@ class RootfindingIVPTests : public::testing::Test {
 public:
 
   /// Default constructor
-  RootfindingIVPTests() {
+  inline RootfindingIVPTests() {
     // the right hand side of the ODE
     rhs = std::make_shared<KineticsRHS>();
 
@@ -294,11 +294,11 @@ public:
     root = std::make_shared<RootFunction>();
 
     // options for the ODE integrator
-    pt::ptree pt;
     pt.put<double>("ODESolver.RelativeTolerance", 1.0e-10);
     pt.put<double>("ODESolver.AbsoluteTolerance", 1.0e-10);
     pt.put<double>("ODESolver.MaxStepSize", 1.0);
-
+    pt.put<unsigned int>("Rootfinder.MaxSteps", (int)1e3);
+  
     // initial condition
     ic = N_VNew_Serial(3);
     NV_Ith_S(ic, 0) = 1.0;
@@ -307,9 +307,9 @@ public:
   }
 
   /// Default destructor
-  virtual ~RootfindingIVPTests() {}
+  inline virtual ~RootfindingIVPTests() {}
 
-  virtual void TearDown() override {
+  inline virtual void TearDown() override {
     // the input and output number is unknown
     EXPECT_EQ(rootfinder->numInputs, -1); // there is an optional input so even though the inputs to rhs and root are known
     EXPECT_EQ(rootfinder->numOutputs, -1); // there is an optional output that depends on the optional input
@@ -533,4 +533,40 @@ TEST_F(RootfindingIVPTests, AdamsIterMethod) {
   
   // the root finder
   rootfinder = std::make_shared<RootfindingIVP>(rhs, root, pt);
+}
+
+TEST_F(RootfindingIVPTests, Timeseries) {
+  pt.put<std::string>("ODESolver.MultistepMethod", "BDF");
+  pt.put<std::string>("ODESolver.NonlinearSolver", "Newton");
+  pt.put<std::string>("ODESolver.LinearSolver", "Dense");
+
+  // we want the states at these times
+  const double t0 = 0.25; // before the root
+  const double t1 = 0.75; // after the root
+  const Eigen::VectorXd outTimes = Eigen::VectorXd::LinSpaced(10, 0.0, 0.5); // before and after the root
+  
+  // the root finder
+  rootfinder = std::make_shared<RootfindingIVP>(rhs, root, pt);
+
+  // evaluate the rootfinder
+  const std::vector<boost::any>& result = rootfinder->Evaluate(ic, a, b, p, t0, outTimes, t1);
+  const N_Vector& rt = boost::any_cast<const N_Vector&>(result[0]);
+
+  EXPECT_TRUE(((std::string)result[2].type().name()).compare(typeid(N_Vector).name())==0);
+  EXPECT_TRUE(((std::string)result[3].type().name()).compare(typeid(std::vector<N_Vector>).name())==0);
+  EXPECT_TRUE(((std::string)result[4].type().name()).compare(typeid(N_Vector).name())==0);
+
+  EXPECT_EQ(NV_LENGTH_S(boost::any_cast<N_Vector>(result[2])), 3); // before the root --- it is state size
+  EXPECT_FALSE(boost::any_cast<N_Vector>(result[4])); // after the root --- it is empty
+
+  const std::vector<N_Vector>& timeSeries = boost::any_cast<const std::vector<N_Vector>&>(result[3]);
+  
+  EXPECT_EQ(timeSeries.size(), outTimes.size());
+  for( unsigned int i=0; i<outTimes.size(); ++i ) {
+    if( outTimes(i)>boost::any_cast<const double>(result[1]) ) { // the time is greater than the location of the root
+      EXPECT_FALSE(timeSeries[i]); // after the root --- it is empty
+    } else {
+      EXPECT_EQ(NV_LENGTH_S(timeSeries[i]), 3); // before the root --- it is state size
+    }
+  }
 }

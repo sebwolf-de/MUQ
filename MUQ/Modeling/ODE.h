@@ -160,21 +160,6 @@ namespace muq {
 	 @param[in] vec The vector the Jacobian transpose is acting on at eact timestep
        */
       void SaveJacobianTransposeAction(N_Vector& jacTransAct, unsigned int const ncols, unsigned int const wrtIn, N_Vector* sensState, N_Vector const& state, ref_vector<boost::any> rhsInputs, N_Vector const& vec) const;
-
-      /// The current index and size of each output vector
-      /**
-	 @params[in] outputTimes The times the user has asked for
-	 \return A vector of pairs --- first: the current index of this output vector (starts at 0), second: the size of that output vector
-       */
-      std::vector<std::pair<unsigned int, unsigned int> > TimeIndices(ref_vector<boost::any> const& outputTimes);
-      
-      /// Compute the next time to integrate to
-      /**
-	 @param[out] nextTime first: the next time to integrate to, second: the output index
-	 @param[out] timeIndices Each element corresponds to a vector of desired times, first: the current index of that vector, second: the size of that vector
-	 @param[in] outputTimes We want the state at these times 
-       */
-      bool NextTime(std::pair<double, int>& nextTime, std::vector<std::pair<unsigned int, unsigned int> >& timeIndices, ref_vector<boost::any> const& outputTimes) const;
     };
   } // namespace Modeling
 } // namespace muq

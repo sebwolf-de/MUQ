@@ -623,7 +623,7 @@ bool WorkPiece::CheckOutputType(unsigned int const outputNum, std::string const&
   
   // check to see that the types match (or that we don't know the type)
   if( it!=outputTypes.end() && it->second.compare(type)!=0 ) {
-    std::cerr << std::endl << "ERROR: Output types do not match." << std::endl << "\tGiven input: " << boost::core::demangle(type.c_str()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
+    std::cerr << std::endl << "ERROR: Output types do not match." << std::endl << "\tGiven output: " << boost::core::demangle(type.c_str()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
     return false;
   }
   

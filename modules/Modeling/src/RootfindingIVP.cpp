@@ -8,7 +8,7 @@
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 
-RootfindingIVP::RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : ODEBase(rhs, pt, algebra), root(root) {
+RootfindingIVP::RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : ODEBase(rhs, pt, algebra), root(root), maxSteps(pt.get<unsigned int>("Rootfinder.MaxSteps", (int)1e10)), maxTime(pt.get<double>("Rootfinder.MaxTime", 1.0e3)) {
   // we must know the number of inputs for both the rhs and the root and they must have at least one (the state)
   assert(rhs->numInputs>0);
   assert(root->numInputs>0);
@@ -70,19 +70,53 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
   int flag = CVodeRootInit(cvode_mem, root->numOutputs, EvaluateRoot);
   assert(CheckFlag(&flag, "CVodeRootInit", 1));
 
+  // set the maximum number of steps
+  flag = CVodeSetMaxNumSteps(cvode_mem, maxSteps);
+  assert(CheckFlag(&flag, "CVodeSetMaxNumSteps", 1));
+
   // set the intial time
-  realtype t = 0.0;
+  double t = 0.0;
 
-  // integrate forward in time
-  flag = CVode(cvode_mem, 10.0, state, &t, CV_NORMAL);
-  assert(CheckFlag(&flag, "CVode", 1));
+  // each element corresponds to a vector of desired times, first: the current index of that vector, second: the size of that vector
+  if( inputs.size()>rhs->numInputs+root->numInputs-1 ) {
+    ref_vector<boost::any> outputTimes(inputs.begin()+rhs->numInputs+root->numInputs-1, inputs.end());
+    std::vector<std::pair<unsigned int, unsigned int> > timeIndices = TimeIndices(outputTimes);    
 
+    // first: the next time to integrate to, second: the output index
+    std::pair<double, int> nextTime;
+
+    while( NextTime(nextTime, timeIndices, outputTimes) ) {
+      // if we have to move forward --- i.e., not at the initial time or another output does not need the current time
+      if( std::fabs(nextTime.first-t)>1.0e-14 ) { // we have to move forward in time
+	flag = CVode(cvode_mem, nextTime.first, state, &t, CV_NORMAL);
+	assert(CheckFlag(&flag, "CVode", 1));
+      }
+
+      if( flag==CV_ROOT_RETURN ) { break; }
+
+      // save the result at this timestep
+      if( timeIndices[nextTime.second].second>1 ) { // the output has more than one compnent ...
+	// .. save the current state as an element in the vector
+	DeepCopy(boost::any_cast<std::vector<N_Vector>&>(outputs[nextTime.second]) [timeIndices[nextTime.second].first-1], state);
+      } else { // the out has one component ...
+	// ... save the current state (not inside a vector)
+	DeepCopy(boost::any_cast<N_Vector&>(outputs[nextTime.second]), state);
+      }
+    }
+  }
+
+  if( flag!=CV_ROOT_RETURN ) {
+    // integrate forward in time
+    flag = CVode(cvode_mem, maxTime, state, &t, CV_NORMAL);
+    assert(CheckFlag(&flag, "CVode", 1));
+  }
+  
   // make sure we found a root
   assert(flag==CV_ROOT_RETURN); 
       
   // set the output
-  outputs.push_back(state);
-  outputs.push_back(t);
+  outputs.insert(outputs.begin(), t);
+  outputs.insert(outputs.begin(), state);
 
   if( sensState ) {
     // get the sensitivity
@@ -125,7 +159,7 @@ void RootfindingIVP::JacobianImpl(unsigned int const wrtIn, unsigned int const w
   const Eigen::VectorXi& rootsfound = FindRoot(inputs, wrtIn, wrtOut);
   unsigned int ind = 0;
   for( ; ind<rootsfound.size(); ++ind ) {
-    if( rootsfound(ind)>0 ) { break; } 
+    if( rootsfound(ind)!=0 ) { break; } 
   }
 
   // the inputs to the rhs function
@@ -239,7 +273,7 @@ int RootfindingIVP::EvaluateRoot(realtype t, N_Vector state, realtype *root, voi
   const boost::any& anyref = state;
 
   // the inputs the root function
-  ref_vector<boost::any> rootins(data->inputs.begin()+data->rhs->numInputs, data->inputs.end());
+  ref_vector<boost::any> rootins(data->inputs.begin()+data->rhs->numInputs, data->inputs.begin()+data->rhs->numInputs+data->root->numInputs-1);
   rootins.insert(rootins.begin(), anyref);
 
   // evaluate the root

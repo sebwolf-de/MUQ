@@ -180,6 +180,21 @@ namespace muq {
        */
       void SetUpSensitivity(void *cvode_mem, unsigned int const paramSize, N_Vector *sensState) const;
 
+      /// The current index and size of each output vector
+      /**
+	 @params[in] outputTimes The times the user has asked for
+	 \return A vector of pairs --- first: the current index of this output vector (starts at 0), second: the size of that output vector
+       */
+      std::vector<std::pair<unsigned int, unsigned int> > TimeIndices(ref_vector<boost::any> const& outputTimes);
+
+      /// Compute the next time to integrate to
+      /**
+	 @param[out] nextTime first: the next time to integrate to, second: the output index
+	 @param[out] timeIndices Each element corresponds to a vector of desired times, first: the current index of that vector, second: the size of that vector
+	 @param[in] outputTimes We want the state at these times 
+       */
+      bool NextTime(std::pair<double, int>& nextTime, std::vector<std::pair<unsigned int, unsigned int> >& timeIndices, ref_vector<boost::any> const& outputTimes) const;
+
       /// Which linear solver should we use?
       enum LinearSolver {
 	/// Dense solver

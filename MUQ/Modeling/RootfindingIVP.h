@@ -23,6 +23,19 @@ namespace muq {
 	 The second output is the time at which the root (first output) was obtained.
 
 	 The third output exists if the user gives muq::Modeling::RootfinderIVP times to save the state (optional final input).  This output is a vector --- std::vector<StateType> --- of states at the specified times.
+
+	 Parameters options (for boost::property_tree::ptree):
+	 <ol>
+	 <li> All the parameter listed in muq::Modeling::ODEBase
+	 <li> The maximum number of steps (<EM>Rootfinder.MaxSteps</EM>)
+	 <ul>
+	 <li> Defaults to \f$10^{10}\f$
+	 </ul>
+	 <li> The maximum amount of time to integrate (<EM>Rootfinder.MaxTime</EM>)
+	 <ul>
+	 <li> Defaults to \f$10^{3}\f$
+	 </ul>
+	 </ol>
 	 @param[in] rhs A muq::Modeling::WorkPiece that evaluates the right hand side of the ODE
 	 @param[in] root A muq::Modeling::WorkPiece whose outputs are double's --- we integrate the ODE until we find the first root of one of these outputs
 	 @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
@@ -75,6 +88,12 @@ namespace muq {
 
       /// The root function
       std::shared_ptr<WorkPiece> root;
+
+      /// The maximum number of steps the timesteper can take
+      const unsigned int maxSteps;
+
+      /// The maximum amount of time to integrate
+      const double maxTime;
     };
   } // namespace Modeling
 } // namespace muq
