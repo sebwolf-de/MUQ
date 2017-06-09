@@ -92,16 +92,20 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
 	assert(CheckFlag(&flag, "CVode", 1));
       }
 
+      // if we are at the root, but the root time is not a time we asked for do not record!
+      if( std::fabs(nextTime.first-t)<1.0e-14 ) { // we do not have to move forward in time
+	// save the result at this timestep
+	if( timeIndices[nextTime.second].second>1 ) { // the output has more than one compnent ...
+	  // .. save the current state as an element in the vector
+	  DeepCopy(boost::any_cast<std::vector<N_Vector>&>(outputs[nextTime.second]) [timeIndices[nextTime.second].first-1], state);
+	} else { // the out has one component ...
+	  // ... save the current state (not inside a vector)
+	  DeepCopy(boost::any_cast<N_Vector&>(outputs[nextTime.second]), state);
+	}
+      }
+
       if( flag==CV_ROOT_RETURN ) { break; }
 
-      // save the result at this timestep
-      if( timeIndices[nextTime.second].second>1 ) { // the output has more than one compnent ...
-	// .. save the current state as an element in the vector
-	DeepCopy(boost::any_cast<std::vector<N_Vector>&>(outputs[nextTime.second]) [timeIndices[nextTime.second].first-1], state);
-      } else { // the out has one component ...
-	// ... save the current state (not inside a vector)
-	DeepCopy(boost::any_cast<N_Vector&>(outputs[nextTime.second]), state);
-      }
     }
   }
 

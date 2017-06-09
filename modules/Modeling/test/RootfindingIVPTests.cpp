@@ -552,6 +552,15 @@ TEST_F(RootfindingIVPTests, Timeseries) {
   const std::vector<boost::any>& result = rootfinder->Evaluate(ic, a, b, p, t0, outTimes, t1);
   const N_Vector& rt = boost::any_cast<const N_Vector&>(result[0]);
 
+  // check the state at the root
+  EXPECT_EQ(NV_LENGTH_S(rt), 3);
+  for( unsigned int i=0; i<3; ++i ) {
+    EXPECT_NEAR(NV_Ith_S(rt, i), rtExpected(i), 1.0e-5);
+  }
+  
+  // check the time where the root was found
+  EXPECT_NEAR(boost::any_cast<const double>(result[1]), 0.41421356237309931, 1.0e-5);
+  
   EXPECT_TRUE(((std::string)result[2].type().name()).compare(typeid(N_Vector).name())==0);
   EXPECT_TRUE(((std::string)result[3].type().name()).compare(typeid(std::vector<N_Vector>).name())==0);
   EXPECT_TRUE(((std::string)result[4].type().name()).compare(typeid(N_Vector).name())==0);
