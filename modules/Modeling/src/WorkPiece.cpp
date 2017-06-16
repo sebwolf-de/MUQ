@@ -594,6 +594,9 @@ void WorkPiece::Clear() {
 }
 
 void WorkPiece::ClearDerivatives() {
+  // make sure we actually want to clear the derivatives
+  if( !clearDerivatives ) { return; }
+  
   // clear the jacobian
   jacobian = boost::none;
 

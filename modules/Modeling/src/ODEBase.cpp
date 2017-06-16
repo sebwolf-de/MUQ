@@ -13,6 +13,10 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 
 ODEBase::ODEBase(std::shared_ptr<WorkPiece> rhs, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : WorkPiece(), rhs(rhs), algebra(algebra), linSolver(pt.get<std::string>("ODESolver.LinearSolver", "Dense")), reltol(pt.get<double>("ODESolver.RelativeTolerance", 1.0e-8)), abstol(pt.get<double>("ODESolver.AbsoluteTolerance", 1.0e-8)), maxStepSize(pt.get<double>("ODESolver.MaxStepSize", 1.0)) {
+  // do not clear the outputs --- they have to be destroyed properly
+  clearOutputs = false;
+  clearDerivatives = false;
+  
   // we must know the number of inputs for the rhs and it must have at least one (the state)
   assert(rhs->numInputs>0);
 
@@ -372,4 +376,91 @@ bool ODEBase::NextTime(std::pair<double, int>& nextTime, std::vector<std::pair<u
 
   // continue integrating
   return true;
+}
+
+void ODEBase::ClearOutputs() {
+  // destory the outputs
+  for( unsigned int i=0; i<outputs.size(); ++i ) {
+    // check if it is a N_Vector
+    if( N_VectorName.compare(outputs[i].type().name())==0 ) {
+      N_VDestroy(boost::any_cast<N_Vector&>(outputs[i]));
+    }
+    // check if it is a std::vector<N_Vector>
+    if( stdvecN_VectorName.compare(outputs[i].type().name())==0 ) {
+      std::vector<N_Vector>& vec = boost::any_cast<std::vector<N_Vector>&>(outputs[i]);
+      for( auto it : vec ) {
+	N_VDestroy(it);
+      }
+    }
+  }
+  
+  // clear the outputs
+  outputs.clear();
+}
+
+void ODEBase::ClearJacobian() {
+  // check the jacobian
+  if( jacobian ) {
+    // check if it is a N_Vector
+    if( DlsMatName.compare((*jacobian).type().name())==0 ) {
+      DestroyMat(boost::any_cast<DlsMat&>(*jacobian));
+    }
+    // check if it is a std::vector<DlsMat>
+    if( stdvecDlsMatName.compare((*jacobian).type().name())==0 ) {
+      std::vector<DlsMat>& vec = boost::any_cast<std::vector<DlsMat>&>((*jacobian));
+      for( auto it : vec ) {
+	DestroyMat(it);
+      }
+    }
+    
+    // reset the jacobian
+    jacobian = boost::none;
+  }
+}
+
+void ODEBase::ClearJacobianAction() {
+  // destory the jacobianAction
+  if( jacobianAction ) {
+    // check if it is a N_Vector
+    if( N_VectorName.compare((*jacobianAction).type().name())==0 ) {
+      N_VDestroy(boost::any_cast<N_Vector&>(*jacobianAction));
+    }
+    // check if it is a std::vector<N_Vector>
+    if( stdvecN_VectorName.compare((*jacobianAction).type().name())==0 ) {
+      std::vector<N_Vector>& vec = boost::any_cast<std::vector<N_Vector>&>((*jacobianAction));
+      for( auto it : vec ) {
+	N_VDestroy(it);
+      }
+    }
+  }
+
+  // reset the jacobianAction
+  jacobianAction = boost::none;
+}
+
+void ODEBase::ClearJacobianTransposeAction() {
+  // destory the jacobianTransposeAction
+  if( jacobianTransposeAction ) {
+    // check if it is a N_Vector
+    if( N_VectorName.compare((*jacobianTransposeAction).type().name())==0 ) {
+      N_VDestroy(boost::any_cast<N_Vector&>(*jacobianTransposeAction));
+    }
+    // check if it is a std::vector<N_Vector>
+    if( stdvecN_VectorName.compare((*jacobianTransposeAction).type().name())==0 ) {
+      std::vector<N_Vector>& vec = boost::any_cast<std::vector<N_Vector>&>((*jacobianTransposeAction));
+      for( auto it : vec ) {
+	N_VDestroy(it);
+      }
+    }
+  }
+
+  // reset the jacobianTransposeAction
+  jacobianTransposeAction = boost::none;
+}
+
+void ODEBase::ClearResults() {
+  ClearOutputs();
+  ClearJacobian();
+  ClearJacobianAction();
+  ClearJacobianTransposeAction();
 }

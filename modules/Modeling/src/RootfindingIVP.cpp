@@ -26,6 +26,9 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
   // the number of inputs must be at leastthan the number of inputs required by the rhs and the root
   assert(inputs.size()>=rhs->numInputs+root->numInputs-1);
 
+  // clear the results
+  //ClearResults();
+
   // create the state vector (have to do a hard copy --- N_Vector is a pointer to the data, the pointer has been declared const, not the data)
   N_Vector state;
   DeepCopy(state, boost::any_cast<const N_Vector&>(inputs[0]));
@@ -116,7 +119,7 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
   }
   
   // make sure we found a root
-  assert(flag==CV_ROOT_RETURN); 
+  assert(flag==CV_ROOT_RETURN);
       
   // set the output
   outputs.insert(outputs.begin(), t);

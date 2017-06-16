@@ -22,6 +22,9 @@ void ODE::Integrate(ref_vector<boost::any> const& inputs, int const wrtIn, int c
   // the number of inputs must be greater than the number of inputs required by the rhs
   assert(inputs.size()>rhs->numInputs);
 
+  // clear the results
+  ClearResults();
+
   // create the state vector (have to do a hard copy --- N_Vector is a pointer to the data, the pointer has been declared const, not the data)
   N_Vector state;
   DeepCopy(state, boost::any_cast<const N_Vector&>(inputs[0]));

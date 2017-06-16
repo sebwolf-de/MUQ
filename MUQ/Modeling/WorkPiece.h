@@ -474,7 +474,10 @@ namespace muq {
 	 If true, muq::Modeling::WorkPiece::outputs is cleared everytime muq::Modeling::WorkPiece::Evaluate is called.  If false, the outputs are not cleared.  Defaults to true.
        */
       bool clearOutputs = true;
-      
+
+      /// Clear derivatives every time Jacobian, JacobianAction, or JacobianActionTranspose is called
+      bool clearDerivatives = true;
+
       /// The outputs
       /**
 	 The outputs of this muq::Modeling::WorkPiece are filled by WorkPiece::EvaluateImpl().  If the number of outputs is specified (i.e., WorkPiece::numOutputs is not -1) then WorkPiece::Evaluate() checks to make sure the size of this vector is equal to WorkPiece::numOutputs after calling WorkPiece::EvaluateImpl().  If the output types are specified (i.e., WorkPiece::outputTypes is not an empty vector) then WorkPiece::Evaluate() checks that the output types match WorkPiece::outputTypes after calling WorkPiece::EvaluateImpl().

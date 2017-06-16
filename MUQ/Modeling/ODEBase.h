@@ -195,6 +195,9 @@ namespace muq {
        */
       bool NextTime(std::pair<double, int>& nextTime, std::vector<std::pair<unsigned int, unsigned int> >& timeIndices, ref_vector<boost::any> const& outputTimes) const;
 
+      /// Clear the outputs, jacobian, jacobianAction, and jacobianTransposeAction
+      void ClearResults();
+
       /// Which linear solver should we use?
       enum LinearSolver {
 	/// Dense solver
@@ -231,11 +234,35 @@ namespace muq {
       
       /// Nonlinear solver method
       int solveMethod;
-      
+
+      /// N_Vector type name
+      const std::string N_VectorName = typeid(N_Vector).name();
+
+      /// std::vector<N_Vector> type name
+      const std::string stdvecN_VectorName = typeid(std::vector<N_Vector>).name();
+
+      /// DlsMat type name
+      const std::string DlsMatName = typeid(DlsMat).name();
+
+      /// std::vector<DlsMat> type name
+      const std::string stdvecDlsMatName = typeid(std::vector<DlsMat>).name();
+
     private:
 
       /// Set the input and output types based on the rhs muq::Modeling::WorkPiece's
       void SetInputOutputTypes();
+
+      /// Clear the outputs
+      void ClearOutputs();
+
+      /// Clear the jacobian
+      void ClearJacobian();
+
+      /// Clear the jacobianAction
+      void ClearJacobianAction();
+
+      /// Clear the jacobianTransposeAction
+      void ClearJacobianTransposeAction();
     };
   
   } // namespace Modeling
