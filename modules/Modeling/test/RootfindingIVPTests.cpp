@@ -328,9 +328,9 @@ public:
     EXPECT_NEAR(boost::any_cast<const double>(result[1]), 0.41421356237309931, 1.0e-5);
 
     // check the rootfinder jacobian
+    const Eigen::MatrixXd& jac0FD = JacobianFD(0);
     const boost::any& jac0 = rootfinder->Jacobian(0, 0, ic, a, b, p);
     const DlsMat& jac0ref = boost::any_cast<const DlsMat&>(jac0);
-    const Eigen::MatrixXd& jac0FD = JacobianFD(0);
 
     EXPECT_EQ(jac0ref->M, jac0FD.rows());
     EXPECT_EQ(jac0ref->N, jac0FD.cols());
@@ -340,9 +340,9 @@ public:
       }
     }
 
+    const Eigen::MatrixXd& jac1FD = JacobianFD(1);
     const boost::any& jac1 = rootfinder->Jacobian(1, 0, ic, a, b, p);
     const DlsMat& jac1ref = boost::any_cast<const DlsMat&>(jac1);
-    const Eigen::MatrixXd& jac1FD = JacobianFD(1);
 
     EXPECT_EQ(jac1ref->M, jac1FD.rows());
     EXPECT_EQ(jac1ref->N, jac1FD.cols());
@@ -352,9 +352,9 @@ public:
       }
     }
 
+    const Eigen::MatrixXd& jac2FD = JacobianFD(2);
     const boost::any& jac2 = rootfinder->Jacobian(2, 0, ic, a, b, p);
     const DlsMat& jac2ref = boost::any_cast<const DlsMat&>(jac2);
-    const Eigen::MatrixXd& jac2FD = JacobianFD(2);
 
     EXPECT_EQ(jac2ref->M, jac2FD.rows());
     EXPECT_EQ(jac2ref->N, jac2FD.cols());
@@ -364,9 +364,9 @@ public:
       }
     }
 
+    const Eigen::MatrixXd& jac3FD = JacobianFD(3);
     const boost::any& jac3 = rootfinder->Jacobian(3, 0, ic, a, b, p);
     const DlsMat& jac3ref = boost::any_cast<const DlsMat&>(jac3);
-    const Eigen::MatrixXd& jac3FD = JacobianFD(3);
 
     EXPECT_EQ(jac3ref->M, jac3FD.rows());
     EXPECT_EQ(jac3ref->N, jac3FD.cols());
@@ -407,7 +407,9 @@ private:
   inline Eigen::MatrixXd JacobianFD(unsigned int const wrtIn) const {
     // evaluate the base value
     const std::vector<boost::any>& baseany = rootfinder->Evaluate(ic, a, b, p);
-    const N_Vector& base = boost::any_cast<const N_Vector&>(baseany[0]);
+    const N_Vector& baseref = boost::any_cast<const N_Vector&>(baseany[0]);
+    N_Vector base = N_VNew_Serial(NV_LENGTH_S(baseref));
+    for( unsigned int i=0; i<NV_LENGTH_S(baseref); ++i ) { NV_Ith_S(base, i) = NV_Ith_S(baseref, i); }
 
     // step size
     const double dx = 1.0e-6;

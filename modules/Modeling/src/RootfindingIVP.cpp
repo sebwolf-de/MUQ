@@ -27,7 +27,7 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
   assert(inputs.size()>=rhs->numInputs+root->numInputs-1);
 
   // clear the results
-  //ClearResults();
+  ClearResults();
 
   // create the state vector (have to do a hard copy --- N_Vector is a pointer to the data, the pointer has been declared const, not the data)
   N_Vector state;
