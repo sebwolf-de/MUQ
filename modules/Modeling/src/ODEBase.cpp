@@ -183,8 +183,14 @@ int ODEBase::EvaluateRHS(realtype time, N_Vector state, N_Vector statedot, void 
 
   // evaluate the rhs
   const std::vector<boost::any>& result = data->rhs->Evaluate(ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
-  NV_DATA_S(statedot) = NV_DATA_S(boost::any_cast<N_Vector>(result[0]));
 
+  // need to do a deep copy to avoid memory leaks
+  const N_Vector& vec = boost::any_cast<const N_Vector&>(result[0]);
+  assert(NV_LENGTH_S(statedot)==NV_LENGTH_S(vec));
+  for( unsigned int i=0; i<NV_LENGTH_S(statedot); ++i ) {
+    NV_Ith_S(statedot, i) = NV_Ith_S(vec, i);
+  }
+  
   return 0;
 }
 
@@ -200,7 +206,7 @@ int ODEBase::RHSJacobianAction(N_Vector v, N_Vector Jv, realtype time, N_Vector 
 
   // compute the jacobain wrt the state
   const boost::any& jacobianAction = data->rhs->JacobianAction(0, 0, v, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
-  NV_DATA_S(Jv) = NV_DATA_S(boost::any_cast<N_Vector>(jacobianAction));
+  NV_DATA_S(Jv) = NV_DATA_S(boost::any_cast<const N_Vector&>(jacobianAction));
 
   return 0;
 }
@@ -217,7 +223,13 @@ int ODEBase::RHSJacobian(long int N, realtype time, N_Vector state, N_Vector rhs
 
   // evaluate the jacobian
   const boost::any& jcbn = data->rhs->Jacobian(0, 0, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
-  jac = boost::any_cast<DlsMat>(jcbn);
+  const DlsMat& jcbnref = boost::any_cast<const DlsMat&>(jcbn);
+  //DenseCopy(boost::any_cast<const DlsMat&>(jcbn), jac);
+  for( unsigned int i=0; i<jcbnref->M; ++i ) {
+    for( unsigned int j=0; j<jcbnref->N; ++j ) {
+      DENSE_ELEM(jac, i, j) = DENSE_ELEM(jcbnref, i, j);
+    }
+  }
 
   return 0;
 }
@@ -295,21 +307,24 @@ int ODEBase::ForwardSensitivityRHS(int Ns, realtype time, N_Vector y, N_Vector y
   const boost::any& dfdy_any = data->rhs->Jacobian(0, 0, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
   const DlsMat& dfdy = boost::any_cast<const DlsMat&>(dfdy_any);
 
+  for( unsigned int i=0; i<Ns; ++i ) {
+    DenseMatvec(dfdy, NV_DATA_S(ys[i]), NV_DATA_S(ySdot[i]));
+  }
+
   // the derivative of the rhs wrt the parameter
   assert(data->wrtIn>=0);
   const boost::any& dfdp_any = data->rhs->Jacobian(data->wrtIn, 0, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
   const DlsMat& dfdp = boost::any_cast<const DlsMat&>(dfdp_any);
 
   // loop through and fill in the rhs vectors stored in ySdot
+  N_Vector col = N_VNew_Serial(dfdp->M);
   for( unsigned int i=0; i<Ns; ++i ) {
-    N_Vector vec = N_VNew_Serial(dfdy->M);
-    DenseMatvec(dfdy, NV_DATA_S(ys[i]), NV_DATA_S(vec));
-
-    N_Vector col = N_VNew_Serial(dfdp->M);
     NV_DATA_S(col) = DENSE_COL(dfdp, i);
 
-    N_VLinearSum(1.0, vec, 1.0, col, ySdot[i]);
+    N_VLinearSum(1.0, ySdot[i], 1.0, col, ySdot[i]);
   }
+  NV_DATA_S(col) = nullptr;
+  N_VDestroy(col);
 
   return 0;
 }
@@ -383,7 +398,8 @@ void ODEBase::ClearOutputs() {
   for( unsigned int i=0; i<outputs.size(); ++i ) {
     // check if it is a N_Vector
     if( N_VectorName.compare(outputs[i].type().name())==0 ) {
-      N_VDestroy(boost::any_cast<N_Vector&>(outputs[i]));
+      N_Vector& vec = boost::any_cast<N_Vector&>(outputs[i]);
+      N_VDestroy(vec);
     }
     // check if it is a std::vector<N_Vector>
     if( stdvecN_VectorName.compare(outputs[i].type().name())==0 ) {

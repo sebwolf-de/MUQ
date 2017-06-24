@@ -108,7 +108,6 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
       }
 
       if( flag==CV_ROOT_RETURN ) { break; }
-
     }
   }
 
@@ -117,7 +116,7 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
     flag = CVode(cvode_mem, maxTime, state, &t, CV_NORMAL);
     assert(CheckFlag(&flag, "CVode", 1));
   }
-  
+
   // make sure we found a root
   assert(flag==CV_ROOT_RETURN);
       
@@ -134,11 +133,13 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
     DlsMat& jac = boost::any_cast<DlsMat&>(*jacobian);
     for( unsigned int col=0; col<paramSize; ++col ) {
       DENSE_COL(jac, col) = NV_DATA_S(sensState[col]);
+      NV_DATA_S(sensState[col]) = nullptr;
     }
     
-    // do not delete sensState --- jacobian now points to that data
+    // delete sensState
+    N_VDestroyVectorArray_Serial(sensState, paramSize);
   }
-
+ 
   // retrieve information about the root
   Eigen::VectorXi rootsfound(root->numOutputs);
   flag = CVodeGetRootInfo(cvode_mem, rootsfound.data());
@@ -161,7 +162,7 @@ void RootfindingIVP::JacobianImpl(unsigned int const wrtIn, unsigned int const w
     
     assert(wrtOut==0);
   }
-
+  
   // find the first root to one of the root outputs
   const Eigen::VectorXi& rootsfound = FindRoot(inputs, wrtIn, wrtOut);
   unsigned int ind = 0;
@@ -209,10 +210,6 @@ void RootfindingIVP::JacobianImpl(unsigned int const wrtIn, unsigned int const w
       }
     }
 
-    N_VDestroy(fref);
-    DestroyMat(dgdyref);
-    DestroyMat(dgdpararef);
-
     return;
   }
 
@@ -246,8 +243,6 @@ void RootfindingIVP::JacobianImpl(unsigned int const wrtIn, unsigned int const w
   
   // destroy temp vectors/matrices
   N_VDestroy(dtfdic);
-  N_VDestroy(fref);
-  DestroyMat(dgdyref);
 }
 
 void RootfindingIVP::UpdateInputOutputTypes() {
