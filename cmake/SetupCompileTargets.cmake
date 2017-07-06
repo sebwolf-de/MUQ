@@ -13,7 +13,7 @@ foreach(libName ${MUQ_TARGETS})
     if(${strLength} GREATER 0)
     
         ADD_LIBRARY(${libName} ${${libName}_SOURCES})
-        TARGET_LINK_LIBRARIES(${libName} ${${CMAKE_PROJECT_NAME}_LINK_LIBS})
+        TARGET_LINK_LIBRARIES(${libName} ${MUQ_LINK_LIBS})
 
         # Add dependencies for any required dependencies that MUQ is going to build internally
         foreach(depend ${MUQ_REQUIRES})
@@ -24,7 +24,7 @@ foreach(libName ${MUQ_TARGETS})
             endif()
         endforeach()
     
-        list(APPEND ${CMAKE_PROJECT_NAME}_LIBRARIES ${libName})
+        list(APPEND MUQ_LIBRARIES ${libName})
         install(TARGETS ${libName}
                 EXPORT ${CMAKE_PROJECT_NAME}Depends
                 LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
@@ -33,6 +33,11 @@ foreach(libName ${MUQ_TARGETS})
     
 endforeach()
 
+INSTALL (
+    DIRECTORY ${CMAKE_SOURCE_DIR}/MUQ
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.h")
+    
 # If a group depends on an external library that is going to be built by MUQ, then make sure we account for that dependency
 foreach(group ${MUQ_GROUPS})
 
