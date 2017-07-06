@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.9) 
+cmake_minimum_required (VERSION 2.8.12) 
 
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/finds)

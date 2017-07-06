@@ -2,7 +2,7 @@ include(ExternalProject)
 
 if(NOT HDF5_EXTERNAL_SOURCE)
 
-  set(HDF5_EXTERNAL_SOURCE https://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.16/src/hdf5-1.8.16.tar.gz)
+  set(HDF5_EXTERNAL_SOURCE https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.19/src/CMake-hdf5-1.8.19.tar.gz)
   message(STATUS "Will download HDF5 from ${HDF5_EXTERNAL_SOURCE} during compile.")
   
 endif()
