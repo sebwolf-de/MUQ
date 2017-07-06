@@ -1,8 +1,12 @@
 include(ExternalProject)
 
+if(NOT DEFINED MUQ_INTERNAL_HDF5_VERSION)
+  set(MUQ_INTERNAL_HDF5_VERSION "1.8.19")
+endif()
+
 if(NOT HDF5_EXTERNAL_SOURCE)
 
-  set(HDF5_EXTERNAL_SOURCE https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.19/src/CMake-hdf5-1.8.19.tar.gz)
+  set(HDF5_EXTERNAL_SOURCE https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-${MUQ_INTERNAL_HDF5_VERSION}/src/CMake-hdf5-${MUQ_INTERNAL_HDF5_VERSION}.tar.gz)
   message(STATUS "Will download HDF5 from ${HDF5_EXTERNAL_SOURCE} during compile.")
   
 endif()
@@ -16,7 +20,7 @@ ExternalProject_Add(
   HDF5
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/hdf5
     URL ${HDF5_EXTERNAL_SOURCE}
-    CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}; ${CMAKE_CURRENT_BINARY_DIR}/external/hdf5/src/HDF5/configure  CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ${HDF5_PARALLEL_FLAG} --prefix=${HDF5_INSTALL_DIR} --enable-production --disable-examples
+    CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}; ${CMAKE_CURRENT_BINARY_DIR}/external/hdf5/src/HDF5/hdf5-${MUQ_INTERNAL_HDF5_VERSION}/configure  CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ${HDF5_PARALLEL_FLAG} --prefix=${HDF5_INSTALL_DIR} --enable-production --disable-examples
     BUILD_COMMAND make install
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND ""
