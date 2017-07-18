@@ -17,7 +17,7 @@ TEST(Utilities_LyapunovSolver, Diagonal)
     LyapunovSolver<double> solver;
     solver.compute(A,Q);
 
-    Eigen::MatrixXd const& X = solver.matrixX();
+    auto X = solver.matrixX().real();
 
     for(int i=0; i<dim; ++i)
     {
@@ -27,6 +27,33 @@ TEST(Utilities_LyapunovSolver, Diagonal)
         {
             EXPECT_DOUBLE_EQ(0.0, X(i,j));
             EXPECT_DOUBLE_EQ(0.0, X(j,i));
+        }
+    }
+
+}
+
+
+TEST(Utilities_LyapunovSolver, DampedOscillator)
+{
+    const int dim = 2;
+    Eigen::MatrixXd A = Eigen::MatrixXd::Zero(dim,dim);
+    A << 0.0, 1.0,
+        -1.0, -0.1;
+    
+    Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(dim,dim);
+    
+
+    LyapunovSolver<double> solver;
+    solver.compute(A, Q);
+
+    auto& X = solver.matrixX();
+
+    
+    Eigen::MatrixXcd resid = A.cast<std::complex<double>>().adjoint()*X + X*A.cast<std::complex<double>>() + Q.cast<std::complex<double>>();
+
+    for(int i=0; i<dim; ++i){
+        for(int j=0; j<dim; ++j){
+            EXPECT_NEAR(0.0, resid(i,j).real(),6e-15);
         }
     }
 
