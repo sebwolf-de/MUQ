@@ -16,7 +16,7 @@ CreateCompileGroup(
     MODELING_CORE
     "The basic building blocks of the Modeling library."
     muqModeling
-    ""
+    "UTILITIES_LINEARALGEBRA"
     "EIGEN3;BOOST"
     ""
     WorkPiece.cpp
@@ -29,4 +29,6 @@ CreateCompileGroup(
 
     ConstantPiece.cpp
     IdentityPiece.cpp
+
+    LinearSDE.cpp
 )

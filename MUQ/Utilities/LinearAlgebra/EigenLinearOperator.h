@@ -26,10 +26,10 @@ public:
   virtual ~EigenLinearOperator(){};
   
   /** Apply the linear operator to a vector */
-  virtual Eigen::MatrixXd Apply(Eigen::Ref<Eigen::MatrixXd> const& x) override {return A*x;};
+  virtual Eigen::MatrixXd Apply(Eigen::Ref<const Eigen::MatrixXd> const& x) override {return A*x;};
 
   /** Apply the transpose of the linear operator to a vector. */
-  virtual Eigen::MatrixXd ApplyTranspose(Eigen::Ref<Eigen::MatrixXd> const& x) override {return A.transpose()*x;};
+  virtual Eigen::MatrixXd ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd> const& x) override {return A.transpose()*x;};
 
 protected:
   EigenType A;

@@ -4,7 +4,8 @@
 #include <Eigen/Core>
 
 #include <memory>
-
+#include <iostream>
+#include <exception>
 
 namespace muq
 {
@@ -12,6 +13,14 @@ namespace Utilities
 {
 
 
+class LinearOperatorTypeException: public std::exception
+{
+  virtual const char* what() const throw()
+  {
+    return "Tried creating a linear operator from an unsupported type.  Make sure all necessary headers are included and a child of LinearOperator exists for this type.";
+  }
+};
+    
 class LinearOperator;
     
 template<typename MatrixType>
@@ -19,7 +28,10 @@ struct LinearOperatorFactory
 {
     static std::shared_ptr<LinearOperator> Create(MatrixType const& A)
     {
-        //static_assert(false, "ERROR: Tried creating a linear operator from an unsupported type.  Make sure all necessary headers are included and a child of LinearOperator exists for this type.");
+        throw LinearOperatorTypeException();
+        
+        return std::shared_ptr<LinearOperator>();
+        
     };
 };
 
@@ -53,20 +65,20 @@ public:
   virtual ~LinearOperator(){};
   
   /** Apply the linear operator to a vector */
-  virtual Eigen::MatrixXd Apply(Eigen::Ref<Eigen::MatrixXd> const& x) = 0;
-
+  virtual Eigen::MatrixXd Apply(Eigen::Ref<const Eigen::MatrixXd> const& x) = 0;
+  
   /** Apply the transpose of the linear operator to a vector. */
-  virtual Eigen::MatrixXd ApplyTranspose(Eigen::Ref<Eigen::MatrixXd> const& x) = 0;
+  virtual Eigen::MatrixXd ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd> const& x) = 0;
 
   /** Fills in the reference \f$y\f$ with \f$y=Ax\f$ */
-  virtual void Apply(Eigen::Ref<Eigen::MatrixXd> const& x, Eigen::Ref<Eigen::MatrixXd> y)
+  virtual void Apply(Eigen::Ref<const Eigen::MatrixXd> const& x, Eigen::Ref<Eigen::MatrixXd> y)
   {
     assert(y.cols()==x.cols());
     y = Apply(x);
   };
 
   /** Fill in the reference \f$y\f$ with \f$y = A^Txf$ */
-  virtual void ApplyTranspose(Eigen::Ref<Eigen::MatrixXd> const& x, Eigen::Ref<Eigen::MatrixXd> y)
+  virtual void ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd> const& x, Eigen::Ref<Eigen::MatrixXd> y)
   {
     assert(y.cols()==x.cols());
     y = ApplyTranspose(x);
