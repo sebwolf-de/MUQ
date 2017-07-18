@@ -9,7 +9,24 @@ namespace muq
 namespace Utilities
 {
 
-    /** Solve the equation AX + XA^T + Q = 0
+    /** @class LyaponovSolver
+        @brief Solves the Lyapunov equation \f$A^TX + XA + Q = 0\f$ given square matrices \f$A\f$ and \f$Q\f$.  
+        @details This class solves the continuous time Lyapunov equation given by \f[A^TX + XA + Q = 0,\f] where \f$A\f$ and \f$Q\f$ are square matrices.
+                 In general, this class follows a similar form to the eigenvalue solvers in Eigen; the "compute" function is called with \f$A\f$ and \f$Q\f$ to compute the solution \f$X\f$, and then the solution \f$X\f$ is accessed using the "matrixX" function.   For example,
+
+\code{.cpp}
+Eigen::MatrixXd A;
+// Fill in A here
+
+Eigen::MatrixXd Q;
+// Fill in Q here
+
+LyapunovSolver<double> solver;
+solver.compute(A,Q);
+
+Eigen::MatrixXcd const& X = solver.matrixX();
+\endcode
+
      */
     template<class ScalarType, int FixedRows=Eigen::Dynamic, int FixedCols=Eigen::Dynamic>
     class LyapunovSolver
