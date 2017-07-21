@@ -144,3 +144,28 @@ TEST(Approximation_GP, StateSpaceError)
     EXPECT_THROW(kernel.GetStateSpace(), muq::NotImplementedError);
         
 }
+
+
+TEST(Approximation_GP, MaternKernel)
+{
+    Eigen::VectorXd pt1(1);
+    pt1 << 0.5;
+
+    Eigen::VectorXd pt2(1);
+    pt2 << 0.75;
+
+    const double sigma2 = 2.0;
+    const double length = 0.5;
+
+    EXPECT_THROW(MaternKernel(1, sigma2, length, 2.0), std::invalid_argument);
+    
+    MaternKernel kernel12(1, sigma2, length, 1.0/2.0);
+    EXPECT_NEAR(1.2130613194252673, kernel12.Evaluate(pt1,pt2)(0,0), 1e-10);
+    
+    MaternKernel kernel32(1, sigma2, length, 3.0/2.0);
+    EXPECT_NEAR(1.5697753079149015, kernel32.Evaluate(pt1,pt2)(0,0), 1e-10);
+    
+    MaternKernel kernel52(1, sigma2, length, 5.0/2.0);
+    EXPECT_NEAR(1.6572982848362512, kernel52.Evaluate(pt1,pt2)(0,0), 1e-10);
+    
+}

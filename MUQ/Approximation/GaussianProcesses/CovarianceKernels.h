@@ -10,7 +10,7 @@
 #include "MUQ/Approximation/GaussianProcesses/SquaredExpKernel.h"
 #include "MUQ/Approximation/GaussianProcesses/SumKernel.h"
 #include "MUQ/Approximation/GaussianProcesses/WhiteNoiseKernel.h"
-
+#include "MUQ/Approximation/GaussianProcesses/MaternKernel.h"
 
 namespace muq
 {
