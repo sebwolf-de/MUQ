@@ -5,5 +5,5 @@ CreateCompileGroup(
     ""
     "EIGEN3"
     ""
-    ""
+    RandomGenerator.cpp
 )
