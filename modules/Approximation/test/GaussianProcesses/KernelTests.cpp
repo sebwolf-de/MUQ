@@ -1,5 +1,5 @@
 #include "MUQ/Approximation/GaussianProcesses/CovarianceKernels.h"
-#include "MUQ/Approximation/GaussianProcesses/GaussianProcess.h"
+#include "MUQ/Utilities/Exceptions.h"
 
 #include <gtest/gtest.h>
 
@@ -19,102 +19,6 @@ TEST(Approximation_GP, VectorNorm)
     EXPECT_DOUBLE_EQ((v2-v1).norm(), CalcDistance(v1,v2));
 }
 
-TEST(Approximation_GP, HyperFit1d)
-{
-    const unsigned numPred  = 50;
-    const unsigned maxTrain = 50;
-    
-    const double pi = 4.0 * atan(1.0);
-
-    // Set linearly space locations where we want to evaluate the Gaussian Process
-    Eigen::RowVectorXd predLocs(numPred);
-    predLocs.setLinSpaced(numPred, 0,1);
-
-    // Generate random training locations
-    Eigen::RowVectorXd trainLocs(maxTrain);
-    std::random_device r;
-    std::default_random_engine e1(r());
-    std::uniform_real_distribution<double> uniform_dist(0.0, 1.0);
-    std::normal_distribution<double> normal_dist(0.0, 1.0);
-
-    for(int i=0; i<maxTrain; ++i)
-	trainLocs(i) = uniform_dist(e1);
-
-    // Generate the training data (with some random noise)
-    Eigen::RowVectorXd trainData(maxTrain);
-    for(int i=0; i<maxTrain; ++i)
-	trainData(i) = sin(4*2*pi*trainLocs(i) ) + sqrt(1e-4)*normal_dist(e1);
-
-    const unsigned dim = 1;
-    auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} )*PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});    
-   
-    // Create the GP
-    ConstantMean mean(dim, 1);
-    auto gp = ConstructGP(mean, kernel);
-
-
-    gp.Fit(trainLocs, trainData);
-    
-    // Make a prediction
-    auto post = gp.Predict(predLocs);
-
-    //for(int i=0; i<predLocs.cols(); ++i)
-    //	std::cout << "[" << predLocs(0,i) << ", " << post.mean(0,i) << "]," << std::endl;
-    
-}
-
-TEST(Approximation_GP, HyperFit2d)
-{
-    std::random_device r;
-    std::default_random_engine e1(r());
-    std::uniform_real_distribution<double> uniform_dist(0.0, 1.0);
-    std::normal_distribution<double> normal_dist(0.0, 1.0);
-
-
-    const unsigned numPred  = 50;
-    const unsigned maxTrain = 50;
-
-    
-    // Set linearly space locations where we want to evaluate the Gaussian Process
-    Eigen::MatrixXd predLocs(2, numPred);
-    for(int i=0; i<numPred; ++i)
-    {
-	predLocs(0,i) = uniform_dist(e1);
-	predLocs(1,i) = uniform_dist(e1);
-    }
-    
-    // Generate random training locations
-    Eigen::MatrixXd trainLocs(2, maxTrain);
-  
-    for(int i=0; i<maxTrain; ++i)
-    {
-	trainLocs(0,i) = uniform_dist(e1);
-	trainLocs(1,i) = uniform_dist(e1);
-    }
-    
-    // Generate the training data (with some random noise)
-    Eigen::RowVectorXd trainData(maxTrain);
-    for(int i=0; i<maxTrain; ++i)
-	trainData(i) = trainLocs.col(i).squaredNorm();
-
-    // define a tensor product kernel
-    std::vector<unsigned> inds1{0};
-    std::vector<unsigned> inds2{1};
-    const unsigned dim = 2;
-    auto kernel = SquaredExpKernel(dim, inds1, 2.0, 0.35, {0.1,10} )*SquaredExpKernel(dim, inds2, 2.0, 0.35, {0.1,10} );
-
-    
-    // Create the GP
-    ConstantMean mean(dim, 1);
-    auto gp = ConstructGP(mean, kernel);
-
-    gp.Fit(trainLocs, trainData);
-    gp.Optimize();
-    
-    // Make a prediction
-    auto post = gp.Predict(predLocs);
-
-}
 
 TEST(Approximation_GP, LinearTransformKernel)
 {
@@ -180,4 +84,63 @@ TEST(Approximation_GP, Clone)
     Eigen::MatrixXd result_ptr = kernel_copy->Evaluate(x1,x2);
     
     EXPECT_DOUBLE_EQ(result(0,0), result_ptr(0,0));
+}
+
+
+// TEST(Approximation_GP, SeperableProduct)
+// {
+//     {
+        
+//         const unsigned dim = 2;
+//         auto kernel1 = SquaredExpKernel(dim, 2.0, 3.5) * SquaredExpKernel(dim, 1.0, 0.5);
+        
+//         auto comps1 = kernel1.GetSeperableComponents();
+//         EXPECT_EQ(1, comps1.size());
+//     }
+
+//     {
+//         std::vector<unsigned> inds1{0};
+//         std::vector<unsigned> inds2{1};
+//         const unsigned dim = 2;
+//         auto kernel2 = SquaredExpKernel(dim, inds1, 2.0, 0.35, {0.1,10} ) * SquaredExpKernel(dim, inds2, 2.0, 0.35, {0.1,10} );
+        
+//         auto comps2 = kernel2.GetSeperableComponents();
+//         EXPECT_EQ(2, comps2.size());
+//     }
+
+//     {
+//         std::vector<unsigned> inds1{0};
+//         std::vector<unsigned> inds2{1,2};
+        
+//         const unsigned dim = 3;
+//         auto kernel2 = SquaredExpKernel(dim, inds1, 2.0, 0.35, {0.1,10} ) * SquaredExpKernel(dim, inds2, 2.0, 0.35, {0.1,10} );
+
+//         auto comps2 = kernel2.GetSeperableComponents();
+//         EXPECT_EQ(2, comps2.size());
+//     }
+
+//     {
+//         std::vector<unsigned> inds1{0,1};
+//         std::vector<unsigned> inds2{1,2};
+        
+//         const unsigned dim = 3;
+//         auto kernel2 = SquaredExpKernel(dim, inds1, 2.0, 0.35, {0.1,10} ) * SquaredExpKernel(dim, inds2, 2.0, 0.35, {0.1,10} );
+
+//         auto comps2 = kernel2.GetSeperableComponents();
+//         EXPECT_EQ(1, comps2.size());
+//     }
+        
+// }
+
+
+TEST(Approximation_GP, StateSpaceError)
+{
+    std::vector<std::shared_ptr<KernelBase>> kernels;
+    kernels.push_back( std::make_shared<SquaredExpKernel>(1, 1.0, 1.0) );
+    kernels.push_back( std::make_shared<SquaredExpKernel>(2, 1.0, 1.0) );
+    
+    CoregionalKernel kernel(2, Eigen::MatrixXd::Identity(2,2), kernels);
+
+    EXPECT_THROW(kernel.GetStateSpace(), muq::NotImplementedError);
+        
 }

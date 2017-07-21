@@ -56,7 +56,9 @@ where \f$f(t)\f$ is the solution in \f$\mathbb{R}^M\f$, \f$F\f$ is an \f$M\times
         /** Evolve the mean and covariance of the system using a std::pair to hold the distribution.
          */
         std::pair<Eigen::VectorXd, Eigen::MatrixXd> EvolveDistribution(std::pair<Eigen::VectorXd,Eigen::MatrixXd> const& muCov,
-                                                                       double                 T) const{ return EvolveDistribution(muCov.first, muCov.second, dt);}; 
+                                                                       double                                            T) const{
+            return EvolveDistribution(muCov.first, muCov.second, dt);
+        }; 
 
 
         /// The dimension of the state variable \f$f(t)\f$.
