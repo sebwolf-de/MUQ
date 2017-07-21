@@ -96,7 +96,7 @@ public:
 	{
             double dtemp_dlength = -1.0*sqrt(2.0*nu)*dist/(length*length);
             double part1 = nu*std::pow(temp,nu-1)*dtemp_dlength;
-            double part2 = 0.5*(boost::math::cyl_bessel_k(nu-1, temp) + boost::math::cyl_bessel_k(nu+1,temp) )*dtemp_dlength;
+            double part2 = -0.5*(boost::math::cyl_bessel_k(nu-1.0, temp) + boost::math::cyl_bessel_k(nu+1.0,temp) )*dtemp_dlength;
 	    derivs(0,0) = sigma2 * scale * (part1*boost::math::cyl_bessel_k(nu, temp) + part2*std::pow(temp, nu));
 	}
 	else

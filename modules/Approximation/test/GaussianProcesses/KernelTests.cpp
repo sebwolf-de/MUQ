@@ -167,5 +167,30 @@ TEST(Approximation_GP, MaternKernel)
     
     MaternKernel kernel52(1, sigma2, length, 5.0/2.0);
     EXPECT_NEAR(1.6572982848362512, kernel52.Evaluate(pt1,pt2)(0,0), 1e-10);
+
+    // Finite difference derivative test
+    double currVal = kernel52.Evaluate(pt1,pt2)(0,0);
+
+    Eigen::VectorXd p0 = kernel52.GetParams();
+    Eigen::VectorXd p1 = p0;
+    Eigen::MatrixXd deriv(1,1);
     
+    const double dp = 1e-5;
+    p1(0) += dp;
+
+    kernel52.SetParams(p1);
+    double nextVal = kernel52.Evaluate(pt1,pt2)(0,0);
+
+    kernel52.GetDerivative(pt1,pt2,0,deriv);
+    EXPECT_NEAR((nextVal-currVal)/dp, deriv(0,0), 1e-4);
+
+    p1 = p0;
+    p1(1) += dp;
+
+    kernel52.SetParams(p1);
+    nextVal = kernel52.Evaluate(pt1,pt2)(0,0);
+
+    kernel52.GetDerivative(pt1,pt2,1,deriv);
+    EXPECT_NEAR((nextVal-currVal)/dp, deriv(0,0), 1e-4);
+
 }
