@@ -3,11 +3,27 @@
 
 #include "MUQ/Approximation/GaussianProcesses/KernelImpl.h"
 
+#include "MUQ/Utilities/LinearAlgebra/CompanionMatrix.h"
+#include "MUQ/Utilities/LinearAlgebra/LyapunovSolver.h"
+
+#include "MUQ/Modeling/LinearSDE.h"
+
+
 #include <cmath>
 #include <stdexcept>
 
 #include <boost/math/special_functions/bessel.hpp>
 #include <boost/math/special_functions/gamma.hpp>
+#include <boost/math/constants/constants.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <unsupported/Eigen/Polynomials>
+#include <Eigen/SparseCore>
+
+#include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Utilities/LinearAlgebra/EigenLinearOperator.h"
+
+#include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
 
 namespace muq
 {
@@ -38,36 +54,19 @@ public:
                  double                lengthIn,
                  double                nuIn,
                  Eigen::Vector2d       sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
-                 Eigen::Vector2d       lengthBounds = {1e-10, std::numeric_limits<double>::infinity()}) : KernelImpl<MaternKernel>(dimIn, dimInds, 1, 2), sigma2(sigma2In), length(lengthIn), nu(nuIn), scale(std::pow(2.0, 1.0-nuIn)/boost::math::tgamma(nuIn))
-    {
-        CheckNu();
-        
-	paramBounds.resize(2,2);
-	paramBounds(0,0) = sigmaBounds(0);
-	paramBounds(1,0) = sigmaBounds(1);
-	
-	paramBounds(0,1) = lengthBounds(0);
-	paramBounds(1,1) = lengthBounds(1);
-    };
+                 Eigen::Vector2d       lengthBounds = {1e-10, std::numeric_limits<double>::infinity()});
+    
     
     MaternKernel(unsigned        dimIn,
                  double          sigma2In,
                  double          lengthIn,
                  double          nuIn,
                  Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
-                 Eigen::Vector2d lengthBounds = {1e-10, std::numeric_limits<double>::infinity()}) : KernelImpl<MaternKernel>(dimIn, 1, 2), sigma2(sigma2In), length(lengthIn), nu(nuIn), scale(std::pow(2.0, 1.0-nuIn)/boost::math::tgamma(nuIn))
-    {
-        CheckNu();
-        
-	paramBounds.resize(2,2);
-	paramBounds(0,0) = sigmaBounds(0);
-	paramBounds(1,0) = sigmaBounds(1);
-	
-	paramBounds(0,1) = lengthBounds(0);
-	paramBounds(1,1) = lengthBounds(1);
-    };
+                 Eigen::Vector2d lengthBounds = {1e-10, std::numeric_limits<double>::infinity()});
 
+    
     virtual ~MaternKernel(){};
+
     
     template<typename VecType1, typename VecType2, typename MatrixType>
     inline void EvaluateImpl(VecType1 const& x1, VecType2 const& x2, MatrixType &cov ) const
@@ -80,6 +79,7 @@ public:
 	cov(0,0) = sigma2 * scale * std::pow(temp, nu) * boost::math::cyl_bessel_k(nu, temp);
     }
 
+    
     template<typename VecType1, typename VecType2, typename MatrixType>
     inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType & derivs) const
     {
@@ -104,33 +104,22 @@ public:
 	    assert(false);
 	}
     }
-	
-    virtual Eigen::VectorXd GetParams() const override
-    {
-	return Eigen::Vector2d{sigma2,length};
-    }
+
     
-    virtual void SetParams(Eigen::VectorXd const& params) override
-    {
-        sigma2 = params(0);
-	length = params(1);
-    }
+    virtual Eigen::VectorXd GetParams() const override;
+    
+    virtual void SetParams(Eigen::VectorXd const& params) override;
+
+    virtual std::shared_ptr<StateSpaceGP> GetStateSpace(boost::property_tree::ptree sdeOptions = boost::property_tree::ptree()) const override;
 
 private:
+    
     double sigma2;
     double length;
     double nu;
     double scale;
 
-    void CheckNu() const{
-
-        if(nu<=0)
-            throw std::invalid_argument("The value of nu must be greater than 0.");
-
-        if((std::round(nu-0.5)-(nu-0.5)) > 4.0*std::numeric_limits<double>::epsilon())
-            throw std::invalid_argument("The value of nu must take the form nu=i-0.5 for a positive integer i.");
-
-    };
+    void CheckNu() const;
 };
 
 }

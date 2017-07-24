@@ -16,6 +16,7 @@ namespace Approximation
     
 class StateSpaceGP
 {
+public:
     StateSpaceGP(std::shared_ptr<muq::Modeling::LinearSDE>       sdeIn,
                  std::shared_ptr<muq::Utilities::LinearOperator> obsOpIn,
                  Eigen::MatrixXd                          const& pInfIn);
