@@ -26,6 +26,8 @@ where \f$a_i\f$ are the coefficients of the polynomial.
         virtual Eigen::MatrixXd Apply(Eigen::Ref<const Eigen::MatrixXd> const& x) override;
 
         virtual Eigen::MatrixXd ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd> const& x) override;
+
+        virtual Eigen::MatrixXd GetMatrix() override;
         
     private:
         Eigen::VectorXd lastRow;

@@ -28,3 +28,14 @@ Eigen::MatrixXd CompanionMatrix::ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd
     
     return output;
 }
+
+
+Eigen::MatrixXd CompanionMatrix::GetMatrix()
+{
+
+    Eigen::MatrixXd output(nrows, ncols);
+    output.block(0,1,nrows-1,nrows-1) = Eigen::MatrixXd::Identity(nrows-1,nrows-1);
+    output.row(nrows-1) = lastRow;
+
+    return output;
+}

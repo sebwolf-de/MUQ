@@ -31,6 +31,8 @@ public:
   /** Apply the transpose of the linear operator to a vector. */
   virtual Eigen::MatrixXd ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd> const& x) override {return A.transpose()*x;};
 
+  virtual Eigen::MatrixXd GetMatrix() override{ return Eigen::MatrixXd(A);};
+  
 protected:
   EigenType A;
   
