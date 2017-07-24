@@ -6,4 +6,5 @@ CreateCompileGroup(
     "EIGEN3"
     ""
     RandomGenerator.cpp
+    LinearAlgebra/CompanionMatrix.cpp
 )
