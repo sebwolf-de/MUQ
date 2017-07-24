@@ -22,7 +22,6 @@ Eigen::VectorXd StateSpaceGP::Sample(Eigen::VectorXd const& times) const
 
     // Generate sample for initial condition
     Eigen::VectorXd x = L.triangularView<Eigen::Lower>()*RandomGenerator::GetNormal(L.rows());
-    std::cout << "x = " << x << std::endl;
     
     // Make space for the simulated GP
     Eigen::VectorXd output(times.size());

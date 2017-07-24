@@ -102,6 +102,7 @@ public:
 	period = params(2);
     }
 
+    virtual std::shared_ptr<StateSpaceGP> GetStateSpace(boost::property_tree::ptree sdeOptions = boost::property_tree::ptree()) const override;
     
 private:
     double sigma2;

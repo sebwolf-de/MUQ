@@ -215,7 +215,31 @@ TEST(Approximation_GP, MaternStateSpace)
     Eigen::VectorXd obsTimes = Eigen::VectorXd::LinSpaced(100, 0, 1);
     Eigen::VectorXd realization = gp->Sample(obsTimes);
 
-    for(int i=0; i<realization.size(); ++i)
-        std::cout << realization(i) << ", ";
-    std::cout << std::endl;
+}
+
+TEST(Approximation_GP, PeriodicStateSpace)
+{
+
+    const double sigma2 = 1.0;
+    const double length = 0.6;
+    const double period = 0.25;
+    const double periodN = 50; // how many steps per period
+    
+    PeriodicKernel kernel(1, sigma2, length, period);
+
+    boost::property_tree::ptree options;
+    options.put("PeriodicKernel.StateSpace.NumTerms",8);
+    options.put("SDE.dt", 6e-5);
+    
+    std::shared_ptr<StateSpaceGP> gp = kernel.GetStateSpace(options);
+    
+    // draw a random sample from the SDE model
+    Eigen::VectorXd obsTimes = Eigen::VectorXd::LinSpaced(5*periodN+1, 0, 5*period);
+        
+    Eigen::VectorXd realization = gp->Sample(obsTimes);
+
+    // Make sure the sample is periodic
+    for(int i=0; i<obsTimes.size()-periodN-1; ++i)
+        EXPECT_NEAR(realization(i), realization(i+periodN), 1e-1);
+    
 }
