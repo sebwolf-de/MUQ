@@ -36,7 +36,7 @@ Eigen::MatrixXcd const& X = solver.matrixX();
         typedef Eigen::Matrix<ScalarType, FixedRows, FixedCols> MatrixType;
         typedef Eigen::Matrix<std::complex<ScalarType>, FixedRows, FixedCols> ComplexMatrixType;
         
-        void compute(MatrixType const& A, MatrixType const& C)
+        LyapunovSolver& compute(MatrixType const& A, MatrixType const& C)
         {
             const int dim = A.rows();
             assert(A.rows()==A.cols());
@@ -55,6 +55,8 @@ Eigen::MatrixXcd const& X = solver.matrixX();
             ComputeFromSchur(S, ctilde, X);
 
             X = (Q*X*Q.adjoint()).eval();
+
+            return *this;
         };
 
         ComplexMatrixType const& matrixX() const{return X;};

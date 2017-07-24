@@ -25,10 +25,10 @@ where \f$f(t)\f$ is the solution in \f$\mathbb{R}^M\f$, \f$F\f$ is an \f$M\times
 
     public:
 
-        template<typename Ftype, typename Ltype>
-        LinearSDE(Ftype                const& Fin,
-                  Ltype                const& Lin,
-                  Eigen::MatrixXd      const& Qin,
+        template<typename Derived1, typename Derived2>
+        LinearSDE(Eigen::Matrix<Derived1,Eigen::Dynamic, Eigen::Dynamic>   const& Fin,
+                  Eigen::Matrix<Derived2,Eigen::Dynamic, Eigen::Dynamic>   const& Lin,
+                  Eigen::MatrixXd                                          const& Qin,
                   boost::property_tree::ptree options) : LinearSDE(muq::Utilities::LinearOperator::Create(Fin),
                                                                    muq::Utilities::LinearOperator::Create(Lin),
                                                                    Qin,

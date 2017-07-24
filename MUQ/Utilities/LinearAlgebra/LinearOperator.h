@@ -71,30 +71,20 @@ public:
   virtual Eigen::MatrixXd ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd> const& x) = 0;
 
   /** Fills in the reference \f$y\f$ with \f$y=Ax\f$ */
-  virtual void Apply(Eigen::Ref<const Eigen::MatrixXd> const& x, Eigen::Ref<Eigen::MatrixXd> y)
-  {
-    assert(y.cols()==x.cols());
-    y = Apply(x);
-  };
+  virtual void Apply(Eigen::Ref<const Eigen::MatrixXd> const& x, Eigen::Ref<Eigen::MatrixXd> y);
 
   /** Fill in the reference \f$y\f$ with \f$y = A^Txf$ */
-  virtual void ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd> const& x, Eigen::Ref<Eigen::MatrixXd> y)
-  {
-    assert(y.cols()==x.cols());
-    y = ApplyTranspose(x);
-  };
+  virtual void ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd> const& x, Eigen::Ref<Eigen::MatrixXd> y);
   
   /** The output dimension of the linear operator. */
-  int rows() const
-  {
-    return nrows;
-  }
+  int rows() const { return nrows; }
 
   /** The input dimension of the linear operator. */
-  int cols() const
-  {
-    return ncols;
-  }
+  int cols() const { return ncols; }
+
+  /** Get a dense matrix representation of this linear operator. */
+  virtual Eigen::MatrixXd GetMatrix();
+  
 
   template<typename OtherType>
   static std::shared_ptr<LinearOperator> Create(OtherType const& A)
