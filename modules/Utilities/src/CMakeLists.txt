@@ -8,4 +8,5 @@ CreateCompileGroup(
     RandomGenerator.cpp
     LinearAlgebra/LinearOperator.cpp
     LinearAlgebra/CompanionMatrix.cpp
+    LinearAlgebra/BlockDiagonalOperator.cpp
 )

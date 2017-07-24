@@ -36,7 +36,7 @@ struct LinearOperatorFactory
 };
 
 /** @class LinearOperator
- *  @ingroup Utilities
+ *  @ingroup LinearOperators
  *  @brief Generic linear operator base class
  *  @details In many situations, it is convenient to work with general linear operators instead of specific matrices.
  *      This class provides an abstract base class to help support working with general operators.  

@@ -1,6 +1,7 @@
 #include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/EigenLinearOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/CompanionMatrix.h"
+#include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
 
 #include <random>
 
@@ -138,6 +139,47 @@ TEST(Utilities_LinearOperator, CompanionMatrix)
         {
             EXPECT_DOUBLE_EQ(trueB(i,j), b(i,j));
         }
+    }
+
+}
+
+
+TEST(Utilities_LinearOperator, BlockDiagonal)
+{
+
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(2,3);
+    Eigen::MatrixXd B = Eigen::MatrixXd::Random(4,2);
+
+    std::vector<std::shared_ptr<LinearOperator>> ops(2);
+    ops.at(0) = LinearOperator::Create(A);
+    ops.at(1) = LinearOperator::Create(B);
+
+    auto ABop = std::make_shared<BlockDiagonalOperator>(ops);
+
+    Eigen::MatrixXd x = Eigen::MatrixXd::Random(A.cols()+B.cols(), 10);
+
+    Eigen::MatrixXd bTrue(A.rows() + B.rows(), x.cols());
+    bTrue.block(0,0, A.rows(), bTrue.cols()) = A * x.block(0, 0, A.cols(), x.cols());
+    bTrue.block(A.rows(),0, B.rows(), bTrue.cols()) = B * x.block(A.cols(), 0, B.cols(), x.cols());
+    
+
+    Eigen::MatrixXd bOp = ABop->Apply(x);
+    for(int j=0; j<bOp.cols(); ++j){
+        for(int i=0; i<bOp.rows(); ++i)
+            EXPECT_DOUBLE_EQ(bTrue(i,j), bOp(i,j));
+    }
+
+
+    x = Eigen::MatrixXd::Random(A.rows() + B.rows(), 10);
+    bTrue.resize(A.cols() + B.cols(), x.cols());
+    bTrue.block(0,0,A.cols(), bTrue.cols()) = A.transpose() * x.block(0,0,A.rows(), x.cols());
+    bTrue.block(A.cols(),0,B.cols(), bTrue.cols()) = B.transpose() * x.block(A.rows(), 0 , B.rows(), x.cols());
+
+
+    bOp = ABop->ApplyTranspose(x);
+    for(int j=0; j<bOp.cols(); ++j){
+        for(int i=0; i<bOp.rows(); ++i)
+            EXPECT_DOUBLE_EQ(bTrue(i,j), bOp(i,j));
     }
 
 }
