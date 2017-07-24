@@ -21,7 +21,7 @@ template<typename EigenType>
 class EigenLinearOperator : public LinearOperator {
 public:
 
-  EigenLinearOperator(EigenType const& Ain) : LinearOperator(A.rows(), A.cols()), A(Ain){}
+EigenLinearOperator(EigenType const& Ain) : LinearOperator(Ain.rows(), Ain.cols()), A(Ain){}
 
   virtual ~EigenLinearOperator(){};
   

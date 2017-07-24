@@ -17,10 +17,6 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <boost/math/special_functions/bessel.hpp>
-#include <boost/math/special_functions/gamma.hpp>
-#include <boost/math/constants/constants.hpp>
-
 using namespace muq::Approximation;
 
 
@@ -96,7 +92,9 @@ std::shared_ptr<StateSpaceGP> MaternKernel::GetStateSpace(boost::property_tree::
         
     Eigen::roots_to_monicPolynomial( roots, poly );
 
-    auto F = std::make_shared<muq::Utilities::CompanionMatrix>(poly);
+    poly = poly.head(poly.size()-1).eval();
+    
+    auto F = std::make_shared<muq::Utilities::CompanionMatrix>(-1.0*poly);
 
     std::vector<Eigen::Triplet<double>> Lcoeffs;
     Lcoeffs.push_back(Eigen::Triplet<double>(poly.size()-1,0,1.0));
@@ -105,9 +103,10 @@ std::shared_ptr<StateSpaceGP> MaternKernel::GetStateSpace(boost::property_tree::
     Lmat.setFromTriplets(Lcoeffs.begin(), Lcoeffs.end());
 
     auto L = muq::Utilities::LinearOperator::Create(Lmat);
-
-    // Create the process noise matrix
-    Eigen::MatrixXd Q = L->Apply(L->Apply(q*Eigen::VectorXd::Ones(1)).transpose());
+    
+    Eigen::MatrixXd Q(1,1);
+    Q(0,0) = q;
+    
 
     // Set up the stochastic differential equation
     auto sde = std::make_shared<muq::Modeling::LinearSDE>(F, L, Q, sdeOptions);
@@ -123,8 +122,9 @@ std::shared_ptr<StateSpaceGP> MaternKernel::GetStateSpace(boost::property_tree::
     auto H = muq::Utilities::LinearOperator::Create(Hmat);
 
     // Solve the continuous time Lyapunov equation to find the stationary covariance
-    Eigen::MatrixXd Pinf = muq::Utilities::LyapunovSolver<double>().compute(F->GetMatrix(), Q).matrixX().real();
-
-        
+    Q = L->Apply(L->Apply(q*Eigen::VectorXd::Ones(1)).transpose());
+    
+    Eigen::MatrixXd Pinf = muq::Utilities::LyapunovSolver<double>().compute(F->GetMatrix().transpose(), Q).matrixX().real();
+    
     return std::make_shared<StateSpaceGP>(sde, H, Pinf);
 }

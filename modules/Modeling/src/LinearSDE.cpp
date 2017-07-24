@@ -4,13 +4,15 @@
 
 #include <unsupported/Eigen/MatrixFunctions>
 
+#include "MUQ/Utilities/RandomGenerator.h"
+
 using namespace muq::Modeling;
 using namespace muq::Utilities;
 
 LinearSDE::LinearSDE(std::shared_ptr<LinearOperator>    Fin,
                      std::shared_ptr<LinearOperator>    Lin,
                      Eigen::MatrixXd             const& Qin,
-                     boost::property_tree::ptree        options) : stateDim(Fin->rows()), F(Fin), L(Lin), Q(Qin), gen(std::random_device()()), normRG(0.0, 1.0)
+                     boost::property_tree::ptree        options) : stateDim(Fin->rows()), F(Fin), L(Lin), Q(Qin)
 {
     // Extract options from the ptree
     ExtractOptions(options);
@@ -25,32 +27,29 @@ void LinearSDE::ExtractOptions(boost::property_tree::ptree options)
 }
 
 Eigen::VectorXd LinearSDE::EvolveState(Eigen::VectorXd const& f0,
-                                       double                 T)
+                                       double                 T) const
 {
     Eigen::VectorXd f = f0;
 
     const int numTimes = std::ceil(T/dt);
 
-    Eigen::VectorXd z(stateDim);
+    Eigen::VectorXd z;
     
     // Take all but the last step.  The last step might be a partial step
     for(int i=0; i<numTimes-1; ++i)
     {
-        for(int j=0; j<stateDim; ++j)
-            z(j) = normRG(gen);
-
-        z = (sqrt(dt)*sqrtQ*z).eval();
+        z = sqrt(dt) * (sqrtQ.triangularView<Eigen::Lower>() * RandomGenerator::GetNormal(sqrtQ.cols()));
+        
         f += dt*F->Apply(f) + L->Apply( z );
     }
 
     // Now take the last step
     double lastDt = T-(numTimes-1)*dt;
-    for(int j=0; j<stateDim; ++j)
-        z(j) = normRG(gen);
+    
+    z = sqrt(lastDt) * (sqrtQ.triangularView<Eigen::Lower>() * RandomGenerator::GetNormal(sqrtQ.cols()));
 
-    z = (sqrt(lastDt)*sqrtQ*z).eval();
     f += lastDt*F->Apply(f) + L->Apply( z );
-
+    
     return f;
 }
 

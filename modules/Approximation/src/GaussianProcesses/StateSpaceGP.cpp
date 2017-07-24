@@ -22,17 +22,18 @@ Eigen::VectorXd StateSpaceGP::Sample(Eigen::VectorXd const& times) const
 
     // Generate sample for initial condition
     Eigen::VectorXd x = L.triangularView<Eigen::Lower>()*RandomGenerator::GetNormal(L.rows());
-
+    std::cout << "x = " << x << std::endl;
+    
     // Make space for the simulated GP
     Eigen::VectorXd output(times.size());
 
     output(0) = obsOp->Apply(x)(0);
     
     // Step through the each time and integrate the SDE between times
-    for(int i=1; i<times.size(); ++i)
-    {    
+    for(int i=0; i<times.size()-1; ++i)
+    {   
         x = sde->EvolveState(x, times(i+1)-times(i));
-        output(i) = obsOp->Apply(x)(0);
+        output(i+1) = obsOp->Apply(x)(0);
     }
 
     return output;

@@ -1,4 +1,6 @@
 #include "MUQ/Approximation/GaussianProcesses/CovarianceKernels.h"
+#include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
+
 #include "MUQ/Utilities/Exceptions.h"
 
 #include <gtest/gtest.h>
@@ -193,4 +195,27 @@ TEST(Approximation_GP, MaternKernel)
     kernel52.GetDerivative(pt1,pt2,1,deriv);
     EXPECT_NEAR((nextVal-currVal)/dp, deriv(0,0), 1e-4);
 
+}
+
+TEST(Approximation_GP, MaternStateSpace)
+{
+
+    const double sigma2 = 1.0;
+    const double length = 0.15;
+
+    const double nu = 3.0/2.0;
+    
+    MaternKernel kernel(1, sigma2, length, nu);
+
+    std::shared_ptr<StateSpaceGP> gp = kernel.GetStateSpace();
+
+    EXPECT_EQ(nu+0.5, gp->stateDim);
+
+    // draw a random sample from the SDE model
+    Eigen::VectorXd obsTimes = Eigen::VectorXd::LinSpaced(100, 0, 1);
+    Eigen::VectorXd realization = gp->Sample(obsTimes);
+
+    for(int i=0; i<realization.size(); ++i)
+        std::cout << realization(i) << ", ";
+    std::cout << std::endl;
 }

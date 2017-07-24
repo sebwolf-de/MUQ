@@ -3,27 +3,17 @@
 
 #include "MUQ/Approximation/GaussianProcesses/KernelImpl.h"
 
-#include "MUQ/Utilities/LinearAlgebra/CompanionMatrix.h"
-#include "MUQ/Utilities/LinearAlgebra/LyapunovSolver.h"
-
-#include "MUQ/Modeling/LinearSDE.h"
-
-
 #include <cmath>
 #include <stdexcept>
+
+#include <boost/property_tree/ptree_fwd.hpp>
+
 
 #include <boost/math/special_functions/bessel.hpp>
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/constants/constants.hpp>
-#include <boost/property_tree/ptree.hpp>
 
-#include <unsupported/Eigen/Polynomials>
-#include <Eigen/SparseCore>
 
-#include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/EigenLinearOperator.h"
-
-#include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
 
 namespace muq
 {

@@ -45,7 +45,7 @@ where \f$f(t)\f$ is the solution in \f$\mathbb{R}^M\f$, \f$F\f$ is an \f$M\times
         /** Given \f$f(t)\f$, the state of the system at time \f$t\f$, return a random realization of the state at time \f$t+\delta t\f$.
          */
         Eigen::VectorXd EvolveState(Eigen::VectorXd const& f0,
-                                    double                 T);
+                                    double                 T) const;
 
         /** Given the mean and covariance of the solution at time \f$t\f$, compute the mean and covariance of the solution at time \f$t+T\f$.
          */
@@ -75,9 +75,6 @@ where \f$f(t)\f$ is the solution in \f$\mathbb{R}^M\f$, \f$F\f$ is an \f$M\times
         Eigen::MatrixXd sqrtQ;
 
         double dt; // time step used in SDE integration
-
-        std::mt19937 gen;
-        std::normal_distribution<> normRG;
 
     };
 
