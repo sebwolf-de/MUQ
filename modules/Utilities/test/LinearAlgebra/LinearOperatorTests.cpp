@@ -2,6 +2,7 @@
 #include "MUQ/Utilities/LinearAlgebra/EigenLinearOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/CompanionMatrix.h"
 #include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
+#include "MUQ/Utilities/LinearAlgebra/KroneckerProductOperator.h"
 
 #include <random>
 
@@ -182,4 +183,40 @@ TEST(Utilities_LinearOperator, BlockDiagonal)
             EXPECT_DOUBLE_EQ(bTrue(i,j), bOp(i,j));
     }
 
+}
+
+TEST(Utilities_LinearOperator, KroneckerProduct)
+{
+
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(2,3);
+    Eigen::MatrixXd B = Eigen::MatrixXd::Random(4,2);
+
+    auto Aop = LinearOperator::Create(A);
+    auto Bop = LinearOperator::Create(B);
+
+
+    auto AB = std::make_shared<KroneckerProductOperator>(Aop,Bop);
+    
+    Eigen::MatrixXd x = Eigen::MatrixXd::Random(AB->cols(), 10);
+
+    Eigen::MatrixXd bOp = AB->Apply(x);
+
+    Eigen::MatrixXd trueProd(A.rows()*B.rows(), A.cols()*B.cols());
+    for(int j=0; j<A.cols(); ++j)
+    {
+        for(int i=0; i<A.rows(); ++i)
+        {
+            trueProd.block(i*B.rows(), j*B.cols(), B.rows(), B.cols()) = A(i,j)*B;
+        }
+    }
+
+    Eigen::MatrixXd bMat = trueProd*x;
+
+    for(int j=0; j<bMat.cols(); ++j)
+    {
+        for(int i=0; i<bMat.rows(); ++i)
+        {
+            EXPECT_NEAR(bMat(i,j), bOp(i,j), 1e-13);
+        }
+    }
 }
