@@ -3,6 +3,7 @@
 #include "MUQ/Utilities/LinearAlgebra/CompanionMatrix.h"
 #include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/KroneckerProductOperator.h"
+#include "MUQ/Utilities/LinearAlgebra/SumOperator.h"
 
 #include <random>
 
@@ -211,6 +212,35 @@ TEST(Utilities_LinearOperator, KroneckerProduct)
     }
 
     Eigen::MatrixXd bMat = trueProd*x;
+
+    for(int j=0; j<bMat.cols(); ++j)
+    {
+        for(int i=0; i<bMat.rows(); ++i)
+        {
+            EXPECT_NEAR(bMat(i,j), bOp(i,j), 1e-13);
+        }
+    }
+}
+
+
+
+TEST(Utilities_LinearOperator, Sum)
+{
+
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(5,3);
+    Eigen::MatrixXd B = Eigen::MatrixXd::Random(5,3);
+
+    auto Aop = LinearOperator::Create(A);
+    auto Bop = LinearOperator::Create(B);
+
+
+    auto AB = std::make_shared<SumOperator>(Aop,Bop);
+    
+    Eigen::MatrixXd x = Eigen::MatrixXd::Random(AB->cols(), 10);
+
+    Eigen::MatrixXd bOp = AB->Apply(x);
+
+    Eigen::MatrixXd bMat = (A+B)*x;
 
     for(int j=0; j<bMat.cols(); ++j)
     {

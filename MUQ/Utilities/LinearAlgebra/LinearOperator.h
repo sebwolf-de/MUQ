@@ -85,7 +85,6 @@ public:
   /** Get a dense matrix representation of this linear operator. */
   virtual Eigen::MatrixXd GetMatrix();
   
-
   template<typename OtherType>
   static std::shared_ptr<LinearOperator> Create(OtherType const& A)
   {

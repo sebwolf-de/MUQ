@@ -10,4 +10,5 @@ CreateCompileGroup(
     LinearAlgebra/CompanionMatrix.cpp
     LinearAlgebra/BlockDiagonalOperator.cpp
     LinearAlgebra/KroneckerProductOperator.cpp
+    LinearAlgebra/SumOperator.cpp
 )
