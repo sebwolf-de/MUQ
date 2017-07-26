@@ -2,6 +2,7 @@
 #include "MUQ/Utilities/LinearAlgebra/EigenLinearOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/CompanionMatrix.h"
 #include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
+#include "MUQ/Utilities/LinearAlgebra/BlockRowOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/KroneckerProductOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/SumOperator.h"
 
@@ -223,6 +224,33 @@ TEST(Utilities_LinearOperator, KroneckerProduct)
 }
 
 
+TEST(Utilities_LinearOperator, DenseKronecker)
+{
+
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(10,5);
+    Eigen::MatrixXd B = Eigen::MatrixXd::Random(4,20);
+
+    Eigen::MatrixXd AB = muq::Utilities::KroneckerProduct(A,B);
+    
+    Eigen::MatrixXd trueProd(A.rows()*B.rows(), A.cols()*B.cols());
+    for(int j=0; j<A.cols(); ++j)
+    {
+        for(int i=0; i<A.rows(); ++i)
+        {
+            trueProd.block(i*B.rows(), j*B.cols(), B.rows(), B.cols()) = A(i,j)*B;
+        }
+    }
+
+    for(int j=0; j<trueProd.cols(); ++j)
+    {
+        for(int i=0; i<trueProd.rows(); ++i)
+        {
+            EXPECT_NEAR(trueProd(i,j), AB(i,j), 1e-13);
+        }
+    }
+    
+}
+
 
 TEST(Utilities_LinearOperator, Sum)
 {
@@ -241,6 +269,36 @@ TEST(Utilities_LinearOperator, Sum)
     Eigen::MatrixXd bOp = AB->Apply(x);
 
     Eigen::MatrixXd bMat = (A+B)*x;
+
+    for(int j=0; j<bMat.cols(); ++j)
+    {
+        for(int i=0; i<bMat.rows(); ++i)
+        {
+            EXPECT_NEAR(bMat(i,j), bOp(i,j), 1e-13);
+        }
+    }
+}
+
+TEST(Utilities_LinearOperator, BlockRow)
+{
+
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(5,3);
+    Eigen::MatrixXd B = Eigen::MatrixXd::Random(5,4);
+
+    std::vector<std::shared_ptr<LinearOperator>> ops(2);
+    ops.at(0) = LinearOperator::Create(A);
+    ops.at(1) = LinearOperator::Create(B);
+
+    auto AB = std::make_shared<BlockRowOperator>(ops);
+    
+    Eigen::MatrixXd x = Eigen::MatrixXd::Random(AB->cols(), 10);
+
+    Eigen::MatrixXd bOp = AB->Apply(x);
+
+    Eigen::MatrixXd bMat(AB->rows(), x.cols());
+    bMat = A*x.block(0,0,A.cols(),x.cols());
+    bMat += B*x.block(A.cols(), 0, B.cols(), x.cols());
+    
 
     for(int j=0; j<bMat.cols(); ++j)
     {

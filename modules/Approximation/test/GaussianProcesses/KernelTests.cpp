@@ -209,6 +209,8 @@ TEST(Approximation_GP, MaternStateSpace)
 
     std::shared_ptr<StateSpaceGP> gp = kernel.GetStateSpace();
 
+    std::cout << "Matern F = \n" << gp->GetSDE()->GetF()->GetMatrix() << std::endl << std::endl;
+    
     EXPECT_EQ(nu+0.5, gp->stateDim);
 
     // draw a random sample from the SDE model
@@ -242,4 +244,62 @@ TEST(Approximation_GP, PeriodicStateSpace)
     for(int i=0; i<obsTimes.size()-periodN-1; ++i)
         EXPECT_NEAR(realization(i), realization(i+periodN), 1e-1);
     
+}
+
+
+TEST(Approximation_GP, ProductStateSpace)
+{
+
+    const double sigma2 = 1.0;
+    const double length = 0.6;
+    const double nu = 3.0/2.0;
+    const double period = 0.25;
+    const double periodN = 50; // how many steps per period
+    
+    PeriodicKernel kernel1(1, sigma2, 0.8, period);
+    MaternKernel kernel2(1, sigma2, 2.0, nu);
+
+    auto kernel12 = kernel1*kernel2;
+    auto kernel21 = kernel2*kernel1;
+    auto kernel22 = kernel2*kernel2;
+
+    boost::property_tree::ptree options;
+    options.put("PeriodicKernel.StateSpace.NumTerms",7);
+    options.put("SDE.dt", 1e-4);
+
+    
+    std::shared_ptr<StateSpaceGP> gp1 = kernel1.GetStateSpace(options);
+    std::shared_ptr<StateSpaceGP> gp2 = kernel2.GetStateSpace(options);
+    EXPECT_EQ(int(nu+0.5), gp2->stateDim);
+    std::cout << "Matern = \n" << gp2->GetObs()->GetMatrix() << std::endl << std::endl;
+    std::cout << "Periodic = \n" << gp1->GetObs()->GetMatrix() << std::endl << std::endl;
+    
+    std::shared_ptr<StateSpaceGP> gp12 = kernel12.GetStateSpace(options);
+    std::shared_ptr<StateSpaceGP> gp21 = kernel21.GetStateSpace(options);
+
+    std::cout << "Product = \n" << gp12->GetObs()->GetMatrix() << std::endl << std::endl;
+    
+    EXPECT_THROW(kernel22.GetStateSpace(options), muq::NotImplementedError);
+    EXPECT_EQ(gp1->stateDim *gp2->stateDim, gp12->stateDim);
+    
+    
+    // draw a random sample from the SDE model
+    Eigen::VectorXd obsTimes = Eigen::VectorXd::LinSpaced(5*periodN+1, 0, 5*period);
+
+    Eigen::VectorXd realization1  = gp1->Sample(obsTimes);
+    Eigen::VectorXd realization2  = gp2->Sample(obsTimes);
+    Eigen::VectorXd realization12 = gp12->Sample(obsTimes);
+    
+    for(int i=0; i<realization1.size(); ++i)
+        std::cout << realization1(i) << ",  ";
+    std::cout << std::endl;
+
+    for(int i=0; i<realization1.size(); ++i)
+        std::cout << realization2(i) << ",  ";
+    std::cout << std::endl;
+
+    for(int i=0; i<realization1.size(); ++i)
+        std::cout << realization12(i) << ",  ";
+    std::cout << std::endl;
+
 }

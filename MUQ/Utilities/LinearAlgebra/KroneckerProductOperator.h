@@ -2,6 +2,7 @@
 #define KRONECKERPRODUCTOPERATOR_H
 
 #include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Utilities/LinearAlgebra/SumOperator.h"
 
 namespace muq
 {
@@ -13,7 +14,7 @@ namespace Utilities
         @brief Defines the Kronecker product of two other linear operators.
         @details Let \f$A\in\mathbb{R}^M\times\mathbb{R}^N\f$ and \f$B\f$ be two rectangular matrices.  The Kronecker product of \f$A\f$ and \f$B\f$ is given in block form by
 \f[
-A\times B = \left[ \begin{array}{ccc} A_{11} B & \cdots & A_{1N} B\\ \vdots & \ddots & \vdots \\ A_{M1} & \cdots & A_{MN} B \end{array}\right],
+A\otimes B = \left[ \begin{array}{ccc} A_{11} B & \cdots & A_{1N} B\\ \vdots & \ddots & \vdots \\ A_{M1} & \cdots & A_{MN} B \end{array}\right],
 \f]
     */
     class KroneckerProductOperator : public LinearOperator
@@ -36,6 +37,19 @@ A\times B = \left[ \begin{array}{ccc} A_{11} B & \cdots & A_{1N} B\\ \vdots & \d
 
     }; // class KroneckerProductOperator
 
+
+
+    /** Returns the Kronecker sum of \f$A\in\mathbb{R}^{M_A}\times\mathbb{R}^{N_A}\f$ and \f$B\in\mathbb{R}^{M_B}\times\mathbb{R}^{N_B}\f$.  The Kronecker sum is given by
+        \f[
+           A\otimes I_{N_B} + I_{M_A} \otimes B,
+         \f]
+where \f$I_N\f$ is the identity matrix of size \f$N\f$.
+    */
+    std::shared_ptr<LinearOperator> KroneckerSum(std::shared_ptr<LinearOperator> A,
+                                                 std::shared_ptr<LinearOperator> B);
+
+    Eigen::MatrixXd KroneckerProduct(Eigen::Ref<const Eigen::MatrixXd> const& A,
+                                     Eigen::Ref<const Eigen::MatrixXd> const& B);
 
 } // namespace Utilities
 } // namespace muq

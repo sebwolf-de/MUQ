@@ -74,10 +74,8 @@ std::shared_ptr<StateSpaceGP> PeriodicKernel::GetStateSpace(boost::property_tree
     Eigen::VectorXd q2s(numTerms+1); // holds all of the q_j^2 values from eqn 27 in "Explicit Link Between Periodic Covariance Functions and State Space Models"
 
     q2s(0) = boost::math::cyl_bessel_i(0, 1.0/l2) / exp(1.0/l2);
-
     for(int i=1; i<numTerms+1; ++i)
         q2s(i) = 2.0 * boost::math::cyl_bessel_i(i, 1.0/l2) / exp(1.0/l2);
-
 
     
     // SET UP F

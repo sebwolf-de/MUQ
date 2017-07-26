@@ -1,5 +1,5 @@
-#ifndef BLOCKDIAGONALOPERATOR_H
-#define BLOCKDIAGONALOPERATOR_H
+#ifndef BLOCKROWOPERATOR_H
+#define BLOCKROWOPERATOR_H
 
 #include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
 
@@ -8,21 +8,21 @@
 namespace muq{
 namespace Utilities{
 
-    /** @class BlockDiagonalOperator
+    /** @class BlockRowOperator
         @ingroup LinearOperators
-        @brief Defines a block diagonal linear operator in terms of other linear operators
-        @details This class defines a \f$N\times N\f$ matrix of the form
+        @brief Defines a block row matrix in terms of other linear operators
+        @details This class defines a \f$1\times N\f$ block matrix of the form
 \f[
-A = \left[\begin{array}{cccc} A_{1,1} & 0 & & \\ 0 & A_{2,2} & 0 & \\ \ddots & \ddots & \ddots & \\ & & 0 & A_{N,N} \end{array}\right],
+A = \left[\begin{array}{cccc} A_{1,1} & A_{1,2} & \cdots & A_{1,N} \end{array}\right]
 \f]
-where each block \f$A_{i,i}\f$ is defined through another linear operator.   Note that the blocks do not need to be the same size or square.
+where each block \f$A_{1,i}\f$ is defined through another linear operator.   Note that the blocks do not need to have the same number of columns, but must have the same number of rows.
     */
-    class BlockDiagonalOperator : public LinearOperator
+    class BlockRowOperator : public LinearOperator
     {
 
     public:
 
-        BlockDiagonalOperator(std::vector<std::shared_ptr<LinearOperator>> const& blocksIn);
+        BlockRowOperator(std::vector<std::shared_ptr<LinearOperator>> const& blocksIn);
 
         virtual Eigen::MatrixXd Apply(Eigen::Ref<const Eigen::MatrixXd> const& x) override;
         
@@ -36,8 +36,6 @@ where each block \f$A_{i,i}\f$ is defined through another linear operator.   Not
     private:
         std::vector<std::shared_ptr<LinearOperator>> blocks;
 
-        static int SumRows(std::vector<std::shared_ptr<LinearOperator>> const& blocksIn);
-
         static int SumCols(std::vector<std::shared_ptr<LinearOperator>> const& blocksIn);
         
     };
@@ -50,4 +48,4 @@ where each block \f$A_{i,i}\f$ is defined through another linear operator.   Not
 
 
 
-#endif // BLOCKDIAGONALOPERATOR_H
+#endif // BLOCKROWOPERATOR_H

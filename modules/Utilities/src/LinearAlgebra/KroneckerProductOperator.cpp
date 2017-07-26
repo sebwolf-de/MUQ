@@ -1,5 +1,7 @@
 #include "MUQ/Utilities/LinearAlgebra/KroneckerProductOperator.h"
 
+#include "MUQ/Utilities/LinearAlgebra/SumOperator.h"
+#include "MUQ/Utilities/LinearAlgebra/IdentityOperator.h"
 
 using namespace muq::Utilities;
 
@@ -8,7 +10,6 @@ KroneckerProductOperator::KroneckerProductOperator(std::shared_ptr<LinearOperato
 {
 
 }
-
 
 Eigen::MatrixXd KroneckerProductOperator::Apply(Eigen::Ref<const Eigen::MatrixXd> const& x)
 {
@@ -42,5 +43,30 @@ Eigen::MatrixXd KroneckerProductOperator::ApplyTranspose(Eigen::Ref<const Eigen:
         bMat = A->ApplyTranspose( B->ApplyTranspose( xMat ).transpose() ).transpose();
     }
 
+    return output;
+}
+
+
+std::shared_ptr<LinearOperator> muq::Utilities::KroneckerSum(std::shared_ptr<LinearOperator> A,
+                                                             std::shared_ptr<LinearOperator> B)
+{
+    auto part1 = std::make_shared<KroneckerProductOperator>(A, std::make_shared<IdentityOperator>(B->cols()));
+    auto part2 = std::make_shared<KroneckerProductOperator>(std::make_shared<IdentityOperator>(A->rows()), B);
+
+    return std::make_shared<SumOperator>(part1, part2);
+}
+
+
+Eigen::MatrixXd muq::Utilities::KroneckerProduct(Eigen::Ref<const Eigen::MatrixXd> const& A,
+                                                 Eigen::Ref<const Eigen::MatrixXd> const& B)
+{
+    Eigen::MatrixXd output(A.rows()*B.rows(), A.cols()*B.cols());
+    for(int j=0; j<A.cols(); ++j)
+    {
+        for(int i=0; i<A.rows(); ++i)
+        {
+            output.block(i*B.rows(), j*B.cols(), B.rows(), B.cols()) = A(i,j)*B;
+        }
+    }
     return output;
 }

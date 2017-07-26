@@ -64,6 +64,12 @@ where \f$f(t)\f$ is the solution in \f$\mathbb{R}^M\f$, \f$F\f$ is an \f$M\times
         /// The dimension of the state variable \f$f(t)\f$.
         const int stateDim;
 
+
+        std::shared_ptr<muq::Utilities::LinearOperator> GetF() const{return F;};
+        std::shared_ptr<muq::Utilities::LinearOperator> GetL() const{return L;};
+        Eigen::MatrixXd const& GetQ() const{return Q;};
+        
+        
     protected:
 
         void ExtractOptions(boost::property_tree::ptree options);
