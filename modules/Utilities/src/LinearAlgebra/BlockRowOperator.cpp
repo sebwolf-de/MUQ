@@ -20,7 +20,7 @@ Eigen::MatrixXd BlockRowOperator::Apply(Eigen::Ref<const Eigen::MatrixXd> const&
     
     int currCol = 0;
 
-    Eigen::MatrixXd output(nrows,x.cols());
+    Eigen::MatrixXd output = Eigen::MatrixXd::Zero(nrows,x.cols());
     
     for(int i=0; i<blocks.size(); ++i)
     {
@@ -39,7 +39,7 @@ Eigen::MatrixXd BlockRowOperator::ApplyTranspose(Eigen::Ref<const Eigen::MatrixX
     int currRow = 0;
     int currCol = 0;
 
-    Eigen::MatrixXd output(ncols,x.cols());
+    Eigen::MatrixXd output = Eigen::MatrixXd::Zero(ncols,x.cols());
     
     for(int i=0; i<blocks.size(); ++i)
     {

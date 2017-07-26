@@ -208,8 +208,6 @@ TEST(Approximation_GP, MaternStateSpace)
     MaternKernel kernel(1, sigma2, length, nu);
 
     std::shared_ptr<StateSpaceGP> gp = kernel.GetStateSpace();
-
-    std::cout << "Matern F = \n" << gp->GetSDE()->GetF()->GetMatrix() << std::endl << std::endl;
     
     EXPECT_EQ(nu+0.5, gp->stateDim);
 
@@ -231,7 +229,7 @@ TEST(Approximation_GP, PeriodicStateSpace)
 
     boost::property_tree::ptree options;
     options.put("PeriodicKernel.StateSpace.NumTerms",8);
-    options.put("SDE.dt", 6e-5);
+    options.put("SDE.dt", 5e-5);
     
     std::shared_ptr<StateSpaceGP> gp = kernel.GetStateSpace(options);
     
@@ -266,19 +264,14 @@ TEST(Approximation_GP, ProductStateSpace)
     boost::property_tree::ptree options;
     options.put("PeriodicKernel.StateSpace.NumTerms",7);
     options.put("SDE.dt", 1e-4);
-
     
     std::shared_ptr<StateSpaceGP> gp1 = kernel1.GetStateSpace(options);
     std::shared_ptr<StateSpaceGP> gp2 = kernel2.GetStateSpace(options);
     EXPECT_EQ(int(nu+0.5), gp2->stateDim);
-    std::cout << "Matern = \n" << gp2->GetObs()->GetMatrix() << std::endl << std::endl;
-    std::cout << "Periodic = \n" << gp1->GetObs()->GetMatrix() << std::endl << std::endl;
-    
+   
     std::shared_ptr<StateSpaceGP> gp12 = kernel12.GetStateSpace(options);
     std::shared_ptr<StateSpaceGP> gp21 = kernel21.GetStateSpace(options);
 
-    std::cout << "Product = \n" << gp12->GetObs()->GetMatrix() << std::endl << std::endl;
-    
     EXPECT_THROW(kernel22.GetStateSpace(options), muq::NotImplementedError);
     EXPECT_EQ(gp1->stateDim *gp2->stateDim, gp12->stateDim);
     
@@ -290,16 +283,4 @@ TEST(Approximation_GP, ProductStateSpace)
     Eigen::VectorXd realization2  = gp2->Sample(obsTimes);
     Eigen::VectorXd realization12 = gp12->Sample(obsTimes);
     
-    for(int i=0; i<realization1.size(); ++i)
-        std::cout << realization1(i) << ",  ";
-    std::cout << std::endl;
-
-    for(int i=0; i<realization1.size(); ++i)
-        std::cout << realization2(i) << ",  ";
-    std::cout << std::endl;
-
-    for(int i=0; i<realization1.size(); ++i)
-        std::cout << realization12(i) << ",  ";
-    std::cout << std::endl;
-
 }

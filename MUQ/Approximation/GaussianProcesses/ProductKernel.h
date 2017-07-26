@@ -58,7 +58,6 @@ std::shared_ptr<StateSpaceGP> GetProductStateSpace(PeriodicKernel const& kernel1
         newBlocks.at(i) = std::make_shared<muq::Utilities::KroneckerProductOperator>(otherL, periodicL->GetBlock(i) );
 
     auto newL = std::make_shared<muq::Utilities::BlockDiagonalOperator>(newBlocks);
-    std::cout << "New L shape = " << newL->rows() << " x " << newL->cols() << std::endl;
 
     /// Construct the new H operator
     Eigen::MatrixXd Hblock(1,2);
