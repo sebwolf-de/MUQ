@@ -60,6 +60,9 @@ where \f$f(t)\f$ is the solution in \f$\mathbb{R}^M\f$, \f$F\f$ is an \f$M\times
             return EvolveDistribution(muCov.first, muCov.second, dt);
         }; 
 
+        static std::shared_ptr<LinearSDE> Concatenate(std::vector<std::shared_ptr<LinearSDE>> const& sdes,
+                                                      boost::property_tree::ptree                    options = boost::property_tree::ptree());
+        
 
         /// The dimension of the state variable \f$f(t)\f$.
         const int stateDim;

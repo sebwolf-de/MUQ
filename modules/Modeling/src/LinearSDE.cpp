@@ -6,6 +6,8 @@
 
 #include "MUQ/Utilities/RandomGenerator.h"
 
+#include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
+
 using namespace muq::Modeling;
 using namespace muq::Utilities;
 
@@ -60,15 +62,15 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LinearSDE::EvolveDistribution(Eigen:
 {
 
     Eigen::VectorXd mu = mu0;
-    Eigen::VectorXd gamma = gamma0;
+    Eigen::MatrixXd gamma = gamma0;
 
     const int numTimes = std::ceil(T/dt);
-
+    
     Eigen::MatrixXd LQLT = L->Apply( L->Apply(Q).transpose().eval() );
     LQLT = 0.5*(LQLT + LQLT.transpose()); // <- Make sure LQLT is symmetric
     
     Eigen::MatrixXd Fgamma;
-    
+
     // Take all but the last step because the last step might be a partial step.
     for(int i=0; i<numTimes-1; ++i)
     {
@@ -84,4 +86,32 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LinearSDE::EvolveDistribution(Eigen:
     gamma += lastDt * (Fgamma + Fgamma.transpose() + LQLT);
 
     return std::make_pair(mu,gamma);
+}
+
+
+std::shared_ptr<LinearSDE> LinearSDE::Concatenate(std::vector<std::shared_ptr<LinearSDE>> const& sdes,
+                                                  boost::property_tree::ptree                    options)
+{
+
+    int stateDim = 0;
+    for(auto& sde : sdes)
+        stateDim += sde->stateDim;
+    
+    std::vector<std::shared_ptr<LinearOperator>> Fs(sdes.size());
+    std::vector<std::shared_ptr<LinearOperator>> Ls(sdes.size());
+
+    Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(stateDim, stateDim);
+
+    int currDim = 0;
+    for(int i=0; i<sdes.size(); ++i){
+        Fs.at(i) = sdes.at(i)->GetF();
+        Ls.at(i) = sdes.at(i)->GetL();
+        Q.block(currDim,currDim, sdes.at(i)->stateDim, sdes.at(i)->stateDim) = sdes.at(i)->GetQ();
+        currDim += sdes.at(i)->stateDim;
+    }
+
+    auto F = std::make_shared<BlockDiagonalOperator>(Fs);
+    auto L = std::make_shared<BlockDiagonalOperator>(Ls);
+
+    return std::make_shared<LinearSDE>(F,L,Q, options);
 }
