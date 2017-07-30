@@ -5,6 +5,7 @@
 #include "MUQ/Utilities/LinearAlgebra/BlockRowOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/KroneckerProductOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/SumOperator.h"
+#include "MUQ/Utilities/LinearAlgebra/ConcatenateOperator.h"
 
 #include <random>
 
@@ -12,6 +13,8 @@
 
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
+
+#include "MUQ/Utilities/Exceptions.h"
 
 using namespace muq::Utilities;
 
@@ -305,6 +308,73 @@ TEST(Utilities_LinearOperator, BlockRow)
         for(int i=0; i<bMat.rows(); ++i)
         {
             EXPECT_NEAR(bMat(i,j), bOp(i,j), 1e-13);
+        }
+    }
+}
+
+
+TEST(Utilities_LinearOperator, Concatenate_BadSizes)
+{
+
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(2,3);
+    Eigen::MatrixXd B = Eigen::MatrixXd::Random(5,7);
+
+    auto Aop = LinearOperator::Create(A);
+    auto Bop = LinearOperator::Create(B);
+
+
+    EXPECT_THROW(ConcatenateOperator(Aop,Bop,0), muq::WrongSizeError);
+    EXPECT_THROW(ConcatenateOperator(Aop,Bop,1), muq::WrongSizeError);
+}
+
+TEST(Utilities_LinearOperator, Concatenate)
+{
+
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(5,3);
+    Eigen::MatrixXd B = Eigen::MatrixXd::Random(5,3);
+
+    auto Aop = LinearOperator::Create(A);
+    auto Bop = LinearOperator::Create(B);
+
+    auto AB_vert = std::make_shared<ConcatenateOperator>(Aop,Bop,0);
+    auto AB_horiz = std::make_shared<ConcatenateOperator>(Aop,Bop,1);
+
+    EXPECT_EQ(A.rows() + B.rows(), AB_vert->rows());
+    EXPECT_EQ(A.rows(), AB_horiz->rows());
+    EXPECT_EQ(A.cols(), AB_vert->cols());
+    EXPECT_EQ(A.cols() + B.cols(), AB_horiz->cols());
+    
+    {
+        Eigen::MatrixXd x = Eigen::MatrixXd::Random(AB_vert->cols(), 10);
+        Eigen::MatrixXd bOp = AB_vert->Apply(x);
+
+        Eigen::MatrixXd bMat(A.rows()+B.rows(), x.cols());
+        bMat.topRows(A.rows()) = A*x;
+        bMat.bottomRows(B.rows()) = B*x;
+
+        for(int j=0; j<bMat.cols(); ++j)
+        {
+            for(int i=0; i<bMat.rows(); ++i)
+            {
+                EXPECT_NEAR(bMat(i,j), bOp(i,j), 1e-13);
+            }
+        }
+    }
+
+    {
+        Eigen::MatrixXd x = Eigen::MatrixXd::Random(AB_horiz->cols(), 10);
+        Eigen::MatrixXd bOp = AB_horiz->Apply(x);
+
+        Eigen::MatrixXd bMat(A.rows(), x.cols());
+        bMat = A*x.topRows(A.cols());
+        bMat += B*x.bottomRows(B.cols());
+
+        for(int j=0; j<bMat.cols(); ++j)
+        {
+            for(int i=0; i<bMat.rows(); ++i)
+            {
+                EXPECT_NEAR(bMat(i,j), bOp(i,j), 1e-13);
+            }
         }
     }
 }

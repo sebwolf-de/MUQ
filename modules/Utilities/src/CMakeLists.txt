@@ -12,4 +12,5 @@ CreateCompileGroup(
     LinearAlgebra/BlockRowOperator.cpp
     LinearAlgebra/KroneckerProductOperator.cpp
     LinearAlgebra/SumOperator.cpp
+    LinearAlgebra/ConcatenateOperator.cpp
 )
