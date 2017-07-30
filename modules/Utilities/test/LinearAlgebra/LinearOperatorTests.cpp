@@ -378,3 +378,22 @@ TEST(Utilities_LinearOperator, Concatenate)
         }
     }
 }
+
+
+TEST(Utilities_LinearOperator, Concatenate_StackFuncs)
+{
+
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(5,3);
+    Eigen::MatrixXd B = Eigen::MatrixXd::Random(5,3);
+
+    auto Aop = LinearOperator::Create(A);
+    auto Bop = LinearOperator::Create(B);
+
+    auto AB_vert = ConcatenateOperator::VStack(Aop,Bop);
+    auto AB_horiz = ConcatenateOperator::HStack(Aop,Bop);
+
+    EXPECT_EQ(A.rows() + B.rows(), AB_vert->rows());
+    EXPECT_EQ(A.rows(), AB_horiz->rows());
+    EXPECT_EQ(A.cols(), AB_vert->cols());
+    EXPECT_EQ(A.cols() + B.cols(), AB_horiz->cols());
+}
