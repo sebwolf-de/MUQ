@@ -13,4 +13,6 @@ CreateCompileGroup(
     LinearAlgebra/KroneckerProductOperator.cpp
     LinearAlgebra/SumOperator.cpp
     LinearAlgebra/ConcatenateOperator.cpp
+    LinearAlgebra/DiagonalOperator.cpp
+    LinearAlgebra/ProductOperator.cpp
 )
