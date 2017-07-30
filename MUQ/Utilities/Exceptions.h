@@ -24,6 +24,16 @@ namespace muq
 
     };
 
+    /** @class WrongSizeError
+        @ingroup Exceptions
+        @brief Exception to throw when matrices, vectors, or arrays are the wrong size.
+    */
+    class WrongSizeError : public std::length_error
+    {
+    public:
+        WrongSizeError(std::string const& message) : std::length_error(message){};
+    };
+
     
 };
 
