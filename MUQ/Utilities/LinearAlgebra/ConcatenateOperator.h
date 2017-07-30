@@ -3,6 +3,7 @@
 
 #include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
 
+#include <vector>
 
 namespace muq
 {
@@ -24,9 +25,8 @@ C = \left[A, B\right].
     class ConcatenateOperator : public LinearOperator
     {
     public:
-        ConcatenateOperator(std::shared_ptr<LinearOperator> Ain,
-                            std::shared_ptr<LinearOperator> Bin,
-                            const int                       rowColIn);
+        ConcatenateOperator(std::vector<std::shared_ptr<LinearOperator>> const& opsIn,
+                            const int                                           rowColIn);
 
         virtual ~ConcatenateOperator(){};
         
@@ -48,17 +48,15 @@ C = \left[A, B\right].
 
         
     private:
-        std::shared_ptr<LinearOperator> A, B;
+        std::vector<std::shared_ptr<LinearOperator>> ops;
         
         const int rowCol; // zero if stacked vertically along rows, 1 if stacked horizontally
 
-        static int GetRows(std::shared_ptr<LinearOperator> Ain,
-                           std::shared_ptr<LinearOperator> Bin,
-                           const int                       rowColIn);
+        static int GetRows(std::vector<std::shared_ptr<LinearOperator>> const& opsIn,
+                           const int                                           rowColIn);
         
-        static int GetCols(std::shared_ptr<LinearOperator> Ain,
-                           std::shared_ptr<LinearOperator> Bin,
-                           const int                       rowColIn);
+        static int GetCols(std::vector<std::shared_ptr<LinearOperator>> const& opsIn,
+                           const int                                           rowColIn);
 
         void CheckSizes();
         

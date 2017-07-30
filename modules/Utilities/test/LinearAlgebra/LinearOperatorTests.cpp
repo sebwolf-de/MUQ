@@ -322,9 +322,12 @@ TEST(Utilities_LinearOperator, Concatenate_BadSizes)
     auto Aop = LinearOperator::Create(A);
     auto Bop = LinearOperator::Create(B);
 
-
-    EXPECT_THROW(ConcatenateOperator(Aop,Bop,0), muq::WrongSizeError);
-    EXPECT_THROW(ConcatenateOperator(Aop,Bop,1), muq::WrongSizeError);
+    std::vector<std::shared_ptr<LinearOperator>> ops(2);
+    ops.at(0) = Aop;
+    ops.at(1) = Bop;
+    
+    EXPECT_THROW(ConcatenateOperator(ops,0), muq::WrongSizeError);
+    EXPECT_THROW(ConcatenateOperator(ops,1), muq::WrongSizeError);
 }
 
 TEST(Utilities_LinearOperator, Concatenate)
@@ -336,8 +339,11 @@ TEST(Utilities_LinearOperator, Concatenate)
     auto Aop = LinearOperator::Create(A);
     auto Bop = LinearOperator::Create(B);
 
-    auto AB_vert = std::make_shared<ConcatenateOperator>(Aop,Bop,0);
-    auto AB_horiz = std::make_shared<ConcatenateOperator>(Aop,Bop,1);
+    std::vector<std::shared_ptr<LinearOperator>> ops(2);
+    ops.at(0) = Aop;
+    ops.at(1) = Bop;
+    auto AB_vert = std::make_shared<ConcatenateOperator>(ops, 0);
+    auto AB_horiz = std::make_shared<ConcatenateOperator>(ops, 1);
 
     EXPECT_EQ(A.rows() + B.rows(), AB_vert->rows());
     EXPECT_EQ(A.rows(), AB_horiz->rows());
