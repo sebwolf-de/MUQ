@@ -33,6 +33,11 @@ foreach(libName ${MUQ_TARGETS})
     
 endforeach()
 
+INSTALL (
+    DIRECTORY ${CMAKE_SOURCE_DIR}/MUQ
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.h")
+    
 # If a group depends on an external library that is going to be built by MUQ, then make sure we account for that dependency
 foreach(group ${MUQ_GROUPS})
 
