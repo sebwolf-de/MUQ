@@ -22,6 +22,8 @@ IF(MUQ_USE_GTEST)
         endif()
     endforeach()
 
+    message("ALL TEST SOURCES = ${all_gtest_sources}")
+    message("ALL LIBS = ${all_compiled_libraries}")
     list(REMOVE_DUPLICATES all_compiled_libraries)
     list(REMOVE_DUPLICATES all_gtest_sources)
 

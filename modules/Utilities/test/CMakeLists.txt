@@ -1,5 +1,4 @@
 
-
 CreateTestGroup(
     UTILITIES_LINEARALGEBRA
     LinearAlgebra/LinearOperatorTests.cpp
@@ -7,3 +6,13 @@ CreateTestGroup(
     RandomGeneratorTest.cpp
 
 )
+
+CreateTestGroup(
+    UTILITIES_HDF5
+
+    HDF5/DatasetTests.cpp
+    HDF5/PathTests.cpp
+    HDF5/HDF5FileTest.cpp
+    
+)
+

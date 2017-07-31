@@ -1,13 +1,13 @@
 
 # Turn off any compile groups with unfulfilled external library dependencies
-foreach(group ${MUQ_GROUPS})
-    foreach(depend ${${group}_REQUIRES})
-        if(NOT MUQ_USE_${depend})
-            message(STATUS "Turning off ${group} because of a missing library dependency.")
-            set(MUQ_ENABLEGROUP_${group} OFF) 
-        endif()
-    endforeach()
-endforeach()
+#foreach(group ${MUQ_GROUPS})
+#    foreach(depend ${${group}_REQUIRES})
+#        if(NOT MUQ_USE_${depend}) OR (NOT MUQ_USE
+#            message(STATUS "Turning off ${group} because of a missing library dependency (${depend}).")
+#            set(MUQ_ENABLEGROUP_${group} OFF) 
+#        endif()
+#    endforeach()
+#endforeach()
 
 # Turn off any compile groups whose upstream compile groups are off
 foreach(group ${MUQ_GROUPS})

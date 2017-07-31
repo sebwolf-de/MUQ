@@ -3,6 +3,7 @@
 ##### LOOK FOR GTEST              ######
 ########################################
 IF(MUQ_USE_GTEST)
+
   find_package(GTEST)
   set(MUQ_NEEDS_GTEST ON)
   

@@ -1,10 +1,22 @@
 #ifndef WORKGRAPH_H_
 #define WORKGRAPH_H_
 
-#include "MUQ/Modeling/WorkGraphPiece.h"
+//#include "MUQ/Modeling/WorkGraphPiece.h"
+#include "MUQ/Modeling/NodeNameFinder.h"
+
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/filtered_graph.hpp>
+
+#include <memory>
 
 namespace muq {
-  namespace Modeling { 
+  namespace Modeling {
+
+    class WorkGraphPiece;
+    class AnyAlgebra;
+    class WorkPiece;
+    class ConstantPiece;
+    
     /// A graph of connected muq::Modeling::WorkPiece's 
     class WorkGraph {
     public:
@@ -64,9 +76,10 @@ namespace muq {
       /// Create a muq::Modeling::WorkPiece whose output matches a given node
       /**
 	 @param[in] node The name of the output node
+	 @param[in] algebra Algebra to preform basic operations between different types (defaults to base class, which has common types)
 	 \return A muq::Modeling::WorkPiece whose outputs are the same as the output node
        */
-      std::shared_ptr<WorkGraphPiece> CreateWorkPiece(std::string const& node) const;
+      std::shared_ptr<WorkGraphPiece> CreateWorkPiece(std::string const& node, std::shared_ptr<const AnyAlgebra> algebra = std::make_shared<AnyAlgebra>()) const;
 
       /// Check to see if a node is constant?
       /**

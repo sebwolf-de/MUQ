@@ -4,34 +4,45 @@ macro (GetDependency name)
         list (FIND MUQ_REQUIRES ${name} dindex)
         if (${dindex} GREATER -1)
 	    set(MUQ_NEEDS_${name} ON)
-	    set(MUQ_USE_${name} ON)
+
+            if(NOT DEFINED MUQ_FORCE_INTERNAL_${name})
+                set(MUQ_FORCE_INTERNAL_${name} OFF)
+            endif()
             
-	    find_package(${name})
-	    if(${name}_FOUND)
-	        # check to make sure the library can be linked to
-		include(Check${name})
+            if(${MUQ_FORCE_INTERNAL_${name}})
 
-		if(NOT ${name}_TEST_FAIL)
-			set(USE_INTERNAL_${name} 0)
-		else()
-			set(USE_INTERNAL_${name} 1)	
-		endif()
+                set(USE_INTERNAL_${name} 1)
 
-	    else()
-		set(USE_INTERNAL_${name} 1)	
-	    endif()
-	
+            else()
+            
+                find_package(${name})
+                if(${name}_FOUND)
+                    # check to make sure the library can be linked to
+                    include(Check${name})
+
+                    if(NOT ${name}_TEST_FAIL)
+                            set(USE_INTERNAL_${name} 0)
+                    else()
+                            set(USE_INTERNAL_${name} 1)	
+                    endif()
+
+                else()
+                    set(USE_INTERNAL_${name} 1)	
+                endif()
+
+            endif()
+            
 	    if(USE_INTERNAL_${name})
 		include(Build${name})
 	    endif()
 	
 	    # store include directory information
 	    include_directories(${${name}_INCLUDE_DIRS})
-	    LIST(APPEND ${CMAKE_PROJECT_NAME}_EXTERNAL_INCLUDES ${${name}_INCLUDE_DIRS})
+	    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${${name}_INCLUDE_DIRS})
 
 	    # store library information
-	    LIST(APPEND ${CMAKE_PROJECT_NAME}_LINK_LIBS ${${name}_LIBRARIES})
-	    LIST(APPEND ${CMAKE_PROJECT_NAME}_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
+	    LIST(APPEND MUQ_LINK_LIBS ${${name}_LIBRARIES})
+	    LIST(APPEND MUQ_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
 
         else()
             set(MUQ_NEEDS_${name} OFF)   
@@ -58,13 +69,13 @@ GetDependency(SUNDIALS)
 set(HAVE_HDF5 1)
 
 GetDependency(HDF5)
-GetDependency(HDF5HL)
+
 if(MUQ_USE_OPENMPI)
 	find_package(ZLIB)
 	include_directories(${ZLIB_INCLUDE_DIRS})
-	LIST(APPEND ${CMAKE_PROJECT_NAME}_LINK_LIBS ${ZLIB_LIBRARIES})
-	LIST(APPEND ${CMAKE_PROJECT_NAME}_LINK_LIBS_STATIC ${ZLIB_LIBRARIES_STATIC})
-	LIST(APPEND ${CMAKE_PROJECT_NAME}_EXTERNAL_INCLUDES ${ZLIB_INCLUDE_DIRS})
+	LIST(APPEND MUQ_LINK_LIBS ${ZLIB_LIBRARIES})
+	LIST(APPEND MUQ_LINK_LIBS_STATIC ${ZLIB_LIBRARIES_STATIC})
+	LIST(APPEND MUQ_EXTERNAL_INCLUDES ${ZLIB_INCLUDE_DIRS})
 	message("ZLIB_LIBRARIES" ${ZLIB_LIBRARIES})
 	
 endif()
@@ -82,8 +93,7 @@ GetDependency(FLANN)
 list (FIND MUQ_REQUIRES BOOST dindex)
 if (${dindex} GREATER -1)
     set(MUQ_NEEDS_BOOST ON)
-    set(MUQ_USE_BOOST ON)
-    
+
     find_package(BOOSTMUQ)
     if(NOT DEFINED Boost_FOUND)
 	set(Boost_FOUND ${BOOST_FOUND})
@@ -145,6 +155,6 @@ endif()
 ##### REMOVE DUPLICATE INCLUDES   ######
 ########################################
 
-list( REMOVE_DUPLICATES ${CMAKE_PROJECT_NAME}_EXTERNAL_INCLUDES)
+list( REMOVE_DUPLICATES MUQ_EXTERNAL_INCLUDES)
 
 

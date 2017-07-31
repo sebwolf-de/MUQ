@@ -4,6 +4,10 @@
 #include "MUQ/Modeling/ConstantPiece.h"
 #include "MUQ/Modeling/IdentityPiece.h"
 
+#include "MUQ/Modeling/WorkPiece.h"
+#include "MUQ/Modeling/WorkGraphPiece.h"
+#include "MUQ/Modeling/AnyAlgebra.h"
+
 #include "WorkPieceTestClasses.h"
 
 using namespace muq::Modeling;
@@ -67,11 +71,11 @@ TEST(WorkGraphPiece, Constant) {
     double a = 1.0;
     double b = 2.0;
     auto input = std::vector<boost::any>({boost::any(a), boost::any(b)});
+    
     auto cp = std::make_shared<ConstantPiece>(input);
 
     graph->AddNode(cp,"x");
     graph->AddNode(ip,"y");
     graph->AddEdge("x",0,"y",0);
-
     graph->CreateWorkPiece("y");
 }
