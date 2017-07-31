@@ -15,6 +15,15 @@ foreach(libName ${MUQ_TARGETS})
         ADD_LIBRARY(${libName} ${${libName}_SOURCES})
         TARGET_LINK_LIBRARIES(${libName} ${${CMAKE_PROJECT_NAME}_LINK_LIBS})
 
+        # Add dependencies for any required dependencies that MUQ is going to build internally
+        foreach(depend ${MUQ_REQUIRES})
+            message(STATUS "Checking for dependency of ${libName} on internal build of ${depend}")
+            if(USE_INTERNAL_${depend})
+                message(STATUS "Adding dependency of ${libName} on ${depend}")
+                add_dependencies(${libName} ${depend})
+            endif()
+        endforeach()
+    
         list(APPEND MUQ_LIBRARIES ${libName})
         install(TARGETS ${libName}
                 EXPORT ${CMAKE_PROJECT_NAME}Depends
