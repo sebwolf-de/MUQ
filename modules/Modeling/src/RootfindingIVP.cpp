@@ -8,7 +8,7 @@
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 
-RootfindingIVP::RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : ODEBase(rhs, pt, algebra), root(root), maxSteps(pt.get<unsigned int>("Rootfinder.MaxSteps", (int)1e10)), maxTime(pt.get<double>("Rootfinder.MaxTime", 1.0e3)) {
+RootfindingIVP::RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : ODEBase(rhs, pt, algebra), root(root), maxSteps(pt.get<unsigned int>("Rootfinder.MaxSteps", (int)1e10)), maxTime(pt.get<double>("Rootfinder.MaxTime", 1.0e3)), maxErrorTests(pt.get<unsigned int>("Rootfinder.MaxErrorTests", 100)) {
   // we must know the number of inputs for both the rhs and the root and they must have at least one (the state)
   assert(rhs->numInputs>0);
   assert(root->numInputs>0);
@@ -23,8 +23,8 @@ RootfindingIVP::RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<W
 RootfindingIVP::~RootfindingIVP() {}
 
 Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, int const wrtIn, int const wrtOut, DerivativeMode const& mode) {
-  // the number of inputs must be at leastthan the number of inputs required by the rhs and the root
-  assert(inputs.size()>=rhs->numInputs+root->numInputs-1);
+  // the number of inputs must be at least the the number of inputs required by the rhs and the root
+  assert(inputs.size()>=rhs->numInputs+root->numInputs-1-(autonomous? 0 : 1));
 
   // clear the results
   ClearResults();
@@ -34,7 +34,11 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
   DeepCopy(state, boost::any_cast<const N_Vector&>(inputs[0]));
 
   // create a data structure to pass around in Sundials
-  auto data = std::make_shared<ODEData>(rhs, root, inputs, wrtIn, wrtOut);
+  auto data = std::make_shared<ODEData>(rhs, root, inputs, autonomous, wrtIn, wrtOut);
+  if( !autonomous ) {
+    const boost::any time = 0.0;
+    data->inputs.insert(data->inputs.begin(), time);
+  }
 
   // set solver to null
   void* cvode_mem = nullptr;
@@ -77,6 +81,10 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
   flag = CVodeSetMaxNumSteps(cvode_mem, maxSteps);
   assert(CheckFlag(&flag, "CVodeSetMaxNumSteps", 1));
 
+  // set the maximum number of error test failures
+  flag = CVodeSetMaxErrTestFails(cvode_mem, maxErrorTests);
+  assert(CheckFlag(&flag, "CVodeSetMaxErrorTestFails", 1));
+  
   // set the intial time
   double t = 0.0;
 
@@ -246,8 +254,13 @@ void RootfindingIVP::JacobianImpl(unsigned int const wrtIn, unsigned int const w
 }
 
 void RootfindingIVP::UpdateInputOutputTypes() {
-  // the type of the first input (the state) for the rhs and the root
-  assert(rhs->InputType(0, false).compare(root->InputType(0, false))==0);
+  if( autonomous ) {
+    // the type of the first input (the state) for the rhs and the root
+    assert(rhs->InputType(0, false).compare(root->InputType(0, false))==0);
+  } else { // non-autonomous
+    // the input type of the second input of the rhs is the input of the first input of the root
+    assert(rhs->InputType(1, false).compare(root->InputType(0, false))==0);
+  }
 
   // the second set of input parameters are the parameters for the root
   for( auto intype : root->InputTypes() ) {
@@ -259,7 +272,7 @@ void RootfindingIVP::UpdateInputOutputTypes() {
   }
 
   // the first output type is the state
-  outputTypes[0] = rhs->InputType(0, false);
+  outputTypes[0] = root->InputType(0, false);
 
   // the second output is the time where the root is reached
   outputTypes[1] = typeid(double).name();

@@ -12,7 +12,7 @@
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 
-ODEBase::ODEBase(std::shared_ptr<WorkPiece> rhs, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : WorkPiece(), rhs(rhs), algebra(algebra), linSolver(pt.get<std::string>("ODESolver.LinearSolver", "Dense")), reltol(pt.get<double>("ODESolver.RelativeTolerance", 1.0e-8)), abstol(pt.get<double>("ODESolver.AbsoluteTolerance", 1.0e-8)), maxStepSize(pt.get<double>("ODESolver.MaxStepSize", 1.0)) {
+ODEBase::ODEBase(std::shared_ptr<WorkPiece> rhs, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : WorkPiece(), rhs(rhs), algebra(algebra), linSolver(pt.get<std::string>("ODESolver.LinearSolver", "Dense")), reltol(pt.get<double>("ODESolver.RelativeTolerance", 1.0e-8)), abstol(pt.get<double>("ODESolver.AbsoluteTolerance", 1.0e-8)), maxStepSize(pt.get<double>("ODESolver.MaxStepSize", 1.0)), autonomous(pt.get<bool>("ODESolver.Autonomous", true)) {
   // do not clear the outputs --- they have to be destroyed properly
   clearOutputs = false;
   clearDerivatives = false;
@@ -52,9 +52,17 @@ ODEBase::~ODEBase() {}
 void ODEBase::SetInputOutputTypes() {
   // the name of an N_Vector type
   const std::string stateType = typeid(N_Vector).name();
-  
-  // the type of the first input (the state) for the rhs
-  assert(stateType.compare(rhs->InputType(0, false))==0);
+
+  if( autonomous ) {
+    // the type of the first input (the state) for the rhs
+    assert(stateType.compare(rhs->InputType(0, false))==0);
+  } else { // non-autonomous ...
+    // the time is the first input
+    const std::string doubleType = typeid(double).name();
+    assert(doubleType.compare(rhs->InputType(0, false))==0);
+    // the state is the second input
+    assert(stateType.compare(rhs->InputType(1, false))==0);
+  }
 
   // the first input and output type is the state type --- if the type is known the rhs and the root must agree
   inputTypes[0] = stateType;
@@ -179,7 +187,13 @@ int ODEBase::EvaluateRHS(realtype time, N_Vector state, N_Vector statedot, void 
 
   // set the state input
   const boost::any& anyref = state;
-  data->inputs[0] = anyref;
+  if( data->autonomous ) {
+    data->inputs[0] = anyref; 
+  } else {
+    const boost::any t = time;
+    data->inputs[0] = t; 
+    data->inputs[1] = anyref; 
+  }
 
   // evaluate the rhs
   const std::vector<boost::any>& result = data->rhs->Evaluate(ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
@@ -201,11 +215,17 @@ int ODEBase::RHSJacobianAction(N_Vector v, N_Vector Jv, realtype time, N_Vector 
   assert(data->rhs);
 
   // set the state input
-  const boost::any& anyref = state;
-  data->inputs[0] = anyref;
+  const boost::any anyref = state;
+  if( data->autonomous ) {
+    data->inputs[0] = anyref; 
+  } else {
+    const boost::any& t = time;
+    data->inputs[0] = t; 
+    data->inputs[1] = anyref; 
+  }
 
   // compute the jacobain wrt the state
-  const boost::any& jacobianAction = data->rhs->JacobianAction(0, 0, v, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
+  const boost::any& jacobianAction = data->rhs->JacobianAction(data->autonomous? 0 : 1, 0, v, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
   NV_DATA_S(Jv) = NV_DATA_S(boost::any_cast<const N_Vector&>(jacobianAction));
 
   return 0;
@@ -219,10 +239,16 @@ int ODEBase::RHSJacobian(long int N, realtype time, N_Vector state, N_Vector rhs
   
   // set the state input
   const boost::any& anyref = state;
-  data->inputs[0] = anyref;
+  if( data->autonomous ) {
+    data->inputs[0] = anyref; 
+  } else {
+    const boost::any t = time;
+    data->inputs[0] = t; 
+    data->inputs[1] = anyref; 
+  }
 
   // evaluate the jacobian
-  const boost::any& jcbn = data->rhs->Jacobian(0, 0, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
+  const boost::any& jcbn = data->rhs->Jacobian(data->autonomous? 0 : 1, 0, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
   const DlsMat& jcbnref = boost::any_cast<const DlsMat&>(jcbn);
   //DenseCopy(boost::any_cast<const DlsMat&>(jcbn), jac);
   for( unsigned int i=0; i<jcbnref->M; ++i ) {

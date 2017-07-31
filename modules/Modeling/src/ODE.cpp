@@ -20,7 +20,7 @@ ODE::~ODE() {}
 
 void ODE::Integrate(ref_vector<boost::any> const& inputs, int const wrtIn, int const wrtOut, N_Vector const& vec, DerivativeMode const& mode) {
   // the number of inputs must be greater than the number of inputs required by the rhs
-  assert(inputs.size()>rhs->numInputs);
+  assert(inputs.size()>rhs->numInputs-(autonomous? 0 : 1));
 
   // clear the results
   ClearResults();
@@ -30,7 +30,11 @@ void ODE::Integrate(ref_vector<boost::any> const& inputs, int const wrtIn, int c
   DeepCopy(state, boost::any_cast<const N_Vector&>(inputs[0]));
 
   // create a data structure to pass around in Sundials
-  auto data = std::make_shared<ODEData>(rhs, inputs, wrtIn, wrtOut);
+  auto data = std::make_shared<ODEData>(rhs, inputs, autonomous, wrtIn, wrtOut);
+  if( !autonomous ) {
+    const boost::any time = 0.0;
+    data->inputs.insert(data->inputs.begin(), time);
+  }
 
   // set solver to null
   void* cvode_mem = nullptr;

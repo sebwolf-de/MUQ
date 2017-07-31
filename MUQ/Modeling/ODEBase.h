@@ -52,6 +52,10 @@ namespace muq {
 	 <ul>
 	 <li> Defaults to 1.0
 	 </ul>
+	 <li> Is the RHS autonomous? (<EM>ODESolver.Autonomous</EM>)
+	 <ul>
+	 <li> Defaults to true
+	 </ul>
 	 </ol>
 	 @param[in] rhs The right hand side of the ODE
 	 @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
@@ -246,6 +250,9 @@ namespace muq {
 
       /// std::vector<DlsMat> type name
       const std::string stdvecDlsMatName = typeid(std::vector<DlsMat>).name();
+
+      /// Is the RHS autonomous?
+      const bool autonomous;
 
     private:
 

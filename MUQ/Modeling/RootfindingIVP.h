@@ -35,6 +35,10 @@ namespace muq {
 	 <ul>
 	 <li> Defaults to \f$10^{3}\f$
 	 </ul>
+	 <li> The maximum number of error tests (<EM>Rootfinder.MaxErrorTests</EM>)
+	 <ul>
+	 <li> Defaults to \f$100\f$
+	 </ul>
 	 </ol>
 	 @param[in] rhs A muq::Modeling::WorkPiece that evaluates the right hand side of the ODE
 	 @param[in] root A muq::Modeling::WorkPiece whose outputs are double's --- we integrate the ODE until we find the first root of one of these outputs
@@ -94,6 +98,10 @@ namespace muq {
 
       /// The maximum amount of time to integrate
       const double maxTime;
+
+      /// The maximum number of error test failures
+      const unsigned int maxErrorTests;
+
     };
   } // namespace Modeling
 } // namespace muq
