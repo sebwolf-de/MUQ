@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "muq/Utilities/HDF5/PathTools.h"
+#include "MUQ/Utilities/HDF5/PathTools.h"
 
 TEST(Paths, GetParent)
 {
