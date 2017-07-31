@@ -2,9 +2,6 @@
 
 #include "MUQ/Utilities/HDF5/H5Object.h"
 
-
-
-
 class DatasetTest : public::testing::Test {
 protected:
 

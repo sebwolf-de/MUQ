@@ -3,8 +3,6 @@
 
 using namespace muq::Utilities;
 
-    
-
 H5Object& H5Object::CreateDataset(std::string const& grpName)
 {
     auto pathParts = SplitString(grpName);
