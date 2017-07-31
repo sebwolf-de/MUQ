@@ -12,6 +12,16 @@
 #include "boost/any.hpp"
 #include "boost/optional.hpp"
 
+#include <Eigen/Core>
+
+#include "MUQ/config.h"
+
+#if MUQ_HAS_SUNDIALS==1
+// Sundials includes
+#include <nvector/nvector_serial.h>
+#include <sundials/sundials_dense.h> // definitions DlsMat DENSE_ELEM
+#endif
+
 namespace muq {
   namespace Modeling {
 
@@ -775,6 +785,20 @@ namespace muq {
       /// Clear muq::Modeling::WorkPiece::outputs and muq::Modeling::WorkPiece::jacobian, muq::Modeling::WorkPiece::jacobianAction, and muq::Modeling::WorkPiece::jacobianTransposeAction when muq::Modeling::Jacobian, muq::Modeling::JacobianAction, or muq::Modeling::JacobianTransposeAction() is called
       void ClearDerivatives();
 
+      /// Destroy a boost any
+      /**
+	 Destroys the object associated with a boost::any.  If the boost::any is not a smart pointer, for example, the function must destory it.
+
+	 This function knows how to destory commonly used objects (those in muq::Modeling::WorkPiece::types).  Overloading muq::Modeling::WorkPiece::DestroyAnyImpl() destroys other types of objects
+       */
+      void DestroyAny(boost::any& obj) const;
+
+      /// Destroy a boost any
+      /**
+	 By default, this function does nothing.  It can be overloaded by the user to destroy objects contained within boost::any's
+       */
+      virtual void DestroyAnyImpl(boost::any& obj) const;
+
       /// Check the input type
       /**
 	 @param[in] inputNum The input number --- we are check that the type has the same type as this input
@@ -796,6 +820,21 @@ namespace muq {
 
       /// A unique ID number assigned by the constructor
       const unsigned int id;
+
+      /// A map of common types
+      /**
+	 A list of common types and their corresponding names:
+	 <ol>
+	 <li> "N_Vector" for <TT>N_Vector</TT> type (requires Sundials)
+	 <li> "DlsMat" for <TT>DlsMat</TT> type (requires Sundials)
+	 </ol>
+       */
+      const std::map<std::string, std::string> types = std::map<std::string, std::string>({
+#if MUQ_HAS_SUNDIALS==1
+	  std::pair<std::string, std::string>({std::string("N_Vector"), typeid(N_Vector).name()}),
+	  std::pair<std::string, std::string>({std::string("DlsMat"), typeid(DlsMat).name()})
+#endif
+	    });
     }; // class WorkPiece
   } // namespace Modeling
 } // namespace muq
