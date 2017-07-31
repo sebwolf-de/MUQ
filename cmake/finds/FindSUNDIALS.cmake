@@ -60,3 +60,9 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SUNDIALS  DEFAULT_MSG
 	                              SUNDIALS_LIBRARY SUNDIALS_INCLUDE_DIR)
 mark_as_advanced(SUNDIALS_INCLUDE_DIR SUNDIALS_LIBRARY )
+
+if( CVODES_LIBRARY OR CVODES_LIBRARY_STATIC )
+    set(MUQ_HAS_SUNDIALS 1)
+else()
+    set(MUQ_HAS_SUNDIALS 0)
+endif() 

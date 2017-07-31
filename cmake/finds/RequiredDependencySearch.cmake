@@ -5,25 +5,6 @@ macro (GetDependency name)
         if (${dindex} GREATER -1)
 	    set(MUQ_NEEDS_${name} ON)
 
-<<<<<<< HEAD
-            set(MUQ_HAS_${name} 1)
-	
-	    find_package(${name})
-	    if(${name}_FOUND)
-	        # check to make sure the library can be linked to
-		include(Check${name})
-
-		if(NOT ${name}_TEST_FAIL)
-			set(USE_INTERNAL_${name} 0)
-		else()
-			set(USE_INTERNAL_${name} 1)	
-		endif()
-
-	    else()
-		set(USE_INTERNAL_${name} 1)	
-	    endif()
-	
-=======
             if(NOT DEFINED MUQ_FORCE_INTERNAL_${name})
                 set(MUQ_FORCE_INTERNAL_${name} OFF)
             endif()
@@ -50,8 +31,6 @@ macro (GetDependency name)
                 endif()
 
             endif()
-            
->>>>>>> master
 	    if(USE_INTERNAL_${name})
 		include(Build${name})
 	    endif()
