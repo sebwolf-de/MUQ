@@ -40,7 +40,11 @@ FILE(APPEND ${_log_summary}
 
 macro (PrintRequired name pad)
 if(USE_INTERNAL_${name})
-if(${name}_FOUND)
+if(${MUQ_FORCE_INTERNAL_${name}})
+FILE(APPEND ${_log_summary}
+"#        ${name}${pad}-------------> Met with internal build -- User requested internal compilation.\n"
+)
+elseif(${name}_FOUND)
 FILE(APPEND ${_log_summary}
 "#        ${name}${pad}-------------> Met with internal build -- Failed compilation test.\n"
 )
@@ -78,7 +82,6 @@ FILE(APPEND ${_log_summary}
 PrintRequired(EIGEN3 " --")
 PrintRequired(BOOST " ---")
 PrintRequired(HDF5 " ----")
-PrintRequired(HDF5HL " --")
 PrintRequired(FLANN " ---")
 PrintRequired(SUNDIALS " ")
 FILE(APPEND ${_log_summary} "#\n")

@@ -24,7 +24,8 @@ IF(MUQ_USE_GTEST)
     list(REMOVE_DUPLICATES all_compiled_libraries)
     list(REMOVE_DUPLICATES all_gtest_sources)
 
-    message(ALL TEST SOURCES = ${all_gtest_sources})
+    message("ALL TEST SOURCES = ${all_gtest_sources}")
+    message("ALL TEST LINKS = ${all_compiled_libraries}")
     ADD_EXECUTABLE(RunAllTests ${all_gtest_sources})
 
     # Make sure the test executable depends on all of the targets
@@ -32,7 +33,12 @@ IF(MUQ_USE_GTEST)
         add_dependencies(RunAllTests ${target})
     endforeach()
 
+<<<<<<< HEAD
     message("MUQ_LINK_LIBS = ${${CMAKE_PROJECT_NAME}_LINK_LIBS}")
     TARGET_LINK_LIBRARIES(RunAllTests ${MUQ_LIBRARIES} /Users/andy/software/install-muq-private/muq_external/lib/libsundials_cvodes.2.dylib ${${CMAKE_PROJECT_NAME}_LINK_LIBS} ${GTEST_LIBRARY})
+=======
+    message("MUQ_LINK_LIBS = ${MUQ_LINK_LIBS} ${MUQ_LIBRARIES}")
+    TARGET_LINK_LIBRARIES(RunAllTests ${MUQ_LIBRARIES} ${MUQ_LINK_LIBS} ${GTEST_LIBRARY})
+>>>>>>> master
 
 ENDIF()

@@ -55,6 +55,7 @@ foreach(target ${MUQ_TARGETS})
 		endif()
 		
 	        list(APPEND ${target}_SOURCES ${${group}_SOURCES})
+                
 	    endif()
 	endif()
     endforeach()

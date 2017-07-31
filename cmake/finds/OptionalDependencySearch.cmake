@@ -1,10 +1,7 @@
 ########################################
 ##### LOOK FOR GTEST              ######
 ########################################
-IF(Inference_tests OR Optimization_tests OR IncrementalApproximation_tests OR Geostats_tests 
-  OR UtilitiesAndModelling_tests OR polychaos_tests OR Regression_tests)
-  
-  IF(MUQ_USE_GTEST)
+IF(MUQ_USE_GTEST)
 	find_package(GTEST)
 	
 	IF(GTEST_FOUND)
@@ -27,13 +24,12 @@ IF(Inference_tests OR Optimization_tests OR IncrementalApproximation_tests OR Ge
 
 	ENDIF(GTEST_FOUND AND NOT GTEST_TEST_FAIL)
 
-    else(MUQ_USE_GTEST)
+else(MUQ_USE_GTEST)
     
-        message(WARNING “Tried to compile tests, but MUQ_USE_GTEST is OFF.  Turning off tests.”)
-	set(MUQ_BUILD_TESTS OFF)
+    message(WARNING “Tried to compile tests, but MUQ_USE_GTEST is OFF.  Turning off tests.”)
+    set(MUQ_BUILD_TESTS OFF)
 		
-    endif(MUQ_USE_GTEST)
-endif()
+endif(MUQ_USE_GTEST)        
 
 ########################################
 ##### REMOVE DUPLICATE INCLUDES   ######
