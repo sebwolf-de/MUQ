@@ -34,6 +34,8 @@ public:
     Eigen::MatrixXd GetCov(){return L.triangularView<Eigen::Lower>()*L.transpose();};
 
     const int stateDim;
+
+    static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<StateSpaceGP>> const& gps);
     
 private:
 

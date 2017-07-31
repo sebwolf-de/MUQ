@@ -106,8 +106,10 @@ std::shared_ptr<LinearSDE> LinearSDE::Concatenate(std::vector<std::shared_ptr<Li
     for(int i=0; i<sdes.size(); ++i){
         Fs.at(i) = sdes.at(i)->GetF();
         Ls.at(i) = sdes.at(i)->GetL();
-        Q.block(currDim,currDim, sdes.at(i)->stateDim, sdes.at(i)->stateDim) = sdes.at(i)->GetQ();
-        currDim += sdes.at(i)->stateDim;
+
+        Q.block(currDim, currDim, Ls.at(i)->cols(), Ls.at(i)->cols()) = sdes.at(i)->GetQ();
+
+        currDim += Ls.at(i)->cols();
     }
 
     auto F = std::make_shared<BlockDiagonalOperator>(Fs);

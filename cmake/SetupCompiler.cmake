@@ -2,6 +2,10 @@
 
 include(CheckCXXCompilerFlag)
 
+if(NOT BUILD_SHARED_LIBS)
+       set(BUILD_SHARED_LIBS ON)
+endif()
+
 
 set(CMAKE_CXX_FLAGS_DEBUG  "-O0") #-O0 works better for memcheck
 set(CMAKE_CXX_FLAGS_RELEASE  "-O3") #full optimization with debug symbols for profiling

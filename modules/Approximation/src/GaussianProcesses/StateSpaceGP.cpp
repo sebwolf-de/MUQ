@@ -1,5 +1,5 @@
 #include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
-
+#include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
 #include "MUQ/Utilities/RandomGenerator.h"
 
 #include <Eigen/Dense>
@@ -65,6 +65,32 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> StateSpaceGP::ComputeMeanVar(Eigen::
 }
 
 
+std::shared_ptr<StateSpaceGP> StateSpaceGP::Concatenate(std::vector<std::shared_ptr<StateSpaceGP>> const& gps)
+{
+    // Build the concatenated SDE
+    std::vector<std::shared_ptr<muq::Modeling::LinearSDE>> sdes(gps.size());
+    for(int i=0; i<gps.size(); ++i)
+        sdes.at(i) = gps.at(i)->GetSDE();
 
+    auto sde = LinearSDE::Concatenate(sdes);
+    
+    // Build a concatenated observation operator
+    std::vector<std::shared_ptr<muq::Utilities::LinearOperator>> obsOps(gps.size());
+    for(int i=0; i<gps.size(); ++i)
+        obsOps.at(i) = gps.at(i)->GetObs();
+    
+    auto H = std::make_shared<BlockDiagonalOperator>(obsOps);
+
+    // Build the concatenated covariance
+    Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(sde->stateDim, sde->stateDim);
+    int currRow = 0;
+    for(int i=0; i<gps.size(); ++i)
+    {
+        Q.block(currRow,currRow, gps.at(i)->stateDim, gps.at(i)->stateDim) = gps.at(i)->GetCov();
+        currRow += gps.at(i)->stateDim;
+    }
+  
+    return std::make_shared<StateSpaceGP>(sde, H, Q);
+}
 
                  
