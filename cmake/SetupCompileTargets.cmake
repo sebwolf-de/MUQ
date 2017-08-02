@@ -60,6 +60,14 @@ foreach(group ${MUQ_GROUPS})
 
         # Add dependencies between different MUQ libraries
         foreach(depend ${${group}_REQUIRES_GROUPS})
+            message(STATUS "")
+	    message(STATUS "")
+	    message(STATUS ${group})
+	    message(STATUS ${${group}_LIBRARY})
+	    message(STATUS ${depend})
+	    message(STATUS ${${depend}_LIBRARY})
+	    message(STATUS "")
+	    message(STATUS "")
         
             if(NOT ${${group}_LIBRARY} STREQUAL ${${depend}_LIBRARY})
                 IF( ${depend}_IS_COMPILED )

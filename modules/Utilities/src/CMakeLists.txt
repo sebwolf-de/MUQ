@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # USAGE:
 # CreateCompileGroup(
 #     <group name>
@@ -25,7 +24,8 @@ CreateCompileGroup(
     HDF5/HDF5File.cpp
     HDF5/HDF5Types.cpp
     HDF5/PathTools.cpp
-=======
+)
+
 CreateCompileGroup(
     UTILITIES_LINEARALGEBRA
     "Extensions and generalizations of Eigen for linear algebra."
@@ -43,5 +43,4 @@ CreateCompileGroup(
     LinearAlgebra/ConcatenateOperator.cpp
     LinearAlgebra/DiagonalOperator.cpp
     LinearAlgebra/ProductOperator.cpp
->>>>>>> origin/mparno/python
 )
