@@ -22,7 +22,6 @@ CreateCompileGroup(
     GaussianProcesses/StateSpaceGP.cpp
     GaussianProcesses/MaternKernel.cpp
     GaussianProcesses/PeriodicKernel.cpp     
-    GaussianProcesses/KarhunenLoeveFactory.cpp
 )
 
 CreateCompileGroup(
