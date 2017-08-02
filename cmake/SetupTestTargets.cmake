@@ -17,7 +17,7 @@ IF(MUQ_USE_GTEST)
 	if(${group}_IS_COMPILED)
 	    list(APPEND all_compiled_libraries ${${group}_LIBRARY})
         endif()
-        if(${MUQ_GROUP_${group}})
+        if(${MUQ_ENABLEGROUP_${group}})
             list(APPEND all_gtest_sources ${${group}_TEST_SOURCES})
         endif()
     endforeach()
@@ -26,7 +26,6 @@ IF(MUQ_USE_GTEST)
     list(REMOVE_DUPLICATES all_gtest_sources)
 
     message("ALL TEST SOURCES = ${all_gtest_sources}")
-    message("ALL TEST LINKS = ${all_compiled_libraries}")
     ADD_EXECUTABLE(RunAllTests ${all_gtest_sources})
 
     # Make sure the test executable depends on all of the targets
