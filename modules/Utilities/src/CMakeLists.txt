@@ -13,23 +13,15 @@
 # )
 
 CreateCompileGroup(
-    MODELING_CORE
-    "The basic building blocks of the Modeling library."
-    muqModeling
+    UTILITIES_HDF5
+    "MUQ's wrapper fo interacting with HDF5 binary files."
+    muqUtilities
     ""
-    "EIGEN3;BOOST"
+    "EIGEN3;HDF5"
     ""
-    WorkPiece.cpp
-
-    NodeNameFinder.cpp
-    AnyAlgebra.cpp
-
-    WorkGraph.cpp
-    WorkGraphNode.cpp
-    WorkGraphEdge.cpp
-
-    WorkGraphPiece.cpp
-
-    ConstantPiece.cpp
-    IdentityPiece.cpp
+    HDF5/Attributes.cpp
+    HDF5/H5Object.cpp
+    HDF5/HDF5File.cpp
+    HDF5/HDF5Types.cpp
+    HDF5/PathTools.cpp
 )
