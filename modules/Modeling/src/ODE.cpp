@@ -59,7 +59,7 @@ void ODE::Integrate(ref_vector<boost::any> const& inputs, int const wrtIn, int c
     // free integrator memory
     CVodeFree(&cvode_mem);
     N_VDestroy(state);
-  
+
     return;
   }
 
@@ -177,7 +177,7 @@ void ODE::SaveDerivative(unsigned int const ntimes, unsigned int const timeIndex
     }
   } else { // multiple outputs --- vector of matrices or vectors
     switch( mode ) {
-    case DerivativeMode::Jac: { // savethe jacobian
+    case DerivativeMode::Jac: { // save the jacobian
      SaveJacobian(boost::any_cast<std::vector<DlsMat>&>(*jacobian) [timeIndex], paramSize, wrtIn, sensState, state, rhsInputs);
      return;
     }
@@ -274,9 +274,12 @@ void ODE::SaveJacobian(DlsMat& jac, unsigned int const ncols, unsigned int const
     // evaluate the right hand side
     const std::vector<boost::any>& eval = rhs->Evaluate(rhsInputs);
 
-    // save as a matrix
+    // save as a matrix (need a deep copy since eval will be destory next time rhs->Evaluate is called)
     jac = NewDenseMat(nrows, 1);
-    DENSE_COL(jac, 0) = NV_DATA_S(boost::any_cast<const N_Vector&>(eval[0]));
+    const N_Vector& val = boost::any_cast<const N_Vector&>(eval[0]);
+    for( unsigned int i=0; i<nrows; ++i ) {
+      DENSE_ELEM(jac, i, 0) = NV_Ith_S(val, i);
+    }
 
     return; 
   }

@@ -255,7 +255,7 @@ public:
       EXPECT_NEAR(DENSE_ELEM(jac1ref[i], 0, 0), 0.5*(-ic0/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)+ic1/k*time*std::cos(std::sqrt(k)*time)-ic1/std::pow(k, 1.5)*std::sin(std::sqrt(k)*time)), 1.0e-6);
       EXPECT_NEAR(DENSE_ELEM(jac1ref[i], 1, 0), 0.5*(-ic0*time*std::cos(std::sqrt(k)*time)-ic0/std::sqrt(k)*std::sin(std::sqrt(k)*time)-ic1/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)), 1.0e-6);
     }
-    
+
     const boost::any& jac2 = ode->Jacobian(2, 0, ic, k, outTimes0);
     const std::vector<DlsMat>& jac2ref = boost::any_cast<const std::vector<DlsMat>&>(jac2);
     EXPECT_EQ(jac2ref.size(), outTimes0.size());
@@ -313,7 +313,6 @@ public:
 
       // check action of the jacobian wrt time
       EXPECT_EQ(NV_LENGTH_S(jacact2ref[i]), 2);
-      //EXPECT_NEAR(NV_Ith_S(jacact2ref[i], 0), eigenVec1(0)*NV_Ith_S(times0_state[i], 1), 1.0e-6);
       EXPECT_NEAR(NV_Ith_S(jacact2ref[i], 0), eigenVec1(0)*(-std::sqrt(k)*ic0*std::sin(std::sqrt(k)*time)+ic1*std::cos(std::sqrt(k)*time)), 1.0e-6);
       EXPECT_NEAR(NV_Ith_S(jacact2ref[i], 1), -eigenVec1(0)*k*(ic0*std::cos(std::sqrt(k)*time)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*time)), 1.0e-6);
     }
@@ -379,7 +378,8 @@ public:
   const double k = 0.12;
 
   /// The output times 
-  const Eigen::VectorXd outTimes0 = Eigen::VectorXd::LinSpaced(10, 0.0, 2.0);
+  //const Eigen::VectorXd outTimes0 = Eigen::VectorXd::LinSpaced(10, 0.0, 2.0);
+  const Eigen::VectorXd outTimes0 = Eigen::VectorXd::LinSpaced(2, 0.0, 2.0);
 
 private:
 };
@@ -411,7 +411,7 @@ TEST_F(ODETests, BDFNewtonMethod) {
     EXPECT_NEAR(NV_Ith_S(times0_state[i], 0), ic0*std::cos(std::sqrt(k)*time)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
     EXPECT_NEAR(NV_Ith_S(times0_state[i], 1), -std::sqrt(k)*ic0*std::sin(std::sqrt(k)*time)+ic1*std::cos(std::sqrt(k)*time), 1.0e-6);
   }
-
+  
   // check the result for the second vector of times
   const std::vector<N_Vector>& times1_state = boost::any_cast<const std::vector<N_Vector>&>(result[1]);
   EXPECT_EQ(times1_state.size(), outTimes1.size());
@@ -597,3 +597,4 @@ TEST_F(ODETests, SPTFQMR) {
   // create the ODE integrator
   ode = std::make_shared<ODE>(rhs, pt);
 }
+

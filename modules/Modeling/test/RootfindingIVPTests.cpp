@@ -172,6 +172,12 @@ TEST(KineticsProblemTest, RHS) {
     EXPECT_EQ(jac0ref->M, 3); // check the number of rows
     EXPECT_EQ(jac0ref->N, 3); // check the number of cols
 
+    for( unsigned int i=0; i<3; ++i ) {
+      for( unsigned int j=0; j<3; ++j ) {
+	EXPECT_DOUBLE_EQ(DENSE_ELEM(jac0ref, i, j), expectedJac0(i,j));
+      }
+    }
+    
     // wrt to the parameters a
     const boost::any& jac1 = rhs->Jacobian(1, 0, yvec, a, b);
     const DlsMat& jac1ref = boost::any_cast<const DlsMat>(jac1);
@@ -183,6 +189,12 @@ TEST(KineticsProblemTest, RHS) {
     EXPECT_EQ(jac1ref->M, 3); // check the number of rows
     EXPECT_EQ(jac1ref->N, 2); // check the number of cols
 
+    for( unsigned int i=0; i<3; ++i ) {
+      for( unsigned int j=0; j<2; ++j ) {
+	EXPECT_DOUBLE_EQ(DENSE_ELEM(jac1ref, i, j), expectedJac1(i,j));
+      }
+    }
+    
     // wrt to the parameters b
     const boost::any& jac2 = rhs->Jacobian(2, 0, yvec, a, b);
     const DlsMat& jac2ref = boost::any_cast<const DlsMat>(jac2);
@@ -195,14 +207,6 @@ TEST(KineticsProblemTest, RHS) {
 
     // check the values
     for( unsigned int i=0; i<3; ++i ) {
-      for( unsigned int j=0; j<3; ++j ) {
-	EXPECT_DOUBLE_EQ(DENSE_ELEM(jac0ref, i, j), expectedJac0(i,j));
-      }
-
-      for( unsigned int j=0; j<2; ++j ) {
-	EXPECT_DOUBLE_EQ(DENSE_ELEM(jac1ref, i, j), expectedJac1(i,j));
-      }
-
       EXPECT_DOUBLE_EQ(DENSE_ELEM(jac2ref, i, 0), expectedJac2(i,0));
     }
   }
@@ -236,6 +240,11 @@ TEST(KineticsProblemTest, Root) {
     EXPECT_EQ(jac00ref->M, 1); // rows
     EXPECT_EQ(jac00ref->N, 3); // cols
 
+    // check the values for input 0, output 0 and 1
+    for( unsigned int j=0; j<3; ++j ) {
+      EXPECT_DOUBLE_EQ(DENSE_ELEM(jac00ref, 0, j), 0.0);
+    }
+
     // input 0, output 1
     const boost::any jac01 = root->Jacobian(0, 1, yvec, p);
     const DlsMat& jac01ref = boost::any_cast<const DlsMat&>(jac01);
@@ -248,8 +257,6 @@ TEST(KineticsProblemTest, Root) {
 
     // check the values for input 0, output 0 and 1
     for( unsigned int j=0; j<3; ++j ) {
-      EXPECT_DOUBLE_EQ(DENSE_ELEM(jac00ref, 0, j), 0.0);
-
       EXPECT_DOUBLE_EQ(DENSE_ELEM(jac01ref, 0, j), expectedJac01(0,j));
     }
 
@@ -263,6 +270,11 @@ TEST(KineticsProblemTest, Root) {
     EXPECT_EQ(jac10ref->M, 1); // rows
     EXPECT_EQ(jac10ref->N, 2); // cols
 
+    // check the values of input 1, output 0 and 1
+    for( unsigned int j=0; j<2; ++j ) {
+      EXPECT_DOUBLE_EQ(DENSE_ELEM(jac10ref, 0, j), expectedJac10(0,j));
+    }
+
     // input 1, output 1
     const boost::any jac11 = root->Jacobian(1, 1, yvec, p);
     const DlsMat& jac11ref = boost::any_cast<const DlsMat>(jac11);
@@ -275,8 +287,6 @@ TEST(KineticsProblemTest, Root) {
 
     // check the values of input 1, output 0 and 1
     for( unsigned int j=0; j<2; ++j ) {
-      EXPECT_DOUBLE_EQ(DENSE_ELEM(jac10ref, 0, j), expectedJac10(0,j));
-
       EXPECT_DOUBLE_EQ(DENSE_ELEM(jac11ref, 0, j), expectedJac11(0,j));
     }
   }
@@ -581,3 +591,4 @@ TEST_F(RootfindingIVPTests, Timeseries) {
     }
   }
 }
+

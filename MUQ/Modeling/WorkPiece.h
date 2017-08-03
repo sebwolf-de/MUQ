@@ -827,12 +827,14 @@ namespace muq {
 	 <ol>
 	 <li> "N_Vector" for <TT>N_Vector</TT> type (requires Sundials)
 	 <li> "DlsMat" for <TT>DlsMat</TT> type (requires Sundials)
+	 <li> "DlsMat vector" for <TT>std::vector<DlsMat></TT> type (requires Sundials)
 	 </ol>
        */
       const std::map<std::string, std::string> types = std::map<std::string, std::string>({
 #if MUQ_HAS_SUNDIALS==1
 	  std::pair<std::string, std::string>({std::string("N_Vector"), typeid(N_Vector).name()}),
-	  std::pair<std::string, std::string>({std::string("DlsMat"), typeid(DlsMat).name()})
+	    std::pair<std::string, std::string>({std::string("DlsMat"), typeid(DlsMat).name()}),
+	    std::pair<std::string, std::string>({std::string("DlsMat vector"), typeid(std::vector<DlsMat>).name()}),
 #endif
 	    });
     }; // class WorkPiece

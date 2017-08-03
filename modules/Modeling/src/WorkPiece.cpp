@@ -604,6 +604,16 @@ void WorkPiece::DestroyAny(boost::any& obj) const {
     DestroyMat(boost::any_cast<DlsMat&>(obj));
     return;
   }
+
+  // destroy std::vector<DlsMat> type
+  if( outtype.compare(types.at("DlsMat vector"))==0 ) {
+    std::vector<DlsMat>& vec = boost::any_cast<std::vector<DlsMat>&>(obj);
+    for( auto it : vec ) {
+      DestroyMat(it);
+    }
+    vec.clear();
+    return;
+  }
 #endif
 
   DestroyAnyImpl(obj);

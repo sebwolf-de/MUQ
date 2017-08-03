@@ -226,7 +226,10 @@ int ODEBase::RHSJacobianAction(N_Vector v, N_Vector Jv, realtype time, N_Vector 
 
   // compute the jacobain wrt the state
   const boost::any& jacobianAction = data->rhs->JacobianAction(data->autonomous? 0 : 1, 0, v, ref_vector<boost::any>(data->inputs.begin(), data->inputs.begin()+data->rhs->numInputs));
-  NV_DATA_S(Jv) = NV_DATA_S(boost::any_cast<const N_Vector&>(jacobianAction));
+  N_Vector const& jacAct = boost::any_cast<const N_Vector&>(jacobianAction);
+  for( unsigned int i=0; i<NV_LENGTH_S(jacAct); ++i ) {
+    NV_Ith_S(Jv, i) = NV_Ith_S(jacAct, i);
+  }
 
   return 0;
 }
