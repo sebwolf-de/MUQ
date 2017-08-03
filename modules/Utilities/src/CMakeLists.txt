@@ -25,8 +25,6 @@ CreateCompileGroup(
     HDF5/HDF5Types.cpp
     HDF5/PathTools.cpp
 )
-<<<<<<< HEAD
-=======
 
 CreateCompileGroup(
     UTILITIES_LINEARALGEBRA
@@ -46,4 +44,3 @@ CreateCompileGroup(
     LinearAlgebra/DiagonalOperator.cpp
     LinearAlgebra/ProductOperator.cpp
 )
->>>>>>> origin/master

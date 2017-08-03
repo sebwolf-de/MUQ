@@ -37,14 +37,6 @@ list (FIND MUQ_REQUIRES NLOPT dindex)
 if (${dindex} GREATER -1)
     set(MUQ_NEEDS_NLOPT ON)
 
-<<<<<<< HEAD
-else(MUQ_USE_GTEST)
-    
-    message(WARNING “Tried to compile tests, but MUQ_USE_GTEST is OFF.  Turning off tests.”)
-    set(MUQ_BUILD_TESTS OFF)
-		
-endif(MUQ_USE_GTEST)        
-=======
     IF(MUQ_USE_NLOPT)
 
       FIND_PACKAGE(NLOPT)
@@ -86,7 +78,6 @@ if(MUQ_USE_MKL)
     add_definitions(-DEIGEN_USE_MKL_ALL)
     
 endif()
->>>>>>> origin/master
 
 ########################################
 ##### LOOK FOR PYTHON             ######
