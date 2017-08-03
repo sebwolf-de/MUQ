@@ -144,7 +144,7 @@ boost::graph_traits<Graph>::vertex_iterator WorkGraph::GetNodeIterator(std::stri
 
   // return the iterator with this name (it is end if that node does not exist)
   return std::find_if(v, v_end, NodeNameFinder(name, graph));
-}
+  }
 
 std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > WorkGraph::GraphOutputs() const {
   // create an empty vector to hold outputs
@@ -267,6 +267,7 @@ bool WorkGraph::HasEdge(boost::graph_traits<Graph>::vertex_descriptor const& vOu
 }
 
 void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph>& newGraph) const {
+    
   // a map from the source ID to a pair: <source vertex, vector of edges from that vertex to this one>
   std::map<unsigned int, std::pair<boost::graph_traits<Graph>::vertex_descriptor, std::vector<boost::graph_traits<Graph>::in_edge_iterator> > > sources;
   
@@ -301,6 +302,13 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
       // loop through the edges from the source to this node
       for( auto e : it.second.second ) {
 	if( !newGraph->HasEdge(nextV, vNew, graph->operator[](*e)->inputDim) ) { // if edge does not exist ...
+
+          // Check the dimensions before adding the edge
+          if((graph->operator[](*e)->outputDim != -1) && (graph->operator[](*e)->inputDim !=-1) && (graph->operator[](*e)->outputDim != graph->operator[](*e)->inputDim)){
+            std::cerr << "\nERROR: Number of argument mismatch" << std::endl << std::endl;
+            assert(graph->operator[](*e)->outputDim == graph->operator[](*e)->inputDim);
+          }
+          
 	  // ... add the edge from this node to the existing node
 	  auto nextE = boost::add_edge(nextV, vNew, *(newGraph->graph));
 	  newGraph->graph->operator[](nextE.first) = std::make_shared<WorkGraphEdge>(graph->operator[](*e)->outputDim, graph->operator[](*e)->inputDim);
@@ -388,7 +396,7 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
   for( auto it=inputs.begin(); it!=inputs.end(); ++it ) {
     // make sure the input number is known
     if( newGraph->graph->operator[](it->first)->piece->numInputs<0 ) {
-      std::cerr << std::endl << "ERROR: Cannot create WorkGraphPiece if one of the nodes has an unknown number of inputs" << std::endl << std::endl;
+        std::cerr << std::endl << "ERROR: Cannot create WorkGraphPiece if one of the nodes has an unknown number of inputs.  Node \"" << newGraph->graph->operator[](it->first)->name<< "\" does not specify the number of inputs. " << std::endl << std::endl;
       
       assert(newGraph->graph->operator[](it->first)->piece->numInputs>=0);
     }
@@ -419,11 +427,31 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
     newGraph->AddNode(constantPieces[i], inputNames[i]);
     newGraph->AddEdge(inputNames[i], 0, newGraph->graph->operator[](inputs[i].first)->name, inputs[i].second);
   }
+<<<<<<< HEAD
   
   // the output node
   auto outNode = newGraph->GetNodeIterator(node);
+<<<<<<< HEAD
 
   return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inputNames, inTypes, newGraph->graph->operator[](*outNode)->piece, algebra);
+=======
+
+  return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inputNames, inTypes, newGraph->graph->operator[](*outNode)->piece, algebra);
+=======
+
+  // Look for the original node name
+  auto outNode = newGraph->GetNodeIterator(node);
+
+  // If we didn't find the original node, look for the fixed one
+  if(outNode == vertices(*newGraph->graph).second){
+      std::string node_fixed = node + "_fixed";
+      outNode = newGraph->GetNodeIterator(node_fixed);
+      assert(outNode != vertices(*newGraph->graph).second);
+  }
+  
+  return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inTypes, newGraph->graph->operator[](*outNode)->piece);
+>>>>>>> origin/mparno/python
+>>>>>>> origin/master
 }
 
 class MyVertexWriter {

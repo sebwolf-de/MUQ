@@ -16,12 +16,6 @@ IF(NOT MUQ_USE_NLOPT AND IncrementalApproximation_build)
 	set(IncrementalApproximation_tests OFF)
 endif()
 
-# If there is no libMesh, turn off MuqPde
-if(NOT MUQ_LIBMESH AND PDE_build)
-  set(PDE_build OFF)
-  set(PDE_tests OFF)
-  message(WARNING "PDE requires libMesh which is not found. Thus, PDE has been turned off.")
-endif()
 
 # If there is no gtest, turn off all tests
 if(NOT MUQ_USE_GTEST)
@@ -31,7 +25,5 @@ if(NOT MUQ_USE_GTEST)
   set(Geostats_tests OFF)
   set(UtilitiesAndModelling_tests OFF)
   set(PolynomialChaos_tests OFF)
-  set(Regression_tests OFF)
-  set(PDE_tests OFF)
   message(WARNING "MUQ_USE_GTEST is OFF. Thus, all tests has been turned off.")
 endif(NOT MUQ_USE_GTEST)

@@ -4,34 +4,22 @@ macro (GetDependency name)
         list (FIND MUQ_REQUIRES ${name} dindex)
         if (${dindex} GREATER -1)
 	    set(MUQ_NEEDS_${name} ON)
-
-            if(NOT DEFINED MUQ_FORCE_INTERNAL_${name})
-                set(MUQ_FORCE_INTERNAL_${name} OFF)
-            endif()
             
-            if(${MUQ_FORCE_INTERNAL_${name}})
+	    find_package(${name})
+	    if(${name}_FOUND)
+	        # check to make sure the library can be linked to
+		include(Check${name})
 
-                set(USE_INTERNAL_${name} 1)
+		if(NOT ${name}_TEST_FAIL)
+			set(USE_INTERNAL_${name} 0)
+		else()
+			set(USE_INTERNAL_${name} 1)	
+		endif()
 
-            else()
-            
-                find_package(${name})
-                if(${name}_FOUND)
-                    # check to make sure the library can be linked to
-                    include(Check${name})
-
-                    if(NOT ${name}_TEST_FAIL)
-                            set(USE_INTERNAL_${name} 0)
-                    else()
-                            set(USE_INTERNAL_${name} 1)	
-                    endif()
-
-                else()
-                    set(USE_INTERNAL_${name} 1)	
-                endif()
-
-            endif()
-            
+	    else()
+		set(USE_INTERNAL_${name} 1)	
+	    endif()
+	
 	    if(USE_INTERNAL_${name})
 		include(Build${name})
 	    endif()
@@ -93,7 +81,8 @@ GetDependency(FLANN)
 list (FIND MUQ_REQUIRES BOOST dindex)
 if (${dindex} GREATER -1)
     set(MUQ_NEEDS_BOOST ON)
-
+    set(MUQ_USE_BOOST ON)
+    
     find_package(BOOSTMUQ)
     if(NOT DEFINED Boost_FOUND)
 	set(Boost_FOUND ${BOOST_FOUND})
