@@ -39,3 +39,9 @@ Eigen::MatrixXd KarhunenLoeveExpansion::GetModes(Eigen::Ref<const Eigen::MatrixX
     Eigen::VectorXd scale = seedWts.array()/modeEigs.array();
     return crossCov * modeVecs * scale.asDiagonal();
 }
+
+Eigen::VectorXd KarhunenLoeveExpansion::Evaluate(Eigen::Ref<const Eigen::MatrixXd> const& pts,
+                                                 Eigen::Ref<const Eigen::VectorXd> const& coeffs)
+{
+    return GetModes(pts) * (modeEigs.array().sqrt()*coeffs.array()).matrix();
+}
