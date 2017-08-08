@@ -19,9 +19,9 @@ CreateCompileGroup(
     "MODELING_CORE"
     "EIGEN3;BOOST"
     ""
-    GaussianProcesses/StateSpaceGP.cpp
     GaussianProcesses/MaternKernel.cpp
-    GaussianProcesses/PeriodicKernel.cpp     
+    GaussianProcesses/PeriodicKernel.cpp
+    GaussianProcesses/KarhunenLoeveExpansion.cpp
     GaussianProcesses/KarhunenLoeveFactory.cpp
 )
 
@@ -32,6 +32,7 @@ CreateCompileGroup(
     "MODELING_CORE;APPROXIMATION_GP_Kernels"
     "EIGEN3;BOOST"
     "NLOPT"
+    #GaussianProcesses/StateSpaceGP.cpp
     GaussianProcesses/GaussianProcess.cpp
 )
 
