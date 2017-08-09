@@ -39,41 +39,43 @@ FILE(APPEND ${_log_summary}
 )
 
 macro (PrintRequired name pad)
-if(USE_INTERNAL_${name})
-if(${MUQ_FORCE_INTERNAL_${name}})
-FILE(APPEND ${_log_summary}
-"#        ${name}${pad}-------------> Met with internal build -- User requested internal compilation.\n"
-)
-elseif(${name}_FOUND)
-FILE(APPEND ${_log_summary}
-"#        ${name}${pad}-------------> Met with internal build -- Failed compilation test.\n"
-)
-else()
-FILE(APPEND ${_log_summary}
-"#        ${name}${pad}-------------> Met with internal build -- Could not find library.\n"
-)
-endif()
 
-elseif(NOT ${MUQ_NEEDS_${name}})
-FILE(APPEND ${_log_summary}
-"#        ${name}${pad}-------------> Not required for selected compile groups.\n"
-)
-else()
-FILE(APPEND ${_log_summary}
-"#        ${name}${pad}-------------> Met with existing library:\n"
-"#                                Include Directory:\n"
-"#                                  ${${name}_INCLUDE_DIR}\n")
+    if(USE_INTERNAL_${name})
+        if(${MUQ_FORCE_INTERNAL_${name}})
+            FILE(APPEND ${_log_summary}
+                        "#        ${name}${pad}-------------> Met with internal build -- User requested internal compilation.\n"
+                )
+        elseif(${name}_FOUND)
+            FILE(APPEND ${_log_summary}
+                        "#        ${name}${pad}-------------> Met with internal build -- Failed compilation test.\n"
+                )
+        else()
+            FILE(APPEND ${_log_summary}
+                        "#        ${name}${pad}-------------> Met with internal build -- Could not find library.\n"
+                )
+        endif()
 
-IF(DEFINED ${name}_LIBRARIES)
-FILE(APPEND ${_log_summary} "#                                Libraries:\n")
+    elseif(NOT ${MUQ_NEEDS_${name}})
+        FILE(APPEND ${_log_summary}
+                    "#        ${name}${pad}-------------> Not required for selected compile groups.\n"
+            )
+    else()
+        FILE(APPEND ${_log_summary}
+                    "#        ${name}${pad}-------------> Met with existing library:\n"
+                    "#                                Include Directory:\n"
+                    "#                                  ${${name}_INCLUDE_DIR}\n")
 
-		foreach(libName ${${name}_LIBRARIES}) 
-    		FILE(APPEND ${_log_summary} 
-"#                                  ${libName}\n") 
-		endforeach(libName) 
-endif()
-endif()
-FILE(APPEND ${_log_summary} "#\n")
+        IF(DEFINED ${name}_LIBRARIES)
+            FILE(APPEND ${_log_summary} "#                                Libraries:\n")
+
+            foreach(libName ${${name}_LIBRARIES})
+                FILE(APPEND ${_log_summary} 
+                            "#                                  ${libName}\n")
+            endforeach(libName) 
+        endif()
+    endif()
+    FILE(APPEND ${_log_summary} "#\n")
+
 endmacro(PrintRequired)
 
 FILE(APPEND ${_log_summary}

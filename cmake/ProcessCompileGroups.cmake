@@ -80,3 +80,4 @@ foreach(target ${MUQ_TARGETS})
     endif()
     
 endforeach()
+
