@@ -9,17 +9,25 @@
 
 #include "MUQ/Approximation/GaussianProcesses/Utilities.h"
 
+//#include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
+
 #include "MUQ/Utilities/Exceptions.h"
 
+#include <boost/property_tree/ptree.hpp>
 
 
 namespace muq
 {
+namespace Modeling{
+    class LinearSDE;
+}
+namespace Utilities{
+    class LinearOperator;
+}
+
 namespace Approximation
 {
-
-class StateSpaceGP;
-
+    
 template<typename LeftType, typename RightType>
 class ProductKernel;
 
@@ -31,7 +39,7 @@ class SumKernel;
     @ingroup CovarianceKernels
     @brief Base class for all covariance kernels.
 */
-class KernelBase
+class KernelBase : public std::enable_shared_from_this<muq::Approximation::KernelBase>
 {
 
 public:
@@ -53,6 +61,15 @@ public:
 
 
     virtual ~KernelBase(){};
+
+
+    virtual std::shared_ptr<muq::Approximation::KernelBase> GetPtr() {
+        return shared_from_this();
+    }
+
+    /// Overridden by ProductKernel
+    virtual std::vector<std::shared_ptr<KernelBase>> GetSeperableComponents() {return std::vector<std::shared_ptr<KernelBase>>(1,GetPtr()); };
+
     
     virtual Eigen::MatrixXd Evaluate(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const = 0;
     
@@ -92,7 +109,7 @@ public:
         @details If this is a one dimensional kernel (i.e., inputDim=1 and coDim=1), this function returns a state space representation of the covariance kernel.  In particular, it returns a linear time invariant stochastic differential equation, whose solution, when started with the returned stationary covariance, provides the same information as this Gaussian process.   The first component of the vector-valued stochastic differential equation is related to the Gaussian process.  See "Kalman filtering and smoothing solutions to temporal Gaussian process regression models," by Jouni Hartikainen and Simo Sarkka, for more information.
    
     */
-    virtual std::shared_ptr<StateSpaceGP> GetStateSpace(boost::property_tree::ptree sdeOptions=boost::property_tree::ptree()) const{
+    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions=boost::property_tree::ptree()) const{
         throw muq::NotImplementedError("ERROR.  The GetStateSpace() function has not been implemented in this chiled of muq::Approximation::KernelBase.");
     };
     

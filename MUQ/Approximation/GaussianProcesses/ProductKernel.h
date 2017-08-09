@@ -3,6 +3,7 @@
 
 #include "MUQ/Approximation/GaussianProcesses/KernelImpl.h"
 #include "MUQ/Approximation/GaussianProcesses/PeriodicKernel.h"
+#include "MUQ/Modeling/LinearSDE.h"
 
 #include "MUQ/Utilities/LinearAlgebra/KroneckerProductOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
@@ -10,7 +11,7 @@
 #include "MUQ/Utilities/LinearAlgebra/SumOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/IdentityOperator.h"
 
-#include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
+
 
 #include "MUQ/Utilities/Exceptions.h"
 
@@ -20,7 +21,7 @@ namespace Approximation
 {
 
 template<typename LeftType, typename RightType>
-std::shared_ptr<StateSpaceGP> GetProductStateSpace(LeftType const& kernel1, RightType const& kernel2, boost::property_tree::ptree sdeOptions)
+std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetProductStateSpace(LeftType const& kernel1, RightType const& kernel2, boost::property_tree::ptree sdeOptions)
 {
     throw muq::NotImplementedError("ERROR.  The GetStateSpace() function has not been implemented in this child of muq::Approximation::KernelBase.");
 }
@@ -28,11 +29,11 @@ std::shared_ptr<StateSpaceGP> GetProductStateSpace(LeftType const& kernel1, Righ
 
 // See "Explicit Link Between Periodic 
 template<typename RightType>
-std::shared_ptr<StateSpaceGP> GetProductStateSpace(PeriodicKernel const& kernel1, RightType const& kernel2, boost::property_tree::ptree sdeOptions)
+std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetProductStateSpace(PeriodicKernel const& kernel1, RightType const& kernel2, boost::property_tree::ptree sdeOptions)
 {
 
-    std::shared_ptr<StateSpaceGP> periodicGP = kernel1.GetStateSpace(sdeOptions);
-    auto periodicSDE = periodicGP->GetSDE();
+    auto periodicGP = kernel1.GetStateSpace(sdeOptions);
+    auto periodicSDE = std::get<0>(periodicGP);
 
     auto periodicF = std::dynamic_pointer_cast<muq::Utilities::BlockDiagonalOperator>(periodicSDE->GetF());
     assert(periodicF);
@@ -40,11 +41,11 @@ std::shared_ptr<StateSpaceGP> GetProductStateSpace(PeriodicKernel const& kernel1
     auto periodicL = std::dynamic_pointer_cast<muq::Utilities::BlockDiagonalOperator>(periodicSDE->GetL());
     assert(periodicL);
     
-    std::shared_ptr<StateSpaceGP> otherGP = kernel2.GetStateSpace(sdeOptions);
-    auto otherSDE = otherGP->GetSDE();
+    auto otherGP = kernel2.GetStateSpace(sdeOptions);
+    auto otherSDE = std::get<0>(otherGP);
     auto otherF = otherSDE->GetF();
     auto otherL = otherSDE->GetL();
-    auto otherH = otherGP->GetObs();
+    auto otherH = std::get<1>(otherGP);
     
     /// Construct the new F operator
     std::vector<std::shared_ptr<muq::Utilities::LinearOperator>> newBlocks( periodicF->GetBlocks().size() );
@@ -69,8 +70,8 @@ std::shared_ptr<StateSpaceGP> GetProductStateSpace(PeriodicKernel const& kernel1
     auto newH = std::make_shared<muq::Utilities::BlockRowOperator>(newBlocks);
 
     // Construct Pinf
-    Eigen::MatrixXd periodicP = periodicGP->GetCov();
-    Eigen::MatrixXd otherP = otherGP->GetCov();
+    Eigen::MatrixXd periodicP = std::get<2>(periodicGP);
+    Eigen::MatrixXd otherP = std::get<2>(otherGP);
     
     Eigen::MatrixXd Pinf = Eigen::MatrixXd::Zero(periodicP.rows()*otherP.rows(), periodicP.cols()*otherP.cols());
     for(int i=0; i<newBlocks.size(); ++i)
@@ -84,13 +85,11 @@ std::shared_ptr<StateSpaceGP> GetProductStateSpace(PeriodicKernel const& kernel1
 
     // Construct the new statespace GP
     auto newSDE = std::make_shared<muq::Modeling::LinearSDE>(newF, newL, Q, sdeOptions);
-    auto newGP = std::make_shared<StateSpaceGP>(newSDE, newH, Pinf);
-    
-    return newGP;
+    return std::make_tuple(newSDE, newH, Pinf);
 }
 
 template<typename LeftType>
-std::shared_ptr<StateSpaceGP> GetProductStateSpace(LeftType const& kernel1, PeriodicKernel const& kernel2, boost::property_tree::ptree sdeOptions)
+std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetProductStateSpace(LeftType const& kernel1, PeriodicKernel const& kernel2, boost::property_tree::ptree sdeOptions)
 {
     return GetProductStateSpace(kernel2, kernel1, sdeOptions);
 }
@@ -252,7 +251,7 @@ public:
 	kernel2.SetParams(params.tail(kernel2.numParams));
     }
 
-    virtual std::shared_ptr<StateSpaceGP> GetStateSpace(boost::property_tree::ptree sdeOptions=boost::property_tree::ptree()) const override{
+    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions=boost::property_tree::ptree()) const override{
         return GetProductStateSpace(kernel1, kernel2, sdeOptions);
     };
     

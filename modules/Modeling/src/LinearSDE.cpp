@@ -65,7 +65,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LinearSDE::EvolveDistribution(Eigen:
     Eigen::MatrixXd gamma = gamma0;
 
     const int numTimes = std::ceil(T/dt);
-    
+
     Eigen::MatrixXd LQLT = L->Apply( L->Apply(Q).transpose().eval() );
     LQLT = 0.5*(LQLT + LQLT.transpose()); // <- Make sure LQLT is symmetric
     
@@ -94,13 +94,16 @@ std::shared_ptr<LinearSDE> LinearSDE::Concatenate(std::vector<std::shared_ptr<Li
 {
 
     int stateDim = 0;
-    for(auto& sde : sdes)
+    int stochDim = 0;
+    for(auto& sde : sdes){
         stateDim += sde->stateDim;
+        stochDim += sde->L->cols();
+    }
     
     std::vector<std::shared_ptr<LinearOperator>> Fs(sdes.size());
     std::vector<std::shared_ptr<LinearOperator>> Ls(sdes.size());
 
-    Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(stateDim, stateDim);
+    Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(stochDim, stochDim);
 
     int currDim = 0;
     for(int i=0; i<sdes.size(); ++i){

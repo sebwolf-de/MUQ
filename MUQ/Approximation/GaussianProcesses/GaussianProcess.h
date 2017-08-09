@@ -4,6 +4,7 @@
 #include "MUQ/Approximation/GaussianProcesses/CovarianceKernels.h"
 
 #include <Eigen/Core>
+
 #include <set>
 
 #include <nlopt.h>
@@ -59,13 +60,10 @@ namespace muq
     */
         
     class GaussianProcess;
-
+    class ObservationInformation;
     
     struct OptInfo
     {
-	const Eigen::MatrixXd *xs;
-	const Eigen::MatrixXd *vals;
-
 	GaussianProcess *gp;
     };
     
@@ -80,7 +78,7 @@ namespace muq
     /** @class MeanFunctionBase
         @ingroup MeanFunctions
     */
-    class MeanFunctionBase
+    class MeanFunctionBase : public std::enable_shared_from_this<MeanFunctionBase>
     {
     public:
         MeanFunctionBase(unsigned dimIn,
@@ -89,6 +87,10 @@ namespace muq
 	virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const = 0;
 
 	virtual std::shared_ptr<MeanFunctionBase> Clone() const = 0;
+        virtual std::shared_ptr<MeanFunctionBase> GetPtr()
+        {
+            return shared_from_this();
+        };
 
 	const unsigned inputDim;
 	const unsigned coDim;
@@ -193,17 +195,30 @@ namespace muq
     }
 
 
-    /** @class GaussianInformation
-        @ingroup GaussianProcesses
-    */
-    class GaussianInformation
+    class ObservationInformation
     {
     public:
-	Eigen::MatrixXd mean;
-	Eigen::MatrixXd covariance;
+
+        ObservationInformation(std::shared_ptr<muq::Utilities::LinearOperator> Hin,
+                               Eigen::Ref<const Eigen::VectorXd> const&        locIn,
+                               Eigen::Ref<const Eigen::VectorXd> const&        obsIn,
+                               Eigen::Ref<const Eigen::MatrixXd> const&        obsCovIn) : H(Hin), loc(locIn), obs(obsIn), obsCov(obsCovIn){};
+        
+        // The observation operator
+        std::shared_ptr<muq::Utilities::LinearOperator> H;
+
+        // The location of the observation
+        Eigen::VectorXd loc;
+        
+        // The observed data
+        Eigen::VectorXd obs;
+
+        // The covariance of the observational noise
+        Eigen::MatrixXd obsCov;
     };
-
-
+    
+    
+    
     /** @class GaussianProcess
         @ingroup GaussianProcesses
     */
@@ -211,46 +226,79 @@ namespace muq
     {
 
     public:
+
+        enum CovarianceType
+        {
+            DiagonalCov,
+            BlockCov,
+            FullCov,
+            NoCov
+        };
+        
+        GaussianProcess(MeanFunctionBase& meanIn,
+                        KernelBase&       kernelIn) : GaussianProcess(meanIn.Clone(), kernelIn.Clone()){};
+        
         GaussianProcess(std::shared_ptr<MeanFunctionBase> meanIn,
 			std::shared_ptr<KernelBase>       covKernelIn);
 
+        virtual void Condition(Eigen::Ref<const Eigen::MatrixXd> const& loc,
+                               Eigen::Ref<const Eigen::MatrixXd> const& vals,
+                               double                                   obsVar=0.0);
 
-	void Fit(Eigen::MatrixXd const& xs,
-		 Eigen::MatrixXd const& vals);
+        virtual void Condition(std::shared_ptr<ObservationInformation> obs);
 
-	void Fit();
+	virtual void Optimize();
 
-	void Optimize();
+        // Evaluate the mean and covariance
+	virtual std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Predict(Eigen::MatrixXd const& newLocs,
+                                                                    CovarianceType         covType);
 
-	GaussianInformation Predict(Eigen::MatrixXd const& newLocs);
-	
+        virtual Eigen::MatrixXd PredictMean(Eigen::MatrixXd const& newPts);
+
+        // Draw a random sample from the GP
+        virtual Eigen::MatrixXd Sample(Eigen::MatrixXd const& newPts);
+
+        
+        virtual double LogLikelihood(Eigen::MatrixXd const& xs,
+                                     Eigen::MatrixXd const& vals);
+
 	// Evaluates the log marginal likelihood needed when fitting hyperparameters
-	double EvaluateMarginalLikelihood(Eigen::MatrixXd const& xs,
-					  Eigen::MatrixXd const& vals,
-					  Eigen::VectorXd      & grad,
-					  bool                   computeGrad = true);
+        virtual double MarginalLogLikelihood();
+        virtual double MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
+                                             bool                        computeGrad=true);
+                                            
 
-	
-	Eigen::MatrixXd EvaluateMean(Eigen::MatrixXd const& xs);
+      	std::shared_ptr<MeanFunctionBase> Mean(){return mean;};
+	std::shared_ptr<KernelBase>       Kernel(){return covKernel;};
 
-	std::shared_ptr<MeanFunctionBase> mean;
+    protected:
+
+        Eigen::MatrixXd BuildCrossCov(Eigen::MatrixXd const& newLocs);
+
+        void ProcessObservations();
+        
+        
+        std::shared_ptr<MeanFunctionBase> mean;
 	std::shared_ptr<KernelBase>       covKernel;
 
-    private:
+        std::vector<std::shared_ptr<ObservationInformation>> observations;
 
-	Eigen::MatrixXd trainMean;
-	Eigen::MatrixXd trainLocs;
-	Eigen::MatrixXd trainVals;
-	
-	Eigen::LLT<Eigen::MatrixXd> covSolver;
-	
+
+        Eigen::VectorXd trainDiff;
+        Eigen::VectorXd sigmaTrainDiff;
+        
+        Eigen::LLT<Eigen::MatrixXd> covSolver;
+
+        int obsDim;
 	const int inputDim;
 	const int coDim;
 
+        // Have new observations been added since the covariance was inverted?
+        bool hasNewObs;
+        
 	const double pi = 4.0 * atan(1.0); //boost::math::constants::pi<double>();
 	
     };// class GaussianProcess
-
 
     /** @ingroup GaussianProcesses
      */

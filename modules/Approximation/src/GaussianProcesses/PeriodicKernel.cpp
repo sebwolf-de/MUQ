@@ -60,7 +60,7 @@ private:
     
 };
 
-std::shared_ptr<StateSpaceGP> PeriodicKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
+std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> PeriodicKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
 {
 
     // This is the same as J in the paper
@@ -113,6 +113,6 @@ std::shared_ptr<StateSpaceGP> PeriodicKernel::GetStateSpace(boost::property_tree
     // Create the SDE
     auto sde = std::make_shared<muq::Modeling::LinearSDE>(F,L,Q,sdeOptions);
 
-    return std::make_shared<StateSpaceGP>(sde, H, Pinf);
+    return std::make_tuple(sde, H, Pinf);
     
 }
