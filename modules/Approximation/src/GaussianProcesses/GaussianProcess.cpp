@@ -165,9 +165,15 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::Matr
     
     Eigen::Map<Eigen::VectorXd> postMean(outputMean.data(), coDim*newLocs.cols());
 
-    postMean = crossCov * sigmaTrainDiff;//covSolver.solve(trainDiff);
-    outputMean += mean->Evaluate(newLocs);
-	    
+    if(observations.size()==0){
+        outputMean = mean->Evaluate(newLocs);
+        assert(outputMean.rows()==coDim);
+        
+    }else{
+        postMean = crossCov * sigmaTrainDiff;//covSolver.solve(trainDiff);
+        outputMean += mean->Evaluate(newLocs);
+    }
+    
     // Only compute the prediction variances, not covariance
     if(covType == GaussianProcess::DiagonalCov){
 
@@ -177,8 +183,13 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::Matr
         for(int i=0; i<newLocs.cols(); ++i){
             covKernel->FillCovariance(newLocs.col(i),priorCov);
 
-            for(int d=0; d<coDim; ++d)
-                outputCov(d,i) = priorCov(d,d) - crossCov.row(i*coDim+d) * covSolver.solve(crossCov.col(i*coDim + d));
+            if(observations.size()>0){
+                for(int d=0; d<coDim; ++d)
+                    outputCov(d,i) = priorCov(d,d) - crossCov.row(i*coDim+d) * covSolver.solve(crossCov.col(i*coDim + d));
+            }else{
+                for(int d=0; d<coDim; ++d)
+                    outputCov(d,i) = priorCov(d,d);
+            }
         }
 
     // Predict marginal covariance at each point, but not the covariance between points
@@ -190,19 +201,26 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::Matr
         for(int i=0; i<newLocs.cols(); ++i){
             covKernel->FillCovariance(newLocs.col(i),priorCov);
 
-            outputCov.block(0,coDim*i,coDim,coDim) = priorCov - crossCov.block(i*coDim,0,coDim,crossCov.cols()) * covSolver.solve(crossCov.block(i*coDim,0,coDim,crossCov.cols()));
+            if(observations.size()>0){
+                outputCov.block(0,coDim*i,coDim,coDim) = priorCov - crossCov.block(i*coDim,0,coDim,crossCov.cols()) * covSolver.solve(crossCov.block(i*coDim,0,coDim,crossCov.cols()));
+            }else{
+                outputCov.block(0,coDim*i,coDim,coDim) = priorCov;
+            }
         }
 
         
     // Compute the full joint covariance of all predictions
     }else if(covType==GaussianProcess::FullCov){
-        
+
         Eigen::MatrixXd priorCov(newLocs.cols(), newLocs.cols());
         covKernel->FillCovariance(newLocs,priorCov);
         
         // Solve for the posterior covariance
-        outputCov = priorCov - crossCov * covSolver.solve(crossCov.transpose());
-        
+        if(observations.size()>0){
+            outputCov = priorCov - crossCov * covSolver.solve(crossCov.transpose());
+        }else{
+            outputCov = priorCov;
+        }
     }
     
 
@@ -238,9 +256,10 @@ Eigen::MatrixXd GaussianProcess::Sample(Eigen::MatrixXd const& newPts)
 
     Eigen::MatrixXd mean, covariance;
     std::tie(mean,covariance) = Predict(newPts, GaussianProcess::FullCov);
-    
+
     Eigen::MatrixXd output(mean.rows(), mean.cols());
     Eigen::Map<Eigen::VectorXd> outVec(output.data(), output.rows()*output.cols());
+
     outVec = covariance.selfadjointView<Eigen::Lower>().llt().matrixL()*RandomGenerator::GetNormal(covariance.rows());
 
     output += mean;
