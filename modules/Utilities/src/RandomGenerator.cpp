@@ -166,10 +166,19 @@ void RandomGenerator::SetGenerator(GeneratorType state)
   GetGenerator() = state;
 }
 
+#ifndef __has_feature         // Optional of course.
+  #define __has_feature(x) 0  // Compatibility with non-clang compilers.
+#endif
+
 RandomGenerator::GeneratorType& RandomGenerator::GetGenerator()
 {
-  static thread_local SeedGenerator seedGen;
 
+#if __has_feature(cxx_thread_local)
+  static thread_local SeedGenerator seedGen;
+#else
+  static SeedGenerator seedGen;
+#endif
+  
   /** Use a Mersenne twister generator. */
   static thread_local RandomGenerator::GeneratorType BaseGenerator(seedGen.seed_seq);
 
