@@ -166,22 +166,28 @@ void RandomGenerator::SetGenerator(GeneratorType state)
   GetGenerator() = state;
 }
 
-#ifndef __has_feature         // Optional of course.
-  #define __has_feature(x) 0  // Compatibility with non-clang compilers.
-#endif
 
 RandomGenerator::GeneratorType& RandomGenerator::GetGenerator()
 {
 
-#if __has_feature(cxx_thread_local)
-  static thread_local SeedGenerator seedGen;
+#if defined(__has_feature) && __has_feature(cxx_thread_local)
+#  define MUQ_NATIVE_TLS thread_local
+#elif defined(_GLIBCXX_HAVE_TLS)
+#  define MUQ_NATIVE_TLS __thread
+#elif defined(BOOST_WINDOWS)
+#  define MUQ_NATIVE_TLS __declspec(thread)
+#elif defined(__FreeBSD__) || (defined(__APPLE__) && defined(__MACH__))
+#  define MUQ_NATIVE_TLS __thread
+#endif
+
+#if defined(MUQ_NATIVE_TLS)
+  static MUQ_NATIVE_TLS SeedGenerator seedGen;
+  static MUQ_NATIVE_TLS RandomGenerator::GeneratorType BaseGenerator(seedGen.seed_seq);
 #else
   static SeedGenerator seedGen;
+  static RandomGenerator::GeneratorType BaseGenerator(seedGen.seed_seq);
 #endif
   
-  /** Use a Mersenne twister generator. */
-  static thread_local RandomGenerator::GeneratorType BaseGenerator(seedGen.seed_seq);
-
   return BaseGenerator;
 }
 
