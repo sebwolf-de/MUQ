@@ -38,15 +38,12 @@ double RandomGenerator::GetNormal()
   static std::normal_distribution<> Gauss_RNG(0, 1);
 
   Gauss_RNG.reset();
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
   return Gauss_RNG(GetGenerator());
 }
 
 double RandomGenerator::GetUniform()
 {
   static  std::uniform_real_distribution<> Uniform_RNG(0, 1);
-
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
 
   return Uniform_RNG(GetGenerator());
 }
@@ -56,7 +53,6 @@ double RandomGenerator::GetGamma(double const alpha, double const beta)
   static std::gamma_distribution<> Gamma_RNG(alpha, beta);
 
   Gamma_RNG.reset();
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
   return Gamma_RNG(GetGenerator());
 }
 
@@ -83,8 +79,6 @@ int RandomGenerator::GetUniformInt(int lb, int ub)
   assert(ub >= lb);
 
   static  std::uniform_real_distribution<> Uniform_RNG(0, 1);
-
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
   return round(Uniform_RNG(GetGenerator()) * (ub - lb) + lb);
 }
 
@@ -159,38 +153,25 @@ Eigen::MatrixXd RandomGenerator::GetNormal(int const m, int const n)
 
 void RandomGenerator::SetSeed(int seedval)
 {
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
-
   GetGenerator().seed(seedval);
 }
 
 RandomGenerator::GeneratorType RandomGenerator::CopyGenerator()
 {
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
-
   return GetGenerator();
 }
 
 void RandomGenerator::SetGenerator(GeneratorType state)
 {
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
-
   GetGenerator() = state;
-}
-
-std::mutex& RandomGenerator::GetGeneratorMutex()
-{
-  static std::mutex m;
-
-  return m;
 }
 
 RandomGenerator::GeneratorType& RandomGenerator::GetGenerator()
 {
-  static SeedGenerator seedGen;
+  static thread_local SeedGenerator seedGen;
 
   /** Use a Mersenne twister generator. */
-  static RandomGenerator::GeneratorType BaseGenerator(seedGen.seed_seq);
+  static thread_local RandomGenerator::GeneratorType BaseGenerator(seedGen.seed_seq);
 
   return BaseGenerator;
 }
