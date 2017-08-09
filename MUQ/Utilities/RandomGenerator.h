@@ -72,7 +72,7 @@ public:
   SeedGenerator(const std::array<std::seed_seq::result_type, RandomGenerator::GeneratorType::state_size> &seed_data);
   //draw a seed for the entire state, as per: http://stackoverflow.com/questions/15509270/does-stdmt19937-require-warmup
   std::seed_seq seed_seq;
-  virtual ~SeedGenerator() = default;
+  //virtual ~SeedGenerator() = default;
 };
 
 
