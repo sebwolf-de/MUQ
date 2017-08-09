@@ -40,7 +40,7 @@ Eigen::VectorXd LinearSDE::EvolveState(Eigen::VectorXd const& f0,
     // Take all but the last step.  The last step might be a partial step
     for(int i=0; i<numTimes-1; ++i)
     {
-        z = sqrt(dt) * (sqrtQ.triangularView<Eigen::Lower>() * RandomGenerator::GetNormal(sqrtQ.cols()));
+        z = sqrt(dt) * (sqrtQ.triangularView<Eigen::Lower>() * RandomGenerator::GetNormal(sqrtQ.cols())).eval();
         
         f += dt*F->Apply(f) + L->Apply( z );
     }
