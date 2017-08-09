@@ -27,7 +27,7 @@ private:
 
 
 /** The RandGen generator class is a wrapper around the std::random number generation library.  The point of this class
- *  is to provide a super easy to use interface for generating Random numbers of canonical scalar distributions (e.g., Uniform, Gaussian, Gamma, Uniform Integer, etc...)
+ *  is to provide a super easy to use interface for generating Random numbers of canonical scalar distributions (e.g., Uniform, Gaussian, Gamma, Uniform Integer, etc...
  */
 class RandomGenerator {
 public:

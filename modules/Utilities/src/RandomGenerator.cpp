@@ -172,12 +172,6 @@ RandomGenerator::GeneratorType& RandomGenerator::GetGenerator()
 
 #if defined(__has_feature) && __has_feature(cxx_thread_local)
 #  define MUQ_NATIVE_TLS thread_local
-#elif defined(_GLIBCXX_HAVE_TLS)
-#  define MUQ_NATIVE_TLS __thread
-#elif defined(BOOST_WINDOWS)
-#  define MUQ_NATIVE_TLS __declspec(thread)
-#elif defined(__FreeBSD__) || (defined(__APPLE__) && defined(__MACH__))
-#  define MUQ_NATIVE_TLS __thread
 #endif
 
 #if defined(MUQ_NATIVE_TLS)
