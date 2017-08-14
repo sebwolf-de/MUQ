@@ -7,21 +7,21 @@ using namespace muq::Utilities;
 
 double muq::Approximation::nlopt_obj(unsigned n, const double *x, double *nlopt_grad, void *opt_info)
 {
-    
+
     Eigen::Map<const Eigen::VectorXd> params(x,n);
     double logLikely;
-    
+
     OptInfo* info = (OptInfo*) opt_info;
-    
+
     info->gp->Kernel()->SetParams(params);
 
     if(nlopt_grad){
         Eigen::Map<Eigen::VectorXd> grad(nlopt_grad, n);
-        logLikely = info->gp->MarginalLogLikelihood(grad);	    
+        logLikely = info->gp->MarginalLogLikelihood(grad);
     }else{
         logLikely = info->gp->MarginalLogLikelihood();
     }
-    
+
     return logLikely;
 }
 
@@ -40,7 +40,7 @@ void GaussianProcess::Condition(Eigen::Ref<const Eigen::MatrixXd> const& loc,
                                 double                                   obsVar)
 {
     auto H = std::make_shared<IdentityOperator>(coDim);
-    
+
     for(int i=0; i<loc.cols(); ++i){
         auto obs = std::make_shared<ObservationInformation>(H,
                                                             loc.col(i),
@@ -59,12 +59,12 @@ void GaussianProcess::Condition(std::shared_ptr<ObservationInformation> obs)
 
 void GaussianProcess::ProcessObservations()
 {
-    if(hasNewObs){
-        
+    if((hasNewObs)&&(observations.size()>0)){
+
         obsDim = 0;
         for(int i=0; i<observations.size(); ++i)
             obsDim += observations.at(i)->H->rows();
-        
+
         // Build the covariance between observation locations
         Eigen::MatrixXd trainCov(obsDim, obsDim);
         int currCol = 0;
@@ -81,14 +81,14 @@ void GaussianProcess::ProcessObservations()
             baseCov = covKernel->BuildCovariance(observations.at(j)->loc, observations.at(j)->loc);
             trainCov.block(currRow, currRow, observations.at(j)->H->rows(), observations.at(j)->H->rows()) = observations.at(j)->H->Apply(observations.at(j)->H->Apply(baseCov).transpose());
             baseCov += observations.at(j)->obsCov;
-            
+
             currCol += observations.at(j)->H->rows();
         }
 
         trainCov.triangularView<Eigen::Lower>() = trainCov.triangularView<Eigen::Upper>().transpose();
-        
+
         covSolver = trainCov.selfadjointView<Eigen::Lower>().llt();
-        
+
         // Evaluate the mean function
         Eigen::VectorXd trainDiff(obsDim);
         int currRow = 0;
@@ -98,7 +98,7 @@ void GaussianProcess::ProcessObservations()
         }
 
         sigmaTrainDiff = covSolver.solve(trainDiff);
-        
+
         hasNewObs = false;
     }
 }
@@ -107,16 +107,16 @@ void GaussianProcess::ProcessObservations()
 void GaussianProcess::Optimize()
 {
     ProcessObservations();
-    
+
     OptInfo info;
     info.gp = this;
-    
+
     Eigen::VectorXd params = covKernel->GetParams();
 
     const Eigen::MatrixXd bounds = covKernel->GetParamBounds();
     Eigen::VectorXd lbs = bounds.row(0);
     Eigen::VectorXd ubs = bounds.row(1);
-	    
+
 
     // nlopt_opt opt;
 
@@ -125,12 +125,12 @@ void GaussianProcess::Optimize()
     // nlopt_set_upper_bounds(opt, ubs.data());
     // nlopt_set_vector_storage(opt, 100);
     // nlopt_set_max_objective(opt, muq::Approximation::nlopt_obj, (void*) &info);
-	    	    
+
     // double maxLikely;
     // nlopt_optimize(opt, params.data(), &maxLikely);
 
     // covKernel->SetParams(params);
-	    
+
     // nlopt_destroy(opt);
 }
 
@@ -139,7 +139,7 @@ Eigen::MatrixXd GaussianProcess::BuildCrossCov(Eigen::MatrixXd const& newLocs)
 {
     Eigen::MatrixXd crossCov( coDim*newLocs.cols(), obsDim);
     int currCol = 0;
-    
+
     for(int j=0; j<observations.size(); ++j){
         for(int i=0; i<newLocs.cols(); ++i){
             Eigen::MatrixXd temp = covKernel->BuildCovariance(newLocs.col(i), observations.at(j)->loc);
@@ -156,29 +156,32 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::Matr
 {
 
     ProcessObservations();
-    
+
     // Get the cross covariance between the evaluation points and the observations
-    Eigen::MatrixXd crossCov = BuildCrossCov(newLocs);
+    Eigen::MatrixXd crossCov;
 
     Eigen::MatrixXd outputMean(coDim, newLocs.cols());
     Eigen::MatrixXd outputCov;
-    
+
     Eigen::Map<Eigen::VectorXd> postMean(outputMean.data(), coDim*newLocs.cols());
 
     if(observations.size()==0){
         outputMean = mean->Evaluate(newLocs);
         assert(outputMean.rows()==coDim);
-        
+
     }else{
+        // Get the cross covariance between the evaluation points and the observations
+        crossCov = BuildCrossCov(newLocs);
+
         postMean = crossCov * sigmaTrainDiff;//covSolver.solve(trainDiff);
         outputMean += mean->Evaluate(newLocs);
     }
-    
+
     // Only compute the prediction variances, not covariance
     if(covType == GaussianProcess::DiagonalCov){
 
         outputCov.resize(coDim, newLocs.cols());
-        
+
         Eigen::MatrixXd priorCov(coDim, coDim);
         for(int i=0; i<newLocs.cols(); ++i){
             covKernel->FillCovariance(newLocs.col(i),priorCov);
@@ -196,7 +199,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::Matr
     }else if(covType==GaussianProcess::BlockCov){
 
         outputCov.resize(coDim, coDim*newLocs.cols());
-        
+
         Eigen::MatrixXd priorCov(coDim, coDim);
         for(int i=0; i<newLocs.cols(); ++i){
             covKernel->FillCovariance(newLocs.col(i),priorCov);
@@ -208,13 +211,13 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::Matr
             }
         }
 
-        
+
     // Compute the full joint covariance of all predictions
     }else if(covType==GaussianProcess::FullCov){
 
         Eigen::MatrixXd priorCov(newLocs.cols(), newLocs.cols());
         covKernel->FillCovariance(newLocs,priorCov);
-        
+
         // Solve for the posterior covariance
         if(observations.size()>0){
             outputCov = priorCov - crossCov * covSolver.solve(crossCov.transpose());
@@ -222,7 +225,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::Matr
             outputCov = priorCov;
         }
     }
-    
+
 
     return std::make_pair(outputMean, outputCov);
 };
@@ -235,14 +238,14 @@ Eigen::MatrixXd GaussianProcess::PredictMean(Eigen::MatrixXd const& newPts)
 
     ProcessObservations();
 
-    
+
     // Construct the cross covariance
     Eigen::MatrixXd crossCov = BuildCrossCov(newPts);
 
-    
+
     Eigen::MatrixXd meanMat(coDim, newPts.size());
     Eigen::Map<Eigen::VectorXd> meanVec(meanMat.data(), coDim*newPts.cols());
-    
+
     meanVec = crossCov * sigmaTrainDiff;
     meanMat += mean->Evaluate(newPts);
 
@@ -284,7 +287,7 @@ double GaussianProcess::LogLikelihood(Eigen::MatrixXd const& xs,
     double logDet = 0;
     for(int i=0; i<solver.matrixL().rows(); ++i)
         logDet += 2.0*log(solver.matrixL()(i,i));
-    
+
     double logDens = -0.5*diff.dot( solver.solve(diff) ) - 0.5*logDet - 0.5*valMap.size()*log(2.0*M_PI);
     return logDens;
 }
@@ -307,7 +310,7 @@ double  GaussianProcess::MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
     double logDet = 0.0;
     for(int i=0; i<L.rows(); ++i)
 	logDet += 2.0*log(L(i,i));
-	    
+
     // Make the mean prediction and compute the difference with observations
     double logLikely = -0.5 * trainDiff.transpose() * sigmaTrainDiff - 0.5*logDet - 0.5*observations.size()*log(2.0*pi);
 
@@ -316,7 +319,7 @@ double  GaussianProcess::MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
 	// Compute the gradient of the log likelihood
 	const int numParams = covKernel->numParams;
 	grad.resize(numParams);
-	
+
 	for(int p=0; p<numParams; ++p)
 	{
             // Build the derivative matrix
@@ -324,7 +327,7 @@ double  GaussianProcess::MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
             Eigen::MatrixXd tempDerivMat;
             int currRow=0;
             int currCol=0;
-            
+
             for(int j=0; j<observations.size(); ++j)
             {
                 currRow = 0;
@@ -332,15 +335,15 @@ double  GaussianProcess::MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
                 {
                     tempDerivMat = covKernel->GetDerivative(observations.at(i)->loc, observations.at(j)->loc, p);
                     derivMat.block(currRow,currCol, observations.at(i)->H->rows(), observations.at(j)->H->rows()) = observations.at(i)->H->Apply( observations.at(j)->H->Apply(tempDerivMat).transpose() );
-                    
+
                     currRow += observations.at(i)->H->rows();
                 }
                 currCol += observations.at(j)->H->rows();
             }
-            
+
 	    grad(p) = 0.5*(sigmaTrainDiff*sigmaTrainDiff.transpose()*derivMat - covSolver.solve(derivMat)).trace();
 	}
     }
 
-    return logLikely;	    
+    return logLikely;
 };
