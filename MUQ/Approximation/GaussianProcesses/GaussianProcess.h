@@ -239,7 +239,7 @@ namespace muq
                         KernelBase&       kernelIn) : GaussianProcess(meanIn.Clone(), kernelIn.Clone()){};
 
         GaussianProcess(std::shared_ptr<MeanFunctionBase> meanIn,
-			std::shared_ptr<KernelBase>       covKernelIn);
+            			std::shared_ptr<KernelBase>       covKernelIn);
 
         virtual void Condition(Eigen::Ref<const Eigen::MatrixXd> const& loc,
                                Eigen::Ref<const Eigen::MatrixXd> const& vals,
@@ -247,10 +247,10 @@ namespace muq
 
         virtual void Condition(std::shared_ptr<ObservationInformation> obs);
 
-	virtual void Optimize();
+	    virtual void Optimize();
 
         // Evaluate the mean and covariance
-	virtual std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Predict(Eigen::MatrixXd const& newLocs,
+	    virtual std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Predict(Eigen::MatrixXd const& newLocs,
                                                                     CovarianceType         covType);
 
         virtual Eigen::MatrixXd PredictMean(Eigen::MatrixXd const& newPts);
@@ -262,14 +262,14 @@ namespace muq
         virtual double LogLikelihood(Eigen::MatrixXd const& xs,
                                      Eigen::MatrixXd const& vals);
 
-	// Evaluates the log marginal likelihood needed when fitting hyperparameters
+	    // Evaluates the log marginal likelihood needed when fitting hyperparameters
         virtual double MarginalLogLikelihood();
         virtual double MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
                                              bool                        computeGrad=true);
 
 
       	std::shared_ptr<MeanFunctionBase> Mean(){return mean;};
-	std::shared_ptr<KernelBase>       Kernel(){return covKernel;};
+	    std::shared_ptr<KernelBase>       Kernel(){return covKernel;};
 
     protected:
 
@@ -279,7 +279,7 @@ namespace muq
 
 
         std::shared_ptr<MeanFunctionBase> mean;
-	std::shared_ptr<KernelBase>       covKernel;
+	    std::shared_ptr<KernelBase>       covKernel;
 
         std::vector<std::shared_ptr<ObservationInformation>> observations;
 
@@ -290,13 +290,13 @@ namespace muq
         Eigen::LDLT<Eigen::MatrixXd> covSolver;
 
         int obsDim;
-	const int inputDim;
-	const int coDim;
+	    const int inputDim;
+	    const int coDim;
 
         // Have new observations been added since the covariance was inverted?
         bool hasNewObs;
 
-	const double pi = 4.0 * atan(1.0); //boost::math::constants::pi<double>();
+	    const double pi = 4.0 * atan(1.0); //boost::math::constants::pi<double>();
 
     };// class GaussianProcess
 
