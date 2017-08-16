@@ -18,22 +18,22 @@ int main()
     Eigen::VectorXd times          = f["/Weekly/Dates" ];
     Eigen::VectorXd concentrations = f["/Weekly/Concentrations" ];
 
-    double k1_var = 360;
+    double k1_var = 500;
     double k1_length = 70;
     auto k1  = SquaredExpKernel(1, k1_var, k1_length);
 
     double k2_var = 1.0;
     double k2_period = 1.0;
-    double k2_length = 2.0;
+    double k2_length = 1.3;
     auto k2 = PeriodicKernel(1, k2_var, k2_length, k2_period);
 
     double k3_var = 5.0;
     double k3_length = 90;
-    double k3_nu = 3.0/2.0;
+    double k3_nu = 7.0/2.0;
     auto k3 = MaternKernel(1, k3_var, k3_length, k3_nu);
 
-    double k4_var = 0.5;
-    double k4_length = 2.0;
+    double k4_var = 1.0;
+    double k4_length = 0.5;
     double k4_nu = 3.0/2.0;
     auto k4 = MaternKernel(1, k4_var, k4_length, k4_nu);
 
@@ -49,7 +49,7 @@ int main()
     Eigen::MatrixXd evalPts(1, numPts);
     evalPts.row(0) = Eigen::VectorXd::LinSpaced(numPts, 2000, 2050);
 
-    gp.Condition(times.transpose(), concentrations.transpose(), 1e-2);
+    gp.Condition(times.transpose(), concentrations.transpose(), 5e-2);
     Eigen::MatrixXd postMean, postVar;
     std::tie(postMean,postVar) = gp.Predict(evalPts, GaussianProcess::DiagonalCov);
 
