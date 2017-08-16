@@ -35,9 +35,9 @@ GaussianProcess::GaussianProcess(std::shared_ptr<MeanFunctionBase> meanIn,
     hasNewObs(false)
 {};
 
-void GaussianProcess::Condition(Eigen::Ref<const Eigen::MatrixXd> const& loc,
-                                Eigen::Ref<const Eigen::MatrixXd> const& vals,
-                                double                                   obsVar)
+GaussianProcess& GaussianProcess::Condition(Eigen::Ref<const Eigen::MatrixXd> const& loc,
+                                            Eigen::Ref<const Eigen::MatrixXd> const& vals,
+                                            double                                   obsVar)
 {
     auto H = std::make_shared<IdentityOperator>(coDim);
     
@@ -49,12 +49,16 @@ void GaussianProcess::Condition(Eigen::Ref<const Eigen::MatrixXd> const& loc,
 
         Condition(obs);
     }
+
+    return *this;
 }
 
-void GaussianProcess::Condition(std::shared_ptr<ObservationInformation> obs)
+GaussianProcess& GaussianProcess::Condition(std::shared_ptr<ObservationInformation> obs)
 {
     observations.push_back(obs);
     hasNewObs = true;
+
+    return *this;
 }
 
 void GaussianProcess::ProcessObservations()
@@ -178,14 +182,14 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::Matr
     if(covType == GaussianProcess::DiagonalCov){
 
         outputCov.resize(coDim, newLocs.cols());
-        
+
         Eigen::MatrixXd priorCov(coDim, coDim);
         for(int i=0; i<newLocs.cols(); ++i){
             covKernel->FillCovariance(newLocs.col(i),priorCov);
 
             if(observations.size()>0){
                 for(int d=0; d<coDim; ++d)
-                    outputCov(d,i) = priorCov(d,d) - crossCov.row(i*coDim+d) * covSolver.solve(crossCov.col(i*coDim + d));
+                    outputCov(d,i) = priorCov(d,d) - crossCov.row(i*coDim+d) * covSolver.solve(crossCov.row(i*coDim+d).transpose());
             }else{
                 for(int d=0; d<coDim; ++d)
                     outputCov(d,i) = priorCov(d,d);
@@ -202,7 +206,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::Matr
             covKernel->FillCovariance(newLocs.col(i),priorCov);
 
             if(observations.size()>0){
-                outputCov.block(0,coDim*i,coDim,coDim) = priorCov - crossCov.block(i*coDim,0,coDim,crossCov.cols()) * covSolver.solve(crossCov.block(i*coDim,0,coDim,crossCov.cols()));
+                outputCov.block(0,coDim*i,coDim,coDim) = priorCov - crossCov.block(i*coDim,0,coDim,crossCov.cols()) * covSolver.solve(crossCov.block(i*coDim,0,coDim,crossCov.cols()).transpose());
             }else{
                 outputCov.block(0,coDim*i,coDim,coDim) = priorCov;
             }
