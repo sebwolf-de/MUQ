@@ -41,6 +41,11 @@ void GaussianProcess::Condition(Eigen::Ref<const Eigen::MatrixXd> const& loc,
 {
     auto H = std::make_shared<IdentityOperator>(coDim);
 
+    assert(loc.cols()>0);
+    assert(vals.cols()==loc.cols());
+    assert(vals.rows()==coDim);
+    assert(obsVar>=0);
+
     for(int i=0; i<loc.cols(); ++i){
         auto obs = std::make_shared<ObservationInformation>(H,
                                                             loc.col(i),
@@ -87,7 +92,7 @@ void GaussianProcess::ProcessObservations()
 
         trainCov.triangularView<Eigen::Lower>() = trainCov.triangularView<Eigen::Upper>().transpose();
 
-        covSolver = trainCov.selfadjointView<Eigen::Lower>().llt();
+        covSolver = trainCov.selfadjointView<Eigen::Lower>().ldlt();
 
         // Evaluate the mean function
         Eigen::VectorXd trainDiff(obsDim);
@@ -306,7 +311,9 @@ double  GaussianProcess::MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
     ProcessObservations();
 
     // Compute the log determinant of the covariance
-    const Eigen::TriangularView<const Eigen::MatrixXd, Eigen::Lower> L = covSolver.matrixL();
+    Eigen::MatrixXd L = covSolver.matrixL();
+    L = (L*covSolver.vectorD().cwiseSqrt().asDiagonal()).eval();
+    L = (covSolver.transpositionsP().transpose() * L).eval();
     double logDet = 0.0;
     for(int i=0; i<L.rows(); ++i)
 	logDet += 2.0*log(L(i,i));
