@@ -88,9 +88,8 @@ void GaussianProcess::ProcessObservations()
             }
 
             baseCov = covKernel->BuildCovariance(observations.at(j)->loc, observations.at(j)->loc);
-            trainCov.block(currRow, currRow, observations.at(j)->H->rows(), observations.at(j)->H->rows()) = observations.at(j)->H->Apply(observations.at(j)->H->Apply(baseCov).transpose());
-            baseCov += observations.at(j)->obsCov;
-
+            trainCov.block(currRow, currRow, observations.at(j)->H->rows(), observations.at(j)->H->rows()) = observations.at(j)->H->Apply(observations.at(j)->H->Apply(baseCov).transpose()) + observations.at(j)->obsCov;
+            
             currCol += observations.at(j)->H->rows();
         }
 
