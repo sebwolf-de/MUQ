@@ -220,7 +220,7 @@ public:
         }
         else
         {
-            return std::vector<std::shared_ptr<KernelBase>>(1, KernelBase::GetPtr());
+            return std::vector<std::shared_ptr<KernelBase>>(1, this->Clone());
         }
             
     };

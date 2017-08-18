@@ -22,7 +22,7 @@ public:
 
     StateSpaceGP(MeanFunctionBase&           meanIn,
                  KernelBase&                 kernelIn,
-                 boost::property_tree::ptree options = boost::property_tree::ptree()) : StateSpaceGP(meanIn.GetPtr(), kernelIn.GetPtr(), options){};
+                 boost::property_tree::ptree options = boost::property_tree::ptree()) : StateSpaceGP(meanIn.Clone(), kernelIn.Clone(), options){};
     
     StateSpaceGP(std::shared_ptr<MeanFunctionBase> meanIn,
                  std::shared_ptr<KernelBase>       covKernelIn,
@@ -65,6 +65,12 @@ private:
                  std::shared_ptr<MeanFunctionBase> meanIn,
                  std::shared_ptr<KernelBase>       covKernelIn);
 
+
+    void SortObservations();
+
+    bool ComputeAQ(double dt);
+    Eigen::MatrixXd sdeA, sdeQ;
+    double dtAQ; // the last deltat passed to the ComputeAQ function
     
     // Stocastic Differential equation describing correlations
     std::shared_ptr<muq::Modeling::LinearSDE> sde;

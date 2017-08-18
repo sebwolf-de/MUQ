@@ -7,7 +7,7 @@ CreateTestGroup(
 CreateTestGroup(
   APPROXIMATION_GP
   GaussianProcesses/GaussianProcessTests.cpp
-  #GaussianProcesses/StateSpaceTests.cpp
+  GaussianProcesses/StateSpaceTests.cpp
 )
 
 

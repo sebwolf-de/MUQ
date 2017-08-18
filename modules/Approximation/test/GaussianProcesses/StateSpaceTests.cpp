@@ -38,6 +38,71 @@ TEST(Approximation_GP, MaternStateSpace)
 
 }
 
+TEST(Approximation_GP, StateSpace_DistributionIntegration)
+{
+
+    const double sigma2 = 1.0;
+    const double length = 0.15;
+
+    const double nu = 3.0/2.0;
+    
+    MaternKernel kernel(1, sigma2, length, nu);
+
+    std::shared_ptr<muq::Modeling::LinearSDE> sde; // The underying SDE
+    std::shared_ptr<muq::Utilities::LinearOperator> H; // Observation matrix to go from SDE state to actual GP variable
+    Eigen::MatrixXd pinf; // Steady state covariance matrix
+
+    std::tie(sde, H, pinf) = kernel.GetStateSpace();
+
+    Eigen::MatrixXd p0 = Eigen::MatrixXd::Identity(sde->stateDim, sde->stateDim);
+    Eigen::MatrixXd mu0 = Eigen::VectorXd::Ones(sde->stateDim);
+
+    // Integrate the SDE for a while
+    Eigen::MatrixXd muT, pT;
+    std::tie(muT, pT) = sde->EvolveDistribution(mu0,p0,30);
+
+    EXPECT_NEAR(0.0, muT(0), 1e-14);
+    EXPECT_NEAR(0.0, muT(1), 1e-14);
+    
+    EXPECT_NEAR(pinf(0,0), pT(0,0), 1e-11);
+    EXPECT_NEAR(pinf(0,1), pT(0,1), 1e-11);
+    EXPECT_NEAR(pinf(1,0), pT(1,0), 1e-11);
+    EXPECT_NEAR(pinf(1,1), pT(1,1), 1e-11);
+}
+
+TEST(Approximation_GP, StateSpace_DistributionIntegration2)
+{
+
+    const double sigma2 = 1.0;
+    const double length = 0.15;
+
+    const double nu = 3.0/2.0;
+    
+    MaternKernel kernel(1, sigma2, length, nu);
+
+    std::shared_ptr<muq::Modeling::LinearSDE> sde; // The underying SDE
+    std::shared_ptr<muq::Utilities::LinearOperator> H; // Observation matrix to go from SDE state to actual GP variable
+    Eigen::MatrixXd pinf; // Steady state covariance matrix
+
+    std::tie(sde, H, pinf) = kernel.GetStateSpace();
+
+    Eigen::MatrixXd p0 = Eigen::MatrixXd::Identity(sde->stateDim, sde->stateDim);
+    Eigen::VectorXd mu0 = Eigen::VectorXd::Ones(sde->stateDim);
+    std::pair<Eigen::VectorXd, Eigen::MatrixXd> dist0 = std::make_pair(mu0,p0);
+    
+    // Integrate the SDE for a while
+    Eigen::MatrixXd muT, pT;
+    std::tie(muT, pT) = sde->EvolveDistribution(dist0,30);
+
+    EXPECT_NEAR(0.0, muT(0), 1e-14);
+    EXPECT_NEAR(0.0, muT(1), 1e-14);
+    
+    EXPECT_NEAR(pinf(0,0), pT(0,0), 1e-11);
+    EXPECT_NEAR(pinf(0,1), pT(0,1), 1e-11);
+    EXPECT_NEAR(pinf(1,0), pT(1,0), 1e-11);
+    EXPECT_NEAR(pinf(1,1), pT(1,1), 1e-11);
+}
+
 TEST(Approximation_GP, PeriodicStateSpace)
 {
 
@@ -106,4 +171,51 @@ TEST(Approximation_GP, ProductStateSpace)
     Eigen::MatrixXd realization2  = gp2.Sample(obsTimes);
     Eigen::MatrixXd realization12 = gp12.Sample(obsTimes);
     
+}
+
+TEST(Approximation_GP, StateSpacePredict)
+{
+
+    const double sigma2 = 1.0;
+    const double length = 0.3;
+    const double nu = 3.0/2.0;
+
+    MaternKernel kernel(1, sigma2, length, nu);
+
+    boost::property_tree::ptree options;
+    options.put("SDE.dt", 1e-6);
+
+    ConstantMean mu(1,1);
+    StateSpaceGP gp1(mu, kernel, options);
+    GaussianProcess gp2(mu, kernel);
+    
+    const int numEvals = 100;
+    Eigen::MatrixXd evalPts(1,numEvals);
+    evalPts.row(0) = Eigen::VectorXd::LinSpaced(numEvals, 0, 2);
+
+    // Make a prediction about the prior
+    Eigen::MatrixXd predMu, predCov;
+    std::tie(predMu, predCov) = gp1.Predict(evalPts, GaussianProcess::DiagonalCov);
+
+    Eigen::MatrixXd predMu2, predCov2;
+    std::tie(predMu2, predCov2) = gp2.Predict(evalPts, GaussianProcess::DiagonalCov);
+
+    // Condition both GPs with some data
+    Eigen::MatrixXd obsLoc = 0.5*Eigen::MatrixXd::Ones(1,1);
+    Eigen::MatrixXd obsData = 0.25*Eigen::MatrixXd::Ones(1,1);
+    const double obsVar = 1e-1;
+
+    gp1.Condition(obsLoc, obsData, obsVar);
+    gp2.Condition(obsLoc, obsData, obsVar);
+
+    // Make a posterior prediction
+    std::tie(predMu, predCov) = gp1.Predict(evalPts, GaussianProcess::DiagonalCov);
+    std::tie(predMu2, predCov2) = gp2.Predict(evalPts, GaussianProcess::DiagonalCov);
+
+    const double meanTol = 1e-4;
+    const double covTol = 1e-4;
+    for(int j=0; j<predMu.size(); ++j){
+        EXPECT_NEAR(predMu2(0,j), predMu(0,j), meanTol);
+        EXPECT_NEAR(predCov2(0,j), predCov(0,j), covTol);
+    }
 }

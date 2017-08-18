@@ -34,7 +34,7 @@ TEST(Approximation_GP, HyperFit1d)
     trainData += sqrt(1e-4)*RandomGenerator::GetNormal(maxTrain).transpose();
     
     const unsigned dim = 1;
-    auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} )*PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});    
+    auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} ) * PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});    
    
     // Create the GP
     ConstantMean mean(dim, 1);
@@ -105,7 +105,7 @@ TEST(Approximation_GP, HyperFit2d)
     gp.Optimize();
     
     // Make a prediction
-    auto post = gp.Predict(predLocs, GaussianProcess::FullCov);
+    std::pair<Eigen::MatrixXd, Eigen::MatrixXd> post = gp.Predict(predLocs, GaussianProcess::FullCov);
 
 }
 

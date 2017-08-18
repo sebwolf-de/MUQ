@@ -63,12 +63,12 @@ public:
     virtual ~KernelBase(){};
 
 
-    virtual std::shared_ptr<muq::Approximation::KernelBase> GetPtr() {
-        return shared_from_this();
-    }
+    //virtual std::shared_ptr<muq::Approximation::KernelBase> GetPtr() {
+    //    return shared_from_this();
+    //}
 
     /// Overridden by ProductKernel
-    virtual std::vector<std::shared_ptr<KernelBase>> GetSeperableComponents() {return std::vector<std::shared_ptr<KernelBase>>(1,GetPtr()); };
+    virtual std::vector<std::shared_ptr<KernelBase>> GetSeperableComponents() {return std::vector<std::shared_ptr<KernelBase>>(1,Clone()); };
 
     
     virtual Eigen::MatrixXd Evaluate(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const = 0;

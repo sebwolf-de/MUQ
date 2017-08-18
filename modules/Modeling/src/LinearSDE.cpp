@@ -65,7 +65,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LinearSDE::EvolveDistribution(Eigen:
     Eigen::MatrixXd gamma = gamma0;
 
     const int numTimes = std::ceil(T/dt);
-
+    
     Eigen::MatrixXd LQLT = L->Apply( L->Apply(Q).transpose().eval() );
     LQLT = 0.5*(LQLT + LQLT.transpose()); // <- Make sure LQLT is symmetric
     
@@ -119,4 +119,35 @@ std::shared_ptr<LinearSDE> LinearSDE::Concatenate(std::vector<std::shared_ptr<Li
     auto L = std::make_shared<BlockDiagonalOperator>(Ls);
 
     return std::make_shared<LinearSDE>(F,L,Q, options);
+}
+
+
+std::pair<Eigen::MatrixXd, Eigen::MatrixXd> LinearSDE::Discretize(double deltaT)
+{
+    Eigen::MatrixXd A = Eigen::MatrixXd::Identity(stateDim,stateDim);
+    Eigen::MatrixXd gamma = Eigen::MatrixXd::Zero(stateDim,stateDim);
+
+    const int numTimes = std::ceil(deltaT/dt);
+    
+    Eigen::MatrixXd LQLT = L->Apply( L->Apply(Q).transpose().eval() );
+    LQLT = 0.5*(LQLT + LQLT.transpose()); // <- Make sure LQLT is symmetric
+    
+    Eigen::MatrixXd Fgamma;
+
+    // Take all but the last step because the last step might be a partial step.
+    for(int i=0; i<numTimes-1; ++i)
+    {
+        A += dt * F->Apply(A);
+        Fgamma = F->Apply(gamma);
+        gamma += dt * (Fgamma + Fgamma.transpose() + LQLT);
+    }
+
+    // Take the last step
+    double lastDt = deltaT-(numTimes-1)*dt;
+    A += lastDt * F->Apply(A);
+    Fgamma = F->Apply(gamma);
+    gamma += lastDt * (Fgamma + Fgamma.transpose() + LQLT);
+
+    return std::make_pair(A,gamma);
+
 }
