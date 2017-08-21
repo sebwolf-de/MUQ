@@ -47,21 +47,28 @@ void StateSpaceGP::SortObservations()
 Eigen::MatrixXd StateSpaceGP::Sample(Eigen::MatrixXd const& times)
 {
 
-    // Generate sample for initial condition
-    Eigen::VectorXd x = L.triangularView<Eigen::Lower>()*RandomGenerator::GetNormal(L.rows());
-    
     // Make space for the simulated GP
     Eigen::MatrixXd output(obsOp->rows(), times.size());
+        
+    if(observations.size()==0){
 
-    output.col(0) = obsOp->Apply(x);
+        // Generate sample for initial condition
+        Eigen::VectorXd x = L.triangularView<Eigen::Lower>()*RandomGenerator::GetNormal(L.rows());
+    
+        output.col(0) = obsOp->Apply(x);
 
-    // Step through the each time and integrate the SDE between times
-    for(int i=0; i<times.size()-1; ++i)
-    {
-        x = sde->EvolveState(x, times(i+1)-times(i));
-        output.col(i+1) = obsOp->Apply(x);
+        // Step through the each time and integrate the SDE between times
+        for(int i=0; i<times.size()-1; ++i)
+        {
+            x = sde->EvolveState(x, times(i+1)-times(i));
+            output.col(i+1) = obsOp->Apply(x);
+        }
+        
+    }else{
+
+        throw muq::NotImplementedError("The Sample function of muq::Approximation::StateSpaceGP does not currently support Gaussian Processes that have been conditioned on data.");
     }
-
+    
     return output;
 }
 
