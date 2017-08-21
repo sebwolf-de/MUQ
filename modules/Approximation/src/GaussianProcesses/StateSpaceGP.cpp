@@ -3,6 +3,7 @@
 #include "MUQ/Utilities/LinearAlgebra/ProductOperator.h"
 #include "MUQ/Utilities/RandomGenerator.h"
 #include "MUQ/Inference/Filtering/KalmanFilter.h"
+#include "MUQ/Inference/Filtering/KalmanSmoother.h"
 
 #include "MUQ/Utilities/Exceptions.h"
 
@@ -115,11 +116,12 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
     std::vector< std::pair<Eigen::VectorXd, Eigen::MatrixXd>> obsFilterDists(observations.size());
 
     std::pair<Eigen::VectorXd, Eigen::MatrixXd>* currDist;
-    double currTime;
+    double currTime, nextTime;
 
     int obsInd = 0;
     int evalInd = 0;
-
+    
+    
     // Is the first time an observation or an evaluation?
     if(observations.at(0)->loc(0) < times(0)){
         currTime = observations.at(0)->loc(0);
@@ -148,12 +150,13 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
     }
 
     // Loop through the remaining times
-    double nextTime;
     for(int i=1; i<times.cols() + observations.size(); ++i)
     {
         bool hasObs = false;
         if(obsInd<observations.size()){
-            if(observations.at(obsInd)->loc(0) < times(evalInd)){
+            if(evalInd>=times.cols()){
+                hasObs = true;
+            }else if(observations.at(obsInd)->loc(0) < times(evalInd)){
                 hasObs = true;
             }
         }
@@ -195,8 +198,57 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
     ///////////////////////////////////////////////////
     // BACKWARD (SMOOTHING) PASS
     ///////////////////////////////////////////////////
-    
 
+    // Find the last evaluation point before (or at the same time) as the last observation
+    obsInd = observations.size()-2;
+    evalInd = times.size()-1;
+    for(evalInd = times.size()-1; evalInd >=0; --evalInd)
+    {
+        if(times(evalInd) <= observations.at(observations.size()-1)->loc(0))
+            break;
+    }
+    
+    if(evalInd>=0)
+    {
+        nextTime = observations.at(observations.size()-1)->loc(0);
+        
+        std::pair<Eigen::VectorXd, Eigen::MatrixXd> filterDist = obsDists.at(observations.size()-1);
+        std::pair<Eigen::VectorXd, Eigen::MatrixXd> smoothDist = obsFilterDists.at(observations.size()-1);
+
+        while( evalInd>=0 )
+        {
+            // Have we passed any new observations on the way backward?
+            bool hasObs = false;
+            if(obsInd>=0){
+                if(observations.at(obsInd)->loc(0) > times(evalInd) )
+                    hasObs = true;
+            }
+            
+            if( hasObs )
+            {
+                // Update the value at the observation point if it's not the last observation
+                
+                ComputeAQ(nextTime - observations.at(obsInd)->loc(0));
+                smoothDist = KalmanSmoother::Analyze(obsFilterDists.at(obsInd), filterDist, smoothDist, sdeA);
+                filterDist.swap( obsDists.at(obsInd) );
+                
+                nextTime = observations.at(obsInd)->loc(0);
+                obsInd--;
+
+            }else{
+                ComputeAQ(nextTime - times(evalInd));
+
+                smoothDist = KalmanSmoother::Analyze(evalDists.at(evalInd), filterDist, smoothDist, sdeA);
+
+                filterDist.swap( evalDists.at(evalInd) );
+                evalDists.at(evalInd) = smoothDist;
+
+                nextTime = times(evalInd);
+                evalInd--;
+            }
+        }
+    }
+    
     //////////////////////////////////////////////////
     // GET MEAN AND COVARIANCE FROM SDE SOLUTION
     //////////////////////////////////////////////////

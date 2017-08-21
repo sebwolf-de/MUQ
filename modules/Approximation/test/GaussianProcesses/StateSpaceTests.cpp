@@ -10,11 +10,8 @@
 #include <random>
 #include <iostream>
 
+
 using namespace muq::Approximation;
-
-
-
-
 
 
 TEST(Approximation_GP, MaternStateSpace)
@@ -173,7 +170,7 @@ TEST(Approximation_GP, ProductStateSpace)
     
 }
 
-TEST(Approximation_GP, StateSpacePredict)
+TEST(Approximation_GP, StateSpacePredict_Interpolation)
 {
 
     const double sigma2 = 1.0;
@@ -183,7 +180,7 @@ TEST(Approximation_GP, StateSpacePredict)
     MaternKernel kernel(1, sigma2, length, nu);
 
     boost::property_tree::ptree options;
-    options.put("SDE.dt", 1e-6);
+    options.put("SDE.dt", 1e-5);
 
     ConstantMean mu(1,1);
     StateSpaceGP gp1(mu, kernel, options);
@@ -203,8 +200,118 @@ TEST(Approximation_GP, StateSpacePredict)
     // Condition both GPs with some data
     Eigen::MatrixXd obsLoc = 0.5*Eigen::MatrixXd::Ones(1,1);
     Eigen::MatrixXd obsData = 0.25*Eigen::MatrixXd::Ones(1,1);
-    const double obsVar = 1e-1;
+    const double obsVar = 1e-2;
 
+    gp1.Condition(obsLoc, obsData, obsVar);
+    gp2.Condition(obsLoc, obsData, obsVar);
+
+    // add another observation
+    obsLoc(0) = 1.5;    
+    gp1.Condition(obsLoc, obsData, obsVar);
+    gp2.Condition(obsLoc, obsData, obsVar);
+
+    // Make a posterior prediction
+    std::tie(predMu, predCov) = gp1.Predict(evalPts, GaussianProcess::DiagonalCov);
+    std::tie(predMu2, predCov2) = gp2.Predict(evalPts, GaussianProcess::DiagonalCov);
+
+    const double meanTol = 1e-4;
+    const double covTol = 1e-4;
+    for(int j=0; j<predMu.size(); ++j){
+        EXPECT_NEAR(predMu2(0,j), predMu(0,j), meanTol);
+        EXPECT_NEAR(predCov2(0,j), predCov(0,j), covTol);
+    }
+}
+
+TEST(Approximation_GP, StateSpacePredict_ExtrapolateRight)
+{
+
+    const double sigma2 = 1.0;
+    const double length = 0.3;
+    const double nu = 3.0/2.0;
+
+    MaternKernel kernel(1, sigma2, length, nu);
+
+    boost::property_tree::ptree options;
+    options.put("SDE.dt", 1e-5);
+
+    ConstantMean mu(1,1);
+    StateSpaceGP gp1(mu, kernel, options);
+    GaussianProcess gp2(mu, kernel);
+    
+    const int numEvals = 100;
+    Eigen::MatrixXd evalPts(1,numEvals);
+    evalPts.row(0) = Eigen::VectorXd::LinSpaced(numEvals, 1.6, 3);
+
+    // Make a prediction about the prior
+    Eigen::MatrixXd predMu, predCov;
+    std::tie(predMu, predCov) = gp1.Predict(evalPts, GaussianProcess::DiagonalCov);
+
+    Eigen::MatrixXd predMu2, predCov2;
+    std::tie(predMu2, predCov2) = gp2.Predict(evalPts, GaussianProcess::DiagonalCov);
+
+    // Condition both GPs with some data
+    Eigen::MatrixXd obsLoc = 0.5*Eigen::MatrixXd::Ones(1,1);
+    Eigen::MatrixXd obsData = 0.25*Eigen::MatrixXd::Ones(1,1);
+    const double obsVar = 1e-2;
+
+    gp1.Condition(obsLoc, obsData, obsVar);
+    gp2.Condition(obsLoc, obsData, obsVar);
+
+    // add another observation
+    obsLoc(0) = 1.5;    
+    gp1.Condition(obsLoc, obsData, obsVar);
+    gp2.Condition(obsLoc, obsData, obsVar);
+
+    // Make a posterior prediction
+    std::tie(predMu, predCov) = gp1.Predict(evalPts, GaussianProcess::DiagonalCov);
+    std::tie(predMu2, predCov2) = gp2.Predict(evalPts, GaussianProcess::DiagonalCov);
+
+    const double meanTol = 1e-4;
+    const double covTol = 1e-4;
+    for(int j=0; j<predMu.size(); ++j){
+        EXPECT_NEAR(predMu2(0,j), predMu(0,j), meanTol);
+        EXPECT_NEAR(predCov2(0,j), predCov(0,j), covTol);
+    }
+
+}
+
+TEST(Approximation_GP, StateSpacePredict_ExtrapolateLeft)
+{
+
+    const double sigma2 = 1.0;
+    const double length = 0.3;
+    const double nu = 3.0/2.0;
+
+    MaternKernel kernel(1, sigma2, length, nu);
+
+    boost::property_tree::ptree options;
+    options.put("SDE.dt", 1e-5);
+
+    ConstantMean mu(1,1);
+    StateSpaceGP gp1(mu, kernel, options);
+    GaussianProcess gp2(mu, kernel);
+    
+    const int numEvals = 100;
+    Eigen::MatrixXd evalPts(1,numEvals);
+    evalPts.row(0) = Eigen::VectorXd::LinSpaced(numEvals, -1, 0.2);
+
+    // Make a prediction about the prior
+    Eigen::MatrixXd predMu, predCov;
+    std::tie(predMu, predCov) = gp1.Predict(evalPts, GaussianProcess::DiagonalCov);
+
+    Eigen::MatrixXd predMu2, predCov2;
+    std::tie(predMu2, predCov2) = gp2.Predict(evalPts, GaussianProcess::DiagonalCov);
+
+    // Condition both GPs with some data
+    Eigen::MatrixXd obsLoc = 0.5*Eigen::MatrixXd::Ones(1,1);
+    Eigen::MatrixXd obsData = 0.25*Eigen::MatrixXd::Ones(1,1);
+    const double obsVar = 1e-2;
+
+    gp1.Condition(obsLoc, obsData, obsVar);
+    gp2.Condition(obsLoc, obsData, obsVar);
+
+    // add another observation
+    obsLoc(0) = 1.5;    
     gp1.Condition(obsLoc, obsData, obsVar);
     gp2.Condition(obsLoc, obsData, obsVar);
 
