@@ -69,22 +69,49 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LinearSDE::EvolveDistribution(Eigen:
     Eigen::MatrixXd LQLT = L->Apply( L->Apply(Q).transpose().eval() );
     LQLT = 0.5*(LQLT + LQLT.transpose()); // <- Make sure LQLT is symmetric
     
-    Eigen::MatrixXd Fgamma;
+    Eigen::MatrixXd Fgamma, k1, k2, k3, k4;
 
     // Take all but the last step because the last step might be a partial step.
     for(int i=0; i<numTimes-1; ++i)
     {
-        mu += dt * F->Apply(mu);
+        k1 = F->Apply(mu);
+        k2 = F->Apply(mu + 0.5*dt*k1);
+        k3 = F->Apply(mu + 0.5*dt*k2);
+        k4 = F->Apply(mu + dt*k3);
+        mu = mu + (dt/6.0)*(k1 + 2.0*k2 + 2.0*k3 + k4);
+        
         Fgamma = F->Apply(gamma);
-        gamma += dt * (Fgamma + Fgamma.transpose() + LQLT);
+        k1 = Fgamma + Fgamma.transpose() + LQLT;
+        Fgamma = F->Apply(gamma + 0.5*dt*k1);
+        k2 = Fgamma + Fgamma.transpose() + LQLT;
+        Fgamma = F->Apply(gamma + 0.5*dt*k2);
+        k3 = Fgamma + Fgamma.transpose() + LQLT;
+        Fgamma = F->Apply(gamma + dt*k3);
+        k4 = Fgamma + Fgamma.transpose() + LQLT;
+
+        gamma = gamma + (dt/6.0)*(k1 + 2.0*k2 + 2.0*k3 + k4);
     }
 
     // Take the last step
     double lastDt = T-(numTimes-1)*dt;
-    mu += lastDt * F->Apply(mu);
-    Fgamma = F->Apply(gamma);
-    gamma += lastDt * (Fgamma + Fgamma.transpose() + LQLT);
 
+    k1 = F->Apply(mu);
+    k2 = F->Apply(mu + 0.5*lastDt*k1);
+    k3 = F->Apply(mu + 0.5*lastDt*k2);
+    k4 = F->Apply(mu + lastDt*k3);
+    mu = mu + (lastDt/6.0)*(k1 + 2.0*k2 + 2.0*k3 + k4);
+    
+    Fgamma = F->Apply(gamma);
+    k1 = Fgamma + Fgamma.transpose() + LQLT;
+    Fgamma = F->Apply(gamma + 0.5*lastDt*k1);
+    k2 = Fgamma + Fgamma.transpose() + LQLT;
+    Fgamma = F->Apply(gamma + 0.5*lastDt*k2);
+    k3 = Fgamma + Fgamma.transpose() + LQLT;
+    Fgamma = F->Apply(gamma + lastDt*k3);
+    k4 = Fgamma + Fgamma.transpose() + LQLT;
+    
+    gamma = gamma + (lastDt/6.0)*(k1 + 2.0*k2 + 2.0*k3 + k4);
+    
     return std::make_pair(mu,gamma);
 }
 
@@ -132,22 +159,47 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> LinearSDE::Discretize(double deltaT)
     Eigen::MatrixXd LQLT = L->Apply( L->Apply(Q).transpose().eval() );
     LQLT = 0.5*(LQLT + LQLT.transpose()); // <- Make sure LQLT is symmetric
     
-    Eigen::MatrixXd Fgamma;
+    Eigen::MatrixXd Fgamma, k1, k2, k3, k4;
 
     // Take all but the last step because the last step might be a partial step.
     for(int i=0; i<numTimes-1; ++i)
     {
-        A += dt * F->Apply(A);
+        k1 = F->Apply(A);
+        k2 = F->Apply(A + 0.5*dt*k1);
+        k3 = F->Apply(A + 0.5*dt*k2);
+        k4 = F->Apply(A + dt*k3);
+        A = A + (dt/6.0) * (k1 + 2.0*k2 + 2.0*k3 + k4);
+
         Fgamma = F->Apply(gamma);
-        gamma += dt * (Fgamma + Fgamma.transpose() + LQLT);
+        k1 = Fgamma + Fgamma.transpose() + LQLT;
+        Fgamma = F->Apply(gamma + 0.5*dt*k1);
+        k2 = Fgamma + Fgamma.transpose() + LQLT;
+        Fgamma = F->Apply(gamma + 0.5*dt*k2);
+        k3 = Fgamma + Fgamma.transpose() + LQLT;
+        Fgamma = F->Apply(gamma + dt*k3);
+        k4 = Fgamma + Fgamma.transpose() + LQLT;
+        
+        gamma = gamma + (dt/6.0)*(k1 + 2.0*k2 + 2.0*k3 + k4);
     }
 
-    // Take the last step
     double lastDt = deltaT-(numTimes-1)*dt;
-    A += lastDt * F->Apply(A);
-    Fgamma = F->Apply(gamma);
-    gamma += lastDt * (Fgamma + Fgamma.transpose() + LQLT);
+    k1 = F->Apply(A);
+    k2 = F->Apply(A + 0.5*lastDt*k1);
+    k3 = F->Apply(A + 0.5*lastDt*k2);
+    k4 = F->Apply(A + lastDt*k3);
+    A = A + (lastDt/6.0) * (k1 + 2.0*k2 + 2.0*k3 + k4);
 
+    Fgamma = F->Apply(gamma);
+    k1 = Fgamma + Fgamma.transpose() + LQLT;
+    Fgamma = F->Apply(gamma + 0.5*lastDt*k1);
+    k2 = Fgamma + Fgamma.transpose() + LQLT;
+    Fgamma = F->Apply(gamma + 0.5*lastDt*k2);
+    k3 = Fgamma + Fgamma.transpose() + LQLT;
+    Fgamma = F->Apply(gamma + lastDt*k3);
+    k4 = Fgamma + Fgamma.transpose() + LQLT;
+        
+    gamma = gamma + (lastDt/6.0)*(k1 + 2.0*k2 + 2.0*k3 + k4);
+        
     return std::make_pair(A,gamma);
 
 }

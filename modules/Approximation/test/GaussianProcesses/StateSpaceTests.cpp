@@ -128,6 +128,26 @@ TEST(Approximation_GP, PeriodicStateSpace)
     
 }
 
+TEST(Approximation_GP, SumStateSpace)
+{
+
+    MaternKernel kernel1(1, 3.0, 1.0, 7.0/2.0);
+    MaternKernel kernel2(1, 0.15, 0.25, 1.0/2.0);
+
+    auto kernel = kernel1 + kernel2;
+    
+    boost::property_tree::ptree options;
+    options.put("PeriodicKernel.StateSpace.NumTerms",8);
+    options.put("SDE.dt", 5e-5);
+
+    ConstantMean mu(1,1);
+    StateSpaceGP gp(mu, kernel, options);
+    
+    // draw a random sample from the SDE model
+    Eigen::VectorXd obsTimes = Eigen::VectorXd::LinSpaced(100, 0, 4);
+        
+    Eigen::MatrixXd realization = gp.Sample(obsTimes);
+}
 
 TEST(Approximation_GP, ProductStateSpace)
 {

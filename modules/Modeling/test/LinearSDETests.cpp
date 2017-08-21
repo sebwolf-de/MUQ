@@ -93,7 +93,7 @@ TEST(LinearSDE, Discretize)
     Eigen::MatrixXd Q = Eigen::MatrixXd::Ones(1,1);
     
     boost::property_tree::ptree options;
-    options.put("SDE.dt", 1e-5);
+    options.put("SDE.dt", 1e-3);
 
     LinearSDE sde(F,L,Q,options);
     
