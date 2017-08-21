@@ -37,7 +37,7 @@ TEST(Approximation_GP, HyperFit1d)
     auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} ) * PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});    
    
     // Create the GP
-    ConstantMean mean(dim, 1);
+    ZeroMean mean(dim, 1);
     GaussianProcess gp(mean, kernel);
 
 
@@ -96,7 +96,7 @@ TEST(Approximation_GP, HyperFit2d)
     auto kernel = SquaredExpKernel(dim, inds1, 2.0, 0.35, {0.1,10} )*SquaredExpKernel(dim, inds2, 2.0, 0.35, {0.1,10} );
 
     // Create the GP
-    ConstantMean mean(dim, 1);
+    ZeroMean mean(dim, 1);
     auto gp = ConstructGP(mean, kernel);
 
     for(int i=0; i<trainLocs.cols(); ++i)

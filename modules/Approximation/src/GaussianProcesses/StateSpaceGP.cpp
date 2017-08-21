@@ -139,7 +139,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
         auto H = std::make_shared<ProductOperator>(observations.at(0)->H, obsOp);
         obsFilterDists.at(0) = KalmanFilter::Analyze(obsDists.at(0), 
                                                      H,
-                                                     observations.at(0)->obs,
+                                                     observations.at(0)->obs - mean->Evaluate(observations.at(0)->loc),
                                                      observations.at(0)->obsCov);
 
         currDist = &obsFilterDists.at(0);
@@ -181,7 +181,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
             auto H = std::make_shared<ProductOperator>(observations.at(obsInd)->H, obsOp);
             obsFilterDists.at(obsInd) = KalmanFilter::Analyze(obsDists.at(obsInd),
                                                               H,
-                                                              observations.at(obsInd)->obs,
+                                                              observations.at(obsInd)->obs - mean->Evaluate(observations.at(obsInd)->loc),
                                                               observations.at(obsInd)->obsCov);
 
             currDist = &obsFilterDists.at(obsInd);
@@ -264,7 +264,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
     std::pair<Eigen::MatrixXd, Eigen::MatrixXd> output;
     output.first.resize(coDim, times.cols());
     for(int i=0; i<times.cols(); ++i)
-        output.first.col(i) = obsOp->Apply(evalDists.at(i).first);
+        output.first.col(i) = mean->Evaluate(times.col(i)) + obsOp->Apply(evalDists.at(i).first);
 
     if(covType==GaussianProcess::BlockCov){
         

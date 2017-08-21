@@ -12,7 +12,7 @@ df.columns = ['Date','Concentrations']
 #plt.show()
 
 # Write cleaned data to h5 file
-h5_filename = 'data/MaunaLoaCO2.h5'
+h5_filename = 'MaunaLoaCO2.h5'
 f = h5py.File(h5_filename)
 f['/Weekly/Dates'] = df['Date']
 f['/Weekly/Concentrations'] = df['Concentrations']

@@ -24,7 +24,7 @@ TEST(Approximation_GP, MaternStateSpace)
     
     MaternKernel kernel(1, sigma2, length, nu);
 
-    ConstantMean mu(1,1);
+    ZeroMean mu(1,1);
     StateSpaceGP gp(mu, kernel);
     
     EXPECT_EQ(nu+0.5, gp.stateDim);
@@ -114,7 +114,7 @@ TEST(Approximation_GP, PeriodicStateSpace)
     options.put("PeriodicKernel.StateSpace.NumTerms",8);
     options.put("SDE.dt", 5e-5);
 
-    ConstantMean mu(1,1);
+    ZeroMean mu(1,1);
     StateSpaceGP gp(mu, kernel, options);
     
     // draw a random sample from the SDE model
@@ -140,7 +140,7 @@ TEST(Approximation_GP, SumStateSpace)
     options.put("PeriodicKernel.StateSpace.NumTerms",8);
     options.put("SDE.dt", 5e-5);
 
-    ConstantMean mu(1,1);
+    ZeroMean mu(1,1);
     StateSpaceGP gp(mu, kernel, options);
     
     // draw a random sample from the SDE model
@@ -169,7 +169,7 @@ TEST(Approximation_GP, ProductStateSpace)
     options.put("PeriodicKernel.StateSpace.NumTerms",7);
     options.put("SDE.dt", 1e-4);
 
-    ConstantMean mu(1,1);
+    ZeroMean mu(1,1);
     StateSpaceGP gp1(mu, kernel1, options);
     StateSpaceGP gp2(mu, kernel2, options);
     EXPECT_EQ(int(nu+0.5), gp2.stateDim);
@@ -202,7 +202,7 @@ TEST(Approximation_GP, StateSpacePredict_Interpolation)
     boost::property_tree::ptree options;
     options.put("SDE.dt", 1e-5);
 
-    ConstantMean mu(1,1);
+    ZeroMean mu(1,1);
     StateSpaceGP gp1(mu, kernel, options);
     GaussianProcess gp2(mu, kernel);
     
@@ -254,7 +254,7 @@ TEST(Approximation_GP, StateSpacePredict_ExtrapolateRight)
     boost::property_tree::ptree options;
     options.put("SDE.dt", 1e-5);
 
-    ConstantMean mu(1,1);
+    ZeroMean mu(1,1);
     StateSpaceGP gp1(mu, kernel, options);
     GaussianProcess gp2(mu, kernel);
     
@@ -307,7 +307,7 @@ TEST(Approximation_GP, StateSpacePredict_ExtrapolateLeft)
     boost::property_tree::ptree options;
     options.put("SDE.dt", 1e-5);
 
-    ConstantMean mu(1,1);
+    ZeroMean mu(1,1);
     StateSpaceGP gp1(mu, kernel, options);
     GaussianProcess gp2(mu, kernel);
     

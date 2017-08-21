@@ -100,15 +100,15 @@ namespace muq
     /** @class ConstantMean
         @ingroup MeanFunctions
     */
-    class ConstantMean : public MeanFunctionBase
+    class ZeroMean : public MeanFunctionBase
     {
 
     public:
-        ConstantMean(unsigned dim, unsigned coDim) : MeanFunctionBase(dim,coDim){};
+        ZeroMean(unsigned dim, unsigned coDim) : MeanFunctionBase(dim,coDim){};
 
         virtual std::shared_ptr<MeanFunctionBase> Clone() const override
 	{
-	    return std::make_shared<ConstantMean>(*this);
+	    return std::make_shared<ZeroMean>(*this);
 	}
 
 	virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const override
@@ -116,6 +116,35 @@ namespace muq
 	    return Eigen::MatrixXd::Zero(coDim, xs.cols());
 	}
     };
+
+    
+    class LinearMean : public MeanFunctionBase
+    {
+
+    public:
+        LinearMean(double slope, double intercept) : LinearMean(slope*Eigen::MatrixXd::Ones(1,1), intercept*Eigen::VectorXd::Ones(1)){};
+        
+        LinearMean(Eigen::MatrixXd const& slopesIn,
+                   Eigen::VectorXd const& interceptsIn) : MeanFunctionBase(slopesIn.cols(),slopesIn.rows()),
+                                                          slopes(slopesIn),
+                                                          intercepts(interceptsIn){};
+
+        virtual std::shared_ptr<MeanFunctionBase> Clone() const override
+	{
+	    return std::make_shared<LinearMean>(*this);
+	}
+
+	virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const override
+	{
+            return (slopes*xs).colwise() + intercepts;
+	}
+
+    private:
+        Eigen::MatrixXd slopes;
+        Eigen::VectorXd intercepts;
+        
+    };
+    
 
     /** @class LinearTransformMean
         @ingroup MeanFunctions
