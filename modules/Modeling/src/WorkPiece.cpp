@@ -598,6 +598,16 @@ void WorkPiece::DestroyAny(boost::any& obj) const {
     N_VDestroy(boost::any_cast<N_Vector&>(obj));
     return;
   }
+
+  // destroy std::vector<N_Vector> type
+  if( outtype.compare(types.at("N_Vector vector"))==0 ) { // if it is a vector of N_Vectors
+    std::vector<N_Vector>& vec = boost::any_cast<std::vector<N_Vector>&>(obj);
+    for( auto it : vec ) {
+      N_VDestroy(it);
+    }
+    vec.clear();
+    return;
+  }
   
   // destroy DlsMat type
   if( outtype.compare(types.at("DlsMat"))==0 ) {
