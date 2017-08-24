@@ -3,6 +3,12 @@
 
 #include "MUQ/Approximation/GaussianProcesses/KernelImpl.h"
 
+#include "MUQ/Utilities/LinearAlgebra/IdentityOperator.h"
+#include "MUQ/Utilities/LinearAlgebra/ZeroOperator.h"
+
+#include "MUQ/Modeling/LinearSDE.h"
+
+#include <boost/property_tree/ptree.hpp>
 
 namespace muq
 {
@@ -112,6 +118,20 @@ public:
 	    }
 	}
     }
+
+    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions = boost::property_tree::ptree()) const override
+      {
+        std::shared_ptr<muq::Utilities::LinearOperator> F = std::make_shared<muq::Utilities::ZeroOperator>(sigma2.rows(),1);
+        std::shared_ptr<muq::Utilities::LinearOperator> L = std::make_shared<muq::Utilities::ZeroOperator>(sigma2.rows(),1);
+        Eigen::MatrixXd Q = Eigen::MatrixXd::Ones(1,1);
+        
+        boost::property_tree::ptree options;
+        auto sde = std::make_shared<muq::Modeling::LinearSDE>(F,L,Q,options);
+        
+        std::shared_ptr<muq::Utilities::LinearOperator> obsOp = std::make_shared<muq::Utilities::IdentityOperator>(sigma2.rows());
+
+        return std::make_tuple(sde, obsOp, sigma2);
+      }
 
 private:
     Eigen::MatrixXd sigma2;

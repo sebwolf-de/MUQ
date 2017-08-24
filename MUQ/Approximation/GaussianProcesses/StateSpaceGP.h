@@ -57,6 +57,32 @@ public:
     
     const int stateDim;
 
+    template<typename KernelType1, typename...  KernelTypes>
+    static std::shared_ptr<StateSpaceGP> Concatenate(KernelType1 const& k1, KernelTypes... kernels)
+    {
+      std::vector<std::shared_ptr<KernelBase>> kernelVec(1);
+      kernelVec.at(0) = k1.Clone();
+      return Concatenate(kernelVec, kernels...);
+    }
+
+    template<typename KernelType1, typename...  KernelTypes>
+    static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<KernelBase>> &kernelVec, 
+                                                     KernelType1 const& k1,
+                                                     KernelTypes... kernels)
+    {
+      kernelVec.push_back(k1.Clone());
+      return Concatenate(kernelVec, kernels...);
+    }
+
+    template<typename KernelType1>
+    static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<KernelBase>> &kernelVec,
+                                                       KernelType1 const& k1)
+    {
+        kernelVec.push_back(k1);
+        return Concatenate(kernelVec);
+    }
+
+    static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<KernelBase>> const& gps);
     static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<StateSpaceGP>> const& gps);
     
 private:

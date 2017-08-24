@@ -18,62 +18,37 @@ namespace Approximation
 k(x,x^\prime) = \left[\begin{array}{cc}k_1(x,x^\prime) & 0\\ 0 & k_2(x,x^\prime)\end{array}\right].
 \f]
     */
-    template<typename KernelType1, typename KernelType2>
-    class ConcatenateKernel : public KernelImpl<ConcatenateKernel<KernelType1,KernelType2>>
+    class ConcatenateKernel : public KernelBase
     {
 
     public:
-        ConcatenateKernel(KernelType1 const& kernel1In, KernelType2 const& kernel2In) : KernelImpl<ConcatenateKernel<KernelType1,KernelType2>>(kernel1In.inputDim,
-                                                                                                                                               kernel1In.coDim + kernel2In.coDim,
-                                                                                                                                               kernel1In.numParams + kernel2In.numParams),
-            kernel1(kernel1In),
-            kernel2(kernel2In)
-        {
-            assert(kernel1.inputDim == kernel2.inputDim);
-        };
-
+        ConcatenateKernel(std::vector<std::shared_ptr<KernelBase>> const& kernelsIn);
         virtual ~ConcatenateKernel(){};
     
-        template<typename VecType, typename MatType>
-            inline void EvaluateImpl(VecType const& x1, VecType  const& x2 , MatType & cov) const
-        {
-            auto block1 = GetBlock(cov, 0, 0, kernel1.coDim, kernel1.coDim);
-            auto block2 = GetBlock(cov, kernel1.coDim, kernel1.coDim, kernel2.coDim, kernel2.coDim);
+        virtual Eigen::MatrixXd Evaluate(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const override;
         
-            kernel1.EvaluateImpl(x1, x2, block1);
-            kernel2.EvaluateImpl(x1, x2, block2);
-        }
-
-        template<typename VecType1, typename VecType2, typename MatType>
-            inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatType & derivs) const
-        {
-            assert(wrt < this->numParams);
-
-            // Initialize the derivative matrix to 0
-            for(int j=0; j<derivs.cols(); ++j)
-            {
-                for(int i=0; i<derivs.rows(); ++i)
-                    derivs(i,j) = 0.0;
-            }
+        virtual void FillDerivativeMatrix(Eigen::MatrixXd             const& xs,
+                                          unsigned                           wrt,
+                                          Eigen::Ref<Eigen::MatrixXd>        derivs) const override;
         
-            if(wrt < kernel1.numParams )
-            {
-                auto block = GetBlock(derivs, 0, 0, kernel1.coDim, kernel1.coDim);
-                return kernel1.GetDerivative(x1, x2, wrt, block);
-            }
-            else
-            {
-                auto block = GetBlock(derivs, kernel1.coDim, kernel1.coDim, kernel2.coDim, kernel2.coDim);
-                return kernel2.GetDerivative(x1, x2, wrt-kernel1.numParams, block);
-            }
-        }
+        
+        virtual void FillCovariance(Eigen::MatrixXd             const& xs,
+                                    Eigen::MatrixXd             const& ys,
+                                    Eigen::Ref<Eigen::MatrixXd>        cov) const = 0;
+        
+        virtual void FillCovariance(Eigen::MatrixXd             const& xs,
+                                    Eigen::Ref<Eigen::MatrixXd>        cov) const = 0;
+        
     
         virtual Eigen::MatrixXd GetParamBounds() const override
         {
             Eigen::MatrixXd bounds(2,this->numParams);
 
-            bounds.block(0,0,2,kernel1.numParams) = kernel1.GetParamBounds();
-            bounds.block(0,kernel1.numParams,2,kernel2.numParams) = kernel2.GetParamBounds();
+            int currCol = 0;
+            for(int i=0; i<kernels.size(); ++i){
+              bounds.block(0,currCol, 2, kernels.at(i)->numParams) = kernels.at(i)->GetParamBounds();
+              currCol += kernels.at(i)->numParams;
+            }
 
             return bounds;
         };
@@ -82,30 +57,42 @@ k(x,x^\prime) = \left[\begin{array}{cc}k_1(x,x^\prime) & 0\\ 0 & k_2(x,x^\prime)
         {
             Eigen::VectorXd params(this->numParams);
 
-            params.head(kernel1.numParams) = kernel1.GetParams();
-            params.tail(kernel2.numParams) = kernel2.GetParams();
+            int currCol = 0;
+            for(int i=0; i<kernels.size(); ++i){
+              params.segment(currCol,kernels.at(i)->numParams) = kernels.at(i)->GetParams();
+              currCol += kernels.at(i)->numParams;
+            }
 
             return params;
         };
         
         virtual void SetParams(Eigen::VectorXd const& params) override
         {
-            kernel1.SetParams(params.head(kernel1.numParams));
-            kernel2.SetParams(params.tail(kernel2.numParams));
+            int currCol = 0;
+            for(int i=0; i<kernels.size(); ++i){
+              kernels.at(i)->SetParams(params.segment(currCol,kernels.at(i)->numParams));
+              currCol += kernels.at(i)->numParams;
+            }
         }
 
     
     private:
-        KernelType1  kernel1;
-        KernelType2 kernel2;
+        static int GetNumCodim(std::vector<std::shared_ptr<KernelBase>> const& kernelsIn);
+        static int GetNumParams(std::vector<std::shared_ptr<KernelBase>> const& kernelsIn);
+
+        std::vector<std::shared_ptr<KernelBase>> kernels;
     };
 
 
     
 template<class KernelType1, class KernelType2>
-ConcatenateKernel<KernelType1, KernelType2> Concatenate(KernelType1 const& kernel1, KernelType2 const& kernel2)
+ConcatenateKernel Concatenate(KernelType1 const& kernel1, KernelType2 const& kernel2)
 {
-    return ConcatenateKernel<KernelType1, KernelType2>(kernel1, kernel2);
+    std::vector<std::shared_ptr<KernelBase>> kernels(2);
+    kernels.at(0) = kernel1.Clone();
+    kernels.at(1) = kernel2.Clone();
+
+    return ConcatenateKernel(kernels);
 }
 
 

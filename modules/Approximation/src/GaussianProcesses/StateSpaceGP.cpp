@@ -309,6 +309,33 @@ void StateSpaceGP::SetObs(std::shared_ptr<muq::Utilities::LinearOperator> newObs
     obsOp = newObs;
 }
 
+static std::shared_ptr<StateSpaceGP> StateSpaceGP::Concatenate(std::vector<std::shared_ptr<KernelBase>> const& kernels)
+{
+    int numParts = kernels.size();
+    std::shared_ptr<KernelBase> catKernel = std::make_shared<ConcatenateKernel>(kernels.at(0),kernels.at(1));
+
+    std::vector<std::shared_ptr<muq::Modeling::LinearSDE>> sdes(numParts);
+    std::vector<std::shared_ptr<muq::Utilities::LinearOperator>> obsOps(numParts);
+    std::vector<Eigen::MatrixXd> qs(numParts);
+
+    for(int i=0; i<numParts; ++i)
+      std::tie(sdes.at(i), obsOps.at(i), qs.at(i)) = kernels.at(i)->GetStateSpace();
+
+    auto sde = LinearSDE::Concatenate(sdes);
+    auto H = std::make_shared<BlockDiagonalOperator>(obsOps);
+    
+    Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(sde->stateDim, sde->stateDim);
+    int currRow = 0;
+    for(int i=0; i<numParts; ++i){
+      Q.block(currRow, currRow, qs.at(i).rows(), qs.at(i).rows()) = qs.at(i);
+      currRow += qs.at(i);
+    }
+    
+    auto mu = std::make_shared<ZeroMean>(1, H->rows());
+
+    return std::make_shared<StateSpaceGP>(std::make_tuple(sde,H,Q), mu, );
+}
+
 // std::shared_ptr<StateSpaceGP> StateSpaceGP::Concatenate(std::vector<std::shared_ptr<StateSpaceGP>> const& gps)
 // {
 //     // Build the concatenated SDE
