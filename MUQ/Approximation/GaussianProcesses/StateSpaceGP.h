@@ -85,7 +85,7 @@ public:
     static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<KernelBase>> const& gps);
     static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<StateSpaceGP>> const& gps);
     
-private:
+protected:
 
     StateSpaceGP(std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> ssInfo,
                  std::shared_ptr<MeanFunctionBase> meanIn,

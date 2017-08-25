@@ -20,6 +20,7 @@ CreateCompileGroup(
     "EIGEN3;BOOST"
     ""
     GaussianProcesses/MaternKernel.cpp
+    GaussianProcesses/ConcatenateKernel.cpp
     GaussianProcesses/PeriodicKernel.cpp
     GaussianProcesses/KarhunenLoeveExpansion.cpp
     #GaussianProcesses/KarhunenLoeveFactory.cpp

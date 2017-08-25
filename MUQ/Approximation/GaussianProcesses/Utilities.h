@@ -106,10 +106,13 @@ class ColumnSlice
 {
 public:
     //ColumnSlice(MatType const& matrixIn, unsigned colIn) : col(colIn), matrix(matrixIn){};
-    ColumnSlice(MatType const& matrixIn, unsigned colIn) : col(colIn), matrix(matrixIn){};
+    ColumnSlice(MatType& matrixIn, unsigned colIn) : col(colIn), matrix(matrixIn){};
 
-    double const& operator()(unsigned row) const{return matrix(row, col);};
-    double const& operator()(unsigned row, unsigned col2) const{assert(col2==0); return matrix(row,col);};
+    double operator()(unsigned row) const{return matrix(row, col);};
+    double operator()(unsigned row, unsigned col2) const{assert(col2==0); return matrix(row,col);};
+
+    double& operator()(unsigned row){return matrix(row, col);};
+    double& operator()(unsigned row, unsigned col2){assert(col2==0); return matrix(row,col);};
     
     unsigned dimension(unsigned dim) const
     {
@@ -128,18 +131,22 @@ public:
     {
         return 1;
     }
-    
+
     operator Eigen::VectorXd() const
+    {
+      return eval();
+    };
+    
+    Eigen::VectorXd eval() const
     {
         Eigen::VectorXd output(rows());
         for(int i=0; i<rows(); ++i)
             output(i) = (*this)(i);
         return output;
     };
-    
 private:
     const unsigned   col;
-    MatType        const& matrix;
+    MatType& matrix;
 };
 
 template<typename VecType>
@@ -148,7 +155,8 @@ class VectorSlice
 public:
     VectorSlice(VecType const& vectorIn, std::vector<unsigned> const& indsIn) : vector(vectorIn), inds(indsIn){};
 
-    double const& operator()(unsigned row) const{return vector(inds.at(row));};
+    double  operator()(unsigned row) const{return vector(inds.at(row));};
+    double& operator()(unsigned row){return vector(inds.at(row));};
 
     unsigned dimension(unsigned dim) const
     {
@@ -177,7 +185,8 @@ public:
 	assert(GetShape(matrix,1)>=startCol+numCols);
     };
 
-    double& operator()(unsigned row, unsigned col) const{return matrix(startRow + row, startCol + col);};
+    double operator() (unsigned row, unsigned col) const{return matrix(startRow + row, startCol + col);};
+    double &operator()(unsigned row, unsigned col){return matrix(startRow + row, startCol + col);};
 
     template<typename Derived>
     MatrixBlock& operator=(Eigen::DenseBase<Derived> const& otherMat)
@@ -201,7 +210,7 @@ public:
 private:
     
     const unsigned startRow, startCol, numRows, numCols;
-    MatType        & matrix;
+    MatType& matrix;
 };
 
 /** 
@@ -210,13 +219,13 @@ Grab a particular column of a matrix and return as an instance of the "ColumnSli
 
 */
 template<typename MatType>
-ColumnSlice<MatType> GetColumn(MatType const& matrix, unsigned col)
+ColumnSlice<MatType> GetColumn(MatType& matrix, unsigned col)
 {
     return ColumnSlice<MatType>(matrix, col);
 }
 
 template<typename MatType>
-VectorSlice<MatType> GetSlice(MatType const& matrix, std::vector<unsigned> const& inds)
+VectorSlice<MatType> GetSlice(MatType& matrix, std::vector<unsigned> const& inds)
 {
     return VectorSlice<MatType>(matrix, inds);
 }

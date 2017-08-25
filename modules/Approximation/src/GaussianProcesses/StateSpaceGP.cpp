@@ -5,6 +5,8 @@
 #include "MUQ/Inference/Filtering/KalmanFilter.h"
 #include "MUQ/Inference/Filtering/KalmanSmoother.h"
 
+#include "MUQ/Approximation/GaussianProcesses/ConcatenateKernel.h"
+
 #include "MUQ/Utilities/Exceptions.h"
 
 #include <Eigen/Dense>
@@ -309,10 +311,9 @@ void StateSpaceGP::SetObs(std::shared_ptr<muq::Utilities::LinearOperator> newObs
     obsOp = newObs;
 }
 
-static std::shared_ptr<StateSpaceGP> StateSpaceGP::Concatenate(std::vector<std::shared_ptr<KernelBase>> const& kernels)
+std::shared_ptr<StateSpaceGP> StateSpaceGP::Concatenate(std::vector<std::shared_ptr<KernelBase>> const& kernels)
 {
     int numParts = kernels.size();
-    std::shared_ptr<KernelBase> catKernel = std::make_shared<ConcatenateKernel>(kernels.at(0),kernels.at(1));
 
     std::vector<std::shared_ptr<muq::Modeling::LinearSDE>> sdes(numParts);
     std::vector<std::shared_ptr<muq::Utilities::LinearOperator>> obsOps(numParts);
@@ -328,40 +329,12 @@ static std::shared_ptr<StateSpaceGP> StateSpaceGP::Concatenate(std::vector<std::
     int currRow = 0;
     for(int i=0; i<numParts; ++i){
       Q.block(currRow, currRow, qs.at(i).rows(), qs.at(i).rows()) = qs.at(i);
-      currRow += qs.at(i);
+      currRow += qs.at(i).rows();
     }
     
     auto mu = std::make_shared<ZeroMean>(1, H->rows());
+    auto kernel = std::make_shared<ConcatenateKernel>(kernels);
 
-    return std::make_shared<StateSpaceGP>(std::make_tuple(sde,H,Q), mu, );
-}
-
-// std::shared_ptr<StateSpaceGP> StateSpaceGP::Concatenate(std::vector<std::shared_ptr<StateSpaceGP>> const& gps)
-// {
-//     // Build the concatenated SDE
-//     std::vector<std::shared_ptr<muq::Modeling::LinearSDE>> sdes(gps.size());
-//     for(int i=0; i<gps.size(); ++i)
-//         sdes.at(i) = gps.at(i)->GetSDE();
-
-//     auto sde = LinearSDE::Concatenate(sdes);
-    
-//     // Build a concatenated observation operator
-//     std::vector<std::shared_ptr<muq::Utilities::LinearOperator>> obsOps(gps.size());
-//     for(int i=0; i<gps.size(); ++i)
-//         obsOps.at(i) = gps.at(i)->GetObs();
-    
-//     auto H = std::make_shared<BlockDiagonalOperator>(obsOps);
-
-//     // Build the concatenated covariance
-//     Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(sde->stateDim, sde->stateDim);
-//     int currRow = 0;
-//     for(int i=0; i<gps.size(); ++i)
-//     {
-//         Q.block(currRow,currRow, gps.at(i)->stateDim, gps.at(i)->stateDim) = gps.at(i)->GetCov();
-//         currRow += gps.at(i)->stateDim;
-//     }
-  
-//     return std::make_shared<StateSpaceGP>(sde, H, Q);
-// }
-
-                 
+    // Using "new" here so we can call the private constructor
+    return std::shared_ptr<StateSpaceGP>(new StateSpaceGP(std::make_tuple(sde,H,Q), mu, kernel));
+}                 

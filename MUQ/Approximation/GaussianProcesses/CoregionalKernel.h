@@ -50,7 +50,7 @@ public:
     {
 	Eigen::VectorXd rhoVec(this->coDim);
         for(int i=0; i<this->coDim; ++i)
-            rhoVec(i) = kernels.at(i)->Evaluate(x1,x2)(0,0);
+          rhoVec(i) = kernels.at(i)->Evaluate(x1.eval(),x2.eval())(0,0);
         
 	cov = ( A * rhoVec.asDiagonal() * A.transpose() ).eval();
     }
@@ -66,7 +66,7 @@ public:
         {
             if(wrt < cumParams + kernels.at(i)->numParams)
             {
-                kernelDerivs = kernels.at(i)->GetDerivative(x1, x2, wrt-cumParams);
+                kernelDerivs = kernels.at(i)->GetDerivative(x1.eval(), x2.eval(), wrt-cumParams);
                 kernelInd = i;
                 break;
             }

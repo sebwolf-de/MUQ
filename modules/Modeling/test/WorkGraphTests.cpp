@@ -5,6 +5,7 @@
 #include "WorkPieceTestClasses.h"
 
 #include "MUQ/Modeling/ConstantPiece.h"
+#include "MUQ/Modeling/AnyAlgebra.h"
 
 using namespace muq::Modeling;
 

@@ -25,20 +25,25 @@ k(x,x^\prime) = \left[\begin{array}{cc}k_1(x,x^\prime) & 0\\ 0 & k_2(x,x^\prime)
         ConcatenateKernel(std::vector<std::shared_ptr<KernelBase>> const& kernelsIn);
         virtual ~ConcatenateKernel(){};
     
-        virtual Eigen::MatrixXd Evaluate(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const override;
+        virtual Eigen::MatrixXd Evaluate(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                         Eigen::Ref<const Eigen::VectorXd> const& x2) const override;
         
         virtual void FillDerivativeMatrix(Eigen::MatrixXd             const& xs,
                                           unsigned                           wrt,
                                           Eigen::Ref<Eigen::MatrixXd>        derivs) const override;
         
-        
+        virtual Eigen::MatrixXd GetDerivative(Eigen::Ref<const Eigen::VectorXd> const& x1, 
+                                              Eigen::Ref<const Eigen::VectorXd> const& x2, 
+                                              int                                     wrt) const override;
+
         virtual void FillCovariance(Eigen::MatrixXd             const& xs,
                                     Eigen::MatrixXd             const& ys,
-                                    Eigen::Ref<Eigen::MatrixXd>        cov) const = 0;
+                                    Eigen::Ref<Eigen::MatrixXd>        cov) const override;
         
         virtual void FillCovariance(Eigen::MatrixXd             const& xs,
-                                    Eigen::Ref<Eigen::MatrixXd>        cov) const = 0;
+                                    Eigen::Ref<Eigen::MatrixXd>        cov) const override;
         
+        virtual std::shared_ptr<KernelBase> Clone() const override;
     
         virtual Eigen::MatrixXd GetParamBounds() const override
         {

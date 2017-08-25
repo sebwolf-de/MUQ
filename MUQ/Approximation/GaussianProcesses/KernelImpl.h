@@ -66,7 +66,9 @@ public:
     };
 
     
-    virtual Eigen::MatrixXd GetDerivative(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2, int wrt) const override
+    virtual Eigen::MatrixXd GetDerivative(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                          Eigen::Ref<const Eigen::VectorXd> const& x2,
+                                          int                                      wrt) const override
     {
         Eigen::MatrixXd output(coDim, coDim);
         reinterpret_cast<const ChildType*>(this)->GetDerivative(x1,x2,wrt,output);
@@ -85,7 +87,8 @@ public:
 	return SumKernel<ChildType,RightType>(*reinterpret_cast<const ChildType*>(this),kernel2);
     }
 
-    virtual Eigen::MatrixXd Evaluate(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const override
+    virtual Eigen::MatrixXd Evaluate(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                     Eigen::Ref<const Eigen::VectorXd> const& x2) const override
     {
 
         Eigen::MatrixXd output(coDim, coDim);

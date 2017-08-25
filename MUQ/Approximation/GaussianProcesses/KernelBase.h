@@ -70,13 +70,24 @@ public:
     /// Overridden by ProductKernel
     virtual std::vector<std::shared_ptr<KernelBase>> GetSeperableComponents() {return std::vector<std::shared_ptr<KernelBase>>(1,Clone()); };
 
+    virtual Eigen::MatrixXd Evaluate(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                     Eigen::Ref<const Eigen::VectorXd> const& x2) const = 0;
     
-    virtual Eigen::MatrixXd Evaluate(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2) const = 0;
-    
-    virtual Eigen::MatrixXd BuildCovariance(Eigen::MatrixXd const& x) const = 0;
+    virtual Eigen::MatrixXd BuildCovariance(Eigen::MatrixXd const& xs) const
+    {
+      Eigen::MatrixXd output(coDim*xs.cols(), coDim*xs.cols());
+      FillCovariance(xs,output);
+      return output;
+    }
 
     virtual Eigen::MatrixXd BuildCovariance(Eigen::MatrixXd const& x1,
-                                            Eigen::MatrixXd const& x2) const = 0;
+                                            Eigen::MatrixXd const& x2) const
+    {
+      Eigen::MatrixXd output(coDim*x1.cols(), coDim*x2.cols());
+      FillCovariance(x1, x2, output);
+      return output;
+    };
+
     
     virtual void FillCovariance(Eigen::MatrixXd             const& xs,
 				Eigen::MatrixXd             const& ys,
@@ -85,12 +96,14 @@ public:
     virtual void FillCovariance(Eigen::MatrixXd             const& xs,
 				Eigen::Ref<Eigen::MatrixXd>        cov) const = 0;
 
+
     virtual void FillDerivativeMatrix(Eigen::MatrixXd             const& xs,
 				      unsigned                           wrt,
 				      Eigen::Ref<Eigen::MatrixXd>        derivs) const = 0;
-    
 
-    virtual Eigen::MatrixXd GetDerivative(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2, int wrt) const = 0;
+    virtual Eigen::MatrixXd GetDerivative(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                          Eigen::Ref<const Eigen::VectorXd> const& x2,
+                                          int                                      wrt) const = 0;
     
     virtual Eigen::MatrixXd GetParamBounds() const
     {
