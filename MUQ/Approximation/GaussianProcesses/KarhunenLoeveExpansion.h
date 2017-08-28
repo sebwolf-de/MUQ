@@ -98,6 +98,18 @@ int main(){
 
     public:
 
+        template<typename KernelType>
+        KarhunenLoeveExpansion(KernelType           const& kernelIn,
+                               Eigen::MatrixXd      const& seedPtsIn,
+                               Eigen::VectorXd      const& seedWtsIn,
+                               boost::property_tree::ptree options = boost::property_tree::ptree()) : KarhunenLoeveExpansion(kernelIn.Clone(), seedPtsIn, seedWtsIn, options){};
+
+        template<typename KernelType>
+        KarhunenLoeveExpansion(std::shared_ptr<KernelType> const& kernelIn,
+                               Eigen::MatrixXd             const& seedPtsIn,
+                               Eigen::VectorXd             const& seedWtsIn,
+                               boost::property_tree::ptree        options = boost::property_tree::ptree()) : KarhunenLoeveExpansion(std::dynamic_pointer_cast<KernelBase>(kernelIn), seedPtsIn, seedWtsIn, options){};
+
         KarhunenLoeveExpansion(std::shared_ptr<KernelBase> kernelIn,
                                Eigen::MatrixXd      const& seedPtsIn,
                                Eigen::VectorXd      const& seedWtsIn,

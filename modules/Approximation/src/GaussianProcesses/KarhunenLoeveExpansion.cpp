@@ -7,9 +7,9 @@ using namespace muq::Approximation;
 
 
 KarhunenLoeveExpansion::KarhunenLoeveExpansion(std::shared_ptr<KernelBase> kernelIn,
-                                               Eigen::MatrixXd      const& seedPtsIn,
-                                               Eigen::VectorXd      const& seedWtsIn,
-                                               boost::property_tree::ptree options) : seedPts(seedPtsIn), seedWts(seedWtsIn), covKernel(kernelIn)
+                                                  Eigen::MatrixXd      const& seedPtsIn,
+                                                  Eigen::VectorXd      const& seedWtsIn,
+                                                  boost::property_tree::ptree options) : seedPts(seedPtsIn), seedWts(seedWtsIn), covKernel(kernelIn)
 {
 
     int numModes = options.get("KarhunenLoeve.NumModes", seedWts.size());
