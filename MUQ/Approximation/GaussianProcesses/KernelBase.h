@@ -123,7 +123,15 @@ public:
    
     */
     virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions=boost::property_tree::ptree()) const{
-        throw muq::NotImplementedError("ERROR.  The GetStateSpace() function has not been implemented in this chiled of muq::Approximation::KernelBase.");
+
+      char* classNamePtr;
+      int status = -4;
+      classNamePtr = abi::__cxa_demangle(typeid(*this).name(), NULL, NULL, &status);
+      
+      std::string className(classNamePtr);
+      free(classNamePtr);
+ 
+      throw muq::NotImplementedError("ERROR.  The GetStateSpace() function has not been implemented in this child of muq::Approximation::KernelBase (" + className + ")");
     };
     
     
