@@ -21,7 +21,7 @@ TEST(Approximation_GP, KarhunenLoeve_BasicConstruction)
     
     auto kernel = std::make_shared<MaternKernel>(1, sigma2, length, nu);
 
-    const int numSeeds = 10;
+    const int numSeeds = 300;
     const int numEval = 200;
     
     const double lb = 0.0;
@@ -32,9 +32,13 @@ TEST(Approximation_GP, KarhunenLoeve_BasicConstruction)
         seedPts(0, i) = lb + (ub-lb)*double(i)/double(numSeeds);
 
     Eigen::VectorXd seedWts = (ub-lb)/double(numSeeds)*Eigen::VectorXd::Ones(numSeeds);
-
+  
     // Construct the Karhunen-Loeve decomposition based on a discrete eigenvalue problem at the seed points
-    KarhunenLoeveExpansion kl(kernel, seedPts, seedWts);
+    boost::property_tree::ptree options;
+    options.put("KarhunenLoeve.TruncationType", "FixedNumber");
+    options.put("KarhunenLoeve.EnergyTol", 0.999);
+    options.put("KarhunenLoeve.NumModes", 100);
+    KarhunenLoeveExpansion kl(kernel, seedPts, seedWts, options);
 
     // Evaluate the KL expansion at a bunch of other points
     Eigen::MatrixXd evalPts(1,numEval);
@@ -42,5 +46,14 @@ TEST(Approximation_GP, KarhunenLoeve_BasicConstruction)
         evalPts(0, i) = lb + (ub-lb)*double(i)/double(numEval);
     
     Eigen::MatrixXd modes = kl.GetModes(evalPts);
-   
+
+
+    Eigen::MatrixXd klCov = modes*modes.transpose();
+    Eigen::MatrixXd trueCov = kernel->BuildCovariance(evalPts);
+
+    for(int j=0; j<numEval; ++j){
+      for(int i=0; i<numEval; ++i){
+        EXPECT_NEAR(trueCov(i,j), klCov(i,j), 1e-2);
+      }
+    }
 }

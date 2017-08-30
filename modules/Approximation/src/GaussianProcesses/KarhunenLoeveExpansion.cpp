@@ -11,26 +11,25 @@ KarhunenLoeveExpansion::KarhunenLoeveExpansion(std::shared_ptr<KernelBase> kerne
                                                   Eigen::VectorXd      const& seedWtsIn,
                                                   boost::property_tree::ptree options) : seedPts(seedPtsIn), seedWts(seedWtsIn), covKernel(kernelIn)
 {
+    for(int i=0; i<seedWts.size(); ++i)
+        seedWts(i) = sqrt(seedWts(i));
+
     // Get the type of truncation to use (Energy, FixedNumber)
     std::string truncType = options.get("KarhunenLoeve.TruncationType","Energy");
     if( truncType.compare("Energy") && truncType.compare("FixedNumber") )
     {
-      std::cerr << "\nERROR:  Invalid options for \"KarhunenLoeve.TruncationType\" set in KarhunenLoveExpansion::KarhunenLoeveExpansion.  Valide options are \"Energy\" or \"FixedNumber\", but a value of " + truncType + " was given.\n\n";
+      std::cerr << "\nERROR:  Invalid options for \"KarhunenLoeve.TruncationType\" set in KarhunenLoveExpansion::KarhunenLoeveExpansion.  Valid options are \"Energy\" or \"FixedNumber\", but a value of " + truncType + " was given.\n\n";
       assert(!truncType.compare("Energy") || !truncType.compare("FixedNumber"));
     }
 
     // We will approximation the KL modes as the GP with known values at the seed points.  To get those values, we first need to solve the discrete eigenvalue problem
-    Eigen::MatrixXd seedCov = covKernel->BuildCovariance(seedPts);
-    
-    // Scale the columns of seedCov by the seed weights
-    for(int i=0; i<seedWts.size(); ++i)
-      seedCov.col(i) *= seedWts(i);
+    Eigen::MatrixXd seedCov = covKernel->BuildCovariance(seedPts).cwiseProduct( seedWts * seedWts.transpose());
 
-    Eigen::EigenSolver<Eigen::MatrixXd> eigSolver;
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigSolver;
     eigSolver.compute(seedCov);
 
     // Are the eigenvalues increasing or decreasing...
-    bool eigsIncrease = eigSolver.eigenvalues()(0).real() < eigSolver.eigenvalues()(seedWts.size()-1).real();
+    bool eigsIncrease = eigSolver.eigenvalues()(0) < eigSolver.eigenvalues()(seedWts.size()-1);
 
     // Figure out how many modes we want to keep
     int numModes;
@@ -55,20 +54,20 @@ KarhunenLoeveExpansion::KarhunenLoeveExpansion(std::shared_ptr<KernelBase> kerne
           ind = numModes;
         }
 
-        cumEnergy += std::pow(eigSolver.eigenvalues()(ind).real(), 2.0);
+        cumEnergy += std::pow(eigSolver.eigenvalues()(ind), 2.0);
         ++numModes;
       }
     }
 
     if(eigsIncrease){
-      modeEigs = eigSolver.eigenvalues().tail(numModes).real().reverse();
-      modeVecs = eigSolver.eigenvectors().rightCols(numModes).real().rowwise().reverse();
+      modeEigs = eigSolver.eigenvalues().tail(numModes).reverse();
+      modeVecs = seedWts.asDiagonal() * eigSolver.eigenvectors().rightCols(numModes).rowwise().reverse();
     }else{
-      modeEigs = eigSolver.eigenvalues().tail(numModes).real();
-      modeVecs = eigSolver.eigenvectors().rightCols(numModes).real();
+      modeEigs = eigSolver.eigenvalues().head(numModes);
+      modeVecs = seedWts.asDiagonal() * eigSolver.eigenvectors().leftCols(numModes);
     }
 
-    modeScales = 1.0/modeEigs.array();
+    modeScales = modeEigs.cwiseSqrt().cwiseInverse();
 }
 
 Eigen::MatrixXd KarhunenLoeveExpansion::GetModes(Eigen::Ref<const Eigen::MatrixXd> const& pts)
@@ -77,12 +76,11 @@ Eigen::MatrixXd KarhunenLoeveExpansion::GetModes(Eigen::Ref<const Eigen::MatrixX
     // Build the cross covariance between the seed points and the evaluation points
     Eigen::MatrixXd crossCov = covKernel->BuildCovariance(pts,seedPts);
 
-    
-    return crossCov * seedWts.asDiagonal() * modeVecs * modeScales.asDiagonal();
+    return crossCov * modeVecs * modeScales.asDiagonal();
 }
 
 Eigen::VectorXd KarhunenLoeveExpansion::Evaluate(Eigen::Ref<const Eigen::MatrixXd> const& pts,
                                                  Eigen::Ref<const Eigen::VectorXd> const& coeffs)
 {
-    return GetModes(pts) * (modeEigs.array().sqrt()*coeffs.array()).matrix();
+  return GetModes(pts) *coeffs;
 }
