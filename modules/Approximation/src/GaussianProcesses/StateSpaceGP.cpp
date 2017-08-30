@@ -173,11 +173,14 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
         // Is this time an observation or an evaluation?
         if(hasObs){
 
-            ComputeAQ(observations.at(obsInd)->loc(0) - currTime);
-            
-            obsDists.at(obsInd).first = sdeA * currDist->first;
-            obsDists.at(obsInd).second = sdeA * currDist->second * sdeA.transpose() + sdeQ; //= sde->EvolveDistribution(*currDist, observations.at(obsInd)->loc(0) - currTime);
-                    
+            if(std::abs(observations.at(obsInd)->loc(0) - currTime)<4.0*std::numeric_limits<double>::epsilon()){
+                obsDists.at(obsInd) = *currDist;
+            }else{
+                ComputeAQ(observations.at(obsInd)->loc(0) - currTime);
+                
+                obsDists.at(obsInd).first = sdeA * currDist->first;
+                obsDists.at(obsInd).second = sdeA * currDist->second * sdeA.transpose() + sdeQ; //= sde->EvolveDistribution(*currDist, observations.at(obsInd)->loc(0) - currTime);
+            }                  
             currTime = observations.at(obsInd)->loc(0);
 
             auto H = std::make_shared<ProductOperator>(observations.at(obsInd)->H, obsOp);
@@ -189,13 +192,24 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
             currDist = &obsFilterDists.at(obsInd);
 
             obsInd++;
+
+            // Check to see if this observation is at the same time as the previous evaluation index
+            if(evalInd>0){
+                if(std::abs( observations.at(obsInd)->loc(0) - times(evalInd-1)) < 4.0*std::numeric_limits<double>::epsilon()){
+                    evalDists.at(evalInd-1) = *currDist;
+                }
+            }
             
         }else{
 
-            ComputeAQ(times(evalInd) - currTime);
+            if(std::abs(times(evalInd)-currTime)<4.0*std::numeric_limits<double>::epsilon()){
+                evalDists.at(evalInd) = *currDist;
+            }else{
+                ComputeAQ(times(evalInd) - currTime);
             
-            evalDists.at(evalInd).first = sdeA * currDist->first;
-            evalDists.at(evalInd).second = sdeA * currDist->second * sdeA.transpose() + sdeQ;
+                evalDists.at(evalInd).first = sdeA * currDist->first;
+                evalDists.at(evalInd).second = sdeA * currDist->second * sdeA.transpose() + sdeQ;
+            }
             
             currTime = times(evalInd);
             currDist = &evalDists.at(evalInd);
