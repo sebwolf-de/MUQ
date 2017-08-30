@@ -121,7 +121,7 @@ public:
 
     virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions = boost::property_tree::ptree()) const override
       {
-        std::shared_ptr<muq::Utilities::LinearOperator> F = std::make_shared<muq::Utilities::ZeroOperator>(sigma2.rows(),1);
+        std::shared_ptr<muq::Utilities::LinearOperator> F = std::make_shared<muq::Utilities::ZeroOperator>(sigma2.rows(),sigma2.rows());
         std::shared_ptr<muq::Utilities::LinearOperator> L = std::make_shared<muq::Utilities::ZeroOperator>(sigma2.rows(),1);
         Eigen::MatrixXd Q = Eigen::MatrixXd::Ones(1,1);
         

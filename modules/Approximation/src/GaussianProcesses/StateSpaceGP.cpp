@@ -34,6 +34,16 @@ StateSpaceGP::StateSpaceGP(std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>,
                                                                             mean(meanIn),
                                                                             covKernel(covKernelIn)
 {
+
+  if(meanIn->coDim != covKernelIn->coDim)
+  {
+    throw muq::WrongSizeError("ERROR.  The mean function and covariance kernel should have the same output dimension (i.e., coDim).");
+  }
+
+  if(meanIn->inputDim != covKernelIn->inputDim)
+  {
+    throw muq::WrongSizeError("ERROR.  The input dimension must be the same for the mean function and covariance kernel.");
+  }
 }
 
 void StateSpaceGP::SortObservations()
@@ -141,7 +151,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
         auto H = std::make_shared<ProductOperator>(observations.at(0)->H, obsOp);
         obsFilterDists.at(0) = KalmanFilter::Analyze(obsDists.at(0), 
                                                      H,
-                                                     observations.at(0)->obs - mean->Evaluate(observations.at(0)->loc),
+                                                     observations.at(0)->obs - observations.at(0)->H->Apply(mean->Evaluate(observations.at(0)->loc)),
                                                      observations.at(0)->obsCov);
 
         currDist = &obsFilterDists.at(0);
@@ -183,7 +193,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
             auto H = std::make_shared<ProductOperator>(observations.at(obsInd)->H, obsOp);
             obsFilterDists.at(obsInd) = KalmanFilter::Analyze(obsDists.at(obsInd),
                                                               H,
-                                                              observations.at(obsInd)->obs - mean->Evaluate(observations.at(obsInd)->loc),
+                                                              observations.at(obsInd)->obs - observations.at(obsInd)->H->Apply(mean->Evaluate(observations.at(obsInd)->loc)),
                                                               observations.at(obsInd)->obsCov);
 
             currDist = &obsFilterDists.at(obsInd);
@@ -333,8 +343,12 @@ std::shared_ptr<StateSpaceGP> StateSpaceGP::Concatenate(std::vector<std::shared_
     }
     
     auto mu = std::make_shared<ZeroMean>(1, H->rows());
+    assert(mu);
+
     auto kernel = std::make_shared<ConcatenateKernel>(kernels);
+    assert(kernel);
 
     // Using "new" here so we can call the private constructor
-    return std::shared_ptr<StateSpaceGP>(new StateSpaceGP(std::make_tuple(sde,H,Q), mu, kernel));
+    auto tempTuple = std::make_tuple(sde,H,Q);    
+    return std::make_shared<StateSpaceGP>(tempTuple, mu, kernel);
 }                 

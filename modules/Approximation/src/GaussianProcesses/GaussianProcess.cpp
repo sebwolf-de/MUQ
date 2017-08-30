@@ -27,11 +27,11 @@ double muq::Approximation::nlopt_obj(unsigned n, const double *x, double *nlopt_
 
 
 GaussianProcess::GaussianProcess(std::shared_ptr<MeanFunctionBase> meanIn,
-				 std::shared_ptr<KernelBase>       covKernelIn) :
+				   std::shared_ptr<KernelBase>       covKernelIn) :
+    inputDim(covKernelIn->inputDim),
+    coDim(covKernelIn->coDim),
     mean(meanIn),
     covKernel(covKernelIn),
-    inputDim(covKernel->inputDim),
-    coDim(covKernel->coDim),
     hasNewObs(false)
 {};
 

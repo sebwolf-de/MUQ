@@ -152,6 +152,6 @@ std::shared_ptr<KernelBase> ConcatenateKernel::Clone() const
   std::vector<std::shared_ptr<KernelBase>> newKernels(kernels.size());
   for(int i=0; i<kernels.size(); ++i)
     newKernels.at(i) = kernels.at(i)->Clone();
-  
+ 
   return std::make_shared<ConcatenateKernel>(newKernels);
 }

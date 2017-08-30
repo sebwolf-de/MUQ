@@ -300,6 +300,9 @@ namespace muq
       	std::shared_ptr<MeanFunctionBase> Mean(){return mean;};
         std::shared_ptr<KernelBase>       Kernel(){return covKernel;};
         
+        const int inputDim;
+        const int coDim;
+
     protected:
 
         Eigen::MatrixXd BuildCrossCov(Eigen::MatrixXd const& newLocs);
@@ -319,13 +322,11 @@ namespace muq
         Eigen::LDLT<Eigen::MatrixXd> covSolver;
 
         int obsDim;
-	    const int inputDim;
-	    const int coDim;
-
+	    
         // Have new observations been added since the covariance was inverted?
         bool hasNewObs;
 
-	    const double pi = 4.0 * atan(1.0); //boost::math::constants::pi<double>();
+        const double pi = 4.0 * atan(1.0); //boost::math::constants::pi<double>();
 
     };// class GaussianProcess
 

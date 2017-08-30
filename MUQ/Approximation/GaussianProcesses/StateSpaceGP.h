@@ -78,19 +78,19 @@ public:
     static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<KernelBase>> &kernelVec,
                                                        KernelType1 const& k1)
     {
-        kernelVec.push_back(k1);
+        kernelVec.push_back(k1.Clone());
         return Concatenate(kernelVec);
     }
 
     static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<KernelBase>> const& gps);
     static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<StateSpaceGP>> const& gps);
     
-protected:
 
     StateSpaceGP(std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> ssInfo,
                  std::shared_ptr<MeanFunctionBase> meanIn,
                  std::shared_ptr<KernelBase>       covKernelIn);
 
+protected:
 
     void SortObservations();
 

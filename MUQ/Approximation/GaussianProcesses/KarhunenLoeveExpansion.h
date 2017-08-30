@@ -123,6 +123,8 @@ int main(){
         Eigen::VectorXd Evaluate(Eigen::Ref<const Eigen::MatrixXd> const& pt,
                                  Eigen::Ref<const Eigen::VectorXd> const& coeffs);
 
+        int NumModes() const{return modeEigs.size();};
+
     private:
 
 
@@ -136,7 +138,7 @@ int main(){
         // Values of the KL modes at the seed points.  Each column corresponds to a basis function and each row to a pt function
         Eigen::MatrixXd modeVecs;
         Eigen::VectorXd modeEigs;
-
+        Eigen::VectorXd modeScales;
 
     }; // class KarhuneLoeveExpansion
 
