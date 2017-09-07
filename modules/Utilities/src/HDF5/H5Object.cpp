@@ -112,6 +112,7 @@ BlockDataset H5Object::block(unsigned startRow, unsigned startCol, unsigned numR
     assert(isDataset);
 
     Eigen::VectorXi shape = file->GetDataSetSize(path);
+    assert(shape.size()>0);
     assert(startRow+numRows <= shape(0));
     if(shape.size()>1){
       assert(startCol+numCols <= shape(1));
@@ -186,7 +187,25 @@ BlockDataset H5Object::segment(unsigned startInd, unsigned numInds) const
 
 BlockDataset H5Object::head(unsigned numInds) const
 {
-    return block(0,0,numInds,1);
+    // Make sure the object is one dimensional 
+    Eigen::VectorXi shape = file->GetDataSetSize(path);
+    
+    if(shape.size()==0){
+      std::cerr << "\nERROR: The dataset, " << path << ", does not exist.\n" << std::endl;
+      assert(shape.size()>0);
+    }
+
+    if(shape.size()==1){
+      return block(0,0,numInds,1);
+    }else if(shape(0)==1){
+      return block(0,0,1,numInds);
+    }else if(shape(1)==1){
+      return block(0,0,numInds,1);
+    }else{
+      std::cerr << "\nERROR: The head() function requires the dataset to be one dimensional and \"" << path << "\" does not seem to be one dimensional.\n" << std::endl; 
+      assert(false);
+      return block(0,0,numInds,1);
+    }
 }
 
 BlockDataset H5Object::tail(unsigned numInds) const
@@ -204,14 +223,16 @@ unsigned H5Object::rows() const
 unsigned H5Object::cols() const
 {
     Eigen::VectorXi shape = file->GetDataSetSize(path);
-
-    return shape(1);
+    if(shape.size()==1)
+      return 1;
+    else
+      return shape(1);
 }
 
 unsigned H5Object::size() const
 {
     Eigen::VectorXi shape = file->GetDataSetSize(path);
-    return shape(0)*shape(1);
+    return shape.prod();
 }
 
 double H5Object::operator()(int i) const
@@ -230,7 +251,7 @@ double H5Object::operator()(int i, int j) const
 {
     if(isDataset)
     {
-	return file->ReadPartialMatrix(path, i,j,1,1)(i,j);
+     	return file->ReadPartialMatrix(path, i,j,1,1)(0,0);
     }
     else
     {

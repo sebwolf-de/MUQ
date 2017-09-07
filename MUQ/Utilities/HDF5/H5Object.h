@@ -115,9 +115,9 @@ public:
     }
 
     template<typename scalarType=double, int rows=Eigen::Dynamic, int cols=Eigen::Dynamic>
-	Eigen::Matrix<scalarType,rows,cols> eval()
+    Eigen::Matrix<scalarType,rows,cols> eval()
     {
-		if(isDataset)
+        if(isDataset)
 	{
 	    return file->ReadMatrix<scalarType,rows,cols>(path).template cast<scalarType>();
 	}

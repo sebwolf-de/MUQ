@@ -195,7 +195,6 @@ TEST_F(DatasetTest, BlockWriteOps)
     EXPECT_DOUBLE_EQ(-3, A2(2,1));
 }
 
-
 TEST_F(DatasetTest, IntSetGet)
 {
     muq::Utilities::H5Object f = AddChildren(hdf5file, "/");

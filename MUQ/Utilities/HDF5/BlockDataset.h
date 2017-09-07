@@ -53,8 +53,8 @@ namespace Utilities
 
 	template<typename ScalarType=double, int rows=Eigen::Dynamic, int cols=Eigen::Dynamic>
 	Eigen::Matrix<ScalarType,rows,cols> eval()
-	{
-	    return file->ReadPartialMatrix<ScalarType, rows, cols>(path, startRow, startCol, numRows, numCols);
+        {
+            return file->ReadPartialMatrix<ScalarType, rows, cols>(path, startRow, startCol, numRows, numCols);
 	}
 	
 	template<typename ScalarType, int rows, int cols>
