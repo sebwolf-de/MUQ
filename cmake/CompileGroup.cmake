@@ -21,9 +21,11 @@ function(CreateCompileGroup
 	 REQUIRED_DEPENDENCIES
 	 OPTIONAL_DEPENDENCIES)
 
-  option(MUQ_GROUP_${GROUP_NAME} "Should the group ${GROUP_NAME} be compiled?" ON)
+  option(MUQ_ENABLEGROUP_${GROUP_NAME} "Should the group ${GROUP_NAME} be compiled?" ${MUQ_ENABLEGROUP_DEFAULT})
   
   set(MUQ_GROUPS "${MUQ_GROUPS};${GROUP_NAME}" CACHE INTERNAL "A list of all of the muq groups.")
+
+  set(${GROUP_NAME}_REQUIRES_GROUPS ${GROUP_DEPENDENCIES} CACHE INTERNAL "Other compile groups that are required by the ${GROUP_NAME} group.")
   
   set(${GROUP_NAME}_REQUIRES ${REQUIRED_DEPENDENCIES} CACHE INTERNAL "External packages required by the ${GROUP_NAME} compile group.")
   set(${GROUP_NAME}_DESIRES ${OPTIONAL_DEPENDENCIES} CACHE INTERNAL "External packages that the ${GROUP_NAME} compile group can exploit if they're available.")

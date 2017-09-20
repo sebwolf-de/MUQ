@@ -3,7 +3,7 @@ set(EIGEN_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/external/eigen3/src/EIGEN3")
 
 include(ExternalProject)
 if(NOT EIGEN_EXTERNAL_SOURCE)
-	set(EIGEN_EXTERNAL_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/external/eigen-eigen-ffa86ffb5570.zip)
+	set(EIGEN_EXTERNAL_SOURCE http://bitbucket.org/eigen/eigen/get/3.3.3.tar.bz2)
 endif()
 
 set(EIGEN3_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/muq_external/)

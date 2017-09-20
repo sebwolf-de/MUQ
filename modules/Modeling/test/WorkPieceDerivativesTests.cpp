@@ -207,7 +207,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
     EXPECT_EQ(jacActionref.size(), N);
     for( unsigned int i=0; i<N; ++i ) {
       // its linear so FD should be exact, but the error is very small ...
-      EXPECT_NEAR(jacActionref(i), expectedJacAction(i), 1.0e-9);
+      EXPECT_NEAR(jacActionref(i), expectedJacAction(i), 1.5e-9);
     }
   }
 

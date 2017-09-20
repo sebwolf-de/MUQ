@@ -1,2 +1,0 @@
-# Creates a cached global list of possible dependencies.  These can then be requested by a library in one of the CMakeLists.txt files.
-set(POSSIBLE_MUQ_DEPENDENCIES "EIGEN;BOOST;FLANN;SUNDIALS;NLOPT;HDF5;GLOG;SACADO" CACHE INTERNAL "List of all possible MUQ dependencies.")
