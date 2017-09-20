@@ -427,31 +427,11 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
     newGraph->AddNode(constantPieces[i], inputNames[i]);
     newGraph->AddEdge(inputNames[i], 0, newGraph->graph->operator[](inputs[i].first)->name, inputs[i].second);
   }
-<<<<<<< HEAD
   
   // the output node
   auto outNode = newGraph->GetNodeIterator(node);
-<<<<<<< HEAD
 
   return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inputNames, inTypes, newGraph->graph->operator[](*outNode)->piece, algebra);
-=======
-
-  return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inputNames, inTypes, newGraph->graph->operator[](*outNode)->piece, algebra);
-=======
-
-  // Look for the original node name
-  auto outNode = newGraph->GetNodeIterator(node);
-
-  // If we didn't find the original node, look for the fixed one
-  if(outNode == vertices(*newGraph->graph).second){
-      std::string node_fixed = node + "_fixed";
-      outNode = newGraph->GetNodeIterator(node_fixed);
-      assert(outNode != vertices(*newGraph->graph).second);
-  }
-  
-  return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inTypes, newGraph->graph->operator[](*outNode)->piece);
->>>>>>> origin/mparno/python
->>>>>>> origin/master
 }
 
 class MyVertexWriter {

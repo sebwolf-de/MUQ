@@ -8,8 +8,6 @@ CreateTestGroup(
 
     ConstantPieceTests.cpp
     IdentityPieceTests.cpp
-
-    LinearSDETests.cpp
 )
 
 
