@@ -33,10 +33,7 @@ INCLUDE(OptionsSetup)
 ###############################################
 # Find source files and calculate required dependencies
 ###############################################
-INCLUDE(GetPossibleDependencyList)
 INCLUDE(CompileGroup)
-
-message(STATUS "All possible MUQ dependencies = ${POSSIBLE_MUQ_DEPENDENCIES}")
 
 # The ProcesCompileGroups function will add modules/CMakeLists.txt and then process any computed Compile/Test groups
 INCLUDE(ProcessCompileGroups)
@@ -59,6 +56,11 @@ INCLUDE(DependencyCheck)
 ###############################################
 # Create BUILD targets for cmake
 ###############################################
+
+# Remove any compile groups with unsatisfied dependencies
+INCLUDE(UpdateCompileGroups)
+
+# Set up libraries and test executables based on the compile groups
 INCLUDE(SetupCompileTargets)
 INCLUDE(SetupTestTargets)
 
@@ -122,16 +124,16 @@ if(DOXYGEN_FOUND)
 	option(MUQDOC_INCLUDE_ANALYTICS OFF)
 	if(MUQDOC_INCLUDE_ANALYTICS)
 		message(STATUS "Will include google analytics header information in doxygen output.")
-		set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/analytics_header.html)
+		set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/analytics_header.html)
 	endif()
 	  
   message(STATUS "Extracting parameter values from cpp files.  Results are stored in ${CMAKE_BINARY_DIR}/ExtractedParameters.dox")
-  message(STATUS "python ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}")
-  execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}
+  message(STATUS "python ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}")
+  execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}
                   OUTPUT_FILE "${CMAKE_BINARY_DIR}/ParameterDescriptions.dox")
     
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/muq.doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile @ONLY)
-    #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/MUQdocumentation/ParameterDescriptions.dox.in ${CMAKE_CURRENT_BINARY_DIR}/ParameterDescriptions.dox @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/muq.doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile @ONLY)
+    #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/ParameterDescriptions.dox.in ${CMAKE_CURRENT_BINARY_DIR}/ParameterDescriptions.dox @ONLY)
     add_custom_target(doc
         ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

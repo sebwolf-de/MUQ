@@ -57,3 +57,20 @@ TEST(WorkGraphPiece, FixedInOutNum) {
   EXPECT_TRUE(boost::any_cast<std::string>(outs[0]).compare("string")==0);
   EXPECT_DOUBLE_EQ(boost::any_cast<double>(outs[1]), 2.0);
 }
+
+/*TEST(WorkGraphPiece, Constant) {
+  auto graph = std::make_shared<WorkGraph>();
+
+    auto ip = std::make_shared<IdentityPiece>(1);
+
+    double a = 1.0;
+    double b = 2.0;
+    auto input = std::vector<boost::any>({boost::any(a), boost::any(b)});
+    auto cp = std::make_shared<ConstantPiece>(input);
+
+    graph->AddNode(cp,"x");
+    graph->AddNode(ip,"y");
+    graph->AddEdge("x",0,"y",0);
+
+    graph->CreateWorkPiece("y");
+    }*/
