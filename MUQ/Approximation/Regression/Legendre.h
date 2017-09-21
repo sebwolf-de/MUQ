@@ -1,20 +1,20 @@
-#ifndef MONOMIAL_H_
-#define MONOMIAL_H_
+#ifndef LEGENDRE_H_
+#define LEGENDRE_H_
 
 #include "MUQ/Approximation/Regression/Polynomial.h"
 
 namespace muq {
   namespace Approximation {
-    /// A monomial polynomial (\f$1\f$, \f$x\f$, \f$x^2\f$, ect. ...)
-    /**
-       This is a simple polynomial basis but could cause conditioning problems in some cases ...
-     */
-    class Monomial : public Polynomial {
+    class Legendre : public Polynomial{
     public:
 
-      Monomial();
+      /// A Legendre polynomial (\f$1\f$, \f$x\f$, \f$\frac{1}{2}(3x^2-1)\f$, ect. ...)
+      /**
+	 Legendre polynomials are orthogonal, which helps with some conditioning problems.
+       */
+      Legendre();
 
-      virtual ~Monomial();
+      virtual ~Legendre();
       
     private:
 

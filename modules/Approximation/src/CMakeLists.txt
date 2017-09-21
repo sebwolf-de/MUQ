@@ -21,6 +21,8 @@ CreateCompileGroup(
 	""
 	Regression/Polynomial.cpp
 	Regression/Monomial.cpp
+	Regression/Hermite.cpp
+	Regression/Legendre.cpp
 	
 	Regression/Regression.cpp
 )
