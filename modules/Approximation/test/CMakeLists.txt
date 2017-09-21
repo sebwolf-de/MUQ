@@ -10,5 +10,6 @@ CreateTestGroup(
 	REGRESSION
 
 	RegressionTests/PolynomialTests.cpp
+	RegressionTests/RegressionTests.cpp
 )
 
