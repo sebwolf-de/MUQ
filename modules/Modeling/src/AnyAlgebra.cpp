@@ -45,6 +45,100 @@ unsigned int AnyAlgebra::VectorDimensionBase(boost::any const& vec) const {
   return VectorDimension(vec);
 }
 
+boost::any AnyAlgebra::ZeroVectorBase(std::string const& type, unsigned int size) const {
+  // note: we need to implicitly convert Eigen types or they a returned as: Eigen::CwiseNullaryOp<.,.>
+  if( eigenVec2Type.compare(type)==0 ) { // 2D Eigen vector
+    return (Eigen::Vector2d)Eigen::Vector2d::Zero();
+  } else if( eigenVec3Type.compare(type)==0 ) { // 3D Eigen vector
+    return (Eigen::Vector3d)Eigen::Vector3d::Zero();
+  } else if( eigenVec4Type.compare(type)==0 ) { // 4D Eigen vector
+    return (Eigen::Vector4d)Eigen::Vector4d::Zero();
+  } else if( eigenVecType.compare(type)==0 ) { // XD Eigen vector
+    return (Eigen::VectorXd)Eigen::VectorXd::Zero(size);
+  } else if( doubleType.compare(type)==0 ) { // double
+    return 0.0;
+  } 
+  
+  return ZeroVector(type, size);
+}
+
+boost::any AnyAlgebra::ZeroVector(std::string const& type, unsigned int const size) const {
+  std::cerr << std::endl << "ERROR: cannot compute zero of a vector with type " << boost::core::demangle(type.c_str()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::ZeroVector()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::ZeroVector()" << std::endl << std::endl;
+  assert(false);
+
+  return boost::none;
+}
+
+double AnyAlgebra::NormBase(boost::any const& obj) const {
+  const std::string type = obj.type().name();
+    
+  if( eigenVec2Type.compare(type)==0 ) { // 2D Eigen vector
+    const Eigen::Vector2d& v = boost::any_cast<Eigen::Vector2d const&>(obj);
+    return v.norm();
+  } else if( eigenVec3Type.compare(type)==0 ) { // 3D Eigen vector
+    const Eigen::Vector3d& v = boost::any_cast<Eigen::Vector3d const&>(obj);
+    return v.norm();
+  } else if( eigenVec4Type.compare(type)==0 ) { // 4D Eigen vector
+    const Eigen::Vector4d& v = boost::any_cast<Eigen::Vector4d const&>(obj);
+    return v.norm();
+  } else if( eigenVecType.compare(type)==0 ) { // XD Eigen vector
+    const Eigen::VectorXd& v = boost::any_cast<Eigen::VectorXd const&>(obj);
+    return v.norm();
+  } else if( eigenMatType.compare(type)==0 ) { // XD Eigen matrix
+    const Eigen::MatrixXd& v = boost::any_cast<Eigen::MatrixXd const&>(obj);
+    return v.norm();
+  } else if( doubleType.compare(type)==0 ) { // double
+    return std::abs(boost::any_cast<double const>(obj));
+  }
+  
+  return 0.0;
+}
+
+double AnyAlgebra::Norm(boost::any const& obj) const {
+  std::cerr << std::endl << "ERROR: Cannot compute the norm of an object with type " << boost::core::demangle(obj.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::Norm()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::Norm()" << std::endl << std::endl;
+  assert(false);
+
+  return -1.0;
+}
+
+bool AnyAlgebra::IsZeroBase(boost::any const& obj) const {
+  const std::string type = obj.type().name();
+  
+  if( eigenVec2Type.compare(type)==0 ) { // 2D Eigen vector
+    const Eigen::Vector2d& v = boost::any_cast<Eigen::Vector2d const&>(obj);
+    return (v.array()==Eigen::Array2d::Zero()).all();
+  } else if( eigenVec3Type.compare(type)==0 ) { // 3D Eigen vector
+    const Eigen::Vector3d& v = boost::any_cast<Eigen::Vector3d const&>(obj);
+    return (v.array()==Eigen::Array3d::Zero()).all();
+  } else if( eigenVec4Type.compare(type)==0 ) { // 4D Eigen vector
+    const Eigen::Vector4d& v = boost::any_cast<Eigen::Vector4d const&>(obj);
+    return (v.array()==Eigen::Array4d::Zero()).all();
+  } else if( eigenVecType.compare(type)==0 ) { // XD Eigen vector
+    const Eigen::VectorXd& v = boost::any_cast<Eigen::VectorXd const&>(obj);
+    return (v.array()==Eigen::ArrayXd::Zero(v.size())).all();
+  } else if( eigenMatType.compare(type)==0 ) { // XD Eigen matrix
+    const Eigen::MatrixXd& v = boost::any_cast<Eigen::MatrixXd const&>(obj);
+    return (v.array()==Eigen::ArrayXd::Zero(v.rows(), v.cols())).all();
+  } else if( doubleType.compare(type)==0 ) { // double
+    return boost::any_cast<double const>(obj)==0.0;
+  }
+  
+  return IsZero(obj);
+}
+
+bool AnyAlgebra::IsZero(boost::any const& obj) const {
+  std::cerr << std::endl << "ERROR: No way to determine if an object with type " << boost::core::demangle(obj.type().name()) << " is the zero vector." << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::IsZero()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::IsZero()" << std::endl << std::endl;
+  assert(false);
+
+  return false;
+}
+
 unsigned int AnyAlgebra::VectorDimension(boost::any const& vec) const {
   std::cerr << std::endl << "ERROR: No way to compute the dimension of a vector with type " << boost::core::demangle(vec.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::VectorDimension()" << std::endl << std::endl;
@@ -195,6 +289,30 @@ boost::any AnyAlgebra::AddBase(std::reference_wrapper<const boost::any> const& i
     return (Eigen::VectorXd)(in0Vec+in1Vec);
   }
 
+  // both in/out are Eigen::Vector2d
+  if( eigenVec2Type.compare(in0.get().type().name())==0 && eigenVec2Type.compare(in1.get().type().name())==0 ) {
+    const Eigen::Vector2d& in0Vec = boost::any_cast<const Eigen::Vector2d>(in0);
+    const Eigen::Vector2d& in1Vec = boost::any_cast<const Eigen::Vector2d>(in1);
+
+    return (Eigen::Vector2d)(in0Vec+in1Vec);
+  }
+
+  // both in/out are Eigen::Vector3d
+  if( eigenVec3Type.compare(in0.get().type().name())==0 && eigenVec3Type.compare(in1.get().type().name())==0 ) {
+    const Eigen::Vector3d& in0Vec = boost::any_cast<const Eigen::Vector3d>(in0);
+    const Eigen::Vector3d& in1Vec = boost::any_cast<const Eigen::Vector3d>(in1);
+
+    return (Eigen::Vector3d)(in0Vec+in1Vec);
+  }
+
+  // both in/out are Eigen::Vector4d
+  if( eigenVec4Type.compare(in0.get().type().name())==0 && eigenVec4Type.compare(in1.get().type().name())==0 ) {
+    const Eigen::Vector4d& in0Vec = boost::any_cast<const Eigen::Vector4d>(in0);
+    const Eigen::Vector4d& in1Vec = boost::any_cast<const Eigen::Vector4d>(in1);
+
+    return (Eigen::Vector4d)(in0Vec+in1Vec);
+  }
+
   return Add(in0, in1);
 }
 
@@ -202,6 +320,80 @@ boost::any AnyAlgebra::Add(std::reference_wrapper<const boost::any> const& in0, 
   std::cerr << std::endl << "ERROR: No way to add type " << boost::core::demangle(in0.get().type().name()) << " and type " << boost::core::demangle(in1.get().type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::Add()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::Add()" << std::endl << std::endl;
+  assert(false);
+  
+  return boost::none;
+}
+
+boost::any AnyAlgebra::SubtractBase(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const {
+  // the first type is boost::none
+  if( noneType.compare(in0.get().type().name())==0 ) {
+    // return the second
+    return in1.get();
+  }
+
+  // both in/out are double
+  if( doubleType.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
+    const double in0d = boost::any_cast<const double>(in0);
+    const double in1d = boost::any_cast<const double>(in1);
+
+    return in0d-in1d;
+  }
+
+  // both in/out are Eigen::MatrixXd
+  if( eigenMatType.compare(in0.get().type().name())==0 && eigenMatType.compare(in1.get().type().name())==0 ) {
+    const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd>(in0);
+    const Eigen::MatrixXd& in1Mat = boost::any_cast<const Eigen::MatrixXd>(in1);
+
+    // make sure the sizes match
+    assert(in0Mat.rows()==in1Mat.rows());
+    assert(in0Mat.cols()==in1Mat.cols());
+	
+    return (Eigen::MatrixXd)(in0Mat-in1Mat);
+  }
+
+  // both in/out are Eigen::VectorXd
+  if( eigenVecType.compare(in0.get().type().name())==0 && eigenVecType.compare(in1.get().type().name())==0 ) {
+    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in0);
+    const Eigen::VectorXd& in1Vec = boost::any_cast<const Eigen::VectorXd>(in1);
+
+    // make sure the sizes match
+    assert(in0Vec.size()==in1Vec.size());
+	
+    return (Eigen::VectorXd)(in0Vec-in1Vec);
+  }
+
+  // both in/out are Eigen::Vector2d
+  if( eigenVec2Type.compare(in0.get().type().name())==0 && eigenVec2Type.compare(in1.get().type().name())==0 ) {
+    const Eigen::Vector2d& in0Vec = boost::any_cast<const Eigen::Vector2d>(in0);
+    const Eigen::Vector2d& in1Vec = boost::any_cast<const Eigen::Vector2d>(in1);
+
+    return (Eigen::Vector2d)(in0Vec-in1Vec);
+  }
+
+  // both in/out are Eigen::Vector3d
+  if( eigenVec3Type.compare(in0.get().type().name())==0 && eigenVec3Type.compare(in1.get().type().name())==0 ) {
+    const Eigen::Vector3d& in0Vec = boost::any_cast<const Eigen::Vector3d>(in0);
+    const Eigen::Vector3d& in1Vec = boost::any_cast<const Eigen::Vector3d>(in1);
+
+    return (Eigen::Vector3d)(in0Vec-in1Vec);
+  }
+
+  // both in/out are Eigen::Vector4d
+  if( eigenVec4Type.compare(in0.get().type().name())==0 && eigenVec4Type.compare(in1.get().type().name())==0 ) {
+    const Eigen::Vector4d& in0Vec = boost::any_cast<const Eigen::Vector4d>(in0);
+    const Eigen::Vector4d& in1Vec = boost::any_cast<const Eigen::Vector4d>(in1);
+
+    return (Eigen::Vector4d)(in0Vec-in1Vec);
+  }
+
+  return Subtract(in0, in1);
+}
+
+boost::any AnyAlgebra::Subtract(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const {
+  std::cerr << std::endl << "ERROR: No way to subtract type " << boost::core::demangle(in0.get().type().name()) << " and type " << boost::core::demangle(in1.get().type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::Subtract()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::Subtract()" << std::endl << std::endl;
   assert(false);
   
   return boost::none;
@@ -224,9 +416,6 @@ boost::any AnyAlgebra::MultiplyBase(std::reference_wrapper<const boost::any> con
     const double in0Mat = boost::any_cast<double>(in0);
     const Eigen::MatrixXd& in1Mat = boost::any_cast<const Eigen::MatrixXd>(in1);
 
-    // make sure the sizes match
-    assert(in1Mat.rows()==1);
-	
     return (Eigen::MatrixXd)(in0Mat*in1Mat);
   }
 
@@ -235,10 +424,71 @@ boost::any AnyAlgebra::MultiplyBase(std::reference_wrapper<const boost::any> con
     const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd>(in1);
     const double in1Mat = boost::any_cast<double>(in0);
     
-    // make sure the sizes match
-    assert(in0Mat.cols()==1);
-	
     return (Eigen::MatrixXd)(in0Mat*in1Mat);
+  }
+
+  // Eigen::Vector2d times double 
+  if( eigenVec2Type.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
+    const Eigen::Vector2d& in0Vec = boost::any_cast<const Eigen::Vector2d>(in0);
+    const double in1 = boost::any_cast<double>(in1);
+	
+    return (Eigen::Vector2d)(in0Vec*in1);
+  }
+
+  // double times Eigen::Vector2d
+  if( eigenVec2Type.compare(in1.get().type().name())==0 && doubleType.compare(in0.get().type().name())==0 ) {
+    const Eigen::Vector2d& in0Vec = boost::any_cast<const Eigen::Vector2d>(in1);
+    const double in1 = boost::any_cast<double>(in0);
+	
+    return (Eigen::Vector2d)(in0Vec*in1);
+  }
+
+  // Eigen::Vector3d times double 
+  if( eigenVec3Type.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
+    const Eigen::Vector3d& in0Vec = boost::any_cast<const Eigen::Vector3d>(in0);
+    const double in1 = boost::any_cast<double>(in1);
+	
+    return (Eigen::Vector3d)(in0Vec*in1);
+  }
+
+  // double times Eigen::Vector3d
+  if( eigenVec3Type.compare(in1.get().type().name())==0 && doubleType.compare(in0.get().type().name())==0 ) {
+    const Eigen::Vector3d& in0Vec = boost::any_cast<const Eigen::Vector3d>(in1);
+    const double in1 = boost::any_cast<double>(in0);
+	
+    return (Eigen::Vector3d)(in0Vec*in1);
+  }
+
+  // Eigen::Vector4d times double 
+  if( eigenVec4Type.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
+    const Eigen::Vector4d& in0Vec = boost::any_cast<const Eigen::Vector4d>(in0);
+    const double in1 = boost::any_cast<double>(in1);
+	
+    return (Eigen::Vector4d)(in0Vec*in1);
+  }
+
+  // double times Eigen::Vector4d
+  if( eigenVec4Type.compare(in1.get().type().name())==0 && doubleType.compare(in0.get().type().name())==0 ) {
+    const Eigen::Vector4d& in0Vec = boost::any_cast<const Eigen::Vector4d>(in1);
+    const double in1 = boost::any_cast<double>(in0);
+	
+    return (Eigen::Vector4d)(in0Vec*in1);
+  }
+
+  // Eigen::VectorXd times double 
+  if( eigenVecType.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
+    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in0);
+    const double in1 = boost::any_cast<double>(in1);
+	
+    return (Eigen::Vector4d)(in0Vec*in1);
+  }
+
+  // double times Eigen::Vector4d
+  if( eigenVecType.compare(in1.get().type().name())==0 && doubleType.compare(in0.get().type().name())==0 ) {
+    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in1);
+    const double in1 = boost::any_cast<double>(in0);
+	
+    return (Eigen::VectorXd)(in0Vec*in1);
   }
 
   return Multiply(in0, in1);
