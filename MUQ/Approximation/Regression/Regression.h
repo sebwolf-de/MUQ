@@ -1,15 +1,46 @@
 #ifndef REGRESSION_H_
 #define REGRESSION_H_
 
+#include <Eigen/QR>
+
 #include "MUQ/Modeling/WorkPiece.h"
 #include "MUQ/Modeling/AnyAlgebra.h"
+
+#include "MUQ/Approximation/Regression/MultiIndex.h"
+#include "MUQ/Approximation/Regression/Polynomial.h"
 
 namespace muq {
   namespace Approximation {
     class Regression : public muq::Modeling::WorkPiece {
     public:
 
-      Regression();
+      /// Which polynomial basis should we use?
+      enum PolynomialBasis {
+	/// A monomial basis
+	/**
+	   May be poorly conditioned
+	 */
+	MonomialBasis,
+
+	/// A Hermite polynomial
+	/**
+	   Orthogonal polynomial that may be unstable at high orders
+	 */
+	HermiteBasis,
+
+	/// A Legendre polynomial
+	/**
+	   Orthogoal polynomial
+	 */
+	LegendreBasis
+      };
+
+      /**
+	 @param[in] dim The input dimension
+	 @param[in] order The order of the polynomial regression
+	 @param[in] basis The type of polynomial basis to use (defaults to Legendre)
+       */
+      Regression(unsigned int const dim, unsigned int const order, Regression::PolynomialBasis const& basis = Regression::PolynomialBasis::LegendreBasis);
 
       /// Compute the coeffiecents of the polynomial given data
       /**
@@ -30,8 +61,6 @@ namespace muq {
 
 	// Compute basis coefficients
 	ComputeCoefficients(xs, ys);
-	
-	std::cout << "INSIDE FIT" << std::endl;
       }
       
       /// Compute the coeffiecents of the polynomial given data
@@ -63,28 +92,84 @@ namespace muq {
 	 @param[in] ys The output at each point 
       */
       template<typename data>
-	inline void ComputeCoefficients(std::vector<data> const& xs, std::vector<data> const& ys) const {
+	inline void ComputeCoefficients(std::vector<data> const& xs, std::vector<data> const& ys) {
 	assert(xs.size()==ys.size());
 
 	// set the weights equal to one
 	const Eigen::VectorXd weights = Eigen::VectorXd::Ones(ys.size());
 
-	// create the Vandermonde matrix
-	const Eigen::MatrixXd vand = VandermondeMatrix(xs);
+	// create the Vandermonde matrix and the rhs
+	Eigen::MatrixXd vand = VandermondeMatrix(xs);
+	const Eigen::MatrixXd rhs = ComputeCoefficientsRHS(vand, ys);
+	vand = vand.transpose()*weights.asDiagonal()*vand;
 
-	std::cout << "HERE" << std::endl;
+	// make the solver to do the regression
+	auto solver = vand.colPivHouseholderQr();
+
+	// comptue the coefficients
+	coeff = solver.solve(rhs).transpose();
       }
 
-      // Create the Vandermonde matrix
+      /// Compute the right hand side given data to compute the polynomial coefficients
+      /**
+	 @param[in] vand The Vandermonde matrix
+      	 @param[in] ys_data The output at each point 
+      */
+      template<typename data>
+	inline Eigen::MatrixXd ComputeCoefficientsRHS(Eigen::MatrixXd const& vand, std::vector<data> const& ys_data) const {
+	// the dimension
+	assert(ys_data.size()>0);
+	const unsigned int dim = algebra->VectorDimensionBase(ys_data[0]);
+
+	// initialize space for the data
+	Eigen::MatrixXd ys = Eigen::MatrixXd::Constant(ys_data.size(), dim, std::numeric_limits<double>::quiet_NaN());
+
+	// copy the data into an Eigen type
+	for( unsigned int i=0; i<ys_data.size(); ++i ) {
+	  for( unsigned int j=0; j<dim; ++j ) {
+	    ys(i, j) = boost::any_cast<double const>(algebra->AccessElementBase(j, ys_data[i])); 
+	  }
+	}
+
+	// apply the Vandermonde matrix
+	return vand.transpose()*ys;
+      }
+
+      /// Create the Vandermonde matrix
       /**
 	 @param[in] xs The points 
       */
       template<typename data>
 	Eigen::MatrixXd VandermondeMatrix(std::vector<data> const& xs) const {
-	// the number of points
+	// the number of points and the number of terms
 	const unsigned int N = xs.size();
-	
-	return Eigen::MatrixXd();
+	const unsigned int M = multi->Size();
+
+	// initialize the matrix
+	Eigen::MatrixXd vand = Eigen::MatrixXd::Ones(N, M);
+
+	// each term is built by evaluating the polynomial basis
+	for( unsigned int pt=0; pt<N; ++pt ) { // loop through the points
+	  for( unsigned int i=0; i<M; ++i ) { // loop through the terms
+	    // get the multi-index
+	    const Eigen::VectorXi alpha = boost::any_cast<Eigen::VectorXi const&>(multi->Evaluate(i) [0]);
+
+	    // get the point
+	    const data& pnt = xs[pt];
+	    assert(alpha.size()==algebra->VectorDimensionBase(pnt));
+
+	    // each term is a product of 1D variables
+	    for( unsigned int v=0; v<alpha.size(); ++v ) {
+	      // the point where we are evaluating the polynomial
+	      const double x = boost::any_cast<double const>(algebra->AccessElementBase(v, pnt));
+
+	      // evaluate the polynomial
+	      vand(pt, i) *= boost::any_cast<double const>(poly->Evaluate((unsigned int)alpha(v), x) [0]);
+	    }
+	  }
+	}
+
+	return vand;
       }
       
       /// Center the input points
@@ -120,6 +205,12 @@ namespace muq {
       /// An muq::Modeling::AnyAlgebra to do the algebric manipulations
       std::shared_ptr<muq::Modeling::AnyAlgebra> algebra;
 
+      /// The multi-index to so we know the order of each term
+      std::shared_ptr<MultiIndex> multi;
+
+      /// The polynomial basis (in one variable) used to compute the Vandermonde matrix
+      std::shared_ptr<Polynomial> poly;
+
       /// Current center of the inputs
       /**
 	 Defaults to boost::none.
@@ -131,6 +222,9 @@ namespace muq {
 	 Defaults to zero.
        */
       double currentRadius = 0.0;
+
+      /// Coeffients for the polynomial basis
+      Eigen::MatrixXd coeff;
       
     };
   } // namespace Approximation

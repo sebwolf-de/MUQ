@@ -23,6 +23,8 @@ CreateCompileGroup(
 	Regression/Monomial.cpp
 	Regression/Hermite.cpp
 	Regression/Legendre.cpp
+
+	Regression/MultiIndex.cpp
 	
 	Regression/Regression.cpp
 )

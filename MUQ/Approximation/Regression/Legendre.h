@@ -5,7 +5,7 @@
 
 namespace muq {
   namespace Approximation {
-    class Legendre : public Polynomial{
+    class Legendre : public Polynomial {
     public:
 
       /// A Legendre polynomial (\f$1\f$, \f$x\f$, \f$\frac{1}{2}(3x^2-1)\f$, ect. ...)
