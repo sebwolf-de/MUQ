@@ -12,5 +12,6 @@ CreateTestGroup(
 	RegressionTests/PolynomialTests.cpp
 	RegressionTests/MultiIndexTests.cpp
 	RegressionTests/RegressionTests.cpp
+	RegressionTests/LocalRegressionTests.cpp
 )
 
