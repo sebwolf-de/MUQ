@@ -27,6 +27,7 @@ CreateCompileGroup(
 	Regression/MultiIndex.cpp
 	
 	Regression/Regression.cpp
+	Regression/LocalRegression.cpp
 )
 
 CreateCompileGroup(
