@@ -8,7 +8,10 @@ namespace muq {
     class LocalRegression : public muq::Modeling::WorkPiece {
     public:
 
-      LocalRegression();
+      /**
+	 @param[in] function The function we wish to approximate with a local polynomial
+       */
+      LocalRegression(std::shared_ptr<muq::Modeling::WorkPiece> function);
 
       ~LocalRegression();
       
@@ -19,6 +22,5 @@ namespace muq {
     };
   } // namespace Approximation
 } // namespace muq
-
 
 #endif

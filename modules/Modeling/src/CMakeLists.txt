@@ -35,7 +35,7 @@ CreateCompileGroup(
 )
 
 CreateCompileGroup(
-    SUNDIALS_MODELS
+    MODELING_SUNDIALS_MODELS
     "ODE integrators using Sundials"
     muqModeling
     "MODELING_CORE"
@@ -45,4 +45,15 @@ CreateCompileGroup(
     ODEBase.cpp
     ODE.cpp
     RootfindingIVP.cpp
+)
+
+CreateCompileGroup(
+    MODELING_FLANN
+    "Use the fast library for approximate nearest neighbors (flann) to build model evaluation caches"
+    muqModeling
+    ""
+    "MODELING_CORE;FLANN"
+    ""
+
+    Flann/FlannCache.cpp
 )

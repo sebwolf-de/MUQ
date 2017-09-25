@@ -7,7 +7,7 @@ CreateTestGroup(
 )
 
 CreateTestGroup(
-	REGRESSION
+	APPROXIMATION_REGRESSION
 
 	RegressionTests/PolynomialTests.cpp
 	RegressionTests/MultiIndexTests.cpp

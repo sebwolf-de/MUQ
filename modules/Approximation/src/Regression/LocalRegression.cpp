@@ -3,7 +3,7 @@
 using namespace muq::Modeling;
 using namespace muq::Approximation;
 
-LocalRegression::LocalRegression() {}
+LocalRegression::LocalRegression(std::shared_ptr<WorkPiece> function) {}
 
 LocalRegression::~LocalRegression() {}
 

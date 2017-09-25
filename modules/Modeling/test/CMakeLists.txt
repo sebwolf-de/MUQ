@@ -11,10 +11,15 @@ CreateTestGroup(
 )
 
 CreateTestGroup(
-    SUNDIALS_MODELS
+    MODELING_SUNDIALS_MODELS
 
     ODETests.cpp
     RootfindingIVPTests.cpp
 )
 
+CreateTestGroup(
+    MODELING_FLANN
+    
+    FlannTest/FlannCacheTests.cpp
+)
 

@@ -25,14 +25,24 @@ private:
 class LocalRegressionTest : public::testing::Test {
 public:
 
-  inline LocalRegressionTest() {}
+  inline LocalRegressionTest() {
+    // the function too approximate
+    fn = std::make_shared<func>();
+
+    // create a local regressor
+    reg = std::make_shared<LocalRegression>(fn);
+  }
 
   inline virtual ~LocalRegressionTest() {}
+
+  /// The function to approximate
+  std::shared_ptr<func> fn;
+
+  /// The local regressor
+  std::shared_ptr<LocalRegression> reg;
   
 private:
 };
 
 TEST_F(LocalRegressionTest, Basic) {
-  // create a local regressor
-  auto reg = std::make_shared<LocalRegression>();
 }

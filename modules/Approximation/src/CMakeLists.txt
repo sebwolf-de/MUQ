@@ -13,10 +13,10 @@
 # )
 
 CreateCompileGroup(
-	REGRESSION
+	APPROXIMATION_REGRESSION
 	"Polynomial regression (global and local)"
 	muqApproximation
-	"MODELING_CORE"
+	"MODELING_FLANN;MODELING_CORE"
 	""
 	""
 	Regression/Polynomial.cpp
