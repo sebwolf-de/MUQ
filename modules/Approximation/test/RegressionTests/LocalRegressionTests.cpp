@@ -19,6 +19,10 @@ public:
 private:
 
   inline virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override {
+    const Eigen::Vector3d& in = boost::any_cast<Eigen::Vector3d const&>(inputs[0]);
+    
+    outputs.resize(1);
+    outputs[0] = Eigen::Vector2d(in(0)*in(1), in(2));
   }
 };
 
@@ -45,4 +49,10 @@ private:
 };
 
 TEST_F(LocalRegressionTest, Basic) {
+  // generate some random inputs
+  std::vector<Eigen::Vector3d> inputs(10);
+  for( auto it=inputs.begin(); it!=inputs.end(); ++it ) { *it = Eigen::Vector3d::Random(); }
+
+  // add the random input points to the cache
+  //reg->Add(inputs);
 }

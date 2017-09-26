@@ -3,7 +3,10 @@
 using namespace muq::Modeling;
 using namespace muq::Approximation;
 
-LocalRegression::LocalRegression(std::shared_ptr<WorkPiece> function) {}
+LocalRegression::LocalRegression(std::shared_ptr<WorkPiece> function) {
+  // create a cache of model evaluations
+  cache = std::make_shared<FlannCache>(function);
+}
 
 LocalRegression::~LocalRegression() {}
 
