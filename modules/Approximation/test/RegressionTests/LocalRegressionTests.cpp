@@ -2,6 +2,7 @@
 
 #include "MUQ/Approximation/Regression/LocalRegression.h"
 
+namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::Approximation;
 
@@ -33,8 +34,13 @@ public:
     // the function too approximate
     fn = std::make_shared<func>();
 
+    // set the regressor options
+    pt::ptree pt;
+    pt.put<unsigned int>("LocalRegression.NumNeighbors", 11);
+    pt.put<unsigned int>("LocalRegression.Order", 2);
+
     // create a local regressor
-    reg = std::make_shared<LocalRegression>(fn);
+    reg = std::make_shared<LocalRegression>(fn, pt);
   }
 
   inline virtual ~LocalRegressionTest() {}
@@ -44,15 +50,32 @@ public:
 
   /// The local regressor
   std::shared_ptr<LocalRegression> reg;
-  
+
 private:
 };
 
 TEST_F(LocalRegressionTest, Basic) {
   // generate some random inputs
-  std::vector<Eigen::Vector3d> inputs(10);
+  std::vector<Eigen::Vector3d> inputs(25);
   for( auto it=inputs.begin(); it!=inputs.end(); ++it ) { *it = Eigen::Vector3d::Random(); }
 
   // add the random input points to the cache
-  //reg->Add(inputs);
+  reg->Add(inputs);
+
+  // check the size
+  EXPECT_EQ(reg->CacheSize(), inputs.size());
+
+  // the input point
+  const Eigen::Vector3d input = Eigen::Vector3d::Random();
+
+  // evaluate the local polynomial approximation
+  const std::vector<boost::any>& output = reg->Evaluate(input);
+  const Eigen::VectorXd& result = boost::any_cast<Eigen::VectorXd const&>(output[0]);
+
+  // evaluate the truth
+  const std::vector<boost::any>& output_truth = fn->Evaluate(input);
+  const Eigen::Vector2d& truth = boost::any_cast<Eigen::Vector2d const&>(output_truth[0]);
+  
+  // the regression and the truth are the same---approximating a quadratic with a quardratic
+  EXPECT_NEAR((truth-result).norm(), 0.0, 1.0e-14);
 }

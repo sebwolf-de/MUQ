@@ -7,12 +7,9 @@
 using namespace muq::Modeling;
 using namespace muq::Approximation;
 
-Regression::Regression(unsigned int const dim, unsigned int const order, Regression::PolynomialBasis const& basis) : WorkPiece() {
+Regression::Regression(unsigned int const order, Regression::PolynomialBasis const& basis) : WorkPiece(), order(order) {
   // initalize the algebra
   algebra = std::make_shared<AnyAlgebra>();
-
-  // initalize the multi-index
-  multi = std::make_shared<MultiIndex>(dim, order);
 
   // initalize the polynomial basis
   switch( basis ) {
@@ -35,6 +32,9 @@ void Regression::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   // if there are no points ... just return with an empty outputs
   if(inputs.size()==0) { return; }
 
+  // make sure we can compute the Vandermonde matrix
+  assert(multi);
+
   // get the Vandermonde matrix of the inputs
   const Eigen::MatrixXd vand = VandermondeMatrix(inputs);
   assert(coeff.cols()==vand.cols());
@@ -42,4 +42,16 @@ void Regression::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   // compute the regression polynomial
   outputs.resize(1);
   outputs[0] = (Eigen::MatrixXd)(coeff*vand.transpose());
+}
+
+int Regression::NumInterpolationPoints() const {
+  if( multi ) {
+    return multi->Size();
+  }
+
+  std::cerr << std::endl << std::endl << "ERROR: Not able to compute the number of points required for interpolation" <<
+    std::endl << "\tPolynomialRegressor.cpp NumInterpolationPoints()" << std::endl;
+  assert(false);
+  
+  return -1;
 }

@@ -4,7 +4,8 @@ using namespace muq::Modeling;
 
 FlannCache::Entry::Entry() {}
 
-FlannCache::FlannCache(std::shared_ptr<WorkPiece> function) : function(function) {
+FlannCache::FlannCache(std::shared_ptr<WorkPiece> function) : WorkPiece(1, 1), // can only have one input and output
+							      function(function) {
   // the target function can only have one input/output
   assert(function->numInputs==1);
   assert(function->numOutputs==1);
@@ -83,8 +84,13 @@ void FlannCache::Add(boost::any const& input) {
   // create a new entry in the cache
   auto entry = std::make_shared<Entry>();
   
-  // copy the point as a flann type (copy the input and output into the entry)
-  DeepVectorCopy(result[0], entry->output);
+  // store the result
+  const unsigned int dim = algebra->VectorDimensionBase(result[0]);
+  // copy all of the elements into the Eigen::VectorXd
+  entry->output = Eigen::VectorXd::Constant(dim, std::numeric_limits<double>::quiet_NaN());
+  for( unsigned int i=0; i<dim; ++i ) {
+    entry->output(i) = boost::any_cast<double const>(algebra->AccessElementBase(i, result[0]));
+  }
   
   // add the entry to the cache
   cache[nextID++] = entry;
@@ -104,30 +110,35 @@ void FlannCache::Remove(boost::any const& input) {
   cache.erase(id);
 }
 
-void FlannCache::NearestNeighbors(boost::any const& point, unsigned int const k) const {
+void FlannCache::NearestNeighbors(boost::any const& point, unsigned int const k, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& result) const {
   // make sure we have enough
   assert(k<=Size());
 
-  // conver the input to a flann matrix
+  // convert the input to a flann matrix
   flann::Matrix<double> input;
   DeepVectorCopy(point, input);
 
+  // find the nearest neighbors
   std::vector<std::vector<int> > indices;
   std::vector<std::vector<double> > dists;
-
   nnIndex->knnSearch(input, indices, dists, k, flann::SearchParams(flann::FLANN_CHECKS_UNLIMITED));
 
-  std::cout << indices.size() << std::endl;
-  std::cout << dists.size() << std::endl;
+  // a list of the nearest neighbors
+  neighbors.resize(indices[0].size());
+  result.resize(indices[0].size());
 
-  std::cout << indices[0].size() << std::endl;
-  std::cout << dists[0].size() << std::endl;
+  // store the nearest neighbors in a list
+  for( unsigned int i=0; i<indices[0].size(); ++i ) {
+    // the raw vector to the data
+    double *nn = nnIndex->getPoint(indices[0][i]);
 
-  for( auto ind : indices[0] ) {
-    std::cout << ind << std::endl;
+    // use eigen map so we don't have to copy
+    Eigen::Map<Eigen::VectorXd> pnt(nn, input.cols);
+
+    // store it    
+    neighbors[i] = pnt;
+    result[i] = cache.at(indices[0][i])->output;
   }
-
-  std::cout << std::endl;
 }
 
 unsigned int FlannCache::Size() const { return cache.size(); }

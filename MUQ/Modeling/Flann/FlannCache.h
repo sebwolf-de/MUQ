@@ -57,8 +57,10 @@ namespace muq {
       /**
 	 @param[in] point The point whose nearest neighbors we want to find
 	 @param[in] k We want to find this many nearest neighbors	 
+	 @param[out] neighbors A vector of the \fk\f$ nearest neighbors	 
+	 @param[out] result The output corresponding to the \f$k\f$ nearest neighbors
        */
-      void NearestNeighbors(boost::any const& point, unsigned int const k) const;
+      void NearestNeighbors(boost::any const& point, unsigned int const k, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& result) const;
 
       /// Get the size of the cache
       /**
@@ -76,7 +78,8 @@ namespace muq {
 	Entry();
 
 	/// The output for this entry
-	flann::Matrix<double> output;
+	//flann::Matrix<double> output;
+	Eigen::VectorXd output;
       };
 
       /// Copy any vector into a flann type vector

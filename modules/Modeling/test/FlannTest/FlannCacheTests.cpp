@@ -64,6 +64,15 @@ TEST(FlannCache, CreateCache) {
   // make sure the size is equal to the number of points that we added minus the one we removed
   EXPECT_EQ(cache->Size(), inputs.size()+more_inputs.size()-1);
 
-  // find the 3 nearest neighbors to zero
-  cache->NearestNeighbors((Eigen::Vector3d)Eigen::Vector3d::Zero(), 3);
+  // find the 5 nearest neighbors to zero
+  std::vector<Eigen::VectorXd> neighbors;
+  std::vector<Eigen::VectorXd> result;
+  cache->NearestNeighbors((Eigen::Vector3d)Eigen::Vector3d::Zero(), 5, neighbors, result);
+
+  // check the neighbors
+  EXPECT_EQ(neighbors.size(), 5);
+  for( auto n : neighbors ) { EXPECT_EQ(n.size(), 3); }
+
+  EXPECT_EQ(result.size(), 5);
+  for( auto r : result ) { EXPECT_EQ(r.size(), 2); }
 }

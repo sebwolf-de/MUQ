@@ -36,11 +36,10 @@ namespace muq {
       };
 
       /**
-	 @param[in] dim The input dimension
 	 @param[in] order The order of the polynomial regression
 	 @param[in] basis The type of polynomial basis to use (defaults to Legendre)
        */
-      Regression(unsigned int const dim, unsigned int const order, Regression::PolynomialBasis const& basis = Regression::PolynomialBasis::LegendreBasis);
+      Regression(unsigned int const order, Regression::PolynomialBasis const& basis = Regression::PolynomialBasis::LegendreBasis);
 
       /// Compute the coeffiecents of the polynomial given data
       /**
@@ -80,6 +79,8 @@ namespace muq {
 	// preform the fit with zero center
 	Fit<data>(xs, ys, boost::any_cast<data const&>(zero));
       }
+
+      int NumInterpolationPoints() const;
       
     private:
 
@@ -94,6 +95,17 @@ namespace muq {
       template<typename data>
 	inline void ComputeCoefficients(std::vector<data> const& xs, std::vector<data> const& ys) {
 	assert(xs.size()==ys.size());
+
+	// initalize the multi-index
+	multi = std::make_shared<MultiIndex>(algebra->VectorDimensionBase(xs[0]), order);
+
+	// check to make sure we have more than the number of points required to interpolate
+	const unsigned int interp = NumInterpolationPoints();
+	if( xs.size()<interp ) {
+	  std::cerr << std::endl << "ERROR: Regression requires " << interp << " points to interpolate but only " << xs.size() << " are given." << std::endl;
+	  std::cerr << "\tTry fitting the regression with at least " << interp+1 << " points." << std::endl << std::endl;
+	  assert(xs.size()>NumInterpolationPoints());
+	}
 
 	// set the weights equal to one
 	const Eigen::VectorXd weights = Eigen::VectorXd::Ones(ys.size());
@@ -141,9 +153,12 @@ namespace muq {
       */
       template<typename data>
 	Eigen::MatrixXd VandermondeMatrix(std::vector<data> const& xs) const {
+	assert(multi);
+	
 	// the number of points and the number of terms
 	const unsigned int N = xs.size();
 	const unsigned int M = multi->Size();
+	assert(N>0);
 
 	// initialize the matrix
 	Eigen::MatrixXd vand = Eigen::MatrixXd::Ones(N, M);
@@ -201,6 +216,9 @@ namespace muq {
 	  *it = boost::any_cast<data const&>(algebra->MultiplyBase(normalize, vec));
 	}
       }
+
+      /// The order of the regression
+      const unsigned int order;
 
       /// An muq::Modeling::AnyAlgebra to do the algebric manipulations
       std::shared_ptr<muq::Modeling::AnyAlgebra> algebra;
