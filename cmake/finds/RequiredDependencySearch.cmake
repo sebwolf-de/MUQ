@@ -123,12 +123,6 @@ if (${dindex} GREATER -1)
         set(MUQ_PYTHON 1)
     endif()
 
-    # do we have nlopt?
-    set(MUQ_NLOPT 0)
-    if(MUQ_USE_NLOPT)
-        set(MUQ_NLOPT 1)
-    endif()
-
     # store include directory information
     if(NOT DEFINED Boost_INCLUDE_DIRS)
         set(Boost_INCLUDE_DIRS ${BOOST_INCLUDE_DIRS})

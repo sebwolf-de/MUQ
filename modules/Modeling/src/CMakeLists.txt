@@ -35,3 +35,16 @@ CreateCompileGroup(
 
     LinearSDE.cpp
 )
+
+if(MUQ_USE_DOLFIN)
+  CreateCompileGroup(     
+      MODELING_DOLFIN
+      "Wrappers allowing the construction of WorkPieces Fenics wrappers for the basic building blocks of the Modeling library."
+      "pymuqModeling"
+      "MODELING_CORE_PYTHON"
+      "PYTHON;DOLFIN"
+      ""
+      Dolfin/DolfinPiece.cpp
+  )
+
+endif()
