@@ -7,6 +7,7 @@
 set(MUQ_LIBRARIES )
 set(MUQ_PYTHON_LIBRARIES )
 
+message("MU_LINK_LIBS = ${MUQ_LINK_LIBS}")
 # Build all the targets
 foreach(libName ${MUQ_TARGETS})
 
@@ -72,15 +73,15 @@ foreach(group ${MUQ_GROUPS})
 
         # Add dependencies between different MUQ libraries
         foreach(depend ${${group}_REQUIRES_GROUPS})
-        
+
+        message(STATUS "Thinking about connection between ${${group}_LIBRARY} and ${${depend}_LIBRARY}") 
             if(NOT ${${group}_LIBRARY} STREQUAL ${${depend}_LIBRARY})
                 IF( ${depend}_IS_COMPILED )
                     message(STATUS "Trying to add connection between ${${group}_LIBRARY} and ${${depend}_LIBRARY}")
                     target_link_libraries(${${group}_LIBRARY} PUBLIC ${${depend}_LIBRARY})
                     add_dependencies(${${group}_LIBRARY} ${${depend}_LIBRARY})
                 endif()
-            endif()
-            
+          endif()
         endforeach()
     endif()
     

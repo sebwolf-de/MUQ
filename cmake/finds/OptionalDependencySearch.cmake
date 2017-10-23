@@ -117,15 +117,30 @@ if (${dindex} GREATER -1)
     endif()
 
     if(MUQ_USE_DOLFIN)
-  
+
         find_package(DOLFIN)
 
         if(DOLFIN_FOUND)
-            include_directories(${DOLFIN_INCLUDE_DIRS})
-            include_directories(SYSTEM ${DOLFIN_3RD_PARTY_INCLUDE_DIRS})
+            if (EXISTS ${DOLFIN_USE_FILE})
+                include(${DOLFIN_USE_FILE})
+
+                # Default build type (can be overridden by user)
+                if (NOT CMAKE_BUILD_TYPE)
+                    set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
+                        "Choose the type of build, options are: Debug MinSizeRel Release RelWithDebInfo." FORCE)
+                endif()
+            else()
+                # Compiler definitions
+                add_definitions(${DOLFIN_CXX_DEFINITIONS})
+
+                # Include directories
+                include_directories(${DOLFIN_INCLUDE_DIRS})
+                include_directories(SYSTEM ${DOLFIN_3RD_PARTY_INCLUDE_DIRS})
+            endif()
         else()
-            set(MUQ_USE_DOLFIN OFF)
+            set(MUQ_USE_DOLFIN OFF)    
         endif()
+
     endif()
 else()
     set(MUQ_NEEDS_DOLFIN OFF)

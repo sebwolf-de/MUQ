@@ -229,9 +229,11 @@ std::vector<boost::any> WorkPiece::Evaluate(ref_vector<boost::any> const& ins) {
   // we have new outputs
   Clear();
 
+  std::cout << "Here 0" << std::endl;
   // the inputs are set, so call evaluate with no inputs
   EvaluateImpl(ins);
 
+  std::cout << "Here 7" << std::endl;
   // make sure the output types are correct
   assert(numOutputs<0 || outputs.size()==numOutputs);
 
@@ -239,7 +241,8 @@ std::vector<boost::any> WorkPiece::Evaluate(ref_vector<boost::any> const& ins) {
   for( unsigned int i=0; i<outputs.size(); ++i ) {
     assert(CheckOutputType(i, outputs[i].type().name()));
   }
-  
+
+  std::cout << "Here 8" << std::endl;
   return outputs;
 }
 

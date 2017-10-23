@@ -5,6 +5,8 @@
 
 #include <typeindex>
 
+#include <cxxabi.h>
+
 #include "pybind11/pybind11.h"
 #include "pybind11/eigen.h"
 
@@ -42,7 +44,7 @@ namespace pybind11 { namespace detail {
                 std::cerr << "\nERROR: Could not get the this attr.\n\n";
             }
 
-            std::cerr << "ERROR: Don't have a good way to deal with classes yet...." << std::endl;
+            std::cerr << "ERROR: Don't have a good way to deal with generic classes yet...." << std::endl;
             assert(false);
             
             Py_DECREF(thisAttr);
@@ -55,6 +57,7 @@ namespace pybind11 { namespace detail {
             if(it != toPythonMap.end()){
                 return it->second(src);
             }else{
+                std::cerr << "WARNING: Could not convert type " << demangle_typename(src.type().name()) << " directly to Python type.  Trying to cast as pybind11::object." << std::endl;
                 return boost::any_cast<pybind11::object>(src);
             }
         }
@@ -63,7 +66,10 @@ namespace pybind11 { namespace detail {
 
         using EigenRowType = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
         using EigenColType = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>;
-              
+
+        using EigenVectorType = Eigen::Matrix<double, Eigen::Dynamic,1>;
+        using EigenRowVectorType = Eigen::Matrix<double, 1, Eigen::Dynamic>;
+        
         // A map of functions to convert a boost::any to a corresponding PyObject
         static std::map<std::type_index, std::function<handle(boost::any const&)>> toPythonMap;
         static std::map<std::string, std::function<boost::any(PyObject*)>> fromPythonMap;
@@ -87,6 +93,23 @@ namespace pybind11 { namespace detail {
               return eigen_array_cast<EigenProps<Eigen::Ref<EigenColType>>>(boost::any_cast<Eigen::Ref<EigenColType>>(x));
           };
 
+          m[typeid(EigenRowType)] = [](boost::any const& x){
+              return eigen_array_cast<EigenProps<EigenRowType>>(boost::any_cast<EigenRowType>(x));
+          };
+
+          m[typeid(EigenColType)] = [](boost::any const& x){
+              return eigen_array_cast<EigenProps<EigenColType>>(boost::any_cast<EigenColType>(x));
+          };
+          
+          m[typeid(EigenVectorType)] = [](boost::any const& x){
+              return eigen_array_cast<EigenProps<EigenVectorType>>(boost::any_cast<EigenVectorType>(x));
+          };
+
+          m[typeid(EigenRowVectorType)] = [](boost::any const& x){
+              return eigen_array_cast<EigenProps<EigenRowVectorType>>(boost::any_cast<EigenRowVectorType>(x));
+          };
+
+                    
           return m;
         }
 
@@ -131,6 +154,21 @@ namespace pybind11 { namespace detail {
           };
           
           return m;
+        }
+
+
+
+        static std::string demangle_typename(const char* name) {
+            
+            int status = -4; // some arbitrary value to eliminate the compiler warning
+            
+            // enable c++11 by passing the flag -std=c++11 to g++
+            std::unique_ptr<char, void(*)(void*)> res {
+                abi::__cxa_demangle(name, NULL, NULL, &status),
+                    std::free
+                    };
+            
+            return (status==0) ? res.get() : name ;
         }
     };
 

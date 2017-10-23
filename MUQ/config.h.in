@@ -1,3 +1,7 @@
 #ifndef HAVE_GTEST
 #define HAVE_GTEST @HAVE_GTEST@
 #endif
+
+#ifndef MUQ_USE_PYTHON
+#define MUQ_USE_PYTHON @MUQ_USE_PYTHON@
+#endif
