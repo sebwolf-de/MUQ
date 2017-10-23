@@ -24,7 +24,6 @@ namespace py = pybind11;
 
 void AnyFunction(boost::any x)
 {
-    std::cout << demangle_typename(typeid(f).name()) << std::endl;
     std::cout << "Success!  Ran AnyFunction with type " << x.type().name() << std::endl;
 }
 

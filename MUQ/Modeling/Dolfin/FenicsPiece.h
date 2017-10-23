@@ -97,31 +97,50 @@ namespace muq{
                     Eigen::VectorXd& inVec = *std::dynamic_pointer_cast<dolfin::EigenVector>(it->second->vector())->vec();
 
                     // This is a reference to the vector containing the new values that we want to insert
-                    std::cout << "The type of the input is " << demangle_typename(inputs.at(it->first).get().type().name()) << std::endl;
-                    
                     Eigen::Ref<Eigen::Matrix<double, -1, -1, 1, -1, -1>, 0, Eigen::OuterStride<-1>> vec = boost::any_cast<Eigen::Ref<Eigen::Matrix<double, -1, -1, 1, -1, -1>, 0, Eigen::OuterStride<-1>> >(inputs.at(it->first).get());
                                             
                     // Set the new values and update the function
                     inVec = vec;
                     it->second->update();
-
-                    std::cout << "Here 1" << std::endl;
                 }
 
-                std::cout << "Here 2" << std::endl;
+
+                // Loop over the expression inputs
+                for(auto it = inputExprs.begin(); it!=inputExprs.end(); ++it)
+                {
+                    
+                    unsigned inputInd = it->first;
+
+                    std::pair<pybind11::object, std::vector<std::string>> &exprDef = it->second;
+                    
+                    // This is a reference to the vector containing the new values that we want to insert
+                    if(inputs.at(inputInd).get().type() == typeid(double)){
+                        double val = boost::any_cast<double>(inputs.at(inputInd).get());
+
+                        assert(exprDef.second.size()==1);
+                        
+                        exprDef.first.attr(exprDef.second.at(0).c_str()) = pybind11::cast(val);
+                        
+                    }else{
+                        Eigen::Ref<Eigen::Matrix<double, -1, -1, 1, -1, -1>, 0, Eigen::OuterStride<-1>> vec = boost::any_cast<Eigen::Ref<Eigen::Matrix<double, -1, -1, 1, -1, -1>, 0, Eigen::OuterStride<-1>> >(inputs.at(inputInd).get());
+                        assert(exprDef.second.size()==vec.rows());
+                        for(int k=0; k<exprDef.second.size(); ++k){
+                            exprDef.first.attr(exprDef.second.at(k).c_str()) = pybind11::cast(vec(k,0));
+                        }
+                    }
+                    
+                }
+
+
+                // Solve the system!
                 dolfin::LinearVariationalSolver solver(problem);
                 solver.solve();
 
-                std::cout << "Here 3" << std::endl;
                 std::shared_ptr<dolfin::EigenVector> vec = std::dynamic_pointer_cast<dolfin::EigenVector>(outputField->vector());
                 assert(vec);
 
-                std::cout << "Here 4" << std::endl;
                 outputs.resize(1);
-                std::cout << "Here 5" << std::endl;
                 outputs.at(0) = Eigen::VectorXd(*vec->vec());
-                std::cout << "The type of the output is " << demangle_typename(outputs.at(0).type().name()) << std::endl;
-                std::cout << "Here 6" << std::endl;
             }
             
             boost::any EvaluateVec(Eigen::Ref<const Eigen::VectorXd> const& x, std::vector<double> vals)
