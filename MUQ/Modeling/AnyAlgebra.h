@@ -33,6 +33,13 @@ namespace muq {
        */
       unsigned int VectorDimensionBase(boost::any const& vec) const;
 
+      /// The norm of an object
+      /**
+	 @param[in] obj We need the norm of this object
+	 \return The norm
+       */
+      double NormBase(boost::any const& obj) const;
+
       /// Access an element of a vector
       /**
 	 The return type is whatever the elements of the vector are (doubles, ints, ect ...)
@@ -41,6 +48,20 @@ namespace muq {
 	 \return The \f$i^{th}\f$ element of the vector
        */
       boost::any AccessElementBase(unsigned int i, boost::any const& vec) const;
+
+      /// Compute a zero vector
+      /** 
+	  @param[in] type We need a zero object of this type
+	  @param[in] size The size of the vector 
+       */
+      boost::any ZeroVectorBase(std::string const& type, unsigned int const size) const;
+
+      /// Determine if an object is the zero object
+      /**
+	 @param[in] obj An input object
+	 \return true: if vec is the zero object, false: if vec is not the zero object
+       */
+      bool IsZeroBase(boost::any const& obj) const;
 
       /// Compute an identity object for boost::any
       /**
@@ -58,6 +79,14 @@ namespace muq {
        */
       boost::any AddBase(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const;
 
+      /// Subtract one object from another
+      /**
+	 @param[in] in0 The first input
+	 @param[in] in1 The second input
+	 \return The subtraction of in0 and in1 (in0-in1)
+       */
+      boost::any SubtractBase(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const;
+
       /// Multiply two objects 
       /**
 	 @param[in] in0 The first input
@@ -67,6 +96,13 @@ namespace muq {
       boost::any MultiplyBase(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const;
 
     private:
+
+      /// The norm of an object
+      /**
+	 @param[in] obj We need the norm of this object
+	 \return The norm
+       */
+      virtual double Norm(boost::any const& obj) const;
 
       /// The dimension of a vector
       /**
@@ -102,7 +138,17 @@ namespace muq {
        */
       virtual boost::any Add(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const;
 
-      /// Multiply two objects 
+
+      /// Add two objects together
+      /**
+	 MUQ automatically checks for some common pairs.  However, the user may need to overload this function for special types.
+	 @param[in] in0 The first input
+	 @param[in] in1 The second input
+	 \return The subtraction of in0 and in1 (in0-in1)
+       */
+      virtual boost::any Subtract(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const;
+
+/// Multiply two objects 
       /**
 	 MUQ automatically checks for some common pairs.  However, the user may need to overload this function for special types.
 	 @param[in] in0 The first input
@@ -110,6 +156,20 @@ namespace muq {
 	 \return The multiplication of in0 and in1 (in0*in1) --- order matters!
        */
       boost::any Multiply(std::reference_wrapper<const boost::any> const& in, std::reference_wrapper<const boost::any> const& out) const;
+
+      /// Compute a zero object for boost::any
+      /** 
+	  @param[in] type We need a zero object of this type
+	  @param[in] size The size of the vector 
+       */
+      virtual boost::any ZeroVector(std::string const& type, unsigned int const size) const;
+
+      /// Determine if an object is the zero object
+      /**
+	 @param[in] obj An input object
+	 \return true: if vec is the zero object, false: if vec is not the zero object
+       */
+      virtual bool IsZero(boost::any const& obj) const;
 
       /// The name of a (2 dimensional) Eigen::Vector2d
       const std::string eigenVec2Type = typeid(Eigen::Vector2d).name();

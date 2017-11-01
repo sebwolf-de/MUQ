@@ -1,5 +1,0 @@
-<map id="muq::Modeling::ODEBase" name="muq::Modeling::ODEBase">
-<area shape="rect" id="node3" href="$classmuq_1_1Modeling_1_1ODE.html" title="muq::Modeling::ODE" alt="" coords="5,152,150,177"/>
-<area shape="rect" id="node4" href="$classmuq_1_1Modeling_1_1RootfindingIVP.html" title="A rootfinding initial value problem — find the root of a function along an orbit of an ODE..." alt="" coords="174,152,379,177"/>
-<area shape="rect" id="node2" href="$classmuq_1_1Modeling_1_1WorkPiece.html" title="Base class for MUQ&#39;s modelling envronment. " alt="" coords="86,5,267,31"/>
-</map>

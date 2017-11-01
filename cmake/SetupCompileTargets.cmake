@@ -23,7 +23,7 @@ foreach(libName ${MUQ_TARGETS})
             #target_link_libraries(${CppLib} ${libname})
 
         else()
-            ADD_LIBRARY(${libName} ${${libName}_SOURCES})
+            ADD_LIBRARY(${libName} SHARED ${${libName}_SOURCES})
             list(APPEND MUQ_LIBRARIES ${libName})
         endif()
         
