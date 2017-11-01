@@ -37,12 +37,15 @@ TEST_F(DatasetTest, Groups)
 
     auto g = f.CreateGroup("/something");
 
+    std::cout << "Here 1" << std::endl;
     g["/first"]  = 1.0;
     g["/second"] = 2.0;
     
+    std::cout << "Here 2" << std::endl;
     double val = f["/something/first"](0);
     EXPECT_DOUBLE_EQ(1.0, val);
 
+    std::cout << "Here 3" << std::endl;
     val = g["/second"](0);
     EXPECT_DOUBLE_EQ(2.0, val);
 }
@@ -68,8 +71,39 @@ TEST_F(DatasetTest, DoubleSetGet)
 
     for(int i=0; i<numThird; ++i)
 	EXPECT_DOUBLE_EQ(double(i)/double(numThird-1), third(i));
+}
 
+TEST_F(DatasetTest, CopyDataset)
+{
+  muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
+
+  f["/something/first"] = 1.0;
+
+  f["/something/second"] = f["/something/first"];
+
+  EXPECT_EQ(1, f["/something/second"].rows());
+  EXPECT_EQ(1, f["/something/second"].cols());
+  EXPECT_DOUBLE_EQ(1.0, f["/something/second"](0));
     
+}
+
+TEST_F(DatasetTest, CopyDatasetWithAttribute)
+{
+  muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
+  
+  f["/something/first"] = 1.0;
+  f["/something/first"].attrs["meta1"] = "Units";
+  f["/something/first"].attrs["meta2"] = 10.0;
+  
+  f["/something/second"] = f["/something/first"];
+  
+  EXPECT_EQ(1, f["/something/second"].rows());
+  EXPECT_EQ(1, f["/something/second"].cols());
+  EXPECT_DOUBLE_EQ(1.0, f["/something/second"](0));
+
+  std::string meta1 = f["/something/second"].attrs["meta1"];
+  EXPECT_EQ(std::string("Units"), meta1);
+  EXPECT_DOUBLE_EQ(10.0, f["/something/second"].attrs["meta2"]);
 }
 
 

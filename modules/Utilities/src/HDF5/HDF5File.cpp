@@ -74,6 +74,29 @@ void HDF5File::Close() {
     fileID = -1;
     filename = "";
 }
+
+void HDF5File::Copy(std::string const& dstName, std::shared_ptr<HDF5File> srcFile, std::string const& srcName)
+{
+  
+  // make sure both files are open 
+  assert(fileID>0);
+  assert(srcFile->fileID>0);
+
+  if(!srcFile->DoesDataSetExist(srcName))
+  {
+    std::cerr << "ERROR: Trying to copy a dataset, \"" << srcName << "\", that does not exist." << std::endl;
+    assert( srcFile->DoesDataSetExist(srcName) );
+  }
+  
+  herr_t err;
+  err = H5Ocopy(srcFile->fileID, srcName.c_str(), fileID, dstName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+
+  if(err<0)
+  {
+    std::cerr << "WARNING: HDF5 could not copy " << srcName << " to " << dstName << std::endl;
+  };
+
+}
   
 bool HDF5File::DoesGroupExist(string const& name) const {
 

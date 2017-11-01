@@ -3,7 +3,6 @@
 
 using namespace muq::Utilities;
 
-    
 
 H5Object& H5Object::CreateDataset(std::string const& grpName)
 {
@@ -11,26 +10,27 @@ H5Object& H5Object::CreateDataset(std::string const& grpName)
 
     if(pathParts.second.length()==0)
     {
-	children[pathParts.first] = H5Object(file, path+grpName, true);
-	
-	//children[pathParts.first] = H5Object(file, path + grpName, true);
-	return children[pathParts.first];
+      children[pathParts.first].ExactCopy( H5Object(file, path+grpName, true) ); 
+      return children[pathParts.first];
     }
 	
-    if(children.find( pathParts.first ) == children.end()) 
-    {
-	if((path.length()==1) && (path.at(0)=='/'))
-	    pathParts.first = pathParts.first.substr(1);
-
+    if(children.find( pathParts.first ) == children.end()){
+      if((path.length()==1) && (path.at(0)=='/'))
+      {
+	file->CreateGroup(pathParts.first);
+	children[pathParts.first].ExactCopy( H5Object(file, pathParts.first ,false) );
+      }
+      else
+      {
 	file->CreateGroup(path + pathParts.first);
-	children[pathParts.first] = H5Object(file, path + pathParts.first ,false);
-	
-	//children[pathParts.first] = H5Object(file, path + pathParts.first, false);
-	return children[pathParts.first].CreateDataset(pathParts.second);
+	children[pathParts.first].ExactCopy( H5Object(file, path + pathParts.first ,false) );        
+      }
+      
+      return children[pathParts.first].CreateDataset(pathParts.second);
     } 
     else
     {
-	return children[pathParts.first].CreateDataset(pathParts.second);
+      return children[pathParts.first].CreateDataset(pathParts.second);
     } 
 };
 
@@ -47,7 +47,7 @@ H5Object& H5Object::CreateGroup(std::string const& grpName)
     if(children.find( pathParts.first ) == children.end()) 
     {
 	file->CreateGroup(path + pathParts.first);
-	children[pathParts.first] = H5Object(file, path + pathParts.first, false);
+	children[pathParts.first].ExactCopy( H5Object(file, path + pathParts.first, false) );
 
 	if(pathParts.second.length()!=0)
 	{
@@ -68,26 +68,25 @@ H5Object& H5Object::CreateGroup(std::string const& grpName)
 
 
 H5Object& H5Object::operator[](std::string const& targetPath)
-    {
-      if(isDataset || (targetPath.length()==0))
-      {
-	  return *this;
-      }
-      else
-      {
-	  auto pathParts = SplitString(targetPath);
-	  
-	  if(children.find( pathParts.first ) != children.end())  
-	  {
-	      return children.at(pathParts.first)[pathParts.second];
-	  }
-	  else
-	  {
-	      return CreateDataset(targetPath);
-	  }
-      }
+{
+  if(isDataset || (targetPath.length()==0))
+  {
+    return *this;
+  }
+  else
+  {
+    auto pathParts = SplitString(targetPath);
     
-  };
+    if(children.find( pathParts.first ) != children.end())  
+    {
+      return children.at(pathParts.first)[pathParts.second];
+    }
+    else
+    {
+      return CreateDataset(targetPath);
+    }
+  }  
+};
 
 
 // const H5Object& H5Object::operator[](std::string const& path) const
@@ -296,7 +295,7 @@ H5Object muq::Utilities::AddChildren(std::shared_ptr<HDF5File>        file,
 	    fullChildPath += "/";
 	fullChildPath += childPath;
 	
-	output.children[fullChildPath] = AddChildren(file, fullChildPath);
+	output.children[fullChildPath].ExactCopy( AddChildren(file, fullChildPath) );
     }
     return output;
 }

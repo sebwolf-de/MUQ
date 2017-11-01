@@ -64,7 +64,6 @@ public:
                                                             attrs(file_, path_),
  	                                                    path(path_),
 	                                                    isDataset(isDataset_){};
-	
 
     // Use this templated function for arithmetic types
     template<typename ScalarType, typename = typename std::enable_if<std::is_arithmetic<ScalarType>::value, ScalarType>::type>
@@ -86,14 +85,14 @@ public:
     };
 
     // Use this templated function for non-arithmetic types
-    template<typename MatrixType, typename = typename std::enable_if< !std::is_arithmetic<MatrixType>::value, MatrixType>::type>
-    H5Object& operator=(MatrixType const& val)
+    template<typename Derived>
+    H5Object& operator=(Eigen::DenseBase<Derived> const& val)
     {
 	return (*this)=val.eval();
     };
 
     template<typename ScalarType, int fixedRows, int fixedCols>
-	H5Object& operator=(Eigen::Matrix<ScalarType, fixedRows, fixedCols> const& val)
+    H5Object& operator=(Eigen::Matrix<ScalarType, fixedRows, fixedCols> const& val)
     {
 	assert(path.length()>0);
 	if(isDataset)
@@ -113,6 +112,21 @@ public:
     {
 	return eval<scalarType,rows,cols>();
     }
+
+
+    // Copy the other objects content into the current dataset
+    void DeepCopy(H5Object const& otherObj)
+    {
+      file->Copy(path, otherObj.file, otherObj.path);
+    }
+
+    H5Object& operator=(H5Object const& otherObj) 
+    { 
+      DeepCopy(otherObj);      
+      return *this;
+    };
+
+    //    H5Object& operator=(H5Object const& otherObj) = delete;
 
     template<typename scalarType=double, int rows=Eigen::Dynamic, int cols=Eigen::Dynamic>
     Eigen::Matrix<scalarType,rows,cols> eval()
@@ -185,6 +199,17 @@ public:
     
 private:
     
+    // Creates an exact copy.  Equivalent to the default assignment operator
+    void ExactCopy(H5Object const& otherObj)
+    { 
+      file = otherObj.file;
+      attrs = otherObj.attrs;
+      
+      path = otherObj.path;
+      children = otherObj.children;
+      isDataset = otherObj.isDataset;
+    }
+
   std::string path;
   
   std::map<std::string, H5Object> children;
