@@ -23,3 +23,9 @@ CreateTestGroup(
     FlannTest/FlannCacheTests.cpp
 )
 
+CreateTestGroup(
+    MODELING_DISTRIBUTIONS
+    
+    DistributionsTests/DistributionTests.cpp
+)
+

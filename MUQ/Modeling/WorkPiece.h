@@ -469,6 +469,22 @@ namespace muq {
       
     protected:
 
+      /// Check the input type
+      /**
+	 @param[in] inputNum The input number --- we are check that the type has the same type as this input
+	 @param[in] type The type of the input
+	 \return true: The input matches the specified type or no input type is specified, false: the input type does not match the specified type
+       */
+      bool CheckInputType(unsigned int const inputNum, std::string const& type) const;
+
+      /// Check the output type
+      /**
+	 @param[in] outputNum The output number --- we are check that the computed type has the same type as this output
+	 @param[in] type The type of the output
+	 \return true: The output matches the specified type or no output type is specified, false: the output type does not match the specified type
+       */
+      bool CheckOutputType(unsigned int const outputNum, std::string const& type) const;
+
       /// Create vector of references from a vector of boost::any's
       ref_vector<const boost::any> ToRefVector(std::vector<boost::any> const& anyVec) const;
 
@@ -551,7 +567,6 @@ namespace muq {
       */
       template<typename ith, typename... Args>		       
 	std::vector<boost::any> EvaluateRecursive(ref_vector<boost::any> &inputs, ith const& in, Args... args) {
-	
 	const int inputNum = inputs.size();
 	
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
@@ -798,22 +813,6 @@ namespace muq {
 	 By default, this function does nothing.  It can be overloaded by the user to destroy objects contained within boost::any's
        */
       virtual void DestroyAnyImpl(boost::any& obj) const;
-
-      /// Check the input type
-      /**
-	 @param[in] inputNum The input number --- we are check that the type has the same type as this input
-	 @param[in] type The type of the input
-	 \return true: The input matches the specified type or no input type is specified, false: the input type does not match the specified type
-       */
-      bool CheckInputType(unsigned int const inputNum, std::string const& type) const;
-
-      /// Check the output type
-      /**
-	 @param[in] outputNum The output number --- we are check that the computed type has the same type as this output
-	 @param[in] type The type of the output
-	 \return true: The output matches the specified type or no output type is specified, false: the output type does not match the specified type
-       */
-      bool CheckOutputType(unsigned int const outputNum, std::string const& type) const;
 
       /// Set the ID number, must be called by the constructor
       unsigned int SetID();
