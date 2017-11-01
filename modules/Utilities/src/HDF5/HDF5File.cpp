@@ -81,12 +81,6 @@ void HDF5File::Copy(std::string const& dstName, std::shared_ptr<HDF5File> srcFil
   // make sure both files are open 
   assert(fileID>0);
   assert(srcFile->fileID>0);
-
-  if(!srcFile->DoesDataSetExist(srcName))
-  {
-    std::cerr << "ERROR: Trying to copy a dataset, \"" << srcName << "\", that does not exist." << std::endl;
-    assert( srcFile->DoesDataSetExist(srcName) );
-  }
   
   herr_t err;
   err = H5Ocopy(srcFile->fileID, srcName.c_str(), fileID, dstName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
@@ -255,7 +249,7 @@ herr_t CopyObjectToGlobalFile(hid_t o_id, const char *name, const H5O_info_t *in
 	    H5Ocopy(o_id, name, fileInfo->hdf5file->fileID, fullGroupName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
 	}
     } else if( info->type == H5O_TYPE_GROUP ) { // groups
-	if( !fileInfo->hdf5file->DoesGroupExist(fullGroupName) ) { // of the group does not exist ...
+	if( !fileInfo->hdf5file->DoesGroupExist(fullGroupName) ) { // if the group does not exist ...
 	    // ... copy it over.
 	    H5Ocopy(o_id, name, fileInfo->hdf5file->fileID, fullGroupName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
 	}

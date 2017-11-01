@@ -3,6 +3,28 @@
 
 using namespace muq::Utilities;
 
+void H5Object::DeepCopy(H5Object const& otherObj)
+{
+  file->Copy(path, otherObj.file, otherObj.path);
+  children = otherObj.children;
+  isDataset = otherObj.isDataset;
+}
+
+H5Object& H5Object::operator=(H5Object const& otherObj) 
+{ 
+  DeepCopy(otherObj);  
+  return *this;
+}
+
+void H5Object::ExactCopy(H5Object const& otherObj)
+{ 
+  file = otherObj.file;
+  attrs = otherObj.attrs;
+  
+  path = otherObj.path;
+  children = otherObj.children;
+  isDataset = otherObj.isDataset;
+}
 
 H5Object& H5Object::CreateDataset(std::string const& grpName)
 {

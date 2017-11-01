@@ -113,20 +113,10 @@ public:
 	return eval<scalarType,rows,cols>();
     }
 
-
-    // Copy the other objects content into the current dataset
-    void DeepCopy(H5Object const& otherObj)
-    {
-      file->Copy(path, otherObj.file, otherObj.path);
-    }
-
-    H5Object& operator=(H5Object const& otherObj) 
-    { 
-      DeepCopy(otherObj);      
-      return *this;
-    };
-
-    //    H5Object& operator=(H5Object const& otherObj) = delete;
+    /** 
+        @brief Performs a deep copy of the datasets and groups in otherObj into this object.
+    */
+    H5Object& operator=(H5Object const& otherObj); 
 
     template<typename scalarType=double, int rows=Eigen::Dynamic, int cols=Eigen::Dynamic>
     Eigen::Matrix<scalarType,rows,cols> eval()
@@ -199,16 +189,15 @@ public:
     
 private:
     
-    // Creates an exact copy.  Equivalent to the default assignment operator
-    void ExactCopy(H5Object const& otherObj)
-    { 
-      file = otherObj.file;
-      attrs = otherObj.attrs;
-      
-      path = otherObj.path;
-      children = otherObj.children;
-      isDataset = otherObj.isDataset;
-    }
+    /** @brief Creates an exact copy.  
+        @details Equivalent to the default assignment operator.  Does not copy datasets,
+                 only the path, children, and isDataset values from another H5Object.
+    */
+    void ExactCopy(H5Object const& otherObj);
+
+
+    // Copy the other objects content into the current dataset
+    void DeepCopy(H5Object const& otherObj);
 
   std::string path;
   
