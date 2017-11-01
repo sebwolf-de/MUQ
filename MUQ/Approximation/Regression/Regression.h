@@ -1,3 +1,4 @@
+
 #ifndef REGRESSION_H_
 #define REGRESSION_H_
 
@@ -48,7 +49,7 @@ namespace muq {
 	 @param[in] center The center of the inputs (used to recenter the inputs)
        */
       template<typename data>
-	inline void Fit(std::vector<data> xs, std::vector<data> const& ys, data const& center) {
+	inline void Fit(std::vector<data> xs, std::vector<data> const& ys, boost::any const& center) {
 	assert(xs.size()>0);
 	assert(xs.size()==ys.size());
 
@@ -57,7 +58,7 @@ namespace muq {
 
 	// center the input points
 	CenterPoints(xs);
-
+	
 	// Compute basis coefficients
 	ComputeCoefficients(xs, ys);
       }
@@ -107,13 +108,10 @@ namespace muq {
 	  assert(xs.size()>NumInterpolationPoints());
 	}
 
-	// set the weights equal to one
-	const Eigen::VectorXd weights = Eigen::VectorXd::Ones(ys.size());
-
 	// create the Vandermonde matrix and the rhs
 	Eigen::MatrixXd vand = VandermondeMatrix(xs);
 	const Eigen::MatrixXd rhs = ComputeCoefficientsRHS(vand, ys);
-	vand = vand.transpose()*weights.asDiagonal()*vand;
+	vand = vand.transpose()*vand;
 
 	// make the solver to do the regression
 	auto solver = vand.colPivHouseholderQr();
@@ -190,25 +188,24 @@ namespace muq {
       /// Center the input points
       template<typename data>
 	inline void CenterPoints(std::vector<data>& xs) {
-	// if the current center is zero, do nothing
-	if( algebra->IsZeroBase(currentCenter) ) {
-	  return;
-	}
-
 	// reset the current radius
 	currentRadius = 0.0;
 
+	// is the center zero?
+	const bool zeroCenter = algebra->IsZeroBase(currentCenter);
+	
 	// loop through all of the input points
 	for( auto it=xs.begin(); it!=xs.end(); ++it ) {
-	  const boost::any vec = *it;
-
-	  // recenter the the point
-	  *it = boost::any_cast<data const&>(algebra->SubtractBase(std::reference_wrapper<boost::any const>(vec), std::reference_wrapper<boost::any const>(currentCenter)));
-
+	  if( !zeroCenter ) {
+	    // recenter the the point
+	    const boost::any vec = *it;
+	    *it = boost::any_cast<data const&>(algebra->SubtractBase(std::reference_wrapper<boost::any const>(vec), std::reference_wrapper<boost::any const>(currentCenter)));
+	  }
+	  
 	  // set the radius to the largest distance from the center
 	  currentRadius = std::max(currentRadius, algebra->NormBase(*it));
 	}
-
+	
 	// loop through all of the input points to normalize by the radius
 	const boost::any normalize = 1.0/currentRadius;
 	for( auto it=xs.begin(); it!=xs.end(); ++it ) {

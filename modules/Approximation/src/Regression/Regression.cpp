@@ -35,8 +35,19 @@ void Regression::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   // make sure we can compute the Vandermonde matrix
   assert(multi);
 
+  std::vector<boost::any> centered(inputs.size());
+  assert(currentRadius>0.0);
+  const boost::any normalize = 1.0/currentRadius;
+  for( unsigned int i=0; i<inputs.size(); ++i ) {
+    // center
+    centered[i] = algebra->SubtractBase(inputs[i].get(), currentCenter);
+
+    // normalize
+    centered[i] = algebra->MultiplyBase(normalize, centered[i]);
+  }
+
   // get the Vandermonde matrix of the inputs
-  const Eigen::MatrixXd vand = VandermondeMatrix(inputs);
+  const Eigen::MatrixXd vand = VandermondeMatrix(centered);
   assert(coeff.cols()==vand.cols());
 
   // compute the regression polynomial

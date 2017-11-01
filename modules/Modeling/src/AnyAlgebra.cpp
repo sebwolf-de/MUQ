@@ -363,6 +363,26 @@ boost::any AnyAlgebra::SubtractBase(std::reference_wrapper<const boost::any> con
     return (Eigen::VectorXd)(in0Vec-in1Vec);
   }
 
+  // Eigen::VectorXd and double
+  if( eigenVecType.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
+    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in0);
+    const double& in1Vec = boost::any_cast<const double>(in1);
+  
+    assert(in0Vec.size()==1);
+
+    return (Eigen::VectorXd)Eigen::VectorXd::Constant(1, in0Vec(0)-in1Vec);
+  }
+
+  // double and Eigen::VectorXd
+  if( doubleType.compare(in0.get().type().name())==0 && eigenVecType.compare(in1.get().type().name())==0 ) {
+    const double& in0Vec = boost::any_cast<const double>(in0);
+    const Eigen::VectorXd& in1Vec = boost::any_cast<const Eigen::VectorXd>(in1);
+
+    assert(in1Vec.size()==1);
+
+    return (Eigen::VectorXd)Eigen::VectorXd::Constant(1, in0Vec-in1Vec(1));
+  }
+
   // both in/out are Eigen::Vector2d
   if( eigenVec2Type.compare(in0.get().type().name())==0 && eigenVec2Type.compare(in1.get().type().name())==0 ) {
     const Eigen::Vector2d& in0Vec = boost::any_cast<const Eigen::Vector2d>(in0);
@@ -377,6 +397,26 @@ boost::any AnyAlgebra::SubtractBase(std::reference_wrapper<const boost::any> con
     const Eigen::Vector3d& in1Vec = boost::any_cast<const Eigen::Vector3d>(in1);
 
     return (Eigen::Vector3d)(in0Vec-in1Vec);
+  }
+  
+  // Eigen::Vector3d and Eigen::VectorXd
+  if( eigenVec3Type.compare(in0.get().type().name())==0 && eigenVecType.compare(in1.get().type().name())==0 ) {
+    const Eigen::Vector3d& in0Vec = boost::any_cast<const Eigen::Vector3d>(in0);
+    const Eigen::VectorXd& in1Vec = boost::any_cast<const Eigen::VectorXd>(in1);
+
+    assert(in1Vec.size()==3);
+
+    return (Eigen::VectorXd)(in0Vec-in1Vec);
+  }
+  
+  // Eigen::VectorXd and Eigen::Vector3d
+  if( eigenVecType.compare(in0.get().type().name())==0 && eigenVec3Type.compare(in1.get().type().name())==0 ) {
+    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in0);
+    const Eigen::Vector3d& in1Vec = boost::any_cast<const Eigen::Vector3d>(in1);
+
+    assert(in0Vec.size()==3);
+
+    return (Eigen::VectorXd)(in0Vec-in1Vec);
   }
 
   // both in/out are Eigen::Vector4d
@@ -400,6 +440,14 @@ boost::any AnyAlgebra::Subtract(std::reference_wrapper<const boost::any> const& 
 }
 
 boost::any AnyAlgebra::MultiplyBase(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const {
+  // double times double
+  if( doubleType.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
+    const double in0 = boost::any_cast<double const>(in0);
+    const double in1 = boost::any_cast<double const>(in1);
+
+    return in0*in1;
+  }
+
   // both in/out are Eigen::MatrixXd
   if( eigenMatType.compare(in0.get().type().name())==0 && eigenMatType.compare(in1.get().type().name())==0 ) {
     const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd>(in0);

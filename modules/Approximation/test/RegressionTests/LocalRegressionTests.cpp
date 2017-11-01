@@ -70,7 +70,7 @@ TEST_F(LocalRegressionTest, Basic) {
 
   // evaluate the local polynomial approximation
   const std::vector<boost::any>& output = reg->Evaluate(input);
-  const Eigen::VectorXd& result = boost::any_cast<Eigen::VectorXd const&>(output[0]);
+  const Eigen::Vector2d& result = boost::any_cast<Eigen::Vector2d const&>(output[0]);
 
   // evaluate the truth
   const std::vector<boost::any>& output_truth = fn->Evaluate(input);
