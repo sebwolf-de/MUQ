@@ -35,6 +35,17 @@ CreateCompileGroup(
 )
 
 CreateCompileGroup(
+    MODELING_DISTRIBUTIONS
+    "Implement probability distributions, which allow us to evaluate log-densities and/or sample the distirubtion."
+    muqModeling
+    ""
+    "MODELING_CORE"
+    ""
+
+    Distributions/Distribution.cpp
+)
+
+CreateCompileGroup(
     MODELING_SUNDIALS_MODELS
     "ODE integrators using Sundials"
     muqModeling
