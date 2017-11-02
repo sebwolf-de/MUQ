@@ -2,6 +2,8 @@
 
 using namespace muq::Modeling;
 
+Distribution::~Distribution() {}
+
 Distribution::Distribution() : WorkPiece() {}
 
 Distribution::Distribution(int const num) : WorkPiece(num+1, WorkPiece::Fix::Inputs) {}
@@ -14,15 +16,18 @@ void Distribution::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   // get the mode
   const Distribution::Mode mode = boost::any_cast<Distribution::Mode const>(inputs[0]);
 
+  // the output is either the log-density or a sample
+  outputs.resize(1);
+
   switch( mode ) { // are we evaluting the log density or sampling?
   case Distribution::Mode::EvaluateLogDensity: { // if we are evaluating the log density ...
-    // .. store the log density
-    outputs.resize(1);
+    // ... store the log density
     outputs[0] = LogDensity(ref_vector<boost::any>(inputs.begin()+1, inputs.end()));
-    
     break;
   }
-  case Distribution::Mode::Sample: {
+  case Distribution::Mode::SampleDistribution: { // if we are sampling the distribution
+    // .. store the sample
+    outputs[0] = Sample(ref_vector<boost::any>(inputs.begin()+1, inputs.end()));
     break;
   }
   default: {
@@ -48,7 +53,7 @@ double Distribution::LogDensity() const {
 
 // default behavior of log-density is to return infinity
 double Distribution::LogDensityImpl(ref_vector<boost::any> const& inputs) const {
-  return std::numeric_limits<double>::infinity();
+  return -std::numeric_limits<double>::infinity();
 }
 
 std::vector<std::string> Distribution::AddModeInput(std::vector<std::string> const& types) {
@@ -73,4 +78,22 @@ std::map<unsigned int, std::string> Distribution::AddModeInput(std::map<unsigned
   }
 
   return new_types;
+}
+
+boost::any Distribution::Sample(ref_vector<boost::any> const& inputs) const {
+  // the first input is always whether we are evaluting the log-density or sampling; we either have n-1 inputs or they are unknown
+  assert(numInputs-1==inputs.size() || numInputs<0);
+
+  return SampleImpl(inputs);
+}
+
+boost::any Distribution::Sample() const {
+  // the first input is always whether we are evaluting the log-density or sampling; we either have 1 input or they are unknown
+  assert(numInputs==1 || numInputs<0);
+
+  return Sample(ref_vector<boost::any>());
+}
+
+boost::any Distribution::SampleImpl(ref_vector<boost::any> const& inputs) const {
+  return boost::none;
 }

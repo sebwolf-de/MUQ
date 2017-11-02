@@ -14,8 +14,10 @@ namespace muq {
 	EvaluateLogDensity,
 
 	/// Sample the distribution
-	Sample
+	SampleDistribution
       };
+
+      virtual ~Distribution();
 
       /// Create a muq::Modeling::Distribution with no fixed number of inputs and variable input/output types
       Distribution();
@@ -61,7 +63,7 @@ namespace muq {
 	 \return The log density
        */
       template<typename... Args>
-	double LogDensity(Args... args) const {
+	inline double LogDensity(Args... args) const {
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
 	inputs.reserve(numInputs<0? 0 : numInputs-1); // the first input is always whether we are evaluting the log-density or sampling
@@ -69,27 +71,66 @@ namespace muq {
 	// begin calling LogDensity recursively
 	return LogDensity(inputs, args...);
       }
+
+      /// Sample the distribution
+      /**
+	 Calls SampleImpl, the default behavior is to return boost::none
+	 @param[in] inputs the vector of inputs to the log-density
+	 \return A sample
+       */
+      boost::any Sample(ref_vector<boost::any> const& inputs) const;
+
+      /// Sample the distribution with no inputs
+      /**
+	 Allows the user to call Sample without any inputs
+	 \return A sample
+       */
+      boost::any Sample() const;
+
+      /// Sample the distribution
+      /**
+	 This allows the sample the distribution without first creating a vector of inputs
+	 @param[in] args The inputs (may be more than one)
+	 \return A sample
+       */
+      template<typename... Args>
+	inline double Sample(Args... args) const {
+	// create the reference input vector
+	ref_vector<boost::any> inputs;
+	inputs.reserve(numInputs<0? 0 : numInputs-1); // the first input is always whether we are evaluting the log-density or sampling
+
+	// begin calling Sample recursively
+	return Sample(inputs, args...);
+      }
       
     private:
 
       /// Implement the log-density
       /**
-	 If known, the log-density should be implemented by a child.  If it is not overridden then the default behavior is to return infinity (std::numeric_limits<double>::infinity()).
+	 If known, the log-density should be implemented by a child.  If it is not overridden then the default behavior is to return negative infinity (-1.0*std::numeric_limits<double>::infinity()).
 	 @param[in] inputs the vector of inputs to the log-density
 	 \return The log density
        */
       virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) const;
+
+      /// Sample the distribution
+      /**
+	 Should be overwritten by a child.  The default behavior is to return boost::none
+       */
+      virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) const;
 
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 
       /// Evaluate the log-density
       /**
 	 This allows the user to evaluate the log-density without first creating a vector of inputs
-	 @param[in] args The inputs (may be more than one)
+	 @param[in] inputs The inputs so far
+	 @param[in] in The \f$i^{th}\f$ input
+	 @param[in] args The remaining inputs (may be more than one)
 	 \return The log density
        */
       template<typename ith, typename... Args>
-	double LogDensity(ref_vector<boost::any>& inputs, ith const& in, Args... args) const {
+	inline double LogDensity(ref_vector<boost::any>& inputs, ith const& in, Args... args) const {
 	const int inputNum = inputs.size()+1; // add one, the first input is always whether we are evaluting the log-density or sampling
 		
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
@@ -104,6 +145,32 @@ namespace muq {
 	
 	// call LogDensity recursively
 	return LogDensity(inputs, args...);
+      }
+
+      /// Sample the distribution
+      /**
+	 This allows the user to sample the distribution without first creating a vector of inputs
+	 @param[in] inputs The inputs so far
+	 @param[in] in The \f$i^{th}\f$ input
+	 @param[in] args The remaining inputs (may be more than one)
+	 \return A sample
+       */
+      template<typename ith, typename... Args>
+	inline double Sample(ref_vector<boost::any>& inputs, ith const& in, Args... args) const {
+	const int inputNum = inputs.size()+1; // add one, the first input is always whether we are evaluting the log-density or sampling
+		
+	// we have not yet put all of the inputs into the map, the ith should be less than the total number
+	assert(numInputs<0 || inputNum<numInputs);
+
+	// check the input type
+	assert(CheckInputType(inputNum, typeid(in).name()));
+	
+	// add the last input to the input vector
+	const boost::any in_any(in);
+	inputs.push_back(std::cref(in_any));
+	
+	// call Sample recursively
+	return Sample(inputs, args...);
       }
 
       /// Add the mode to the begining of an input type vector

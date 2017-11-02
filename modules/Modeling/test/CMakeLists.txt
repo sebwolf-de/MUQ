@@ -27,5 +27,6 @@ CreateTestGroup(
     MODELING_DISTRIBUTIONS
     
     DistributionsTests/DistributionTests.cpp
+    DistributionsTests/UniformDistributionTests.cpp
 )
 

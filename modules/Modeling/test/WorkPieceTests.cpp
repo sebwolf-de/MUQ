@@ -7,10 +7,10 @@ class WorkPieceTests : public::testing::Test {
 public:
 
   /// Default constructor
-  WorkPieceTests() {}
+  inline WorkPieceTests() {}
 
   /// Default destructor
-  virtual ~WorkPieceTests() {}
+  inline virtual ~WorkPieceTests() {}
 
   /// A string type object to input
   const std::string s = "a string";

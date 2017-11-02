@@ -43,6 +43,7 @@ CreateCompileGroup(
     ""
 
     Distributions/Distribution.cpp
+    Distributions/Uniform.cpp
 )
 
 CreateCompileGroup(
