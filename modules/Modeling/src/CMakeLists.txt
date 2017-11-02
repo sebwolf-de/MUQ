@@ -44,6 +44,7 @@ CreateCompileGroup(
 
     Distributions/Distribution.cpp
     Distributions/Uniform.cpp
+    Distributions/Gaussian.cpp
 )
 
 CreateCompileGroup(

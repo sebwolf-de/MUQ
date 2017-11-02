@@ -7,7 +7,7 @@ using namespace muq::Modeling;
 class ExampleDensity : public Distribution {
 public:
 
-  inline ExampleDensity() : Distribution(std::vector<std::string>(1, typeid(double).name())) {}
+  inline ExampleDensity() : Distribution() {}
 
   inline virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) const override {
     // get the point where we are evaluating the log density

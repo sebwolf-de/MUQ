@@ -7,7 +7,6 @@ using namespace muq::Modeling;
 
 Uniform::~Uniform() {}
 
-//Uniform::Uniform(std::vector<std::pair<double, double> > const& bounds) : Distribution(), bounds(bounds) {
 Uniform::Uniform(std::vector<std::pair<double, double> > const& bounds) : Distribution(), bounds(ComputeBounds(bounds)) {
   // initialize the any algebra
   algebra = std::make_shared<AnyAlgebra>();

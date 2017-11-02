@@ -6,12 +6,6 @@ Distribution::~Distribution() {}
 
 Distribution::Distribution() : WorkPiece() {}
 
-Distribution::Distribution(int const num) : WorkPiece(num+1, WorkPiece::Fix::Inputs) {}
-
-Distribution::Distribution(std::vector<std::string> const& types) : WorkPiece(AddModeInput(types), WorkPiece::Fix::Inputs) {}
-
-Distribution::Distribution(std::map<unsigned int, std::string> const& types, int const num) : WorkPiece(AddModeInput(types), num, WorkPiece::Fix::Inputs, WorkPiece::Fix::Inputs) {}
-
 void Distribution::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   // get the mode
   const Distribution::Mode mode = boost::any_cast<Distribution::Mode const>(inputs[0]);

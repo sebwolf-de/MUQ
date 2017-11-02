@@ -22,25 +22,6 @@ namespace muq {
       /// Create a muq::Modeling::Distribution with no fixed number of inputs and variable input/output types
       Distribution();
 
-      /// Create a muq::Modeling::Distribution with a fixed number of inputs and variable input/output types
-      /**
-	 @param[in] num The number of inputs 
-      */
-      Distribution(int const num);
-
-      /// Create a muq::Modeling::Distribution with a fixed number of inputs with specified types 
-      /**
-	 @param[in] types A vector of strings, each element is the type of an input 
-      */
-      Distribution(std::vector<std::string> const& types);
-
-      /// Create a muq::Modeling::Distribution with with some specified types 
-      /**
-	 @param[in] types A map from the input number to the input type
-	 @param[in] num The number of inputs (defaults to -1, which is unknown)
-      */
-      Distribution(std::map<unsigned int, std::string> const& types, int const num = -1);
-
       /// Evaluate the log-density
       /**
 	 If known, the log-density should be implemented by a child.  Calls LogDensityImpl, the default behavior is to return infinity (std::numeric_limits<double>::infinity()).
