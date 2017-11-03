@@ -40,6 +40,14 @@ namespace muq {
        */
       double NormBase(boost::any const& obj) const;
 
+      /// The inner product between two vectors
+      /**
+	 @param[in] vec1 The first vector
+	 @param[in] vec2 The second vector
+	 \return The inner product
+       */
+      double InnerProductBase(boost::any const& vec1, boost::any const& vec2) const;
+
       /// Access an element of a vector
       /**
 	 The return type is whatever the elements of the vector are (doubles, ints, ect ...)
@@ -103,6 +111,14 @@ namespace muq {
 	 \return The norm
        */
       virtual double Norm(boost::any const& obj) const;
+
+      /// The inner product between two vectors
+      /**
+	 @param[in] vec1 The first vector
+	 @param[in] vec2 The second vector
+	 \return The inner product
+       */
+      double InnerProduct(boost::any const& vec1, boost::any const& vec2) const;
 
       /// The dimension of a vector
       /**

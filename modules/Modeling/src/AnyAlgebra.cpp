@@ -93,7 +93,7 @@ double AnyAlgebra::NormBase(boost::any const& obj) const {
     return std::abs(boost::any_cast<double const>(obj));
   }
   
-  return 0.0;
+  return Norm(obj);
 }
 
 double AnyAlgebra::Norm(boost::any const& obj) const {
@@ -103,6 +103,103 @@ double AnyAlgebra::Norm(boost::any const& obj) const {
   assert(false);
 
   return -1.0;
+}
+
+double AnyAlgebra::InnerProductBase(boost::any const& vec1, boost::any const& vec2) const {
+  const std::string type1 = vec1.type().name();
+  const std::string type2 = vec2.type().name();
+
+  if( type1.compare(doubleType)==0 && type2.compare(doubleType)==0 ) {
+    return boost::any_cast<double const>(vec1)*boost::any_cast<double const>(vec2);
+  }
+
+  if( type1.compare(eigenVec2Type)==0 && type2.compare(eigenVec2Type)==0 ) {
+    const Eigen::Vector2d& x1 = boost::any_cast<Eigen::Vector2d const&>(vec1);
+    const Eigen::Vector2d& x2 = boost::any_cast<Eigen::Vector2d const&>(vec2);
+
+    return x1.dot(x2);    
+  }
+
+  if( type1.compare(eigenVec2Type)==0 && type2.compare(eigenVecType)==0 ) {
+    const Eigen::Vector2d& x1 = boost::any_cast<Eigen::Vector2d const&>(vec1);
+    const Eigen::VectorXd& x2 = boost::any_cast<Eigen::VectorXd const&>(vec2);
+    assert(x2.size()==2);
+
+    return x1.dot(x2);    
+  }
+
+  if( type1.compare(eigenVecType)==0 && type2.compare(eigenVec2Type)==0 ) {
+    const Eigen::VectorXd& x1 = boost::any_cast<Eigen::VectorXd const&>(vec1);
+    assert(x1.size()==2);
+    const Eigen::Vector2d& x2 = boost::any_cast<Eigen::Vector2d const&>(vec2);
+
+    return x1.dot(x2);    
+  }
+
+  if( type1.compare(eigenVec3Type)==0 && type2.compare(eigenVec3Type)==0 ) {
+    const Eigen::Vector3d& x1 = boost::any_cast<Eigen::Vector3d const&>(vec1);
+    const Eigen::Vector3d& x2 = boost::any_cast<Eigen::Vector3d const&>(vec2);
+
+    return x1.dot(x2);    
+  }
+
+  if( type1.compare(eigenVec3Type)==0 && type2.compare(eigenVecType)==0 ) {
+    const Eigen::Vector3d& x1 = boost::any_cast<Eigen::Vector3d const&>(vec1);
+    const Eigen::VectorXd& x2 = boost::any_cast<Eigen::VectorXd const&>(vec2);
+    assert(x2.size()==3);
+
+    return x1.dot(x2);    
+  }
+
+  if( type1.compare(eigenVecType)==0 && type2.compare(eigenVec3Type)==0 ) {
+    const Eigen::VectorXd& x1 = boost::any_cast<Eigen::VectorXd const&>(vec1);
+    assert(x1.size()==3);
+    const Eigen::Vector3d& x2 = boost::any_cast<Eigen::Vector3d const&>(vec2);
+
+    return x1.dot(x2);    
+  }
+
+  if( type1.compare(eigenVec4Type)==0 && type2.compare(eigenVec4Type)==0 ) {
+    const Eigen::Vector4d& x1 = boost::any_cast<Eigen::Vector4d const&>(vec1);
+    const Eigen::Vector4d& x2 = boost::any_cast<Eigen::Vector4d const&>(vec2);
+
+    return x1.dot(x2);    
+  }
+
+  if( type1.compare(eigenVec4Type)==0 && type2.compare(eigenVecType)==0 ) {
+    const Eigen::Vector4d& x1 = boost::any_cast<Eigen::Vector4d const&>(vec1);
+    const Eigen::VectorXd& x2 = boost::any_cast<Eigen::VectorXd const&>(vec2);
+    assert(x2.size()==4);
+
+    return x1.dot(x2); 
+  }
+
+  if( type1.compare(eigenVecType)==0 && type2.compare(eigenVec4Type)==0 ) {
+    const Eigen::VectorXd& x1 = boost::any_cast<Eigen::VectorXd const&>(vec1);
+    assert(x1.size()==4);
+    const Eigen::Vector4d& x2 = boost::any_cast<Eigen::Vector4d const&>(vec2);
+
+    return x1.dot(x2);    
+  }
+
+  if( type1.compare(eigenVecType)==0 && type2.compare(eigenVecType)==0 ) {
+    const Eigen::VectorXd& x1 = boost::any_cast<Eigen::VectorXd const&>(vec1);
+    const Eigen::VectorXd& x2 = boost::any_cast<Eigen::VectorXd const&>(vec2);
+    assert(x1.size()==x2.size());
+
+    return x1.dot(x2);    
+  }
+
+  return InnerProduct(vec1, vec2);
+}
+
+double AnyAlgebra::InnerProduct(boost::any const& vec1, boost::any const& vec2) const {
+  std::cerr << std::endl << "ERROR: Cannot compute the inner product between vectors with types " << boost::core::demangle(vec1.type().name()) << " and " << boost::core::demangle(vec2.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::InnerProduct()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::InnerProduct()" << std::endl << std::endl;
+  assert(false);
+
+  return 0.0;
 }
 
 bool AnyAlgebra::IsZeroBase(boost::any const& obj) const {

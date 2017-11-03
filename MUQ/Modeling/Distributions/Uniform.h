@@ -27,6 +27,13 @@ namespace muq {
     private:
 
       /// Evaluate the log-density
+      /**
+	 Inputs:
+	 <ol>
+	 <li> The state \f$x\f$
+	 </ol>
+	 \return The log-density (either 1 or negative infinity)
+       */
       virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) const override;
 
       /// Sample the distribution
