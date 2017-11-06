@@ -184,7 +184,7 @@ std::vector<std::string> WorkPiece::Types(std::vector<boost::any> const& vec) co
   types.reserve(vec.size());
 
   // populate types with the type of each element of vec
-  for(auto& it : vec ) {
+  for( auto it : vec ) {
     types.push_back(it.type().name());
   }
 
@@ -239,7 +239,7 @@ std::vector<boost::any> WorkPiece::Evaluate(ref_vector<boost::any> const& ins) {
   for( unsigned int i=0; i<outputs.size(); ++i ) {
     assert(CheckOutputType(i, outputs[i].type().name()));
   }
-  
+
   return outputs;
 }
 

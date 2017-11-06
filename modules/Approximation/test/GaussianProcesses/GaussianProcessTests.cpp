@@ -1,6 +1,8 @@
 #include "MUQ/Approximation/GaussianProcesses/CovarianceKernels.h"
 #include "MUQ/Approximation/GaussianProcesses/GaussianProcess.h"
 
+#include "MUQ/Utilities/RandomGenerator.h"
+
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -8,11 +10,12 @@
 #include <iostream>
 
 using namespace muq::Approximation;
+using namespace muq::Utilities;
 
 TEST(Approximation_GP, HyperFit1d)
 {
     const unsigned numPred  = 50;
-    const unsigned maxTrain = 50;
+    const unsigned maxTrain = 10;
     
     const double pi = 4.0 * atan(1.0);
 
@@ -21,35 +24,34 @@ TEST(Approximation_GP, HyperFit1d)
     predLocs.setLinSpaced(numPred, 0,1);
 
     // Generate random training locations
-    Eigen::RowVectorXd trainLocs(maxTrain);
-    std::random_device r;
-    std::default_random_engine e1(r());
-    std::uniform_real_distribution<double> uniform_dist(0.0, 1.0);
-    std::normal_distribution<double> normal_dist(0.0, 1.0);
-
-    for(int i=0; i<maxTrain; ++i)
-	trainLocs(i) = uniform_dist(e1);
-
+    Eigen::RowVectorXd trainLocs = Eigen::RowVectorXd::LinSpaced(maxTrain, 0, 1);
+    
     // Generate the training data (with some random noise)
     Eigen::RowVectorXd trainData(maxTrain);
     for(int i=0; i<maxTrain; ++i)
-	trainData(i) = sin(4*2*pi*trainLocs(i) ) + sqrt(1e-4)*normal_dist(e1);
+	trainData(i) = sin(4*2*pi*trainLocs(i) );
 
+    trainData += sqrt(1e-4)*RandomGenerator::GetNormal(maxTrain).transpose();
+    
     const unsigned dim = 1;
-    auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} )*PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});    
+    auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} ) * PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});    
    
     // Create the GP
-    ConstantMean mean(dim, 1);
-    auto gp = ConstructGP(mean, kernel);
+    ZeroMean mean(dim, 1);
+    GaussianProcess gp(mean, kernel);
 
 
-    gp.Fit(trainLocs, trainData);
+    for(int i=0; i<trainData.size(); ++i)
+        gp.Condition(trainLocs.col(i), trainData.col(i));
+
+    // Fit the hyperparameters
+    gp.Optimize();
     
     // Make a prediction
-    auto post = gp.Predict(predLocs);
+    Eigen::MatrixXd postMean = gp.PredictMean(predLocs);
 
     //for(int i=0; i<predLocs.cols(); ++i)
-    //	std::cout << "[" << predLocs(0,i) << ", " << post.mean(0,i) << "]," << std::endl;
+    //	std::cout << "[" << predLocs(0,i) << ", " << postMean(0,i) << "]," << std::endl;
     
 }
 
@@ -93,53 +95,18 @@ TEST(Approximation_GP, HyperFit2d)
     const unsigned dim = 2;
     auto kernel = SquaredExpKernel(dim, inds1, 2.0, 0.35, {0.1,10} )*SquaredExpKernel(dim, inds2, 2.0, 0.35, {0.1,10} );
 
-    
     // Create the GP
-    ConstantMean mean(dim, 1);
+    ZeroMean mean(dim, 1);
     auto gp = ConstructGP(mean, kernel);
 
-    gp.Fit(trainLocs, trainData);
+    for(int i=0; i<trainLocs.cols(); ++i)
+        gp.Condition(trainLocs.col(i),trainData.col(i));
+
     gp.Optimize();
     
     // Make a prediction
-    auto post = gp.Predict(predLocs);
+    std::pair<Eigen::MatrixXd, Eigen::MatrixXd> post = gp.Predict(predLocs, GaussianProcess::FullCov);
 
 }
 
-TEST(Approximation_GP, LinearTransformKernel)
-{
-    
-    const unsigned dim = 2;
-    Eigen::MatrixXd sigma2(2,2);
-    sigma2 << 1.0, 0.9,
-	      0.9, 1.5;
-    
-    auto kernel = ConstantKernel(dim, sigma2) * SquaredExpKernel(dim, 2.0, 0.35 );
 
-    EXPECT_EQ(2, kernel.coDim);
-    
-    Eigen::MatrixXd A = Eigen::MatrixXd::Random(3,2);
-
-    auto kernel2 = A*kernel;
-    auto kernel3 = A * ConstantKernel(dim, sigma2) * SquaredExpKernel(dim, 2.0, 0.35 );
-
-    Eigen::MatrixXd x1(dim,1);
-    x1 << 0.1, 0.4;
-
-    Eigen::MatrixXd x2(dim,1);
-    x2 << 0.2, 0.7;
-    
-    Eigen::MatrixXd result2 = kernel2.Evaluate(x1,x2);
-    Eigen::MatrixXd result3 = kernel3.Evaluate(x1,x2);
-
-    Eigen::MatrixXd expected = A * kernel.Evaluate(x1,x2) * A.transpose();
-
-    for(int j=0; j<A.rows(); ++j)
-    {
-	for(int i=0; i<A.rows(); ++i)
-	{
-	    EXPECT_NEAR(expected(i,j), result2(i,j), 1e-15);
-	    EXPECT_NEAR(expected(i,j), result3(i,j), 1e-15);
-	}
-    }
-}

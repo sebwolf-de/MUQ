@@ -79,3 +79,50 @@ TEST(LinearSDE, Concatenate)
     EXPECT_NEAR(cov0(1,1), cov(1,1), 1e-3);
     EXPECT_NEAR(cov0(1,0), cov(1,0), 1e-3);
 }
+
+
+TEST(LinearSDE, Discretize)
+{
+
+    Eigen::MatrixXd F(2,2);
+    F << 0, 1,
+        -1, 0;
+
+    Eigen::MatrixXd L = Eigen::MatrixXd::Ones(2, 1);
+    
+    Eigen::MatrixXd Q = Eigen::MatrixXd::Ones(1,1);
+    
+    boost::property_tree::ptree options;
+    options.put("SDE.dt", 1e-3);
+
+    LinearSDE sde(F,L,Q,options);
+    
+
+
+    const double dt = 1.25;
+    Eigen::VectorXd mu0(2);
+    mu0 << 1.0, 0;
+
+    Eigen::MatrixXd cov0(2,2);
+    cov0 << 0.2, 0.1,
+            0.1, 0.4;
+
+    Eigen::VectorXd mu1;
+    Eigen::MatrixXd cov1;
+    std::tie(mu1,cov1) = sde.EvolveDistribution(mu0,cov0, dt);
+
+    Eigen::MatrixXd A, Qpred;
+    std::tie(A,Qpred) = sde.Discretize(dt);
+
+    Eigen::VectorXd mu2 = A*mu0;
+    Eigen::MatrixXd cov2 = A*cov0*A.transpose() + Qpred;
+
+    const double tol = 1e-5;
+    EXPECT_NEAR(mu1(0), mu2(0), tol);
+    EXPECT_NEAR(mu1(1), mu2(1), tol);
+    EXPECT_NEAR(cov1(0,0), cov2(0,0), tol);
+    EXPECT_NEAR(cov1(0,1), cov2(0,1), tol);
+    EXPECT_NEAR(cov1(1,0), cov2(1,0), tol);
+    EXPECT_NEAR(cov1(1,1), cov2(1,1), tol);
+    
+}

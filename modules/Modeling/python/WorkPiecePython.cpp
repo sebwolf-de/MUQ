@@ -4,6 +4,8 @@
 #include "MUQ/Modeling/WorkGraphPiece.h"
 #include "MUQ/Modeling/WorkGraph.h"
 
+#include "MUQ/Modeling/Dolfin/FenicsPiece.h"
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
@@ -11,6 +13,9 @@
 #include <string>
 
 #include <boost/any.hpp>
+#include <functional>
+#include <vector>
+
 #include "PyAny.h"
 
 using namespace muq::Modeling;
@@ -22,12 +27,11 @@ void AnyFunction(boost::any x)
     std::cout << "Success!  Ran AnyFunction with type " << x.type().name() << std::endl;
 }
 
-
 PYBIND11_PLUGIN(pymuqModeling) {
     py::module m("pymuqModeling", "Python bindings for the muqModeling library.");
-    
-    m.def("AnyFunction", &AnyFunction);
 
+    m.def("AnyFunction", &AnyFunction);
+    
     // Define some functions from the WorkPiece base class
     py::class_<WorkPiece,  std::shared_ptr<WorkPiece>> wp(m, "WorkPiece");
     wp
@@ -67,6 +71,11 @@ PYBIND11_PLUGIN(pymuqModeling) {
         .def("Constant", (bool (WorkGraph::*)(std::string const&) const) &WorkGraph::Constant)
         .def("GetConstantOutputs", (std::vector<boost::any> const& (WorkGraph::*)(std::string const&) const) &WorkGraph::GetConstantOutputs);
     
+
+    py::class_<FenicsPiece, std::shared_ptr<FenicsPiece>> fp(m, "FenicsPiece", wp);
+    fp
+        .def(py::init<pybind11::object const&, pybind11::object const&, std::vector<pybind11::object> const&>() )
+        .def("EvaluateVec", &FenicsPiece::EvaluateVec);
     
     return m.ptr();
 }

@@ -79,7 +79,7 @@ void MaternKernel::SetParams(Eigen::VectorXd const& params)
     length = params(1);
 }
 
-std::shared_ptr<StateSpaceGP> MaternKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
+std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> MaternKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
 {
     int p = nu-0.5;
     
@@ -126,5 +126,5 @@ std::shared_ptr<StateSpaceGP> MaternKernel::GetStateSpace(boost::property_tree::
     
     Eigen::MatrixXd Pinf = muq::Utilities::LyapunovSolver<double>().compute(F->GetMatrix().transpose(), Q).matrixX().real();
     
-    return std::make_shared<StateSpaceGP>(sde, H, Pinf);
+    return std::make_tuple(sde, H, Pinf);
 }

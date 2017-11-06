@@ -21,13 +21,3 @@ CreateCompileGroup(
     ""
     WorkPiecePython.cpp
 )
-
-CreateCompileGroup(
-    MODELING_DOLFIN
-    "Wrappers allowing the construction of WorkPieces Fenics wrappers for the basic building blocks of the Modeling library."
-    "pymuqModeling"
-    "MODELING_CORE_PYTHON"
-    "PYTHON;DOLFIN"
-    ""
-    FenicsPiece.cpp
-)

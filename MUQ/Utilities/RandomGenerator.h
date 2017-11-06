@@ -2,12 +2,7 @@
 #ifndef _RandomGenerator_h
 #define _RandomGenerator_h
 
-
-//#include <fstream>
-//#include <iostream>
 #include <random>
-//#include <mutex>
-//#include <ctime>
 
 #include <Eigen/Core>
 #include <array>
@@ -32,13 +27,7 @@ private:
 
 
 /** The RandGen generator class is a wrapper around the std::random number generation library.  The point of this class
- *  is to provide a super easy to use interface that can easily be mimiced when Boost is not available. These static
- *     methods
- *  will provide safe random numbers, in that the global state of the random number generator is maintained. Thread
- * safe.
- *
- *  NOTE: must call random numbers with dist(engine), not with the bind strategy, as that ruins the global
- *  shared random state. Mutex strategy taken from boost synchronization page tutorial.
+ *  is to provide a super easy to use interface for generating Random numbers of canonical scalar distributions (e.g., Uniform, Gaussian, Gamma, Uniform Integer, etc...
  */
 class RandomGenerator {
 public:
@@ -71,8 +60,6 @@ public:
 
 private:
 
-  static std::mutex  & GetGeneratorMutex();
-
   friend RandomGeneratorTemporarySetSeed;
   static GeneratorType & GetGenerator();
 };
@@ -85,7 +72,7 @@ public:
   SeedGenerator(const std::array<std::seed_seq::result_type, RandomGenerator::GeneratorType::state_size> &seed_data);
   //draw a seed for the entire state, as per: http://stackoverflow.com/questions/15509270/does-stdmt19937-require-warmup
   std::seed_seq seed_seq;
-  virtual ~SeedGenerator() = default;
+  //virtual ~SeedGenerator() = default;
 };
 
 

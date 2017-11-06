@@ -57,9 +57,27 @@ where \f$f(t)\f$ is the solution in \f$\mathbb{R}^M\f$, \f$F\f$ is an \f$M\times
          */
         std::pair<Eigen::VectorXd, Eigen::MatrixXd> EvolveDistribution(std::pair<Eigen::VectorXd,Eigen::MatrixXd> const& muCov,
                                                                        double                                            T) const{
-            return EvolveDistribution(muCov.first, muCov.second, dt);
+            return EvolveDistribution(muCov.first, muCov.second, T);
         }; 
 
+
+        /** 
+           Compute a matrix A and covariance Q such that \f$x(t+\delta t) = A x(t) + q\f$ where \f$q\f$ is a normal random variable with covariance \f$Q\f$.
+         */
+        std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Discretize(double deltaT);
+        
+        /** @brief Combines the states of multiple SDEs into a single monolitch SDE.
+            @details Consider \f$N\f$ different stochastic differential equations defined by matrices \f$F_i\f$, \f$L_i\f$, and process covariances \f$Q_i\f$.   This function creates a new SDE defined by block diagonal matrices \f$F\f$, \f$L\f$, and \f$Q\f$:
+\f[
+F = \left[\begin{array}{cccc} F_1 & 0 & \cdots & \\ 0 & F_2 & 0 \\ \vdots & & \ddots & \\ 0 & \cdots & & F_N \end{array}\right]
+\f]
+\f[
+L = \left[\begin{array}{cccc} L_1 & 0 & \cdots & \\ 0 & L_2 & 0 \\ \vdots & & \ddots & \\ 0 & \cdots & & L_N \end{array}\right]
+\f]
+\f[
+Q = \left[\begin{array}{cccc} Q_1 & 0 & \cdots & \\ 0 & Q_2 & 0 \\ \vdots & & \ddots & \\ 0 & \cdots & & Q_N \end{array}\right]
+\f]
+         */
         static std::shared_ptr<LinearSDE> Concatenate(std::vector<std::shared_ptr<LinearSDE>> const& sdes,
                                                       boost::property_tree::ptree                    options = boost::property_tree::ptree());
         

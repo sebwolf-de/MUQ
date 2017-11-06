@@ -7,11 +7,13 @@
 set(MUQ_LIBRARIES )
 set(MUQ_PYTHON_LIBRARIES )
 
+message("MU_LINK_LIBS = ${MUQ_LINK_LIBS}")
 # Build all the targets
 foreach(libName ${MUQ_TARGETS})
 
     list(LENGTH ${libName}_SOURCES strLength)
     if(${strLength} GREATER 0)
+
 
         string(REGEX MATCH "^pymuq" IsPythonWrapper ${libName})
 
@@ -29,6 +31,17 @@ foreach(libName ${MUQ_TARGETS})
         
         TARGET_LINK_LIBRARIES(${libName} PUBLIC ${MUQ_LINK_LIBS})
 
+        # Add dependencies for any required dependencies that MUQ is going to build internally
+        foreach(depend ${MUQ_REQUIRES})
+            message(STATUS "Checking for dependency of ${libName} on internal build of ${depend}")
+            if(USE_INTERNAL_${depend})
+                message(STATUS "Adding dependency of ${libName} on ${depend}")
+                add_dependencies(${libName} ${depend})
+            endif()
+        endforeach()
+    
+        list(APPEND MUQ_LIBRARIES ${libName})
+        
         install(TARGETS ${libName}
                 EXPORT ${CMAKE_PROJECT_NAME}Depends
                 LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
@@ -60,14 +73,15 @@ foreach(group ${MUQ_GROUPS})
 
         # Add dependencies between different MUQ libraries
         foreach(depend ${${group}_REQUIRES_GROUPS})
+
+        message(STATUS "Thinking about connection between ${${group}_LIBRARY} and ${${depend}_LIBRARY}") 
             if(NOT ${${group}_LIBRARY} STREQUAL ${${depend}_LIBRARY})
                 IF( ${depend}_IS_COMPILED )
                     message(STATUS "Trying to add connection between ${${group}_LIBRARY} and ${${depend}_LIBRARY}")
                     target_link_libraries(${${group}_LIBRARY} PUBLIC ${${depend}_LIBRARY})
                     add_dependencies(${${group}_LIBRARY} ${${depend}_LIBRARY})
                 endif()
-            endif()
-            
+          endif()
         endforeach()
     endif()
     

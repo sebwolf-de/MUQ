@@ -20,4 +20,5 @@ CreateCompileGroup(
     "EIGEN3"
     ""
     Filtering/KalmanFilter.cpp
+    Filtering/KalmanSmoother.cpp
 )
