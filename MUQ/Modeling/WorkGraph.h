@@ -3,6 +3,7 @@
 
 //#include "MUQ/Modeling/WorkGraphPiece.h"
 #include "MUQ/Modeling/NodeNameFinder.h"
+#include "MUQ/Modeling/AnyAlgebra.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/filtered_graph.hpp>
@@ -13,7 +14,6 @@ namespace muq {
   namespace Modeling {
 
     class WorkGraphPiece;
-    class AnyAlgebra;
     class WorkPiece;
     class ConstantPiece;
     
