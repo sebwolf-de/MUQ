@@ -55,7 +55,7 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
   int paramSize = -1;
 
   if( wrtIn>=0 && wrtOut==0 && wrtIn<rhs->numInputs ) { // we are computing the derivative wrt one of the rhs parameters
-    paramSize = algebra->VectorDimensionBase(inputs[wrtIn]); // the dimension of the parameter
+    paramSize = algebra->Size(inputs[wrtIn]); // the dimension of the parameter
 
     // set up sensitivity vector
     sensState = N_VCloneVectorArray_Serial(paramSize, state);

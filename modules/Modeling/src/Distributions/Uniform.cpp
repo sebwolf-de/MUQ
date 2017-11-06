@@ -32,13 +32,13 @@ std::vector<std::pair<double, double> > Uniform::ComputeBounds(std::vector<std::
 
 double Uniform::LogDensityImpl(ref_vector<boost::any> const& inputs) const {
   // get the dimension
-  const unsigned int dim = algebra->VectorDimensionBase(inputs[0].get());
+  const unsigned int dim = algebra->Size(inputs[0].get());
   assert(dim==bounds.size());
 
   // loop though each dimension
   for( unsigned int i=0; i<dim; ++i ) {
     // get the value of the point for this dimension
-    const double x = boost::any_cast<double const>(algebra->AccessElementBase(i, inputs[0].get()));
+    const double x = boost::any_cast<double const>(algebra->AccessElement(inputs[0].get(), i));
 
     // if this dimension is outside the hypercube
     if( x<bounds[i].first || x>bounds[i].second ) {

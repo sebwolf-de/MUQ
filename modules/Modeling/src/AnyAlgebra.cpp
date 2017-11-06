@@ -4,230 +4,348 @@ using namespace muq::Modeling;
 
 AnyAlgebra::AnyAlgebra() {}
 
-unsigned int AnyAlgebra::VectorDimensionBase(boost::any const& vec) const {
-  if( doubleType.compare(vec.type().name())==0 ) { // the type is a double
-    return 1;
-  }
-
-  if( eigenVec2Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector2d
-    // return the size
-    return 2;
-  }
-
-  if( eigenVec3Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector3d
-    // return the size
-    return 3;
-  }
-
-  if( eigenVec4Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector4d
-    // return the size
-    return 4;
-  }
-
-  if( eigenVecType.compare(vec.type().name())==0 ) { // the type is an Eigen::VectorXd
-    // get a constant reference to the Eigen::VectorXd
-    const Eigen::VectorXd& vecref = boost::any_cast<const Eigen::VectorXd&>(vec);
-    
-    // return the size
-    return vecref.size();
-  }
-
-#if MUQ_HAS_SUNDIALS==1
-  if( N_VectorType.compare(vec.type().name())==0 ) { // the type is a N_Vector
-    // get a constant reference to the N_Vector
-    const N_Vector& vecref = boost::any_cast<const N_Vector&>(vec);
-    
-    // return the size
-    return NV_LENGTH_S(vecref);
-  }
-#endif
-
-  return VectorDimension(vec);
+bool AnyAlgebra::IsScalar(std::type_info const& obj_type) const {
+  // is this a scalar type?
+  return typeid(double)==obj_type || typeid(float)==obj_type || typeid(int)==obj_type || typeid(unsigned int)==obj_type;
 }
 
-boost::any AnyAlgebra::ZeroVectorBase(std::string const& type, unsigned int size) const {
-  // note: we need to implicitly convert Eigen types or they a returned as: Eigen::CwiseNullaryOp<.,.>
-  if( eigenVec2Type.compare(type)==0 ) { // 2D Eigen vector
-    return (Eigen::Vector2d)Eigen::Vector2d::Zero();
-  } else if( eigenVec3Type.compare(type)==0 ) { // 3D Eigen vector
-    return (Eigen::Vector3d)Eigen::Vector3d::Zero();
-  } else if( eigenVec4Type.compare(type)==0 ) { // 4D Eigen vector
-    return (Eigen::Vector4d)Eigen::Vector4d::Zero();
-  } else if( eigenVecType.compare(type)==0 ) { // XD Eigen vector
-    return (Eigen::VectorXd)Eigen::VectorXd::Zero(size);
-  } else if( doubleType.compare(type)==0 ) { // double
+bool AnyAlgebra::IsEigenVector(std::type_info const& obj_type) const {
+  // is this an Eigen::Vector type?
+  return typeid(Eigen::Vector2d)==obj_type
+    || typeid(Eigen::Vector2f)==obj_type
+    || typeid(Eigen::Vector2i)==obj_type
+    || typeid(Eigen::Vector3d)==obj_type
+    || typeid(Eigen::Vector3f)==obj_type
+    || typeid(Eigen::Vector3i)==obj_type
+    || typeid(Eigen::Vector4d)==obj_type
+    || typeid(Eigen::Vector4f)==obj_type
+    || typeid(Eigen::Vector4i)==obj_type
+    || typeid(Eigen::VectorXd)==obj_type
+    || typeid(Eigen::VectorXf)==obj_type
+    || typeid(Eigen::VectorXi)==obj_type;
+}
+
+bool AnyAlgebra::IsEigenMatrix(std::type_info const& obj_type) const {
+  // is this an Eigen::Matrix type?
+  return typeid(Eigen::Matrix2d)==obj_type
+    || typeid(Eigen::Matrix2f)==obj_type
+    || typeid(Eigen::Matrix2i)==obj_type
+    || typeid(Eigen::Matrix3d)==obj_type
+    || typeid(Eigen::Matrix3f)==obj_type
+    || typeid(Eigen::Matrix3i)==obj_type
+    || typeid(Eigen::Matrix4d)==obj_type
+    || typeid(Eigen::Matrix4f)==obj_type
+    || typeid(Eigen::Matrix4i)==obj_type
+    || typeid(Eigen::MatrixXd)==obj_type
+    || typeid(Eigen::MatrixXf)==obj_type
+    || typeid(Eigen::MatrixXi)==obj_type;
+}
+
+#if MUQ_HAS_SUNDIALS==1
+bool AnyAlgebra::IsSundialsVector(std::type_info const& obj_type) const {
+  return typeid(N_Vector)==obj_type;
+}
+#endif
+
+unsigned int AnyAlgebra::EigenVectorSize(boost::any const& vec) const {
+  // fixed size vectors
+  if( typeid(Eigen::Vector2d)==vec.type() ) { return 2; }
+  if( typeid(Eigen::Vector3d)==vec.type() ) { return 3; }
+  if( typeid(Eigen::Vector4d)==vec.type() ) { return 4; }
+
+  // generic Eigen::VectorXd
+  const Eigen::VectorXd& eig = boost::any_cast<Eigen::VectorXd const&>(vec);
+  return eig.size();
+}
+
+unsigned int AnyAlgebra::EigenMatrixSize(boost::any const& mat, int const dim) const {
+  // fixed size vectors
+  if( typeid(Eigen::Matrix2d)==mat.type() ) { return dim==-1? 4 : 2;}
+  if( typeid(Eigen::Matrix3d)==mat.type() ) { return dim==-1? 9 : 3; }
+  if( typeid(Eigen::Matrix4d)==mat.type() ) { return dim==-1? 16 : 4; }
+
+  // generic Eigen::MatrixXd
+  const Eigen::MatrixXd& eig = boost::any_cast<Eigen::MatrixXd const&>(mat);
+  switch( dim ) {
+  case 0:
+    return eig.rows();
+  case 1:
+    return eig.cols();
+  default:
+    return eig.size();
+  }
+}
+
+#if MUQ_HAS_SUNDIALS==1
+unsigned int AnyAlgebra::SundialsVectorSize(boost::any const& vec) const {
+  const N_Vector& sun = boost::any_cast<N_Vector const&>(vec);
+
+  return NV_LENGTH_S(sun);
+}
+#endif
+
+unsigned int AnyAlgebra::Size(boost::any const& obj, int const dim) const {
+  // scalars are size one
+  if( IsScalar(obj.type()) ) { return 1; }
+
+  // get the size of an Eigen::VectorXd
+  if( IsEigenVector(obj.type()) ) { return EigenVectorSize(obj); }
+
+  // get the size of an Eigen::MatrixXd
+  if( IsEigenMatrix(obj.type()) ) { return EigenMatrixSize(obj, dim); }
+
+  // get the size of Sundials vectors
+  if( IsSundialsVector(obj.type()) ) { return SundialsVectorSize(obj); }
+
+  return SizeImpl(obj);
+}
+
+unsigned int AnyAlgebra::SizeImpl(boost::any const& obj) const {
+  std::cerr << std::endl << "ERROR: cannot compute the size of an object with type " << boost::core::demangle(obj.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::SizeImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::SizeImpl()" << std::endl << std::endl;
+  assert(false);
+
+  return 0;
+}
+
+boost::any AnyAlgebra::ZeroEigenVector(std::type_info const& type, unsigned int const size) const {  
+  if( typeid(Eigen::Vector2d)==type ) { return (Eigen::Vector2d)Eigen::Vector2d::Zero(); }
+  if( typeid(Eigen::Vector2f)==type ) { return (Eigen::Vector2f)Eigen::Vector2f::Zero(); }
+  if( typeid(Eigen::Vector2i)==type ) { return (Eigen::Vector2i)Eigen::Vector2i::Zero(); }
+  
+  if( typeid(Eigen::Vector3d)==type ) { return (Eigen::Vector3d)Eigen::Vector3d::Zero(); }
+  if( typeid(Eigen::Vector3f)==type ) { return (Eigen::Vector3f)Eigen::Vector3f::Zero(); }
+  if( typeid(Eigen::Vector3i)==type ) { return (Eigen::Vector3i)Eigen::Vector3i::Zero(); }
+  
+  if( typeid(Eigen::Vector4d)==type ) { return (Eigen::Vector4d)Eigen::Vector4d::Zero(); }
+  if( typeid(Eigen::Vector4f)==type ) { return (Eigen::Vector4f)Eigen::Vector4f::Zero(); }
+  if( typeid(Eigen::Vector4i)==type ) { return (Eigen::Vector4i)Eigen::Vector4i::Zero(); }
+
+  if( typeid(Eigen::VectorXd)==type ) { return (Eigen::VectorXd)Eigen::VectorXd::Zero(size); }
+  if( typeid(Eigen::VectorXf)==type ) { return (Eigen::VectorXf)Eigen::VectorXf::Zero(size); }
+  if( typeid(Eigen::VectorXi)==type ) { return (Eigen::VectorXi)Eigen::VectorXi::Zero(size); }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::ZeroEigenMatrix(std::type_info const& type, unsigned int const rows, unsigned int const cols) const {
+  if( typeid(Eigen::Matrix2d)==type ) { return (Eigen::Matrix2d)Eigen::Matrix2d::Zero(); }
+  if( typeid(Eigen::Matrix2f)==type ) { return (Eigen::Matrix2f)Eigen::Matrix2f::Zero(); }
+  if( typeid(Eigen::Matrix2i)==type ) { return (Eigen::Matrix2i)Eigen::Matrix2i::Zero(); }
+  
+  if( typeid(Eigen::Matrix3d)==type ) { return (Eigen::Matrix3d)Eigen::Matrix3d::Zero(); }
+  if( typeid(Eigen::Matrix3f)==type ) { return (Eigen::Matrix3f)Eigen::Matrix3f::Zero(); }
+  if( typeid(Eigen::Matrix3i)==type ) { return (Eigen::Matrix3i)Eigen::Matrix3i::Zero(); }
+  
+  if( typeid(Eigen::Matrix4d)==type ) { return (Eigen::Matrix4d)Eigen::Matrix4d::Zero(); }
+  if( typeid(Eigen::Matrix4f)==type ) { return (Eigen::Matrix4f)Eigen::Matrix4f::Zero(); }
+  if( typeid(Eigen::Matrix4i)==type ) { return (Eigen::Matrix4i)Eigen::Matrix4i::Zero(); }
+
+  if( typeid(Eigen::MatrixXd)==type ) { return (Eigen::MatrixXd)Eigen::MatrixXd::Zero(rows, cols); }
+  if( typeid(Eigen::MatrixXf)==type ) { return (Eigen::MatrixXf)Eigen::MatrixXf::Zero(rows, cols); }
+  if( typeid(Eigen::MatrixXi)==type ) { return (Eigen::MatrixXi)Eigen::MatrixXi::Zero(rows, cols); }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::ZeroScalar(std::type_info const& type) const {
+  if( typeid(double)==type ) { return (double)0.0; }
+  if( typeid(float)==type ) { return (float)0.0; }
+  if( typeid(int)==type ) { return (int)0; }
+  if( typeid(unsigned int)==type ) { return (unsigned int)0; }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::Zero(std::type_info const& type, unsigned int rows, unsigned int const cols) const {
+  if( IsScalar(type) ) { return ZeroScalar(type); }
+  
+  if( IsEigenVector(type) ) { return ZeroEigenVector(type, rows); }
+
+  if( IsEigenMatrix(type) ) { return ZeroEigenMatrix(type, rows, cols); }
+
+  if( type==typeid(double) ) {
     return 0.0;
   } 
   
-  return ZeroVector(type, size);
+  return ZeroImpl(type, rows, cols);
 }
 
-boost::any AnyAlgebra::ZeroVector(std::string const& type, unsigned int const size) const {
-  std::cerr << std::endl << "ERROR: cannot compute zero of a vector with type " << boost::core::demangle(type.c_str()) << std::endl;
-  std::cerr << "\tTry overloading boost::any AnyAlgebra::ZeroVector()" << std::endl << std::endl;
-  std::cerr << "\tError in AnyAlgebra::ZeroVector()" << std::endl << std::endl;
+boost::any AnyAlgebra::ZeroImpl(std::type_info const& type, unsigned int const rows, unsigned int const cols) const {
+  std::cerr << std::endl << "ERROR: cannot compute zero of an object with type " << boost::core::demangle(type.name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::ZeroImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::ZeroImpl()" << std::endl << std::endl;
   assert(false);
 
   return boost::none;
 }
 
-double AnyAlgebra::NormBase(boost::any const& obj) const {
-  const std::string type = obj.type().name();
-    
-  if( eigenVec2Type.compare(type)==0 ) { // 2D Eigen vector
-    const Eigen::Vector2d& v = boost::any_cast<Eigen::Vector2d const&>(obj);
-    return v.norm();
-  } else if( eigenVec3Type.compare(type)==0 ) { // 3D Eigen vector
-    const Eigen::Vector3d& v = boost::any_cast<Eigen::Vector3d const&>(obj);
-    return v.norm();
-  } else if( eigenVec4Type.compare(type)==0 ) { // 4D Eigen vector
-    const Eigen::Vector4d& v = boost::any_cast<Eigen::Vector4d const&>(obj);
-    return v.norm();
-  } else if( eigenVecType.compare(type)==0 ) { // XD Eigen vector
-    const Eigen::VectorXd& v = boost::any_cast<Eigen::VectorXd const&>(obj);
-    return v.norm();
-  } else if( eigenMatType.compare(type)==0 ) { // XD Eigen matrix
-    const Eigen::MatrixXd& v = boost::any_cast<Eigen::MatrixXd const&>(obj);
-    return v.norm();
-  } else if( doubleType.compare(type)==0 ) { // double
-    return std::abs(boost::any_cast<double const>(obj));
-  }
+double AnyAlgebra::ScalarNorm(boost::any const& obj) const {
+  if( typeid(double)==obj.type() ) { return ScalarMagnitude<double>(obj); }
+  if( typeid(float)==obj.type() ) { return ScalarMagnitude<float>(obj); }
+  if( typeid(int)==obj.type() ) { return ScalarMagnitude<int>(obj); }
+  if( typeid(unsigned int)==obj.type() ) { return ScalarMagnitude<unsigned int>(obj); }
+
+  // something went wrong
+  assert(false);
+  return -1.0;
+}
+
+double AnyAlgebra::EigenVectorNorm(boost::any const& vec) const {
+  if( typeid(Eigen::Vector2d)==vec.type() ) { return EigenNorm<Eigen::Vector2d>(vec); }
+  if( typeid(Eigen::Vector3d)==vec.type() ) { return EigenNorm<Eigen::Vector3d>(vec); }
+  if( typeid(Eigen::Vector4d)==vec.type() ) { return EigenNorm<Eigen::Vector4d>(vec); }
   
-  return Norm(obj);
+  return EigenNorm<Eigen::VectorXd>(vec);
+}
+
+double AnyAlgebra::EigenMatrixNorm(boost::any const& mat) const {
+  if( typeid(Eigen::Matrix2d)==mat.type() ) { return EigenNorm<Eigen::Matrix2d>(mat); }
+  if( typeid(Eigen::Matrix3d)==mat.type() ) { return EigenNorm<Eigen::Matrix3d>(mat); }
+  if( typeid(Eigen::Matrix4d)==mat.type() ) { return EigenNorm<Eigen::Matrix4d>(mat); }
+  
+  return EigenNorm<Eigen::MatrixXd>(mat);
 }
 
 double AnyAlgebra::Norm(boost::any const& obj) const {
+  if( IsScalar(obj.type()) ) { return ScalarNorm(obj); }
+
+  if( IsEigenVector(obj.type()) ) { return EigenVectorNorm(obj); }
+
+  if( IsEigenMatrix(obj.type()) ) { return EigenMatrixNorm(obj); }
+    
+  return NormImpl(obj);
+}
+
+double AnyAlgebra::NormImpl(boost::any const& obj) const {
   std::cerr << std::endl << "ERROR: Cannot compute the norm of an object with type " << boost::core::demangle(obj.type().name()) << std::endl;
-  std::cerr << "\tTry overloading boost::any AnyAlgebra::Norm()" << std::endl << std::endl;
-  std::cerr << "\tError in AnyAlgebra::Norm()" << std::endl << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::NormImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::NormImpl()" << std::endl << std::endl;
   assert(false);
 
   return -1.0;
 }
 
-double AnyAlgebra::InnerProductBase(boost::any const& vec1, boost::any const& vec2) const {
-  const std::string type1 = vec1.type().name();
-  const std::string type2 = vec2.type().name();
+double AnyAlgebra::ScalarInnerProduct(boost::any const& vec1, boost::any const& vec2) const {
+  double ip = ScalarInProd<double>(vec1, vec2);
+  if( !std::isnan(ip) ) { return ip; }
 
-  if( type1.compare(doubleType)==0 && type2.compare(doubleType)==0 ) {
-    return boost::any_cast<double const>(vec1)*boost::any_cast<double const>(vec2);
-  }
+  ip = ScalarInProd<float>(vec1, vec2);
+  if( !std::isnan(ip) ) { return ip; }
 
-  if( type1.compare(eigenVec2Type)==0 && type2.compare(eigenVec2Type)==0 ) {
-    const Eigen::Vector2d& x1 = boost::any_cast<Eigen::Vector2d const&>(vec1);
-    const Eigen::Vector2d& x2 = boost::any_cast<Eigen::Vector2d const&>(vec2);
+  ip = ScalarInProd<int>(vec1, vec2);
+  if( !std::isnan(ip) ) { return ip; }
 
-    return x1.dot(x2);    
-  }
+  ip = ScalarInProd<unsigned int>(vec1, vec2);
+  if( !std::isnan(ip) ) { return ip; }
 
-  if( type1.compare(eigenVec2Type)==0 && type2.compare(eigenVecType)==0 ) {
-    const Eigen::Vector2d& x1 = boost::any_cast<Eigen::Vector2d const&>(vec1);
-    const Eigen::VectorXd& x2 = boost::any_cast<Eigen::VectorXd const&>(vec2);
-    assert(x2.size()==2);
+  // something went wrong
+  return std::numeric_limits<double>::quiet_NaN();
+}
 
-    return x1.dot(x2);    
-  }
+double AnyAlgebra::EigenVectorInnerProduct(boost::any const& vec1, boost::any const& vec2) const {
+  double ip = EigenVectorInProd<Eigen::Vector2d>(vec1, vec2);
+  if( !std::isnan(ip) ) { return ip; }
 
-  if( type1.compare(eigenVecType)==0 && type2.compare(eigenVec2Type)==0 ) {
-    const Eigen::VectorXd& x1 = boost::any_cast<Eigen::VectorXd const&>(vec1);
-    assert(x1.size()==2);
-    const Eigen::Vector2d& x2 = boost::any_cast<Eigen::Vector2d const&>(vec2);
+  ip = EigenVectorInProd<Eigen::Vector3d>(vec1, vec2);
+  if( !std::isnan(ip) ) { return ip; }
 
-    return x1.dot(x2);    
-  }
+  ip = EigenVectorInProd<Eigen::Vector4d>(vec1, vec2);
+  if( !std::isnan(ip) ) { return ip; }
 
-  if( type1.compare(eigenVec3Type)==0 && type2.compare(eigenVec3Type)==0 ) {
-    const Eigen::Vector3d& x1 = boost::any_cast<Eigen::Vector3d const&>(vec1);
-    const Eigen::Vector3d& x2 = boost::any_cast<Eigen::Vector3d const&>(vec2);
-
-    return x1.dot(x2);    
-  }
-
-  if( type1.compare(eigenVec3Type)==0 && type2.compare(eigenVecType)==0 ) {
-    const Eigen::Vector3d& x1 = boost::any_cast<Eigen::Vector3d const&>(vec1);
-    const Eigen::VectorXd& x2 = boost::any_cast<Eigen::VectorXd const&>(vec2);
-    assert(x2.size()==3);
-
-    return x1.dot(x2);    
-  }
-
-  if( type1.compare(eigenVecType)==0 && type2.compare(eigenVec3Type)==0 ) {
-    const Eigen::VectorXd& x1 = boost::any_cast<Eigen::VectorXd const&>(vec1);
-    assert(x1.size()==3);
-    const Eigen::Vector3d& x2 = boost::any_cast<Eigen::Vector3d const&>(vec2);
-
-    return x1.dot(x2);    
-  }
-
-  if( type1.compare(eigenVec4Type)==0 && type2.compare(eigenVec4Type)==0 ) {
-    const Eigen::Vector4d& x1 = boost::any_cast<Eigen::Vector4d const&>(vec1);
-    const Eigen::Vector4d& x2 = boost::any_cast<Eigen::Vector4d const&>(vec2);
-
-    return x1.dot(x2);    
-  }
-
-  if( type1.compare(eigenVec4Type)==0 && type2.compare(eigenVecType)==0 ) {
-    const Eigen::Vector4d& x1 = boost::any_cast<Eigen::Vector4d const&>(vec1);
-    const Eigen::VectorXd& x2 = boost::any_cast<Eigen::VectorXd const&>(vec2);
-    assert(x2.size()==4);
-
-    return x1.dot(x2); 
-  }
-
-  if( type1.compare(eigenVecType)==0 && type2.compare(eigenVec4Type)==0 ) {
-    const Eigen::VectorXd& x1 = boost::any_cast<Eigen::VectorXd const&>(vec1);
-    assert(x1.size()==4);
-    const Eigen::Vector4d& x2 = boost::any_cast<Eigen::Vector4d const&>(vec2);
-
-    return x1.dot(x2);    
-  }
-
-  if( type1.compare(eigenVecType)==0 && type2.compare(eigenVecType)==0 ) {
-    const Eigen::VectorXd& x1 = boost::any_cast<Eigen::VectorXd const&>(vec1);
-    const Eigen::VectorXd& x2 = boost::any_cast<Eigen::VectorXd const&>(vec2);
-    assert(x1.size()==x2.size());
-
-    return x1.dot(x2);    
-  }
-
-  return InnerProduct(vec1, vec2);
+  return EigenVectorInProd<Eigen::VectorXd, Eigen::VectorXd>(vec1, vec2);
 }
 
 double AnyAlgebra::InnerProduct(boost::any const& vec1, boost::any const& vec2) const {
+  if( IsScalar(vec1.type()) && IsScalar(vec2.type()) ) { return ScalarInnerProduct(vec1, vec2); }
+
+  if( IsEigenVector(vec1.type()) && IsEigenVector(vec2.type()) ) { return EigenVectorInnerProduct(vec1, vec2); }
+
+  return InnerProductImpl(vec1, vec2);
+}
+
+double AnyAlgebra::InnerProductImpl(boost::any const& vec1, boost::any const& vec2) const {
   std::cerr << std::endl << "ERROR: Cannot compute the inner product between vectors with types " << boost::core::demangle(vec1.type().name()) << " and " << boost::core::demangle(vec2.type().name()) << std::endl;
-  std::cerr << "\tTry overloading boost::any AnyAlgebra::InnerProduct()" << std::endl << std::endl;
-  std::cerr << "\tError in AnyAlgebra::InnerProduct()" << std::endl << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::InnerProductImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::InnerProductImpl()" << std::endl << std::endl;
   assert(false);
 
   return 0.0;
 }
 
-bool AnyAlgebra::IsZeroBase(boost::any const& obj) const {
-  const std::string type = obj.type().name();
-  
-  if( eigenVec2Type.compare(type)==0 ) { // 2D Eigen vector
-    const Eigen::Vector2d& v = boost::any_cast<Eigen::Vector2d const&>(obj);
-    return (v.array()==Eigen::Array2d::Zero()).all();
-  } else if( eigenVec3Type.compare(type)==0 ) { // 3D Eigen vector
-    const Eigen::Vector3d& v = boost::any_cast<Eigen::Vector3d const&>(obj);
-    return (v.array()==Eigen::Array3d::Zero()).all();
-  } else if( eigenVec4Type.compare(type)==0 ) { // 4D Eigen vector
-    const Eigen::Vector4d& v = boost::any_cast<Eigen::Vector4d const&>(obj);
-    return (v.array()==Eigen::Array4d::Zero()).all();
-  } else if( eigenVecType.compare(type)==0 ) { // XD Eigen vector
-    const Eigen::VectorXd& v = boost::any_cast<Eigen::VectorXd const&>(obj);
-    return (v.array()==Eigen::ArrayXd::Zero(v.size())).all();
-  } else if( eigenMatType.compare(type)==0 ) { // XD Eigen matrix
-    const Eigen::MatrixXd& v = boost::any_cast<Eigen::MatrixXd const&>(obj);
-    return (v.array()==Eigen::ArrayXd::Zero(v.rows(), v.cols())).all();
-  } else if( doubleType.compare(type)==0 ) { // double
-    return boost::any_cast<double const>(obj)==0.0;
-  }
-  
-  return IsZero(obj);
+bool AnyAlgebra::IsScalarZero(boost::any const& obj) const {
+  if( obj.type()==typeid(double) ) { return boost::any_cast<double const>(obj)==0.0; }
+  if( obj.type()==typeid(float) ) { return boost::any_cast<float const>(obj)==0.0; }
+  if( obj.type()==typeid(int) ) { return boost::any_cast<int const>(obj)==0; }
+  if( obj.type()==typeid(unsigned int) ) { return boost::any_cast<unsigned int const>(obj)==0; }
+
+  // something when wrong
+  assert(false);
+  return false;
+}
+
+bool AnyAlgebra::IsEigenVectorZero(boost::any const& obj) const {
+  if( typeid(Eigen::Vector2d)==obj.type() ) { return IsEigVecZero<Eigen::Vector2d>(obj); }
+  if( typeid(Eigen::Vector2f)==obj.type() ) { return IsEigVecZero<Eigen::Vector2f>(obj); }
+  if( typeid(Eigen::Vector2i)==obj.type() ) { return IsEigVecZero<Eigen::Vector2i>(obj); }
+
+  if( typeid(Eigen::Vector3d)==obj.type() ) { return IsEigVecZero<Eigen::Vector3d>(obj); }
+  if( typeid(Eigen::Vector3f)==obj.type() ) { return IsEigVecZero<Eigen::Vector3f>(obj); }
+  if( typeid(Eigen::Vector3i)==obj.type() ) { return IsEigVecZero<Eigen::Vector3i>(obj); }
+
+  if( typeid(Eigen::Vector4d)==obj.type() ) { return IsEigVecZero<Eigen::Vector4d>(obj); }
+  if( typeid(Eigen::Vector4f)==obj.type() ) { return IsEigVecZero<Eigen::Vector4f>(obj); }
+  if( typeid(Eigen::Vector4i)==obj.type() ) { return IsEigVecZero<Eigen::Vector4i>(obj); }
+
+  if( typeid(Eigen::VectorXd)==obj.type() ) { return IsEigVecZero<Eigen::VectorXd>(obj); }
+  if( typeid(Eigen::VectorXf)==obj.type() ) { return IsEigVecZero<Eigen::VectorXf>(obj); }
+  if( typeid(Eigen::VectorXi)==obj.type() ) { return IsEigVecZero<Eigen::VectorXi>(obj); }
+
+  // something went wrong
+  assert(false);
+  return false;
+}
+
+bool AnyAlgebra::IsEigenMatrixZero(boost::any const& obj) const {
+  if( typeid(Eigen::Matrix2d)==obj.type() ) { return IsEigMatZero<Eigen::Matrix2d>(obj); }
+  if( typeid(Eigen::Matrix2f)==obj.type() ) { return IsEigMatZero<Eigen::Matrix2f>(obj); }
+  if( typeid(Eigen::Matrix2i)==obj.type() ) { return IsEigMatZero<Eigen::Matrix2i>(obj); }
+
+  if( typeid(Eigen::Matrix3d)==obj.type() ) { return IsEigMatZero<Eigen::Matrix3d>(obj); }
+  if( typeid(Eigen::Matrix3f)==obj.type() ) { return IsEigMatZero<Eigen::Matrix3f>(obj); }
+  if( typeid(Eigen::Matrix3i)==obj.type() ) { return IsEigMatZero<Eigen::Matrix3i>(obj); }
+
+  if( typeid(Eigen::Matrix4d)==obj.type() ) { return IsEigMatZero<Eigen::Matrix4d>(obj); }
+  if( typeid(Eigen::Matrix4f)==obj.type() ) { return IsEigMatZero<Eigen::Matrix4f>(obj); }
+  if( typeid(Eigen::Matrix4i)==obj.type() ) { return IsEigMatZero<Eigen::Matrix4i>(obj); }
+
+  if( typeid(Eigen::MatrixXd)==obj.type() ) { return IsEigMatZero<Eigen::MatrixXd>(obj); }
+  if( typeid(Eigen::MatrixXf)==obj.type() ) { return IsEigMatZero<Eigen::MatrixXf>(obj); }
+  if( typeid(Eigen::MatrixXi)==obj.type() ) { return IsEigMatZero<Eigen::MatrixXi>(obj); }
+
+  // something went wrong
+  assert(false);
+  return false;
 }
 
 bool AnyAlgebra::IsZero(boost::any const& obj) const {
+  if( IsScalar(obj.type()) ) { return IsScalarZero(obj); }
+
+  if( IsEigenVector(obj.type()) ) { return IsEigenVectorZero(obj); }
+  
+  if( IsEigenMatrix(obj.type()) ) { return IsEigenMatrixZero(obj); }
+  
+  return IsZeroImpl(obj);
+}
+
+bool AnyAlgebra::IsZeroImpl(boost::any const& obj) const {
   std::cerr << std::endl << "ERROR: No way to determine if an object with type " << boost::core::demangle(obj.type().name()) << " is the zero vector." << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::IsZero()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::IsZero()" << std::endl << std::endl;
@@ -236,85 +354,75 @@ bool AnyAlgebra::IsZero(boost::any const& obj) const {
   return false;
 }
 
-unsigned int AnyAlgebra::VectorDimension(boost::any const& vec) const {
-  std::cerr << std::endl << "ERROR: No way to compute the dimension of a vector with type " << boost::core::demangle(vec.type().name()) << std::endl;
-  std::cerr << "\tTry overloading boost::any AnyAlgebra::VectorDimension()" << std::endl << std::endl;
-  std::cerr << "\tError in AnyAlgebra::VectorDimension()" << std::endl << std::endl;
+boost::any AnyAlgebra::AccessEigenMatrix(boost::any const& mat, unsigned int const i, unsigned int const j) const {
+  if( typeid(Eigen::Matrix2d)==mat.type() ) { return AccessEigenMat<Eigen::Matrix2d>(mat, i, j); }
+  if( typeid(Eigen::Matrix2f)==mat.type() ) { return AccessEigenMat<Eigen::Matrix2f>(mat, i, j); }
+  if( typeid(Eigen::Matrix2i)==mat.type() ) { return AccessEigenMat<Eigen::Matrix2i>(mat, i, j); }
+
+  if( typeid(Eigen::Matrix3d)==mat.type() ) { return AccessEigenMat<Eigen::Matrix3d>(mat, i, j); }
+  if( typeid(Eigen::Matrix3f)==mat.type() ) { return AccessEigenMat<Eigen::Matrix3f>(mat, i, j); }
+  if( typeid(Eigen::Matrix3i)==mat.type() ) { return AccessEigenMat<Eigen::Matrix3i>(mat, i, j); }
+
+  if( typeid(Eigen::Matrix4d)==mat.type() ) { return AccessEigenMat<Eigen::Matrix4d>(mat, i, j); }
+  if( typeid(Eigen::Matrix4f)==mat.type() ) { return AccessEigenMat<Eigen::Matrix4f>(mat, i, j); }
+  if( typeid(Eigen::Matrix4i)==mat.type() ) { return AccessEigenMat<Eigen::Matrix4i>(mat, i, j); }
+
+  if( typeid(Eigen::MatrixXd)==mat.type() ) { return AccessEigenMat<Eigen::MatrixXd>(mat, i, j); }
+  if( typeid(Eigen::MatrixXf)==mat.type() ) { return AccessEigenMat<Eigen::MatrixXf>(mat, i, j); }
+  if( typeid(Eigen::MatrixXi)==mat.type() ) { return AccessEigenMat<Eigen::MatrixXi>(mat, i, j); }
+
+  // something went wront
   assert(false);
-  
-  return 0;
+  return boost::none;
 }
 
-boost::any AnyAlgebra::AccessElementBase(unsigned int i, boost::any const& vec) const {
-  if( doubleType.compare(vec.type().name())==0 ) { // the type is a double
-    // check the size
-    assert(i==0);
+boost::any AnyAlgebra::AccessEigenVector(boost::any const& vec, unsigned int const i) const {
+  if( typeid(Eigen::Vector2d)==vec.type() ) { return AccessEigenVec<Eigen::Vector2d>(vec, i); }
+  if( typeid(Eigen::Vector2f)==vec.type() ) { return AccessEigenVec<Eigen::Vector2f>(vec, i); }
+  if( typeid(Eigen::Vector2i)==vec.type() ) { return AccessEigenVec<Eigen::Vector2i>(vec, i); }
 
-    // return the value (it is actually a scalar)
-    return vec;
-  }
+  if( typeid(Eigen::Vector3d)==vec.type() ) { return AccessEigenVec<Eigen::Vector3d>(vec, i); }
+  if( typeid(Eigen::Vector3f)==vec.type() ) { return AccessEigenVec<Eigen::Vector3f>(vec, i); }
+  if( typeid(Eigen::Vector3i)==vec.type() ) { return AccessEigenVec<Eigen::Vector3i>(vec, i); }
 
-  if( eigenVec2Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector2d
-    // check the size
-    assert(i<2);
+  if( typeid(Eigen::Vector4d)==vec.type() ) { return AccessEigenVec<Eigen::Vector4d>(vec, i); }
+  if( typeid(Eigen::Vector4f)==vec.type() ) { return AccessEigenVec<Eigen::Vector4f>(vec, i); }
+  if( typeid(Eigen::Vector4i)==vec.type() ) { return AccessEigenVec<Eigen::Vector4i>(vec, i); }
 
-    // get a constant reference to the Eigen::Vector2d
-    const Eigen::Vector2d& vecref = boost::any_cast<const Eigen::Vector2d&>(vec);
+  if( typeid(Eigen::VectorXd)==vec.type() ) { return AccessEigenVec<Eigen::VectorXd>(vec, i); }
+  if( typeid(Eigen::VectorXf)==vec.type() ) { return AccessEigenVec<Eigen::VectorXf>(vec, i); }
+  if( typeid(Eigen::VectorXi)==vec.type() ) { return AccessEigenVec<Eigen::VectorXi>(vec, i); }
 
-    // return ith element
-    return vecref(i);
-  }
-
-  if( eigenVec3Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector3d
-    // check the size
-    assert(i<3);
-
-    // get a constant reference to the Eigen::Vector3d
-    const Eigen::Vector3d& vecref = boost::any_cast<const Eigen::Vector3d&>(vec);
-
-    // return ith element
-    return vecref(i);
-  }
-
-  if( eigenVec4Type.compare(vec.type().name())==0 ) { // the type is an Eigen::Vector4d
-    // check the size
-    assert(i<4);
-
-    // get a constant reference to the Eigen::Vector4d
-    const Eigen::Vector4d& vecref = boost::any_cast<const Eigen::Vector4d&>(vec);
-
-    // return ith element
-    return vecref(i);
-  }
-
-  if( eigenVecType.compare(vec.type().name())==0 ) { // the type is an Eigen::VectorXd
-    // get a constant reference to the Eigen::VectorXd
-    const Eigen::VectorXd& vecref = boost::any_cast<const Eigen::VectorXd&>(vec);
-
-    // check the size
-    assert(i<vecref.size());
-    
-    // return the ith element
-    return vecref(i);
-  }
+  // something went wront
+  assert(false);
+  return boost::none;
+}
 
 #if MUQ_HAS_SUNDIALS==1
-  if( N_VectorType.compare(vec.type().name())==0 ) { // the type is a N_Vector
-    // get a constant reference to the N_Vector
-    const N_Vector& vecref = boost::any_cast<const N_Vector&>(vec);
-
-    // check the size
-    assert(i<NV_LENGTH_S(vecref));
+boost::any AnyAlgebra::AccessSundialsVector(N_Vector const& vec, unsigned int const i) const {
+  // check the size
+    assert(i<NV_LENGTH_S(vec));
 
     // return the ith element
-    return NV_Ith_S(vecref, i);
-  }
+    return NV_Ith_S(vec, i);
+}
+#endif
+
+boost::any AnyAlgebra::AccessElement(boost::any const& obj, unsigned int const i, unsigned int const j) const {
+  if( IsScalar(obj.type()) ) { return obj; }
+
+  if( IsEigenVector(obj.type()) ) { return AccessEigenVector(obj, i); }
+
+  if( IsEigenMatrix(obj.type()) ) { return AccessEigenMatrix(obj, i, j); }
+
+#if MUQ_HAS_SUNDIALS==1
+  if( IsSundialsVector(obj.type()) ) { return AccessSundialsVector(boost::any_cast<const N_Vector&>(obj), i); }
 #endif
   
-  return AccessElement(i, vec);
+  return AccessElementImpl(obj, i);
 }
 
-boost::any AnyAlgebra::AccessElement(unsigned int i, boost::any const& vec) const {
+boost::any AnyAlgebra::AccessElementImpl(boost::any const& vec, unsigned int const i) const {
   std::cerr << std::endl << "ERROR: No way to access element " << i << " of a vector with type " << boost::core::demangle(vec.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::AccessElement()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::AccessElement()" << std::endl << std::endl;
@@ -323,326 +431,603 @@ boost::any AnyAlgebra::AccessElement(unsigned int i, boost::any const& vec) cons
   return boost::none;
 }
 
-boost::any AnyAlgebra::IdentityBase(std::reference_wrapper<const boost::any> const& in) const {
-  // Eigen::VectorXd type
-  if( eigenVecType.compare(in.get().type().name())==0 ) {
-    const Eigen::VectorXd& inVec = boost::any_cast<const Eigen::VectorXd&>(in);
+boost::any AnyAlgebra::ScalarIdentity(std::type_info const& type) const {
+  if( type==typeid(double) ) { return (double)1.0; }
+  if( type==typeid(float) ) { return (float)1.0; }
+  if( type==typeid(int) ) { return (int)1; }
+  if( type==typeid(unsigned int) ) { return (unsigned int)1; }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::EigenMatrixIdentity(std::type_info const& type, unsigned int const rows, unsigned int const cols) const {
+  if( type==typeid(Eigen::Matrix2d) ) { return (Eigen::Matrix2d)Eigen::Matrix2d::Identity(); }
+  if( type==typeid(Eigen::Matrix2f) ) { return (Eigen::Matrix2f)Eigen::Matrix2f::Identity(); }
+  if( type==typeid(Eigen::Matrix2i) ) { return (Eigen::Matrix2i)Eigen::Matrix2i::Identity(); }
+  
+  if( type==typeid(Eigen::Matrix3d) ) { return (Eigen::Matrix3d)Eigen::Matrix3d::Identity(); }
+  if( type==typeid(Eigen::Matrix3f) ) { return (Eigen::Matrix3f)Eigen::Matrix3f::Identity(); }
+  if( type==typeid(Eigen::Matrix3i) ) { return (Eigen::Matrix3i)Eigen::Matrix3i::Identity(); }
+  
+  if( type==typeid(Eigen::Matrix4d) ) { return (Eigen::Matrix4d)Eigen::Matrix4d::Identity(); }
+  if( type==typeid(Eigen::Matrix4f) ) { return (Eigen::Matrix4f)Eigen::Matrix4f::Identity(); }
+  if( type==typeid(Eigen::Matrix4i) ) { return (Eigen::Matrix4i)Eigen::Matrix4i::Identity(); }
+
+  if( type==typeid(Eigen::MatrixXd) ) { return (Eigen::MatrixXd)Eigen::MatrixXd::Identity(rows, cols); }
+  if( type==typeid(Eigen::MatrixXf) ) { return (Eigen::MatrixXf)Eigen::MatrixXf::Identity(rows, cols); }
+  if( type==typeid(Eigen::MatrixXi) ) { return (Eigen::MatrixXi)Eigen::MatrixXi::Identity(rows, cols); }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::EigenVectorIdentity(std::type_info const& type, unsigned int const rows, unsigned int const cols) const {
+  if( type==typeid(Eigen::Vector2d) ) { return (Eigen::Matrix2d)Eigen::Matrix2d::Identity(); }
+  if( type==typeid(Eigen::Vector2f) ) { return (Eigen::Matrix2f)Eigen::Matrix2f::Identity(); }
+  if( type==typeid(Eigen::Vector2i) ) { return (Eigen::Matrix2i)Eigen::Matrix2i::Identity(); }
+  
+  if( type==typeid(Eigen::Vector3d) ) { return (Eigen::Matrix3d)Eigen::Matrix3d::Identity(); }
+  if( type==typeid(Eigen::Vector3f) ) { return (Eigen::Matrix3f)Eigen::Matrix3f::Identity(); }
+  if( type==typeid(Eigen::Vector3i) ) { return (Eigen::Matrix3i)Eigen::Matrix3i::Identity(); }
+  
+  if( type==typeid(Eigen::Vector4d) ) { return (Eigen::Matrix4d)Eigen::Matrix4d::Identity(); }
+  if( type==typeid(Eigen::Vector4f) ) { return (Eigen::Matrix4f)Eigen::Matrix4f::Identity(); }
+  if( type==typeid(Eigen::Vector4i) ) { return (Eigen::Matrix4i)Eigen::Matrix4i::Identity(); }
+
+  if( type==typeid(Eigen::VectorXd) ) { return (Eigen::MatrixXd)Eigen::MatrixXd::Identity(rows, cols); }
+  if( type==typeid(Eigen::VectorXf) ) { return (Eigen::MatrixXf)Eigen::MatrixXf::Identity(rows, cols); }
+  if( type==typeid(Eigen::VectorXi) ) { return (Eigen::MatrixXi)Eigen::MatrixXi::Identity(rows, cols); }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::Identity(std::type_info const& type, unsigned int const rows, unsigned int const cols) const {
+  if( IsScalar(type) ) { return ScalarIdentity(type); }
+
+  if( IsEigenVector(type) ) { return EigenVectorIdentity(type, rows, cols); }
+
+  if( IsEigenMatrix(type) ) { return EigenMatrixIdentity(type, rows, cols); }
+  
+  return IdentityImpl(type, rows, cols);
+}
+
+boost::any AnyAlgebra::IdentityImpl(std::type_info const& type, unsigned int const rows, unsigned int const cols) const {
+  std::cerr << std::endl << "ERROR: No way to compute identy object with type " << boost::core::demangle(type.name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::IdentityImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::IdentityImpl()" << std::endl << std::endl;
+  assert(false);
+  
+  return boost::none;
+}
+
+boost::any AnyAlgebra::AddScalar(boost::any const& in0, boost::any const& in1) const {
+  if( in0.type()==typeid(double) ) { return AddScalar<double>(in0, in1); }
+  if( in0.type()==typeid(float) ) { return AddScalar<float>(in0, in1); }
+  if( in0.type()==typeid(int) ) { return AddScalar<int>(in0, in1); }
+  if( in0.type()==typeid(unsigned int) ) { return AddScalar<unsigned int>(in0, in1); }
+  
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::AddEigenVector(boost::any const& in0, boost::any const& in1) const {
+  // 2D vectors
+  if( in0.type()==typeid(Eigen::Vector2d) ) {
+    if( in1.type()==typeid(Eigen::Vector2d) ) { return AddEigenVector<Eigen::Vector2d, Eigen::Vector2d>(in0, in1); }
+    return AddEigenVector<Eigen::Vector2d, Eigen::VectorXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector2f) ) {
+    if( in1.type()==typeid(Eigen::Vector2f) ) { return AddEigenVector<Eigen::Vector2f, Eigen::Vector2f>(in0, in1); }
+    return AddEigenVector<Eigen::Vector2f, Eigen::VectorXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector2i) ) {
+    if( in1.type()==typeid(Eigen::Vector2i) ) { return AddEigenVector<Eigen::Vector2i, Eigen::Vector2i>(in0, in1); }
+    return AddEigenVector<Eigen::Vector2i, Eigen::VectorXi>(in0, in1); 
+  }
+
+  // 3D vectors
+  if( in0.type()==typeid(Eigen::Vector3d) ) {
+    if( in1.type()==typeid(Eigen::Vector3d) ) { return AddEigenVector<Eigen::Vector3d, Eigen::Vector3d>(in0, in1); }
+    return AddEigenVector<Eigen::Vector3d, Eigen::VectorXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector3f) ) {
+    if( in1.type()==typeid(Eigen::Vector3f) ) { return AddEigenVector<Eigen::Vector3f, Eigen::Vector3f>(in0, in1); }
+    return AddEigenVector<Eigen::Vector3f, Eigen::VectorXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector3i) ) {
+    if( in1.type()==typeid(Eigen::Vector3i) ) { return AddEigenVector<Eigen::Vector3i, Eigen::Vector3i>(in0, in1); }
+    return AddEigenVector<Eigen::Vector3i, Eigen::VectorXi>(in0, in1); 
+  }
+
+  // 4D vectors
+  if( in0.type()==typeid(Eigen::Vector4d) ) {
+    if( in1.type()==typeid(Eigen::Vector4d) ) { return AddEigenVector<Eigen::Vector4d, Eigen::Vector4d>(in0, in1); }
+    return AddEigenVector<Eigen::Vector4d, Eigen::VectorXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector4f) ) {
+    if( in1.type()==typeid(Eigen::Vector4f) ) { return AddEigenVector<Eigen::Vector4f, Eigen::Vector4f>(in0, in1); }
+    return AddEigenVector<Eigen::Vector4f, Eigen::VectorXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector4i) ) {
+    if( in1.type()==typeid(Eigen::Vector4i) ) { return AddEigenVector<Eigen::Vector4i, Eigen::Vector4i>(in0, in1); }
+    return AddEigenVector<Eigen::Vector4i, Eigen::VectorXi>(in0, in1); 
+  }
+
+  // XD vectors
+  if( in0.type()==typeid(Eigen::VectorXd) ) {
+    if( in1.type()==typeid(Eigen::Vector2d) ) { return AddEigenVector<Eigen::VectorXd, Eigen::Vector2d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3d) ) { return AddEigenVector<Eigen::VectorXd, Eigen::Vector3d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4d) ) { return AddEigenVector<Eigen::VectorXd, Eigen::Vector4d>(in0, in1); }
+    return AddEigenVector<Eigen::VectorXd, Eigen::VectorXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::VectorXf) ) {
+    if( in1.type()==typeid(Eigen::Vector2f) ) { return AddEigenVector<Eigen::VectorXf, Eigen::Vector2f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3f) ) { return AddEigenVector<Eigen::VectorXf, Eigen::Vector3f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4f) ) { return AddEigenVector<Eigen::VectorXf, Eigen::Vector4f>(in0, in1); }
+    return AddEigenVector<Eigen::VectorXf, Eigen::VectorXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::VectorXi) ) {
+    if( in1.type()==typeid(Eigen::Vector2i) ) { return AddEigenVector<Eigen::VectorXi, Eigen::Vector2i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3i) ) { return AddEigenVector<Eigen::VectorXi, Eigen::Vector3i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4i) ) { return AddEigenVector<Eigen::VectorXi, Eigen::Vector4i>(in0, in1); }
+    return AddEigenVector<Eigen::VectorXi, Eigen::VectorXi>(in0, in1); 
+  }
+  
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::AddEigenMatrix(boost::any const& in0, boost::any const& in1) const {
+  // 2D matrices
+  if( in0.type()==typeid(Eigen::Matrix2d) ) {
+    if( in1.type()==typeid(Eigen::Matrix2d) ) { return AddEigenMatrix<Eigen::Matrix2d, Eigen::Matrix2d>(in0, in1); }
+    return AddEigenMatrix<Eigen::Matrix2d, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix2f) ) {
+    if( in1.type()==typeid(Eigen::Matrix2f) ) { return AddEigenMatrix<Eigen::Matrix2f, Eigen::Matrix2f>(in0, in1); }
+    return AddEigenMatrix<Eigen::Matrix2f, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix2i) ) {
+    if( in1.type()==typeid(Eigen::Matrix2i) ) { return AddEigenMatrix<Eigen::Matrix2i, Eigen::Matrix2i>(in0, in1); }
+    return AddEigenMatrix<Eigen::Matrix2i, Eigen::MatrixXi>(in0, in1); 
+  }
+
+  // 3D matrices
+  if( in0.type()==typeid(Eigen::Matrix3d) ) {
+    if( in1.type()==typeid(Eigen::Matrix3d) ) { return AddEigenMatrix<Eigen::Matrix3d, Eigen::Matrix3d>(in0, in1); }
+    return AddEigenMatrix<Eigen::Matrix3d, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix3f) ) {
+    if( in1.type()==typeid(Eigen::Matrix3f) ) { return AddEigenMatrix<Eigen::Matrix3f, Eigen::Matrix3f>(in0, in1); }
+    return AddEigenMatrix<Eigen::Matrix3f, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix3i) ) {
+    if( in1.type()==typeid(Eigen::Matrix3i) ) { return AddEigenMatrix<Eigen::Matrix3i, Eigen::Matrix3i>(in0, in1); }
+    return AddEigenMatrix<Eigen::Matrix3i, Eigen::MatrixXi>(in0, in1); 
+  }
+
+  // 4D matrices
+  if( in0.type()==typeid(Eigen::Matrix4d) ) {
+    if( in1.type()==typeid(Eigen::Matrix4d) ) { return AddEigenMatrix<Eigen::Matrix4d, Eigen::Matrix4d>(in0, in1); }
+    return AddEigenMatrix<Eigen::Matrix4d, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix4f) ) {
+    if( in1.type()==typeid(Eigen::Matrix4f) ) { return AddEigenMatrix<Eigen::Matrix4f, Eigen::Matrix4f>(in0, in1); }
+    return AddEigenMatrix<Eigen::Matrix4f, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix4i) ) {
+    if( in1.type()==typeid(Eigen::Matrix4i) ) { return AddEigenMatrix<Eigen::Matrix4i, Eigen::Matrix4i>(in0, in1); }
+    return AddEigenMatrix<Eigen::Matrix4i, Eigen::MatrixXi>(in0, in1); 
+  }
+
+  // XD matrices
+  if( in0.type()==typeid(Eigen::MatrixXd) ) {
+    if( in1.type()==typeid(Eigen::Matrix2d) ) { return AddEigenMatrix<Eigen::MatrixXd, Eigen::Matrix2d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3d) ) { return AddEigenMatrix<Eigen::MatrixXd, Eigen::Matrix3d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4d) ) { return AddEigenMatrix<Eigen::MatrixXd, Eigen::Matrix4d>(in0, in1); }
+    return AddEigenMatrix<Eigen::MatrixXd, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::MatrixXf) ) {
+    if( in1.type()==typeid(Eigen::Matrix2f) ) { return AddEigenMatrix<Eigen::MatrixXf, Eigen::Matrix2f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3f) ) { return AddEigenMatrix<Eigen::MatrixXf, Eigen::Matrix3f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4f) ) { return AddEigenMatrix<Eigen::MatrixXf, Eigen::Matrix4f>(in0, in1); }
+    return AddEigenMatrix<Eigen::MatrixXf, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::MatrixXi) ) {
+    if( in1.type()==typeid(Eigen::Matrix2i) ) { return AddEigenMatrix<Eigen::MatrixXi, Eigen::Matrix2i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3i) ) { return AddEigenMatrix<Eigen::MatrixXi, Eigen::Matrix3i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4i) ) { return AddEigenMatrix<Eigen::MatrixXi, Eigen::Matrix4i>(in0, in1); }
+    return AddEigenMatrix<Eigen::MatrixXi, Eigen::MatrixXi>(in0, in1); 
+  }
+  
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::Add(boost::any const& in0, boost::any const& in1) const {
+  if( IsScalar(in0.type()) && IsScalar(in1.type()) ) { return AddScalar(in0, in1); }
+
+  if( IsEigenVector(in0.type()) && IsEigenVector(in1.type()) ) { return AddEigenVector(in0, in1); }
+
+  if( IsEigenMatrix(in0.type()) && IsEigenMatrix(in1.type()) ) { return AddEigenMatrix(in0, in1); }
+  
+  // the first type is boost::none --- return the second
+  if( in0.type()==typeid(boost::none) ) { return in1; }
+
+  // the second type is boost::none --- return the first
+  if( in1.type()==typeid(boost::none) ) { return in0; }
+
+  return AddImpl(in0, in1);
+}
+
+boost::any AnyAlgebra::AddImpl(boost::any const& in0, boost::any const& in1) const {
+  std::cerr << std::endl << "ERROR: No way to add type " << boost::core::demangle(in0.type().name()) << " and type " << boost::core::demangle(in1.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::AddImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::AddImpl()" << std::endl << std::endl;
+  assert(false);
+  
+  return boost::none;
+}
+
+boost::any AnyAlgebra::SubtractScalar(boost::any const& in0, boost::any const& in1) const {
+  if( in0.type()==typeid(double) ) { return SubtractScalar<double>(in0, in1); }
+  if( in0.type()==typeid(float) ) { return SubtractScalar<float>(in0, in1); }
+  if( in0.type()==typeid(int) ) { return SubtractScalar<int>(in0, in1); }
+  if( in0.type()==typeid(unsigned int) ) { return SubtractScalar<unsigned int>(in0, in1); }
+  
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::SubtractEigenVector(boost::any const& in0, boost::any const& in1) const {
+  // 2D vectors
+  if( in0.type()==typeid(Eigen::Vector2d) ) {
+    if( in1.type()==typeid(Eigen::Vector2d) ) { return SubtractEigenVector<Eigen::Vector2d, Eigen::Vector2d>(in0, in1); }
+    return SubtractEigenVector<Eigen::Vector2d, Eigen::VectorXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector2f) ) {
+    if( in1.type()==typeid(Eigen::Vector2f) ) { return SubtractEigenVector<Eigen::Vector2f, Eigen::Vector2f>(in0, in1); }
+    return SubtractEigenVector<Eigen::Vector2f, Eigen::VectorXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector2i) ) {
+    if( in1.type()==typeid(Eigen::Vector2i) ) { return SubtractEigenVector<Eigen::Vector2i, Eigen::Vector2i>(in0, in1); }
+    return SubtractEigenVector<Eigen::Vector2i, Eigen::VectorXi>(in0, in1); 
+  }
+
+  // 3D vectors
+  if( in0.type()==typeid(Eigen::Vector3d) ) {
+    if( in1.type()==typeid(Eigen::Vector3d) ) { return SubtractEigenVector<Eigen::Vector3d, Eigen::Vector3d>(in0, in1); }
+    return SubtractEigenVector<Eigen::Vector3d, Eigen::VectorXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector3f) ) {
+    if( in1.type()==typeid(Eigen::Vector3f) ) { return SubtractEigenVector<Eigen::Vector3f, Eigen::Vector3f>(in0, in1); }
+    return SubtractEigenVector<Eigen::Vector3f, Eigen::VectorXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector3i) ) {
+    if( in1.type()==typeid(Eigen::Vector3i) ) { return SubtractEigenVector<Eigen::Vector3i, Eigen::Vector3i>(in0, in1); }
+    return SubtractEigenVector<Eigen::Vector3i, Eigen::VectorXi>(in0, in1); 
+  }
+
+  // 4D vectors
+  if( in0.type()==typeid(Eigen::Vector4d) ) {
+    if( in1.type()==typeid(Eigen::Vector4d) ) { return SubtractEigenVector<Eigen::Vector4d, Eigen::Vector4d>(in0, in1); }
+    return SubtractEigenVector<Eigen::Vector4d, Eigen::VectorXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector4f) ) {
+    if( in1.type()==typeid(Eigen::Vector4f) ) { return SubtractEigenVector<Eigen::Vector4f, Eigen::Vector4f>(in0, in1); }
+    return SubtractEigenVector<Eigen::Vector4f, Eigen::VectorXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector4i) ) {
+    if( in1.type()==typeid(Eigen::Vector4i) ) { return SubtractEigenVector<Eigen::Vector4i, Eigen::Vector4i>(in0, in1); }
+    return SubtractEigenVector<Eigen::Vector4i, Eigen::VectorXi>(in0, in1); 
+  }
+
+  // XD vectors
+  if( in0.type()==typeid(Eigen::VectorXd) ) {
+    if( in1.type()==typeid(Eigen::Vector2d) ) { return SubtractEigenVector<Eigen::VectorXd, Eigen::Vector2d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3d) ) { return SubtractEigenVector<Eigen::VectorXd, Eigen::Vector3d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4d) ) { return SubtractEigenVector<Eigen::VectorXd, Eigen::Vector4d>(in0, in1); }
+    return SubtractEigenVector<Eigen::VectorXd, Eigen::VectorXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::VectorXf) ) {
+    if( in1.type()==typeid(Eigen::Vector2f) ) { return SubtractEigenVector<Eigen::VectorXf, Eigen::Vector2f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3f) ) { return SubtractEigenVector<Eigen::VectorXf, Eigen::Vector3f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4f) ) { return SubtractEigenVector<Eigen::VectorXf, Eigen::Vector4f>(in0, in1); }
+    return SubtractEigenVector<Eigen::VectorXf, Eigen::VectorXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::VectorXi) ) {
+    if( in1.type()==typeid(Eigen::Vector2i) ) { return SubtractEigenVector<Eigen::VectorXi, Eigen::Vector2i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3i) ) { return SubtractEigenVector<Eigen::VectorXi, Eigen::Vector3i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4i) ) { return SubtractEigenVector<Eigen::VectorXi, Eigen::Vector4i>(in0, in1); }
+    return SubtractEigenVector<Eigen::VectorXi, Eigen::VectorXi>(in0, in1); 
+  }
+  
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::SubtractEigenMatrix(boost::any const& in0, boost::any const& in1) const {
+  // 2D matrices
+  if( in0.type()==typeid(Eigen::Matrix2d) ) {
+    if( in1.type()==typeid(Eigen::Matrix2d) ) { return SubtractEigenMatrix<Eigen::Matrix2d, Eigen::Matrix2d>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::Matrix2d, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix2f) ) {
+    if( in1.type()==typeid(Eigen::Matrix2f) ) { return SubtractEigenMatrix<Eigen::Matrix2f, Eigen::Matrix2f>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::Matrix2f, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix2i) ) {
+    if( in1.type()==typeid(Eigen::Matrix2i) ) { return SubtractEigenMatrix<Eigen::Matrix2i, Eigen::Matrix2i>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::Matrix2i, Eigen::MatrixXi>(in0, in1); 
+  }
+
+  // 3D matrices
+  if( in0.type()==typeid(Eigen::Matrix3d) ) {
+    if( in1.type()==typeid(Eigen::Matrix3d) ) { return SubtractEigenMatrix<Eigen::Matrix3d, Eigen::Matrix3d>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::Matrix3d, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix3f) ) {
+    if( in1.type()==typeid(Eigen::Matrix3f) ) { return SubtractEigenMatrix<Eigen::Matrix3f, Eigen::Matrix3f>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::Matrix3f, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix3i) ) {
+    if( in1.type()==typeid(Eigen::Matrix3i) ) { return SubtractEigenMatrix<Eigen::Matrix3i, Eigen::Matrix3i>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::Matrix3i, Eigen::MatrixXi>(in0, in1); 
+  }
+
+  // 4D matrices
+  if( in0.type()==typeid(Eigen::Matrix4d) ) {
+    if( in1.type()==typeid(Eigen::Matrix4d) ) { return SubtractEigenMatrix<Eigen::Matrix4d, Eigen::Matrix4d>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::Matrix4d, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix4f) ) {
+    if( in1.type()==typeid(Eigen::Matrix4f) ) { return SubtractEigenMatrix<Eigen::Matrix4f, Eigen::Matrix4f>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::Matrix4f, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix4i) ) {
+    if( in1.type()==typeid(Eigen::Matrix4i) ) { return SubtractEigenMatrix<Eigen::Matrix4i, Eigen::Matrix4i>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::Matrix4i, Eigen::MatrixXi>(in0, in1); 
+  }
+
+  // XD matrices
+  if( in0.type()==typeid(Eigen::MatrixXd) ) {
+    if( in1.type()==typeid(Eigen::Matrix2d) ) { return SubtractEigenMatrix<Eigen::MatrixXd, Eigen::Matrix2d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3d) ) { return SubtractEigenMatrix<Eigen::MatrixXd, Eigen::Matrix3d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4d) ) { return SubtractEigenMatrix<Eigen::MatrixXd, Eigen::Matrix4d>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::MatrixXd, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::MatrixXf) ) {
+    if( in1.type()==typeid(Eigen::Matrix2f) ) { return SubtractEigenMatrix<Eigen::MatrixXf, Eigen::Matrix2f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3f) ) { return SubtractEigenMatrix<Eigen::MatrixXf, Eigen::Matrix3f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4f) ) { return SubtractEigenMatrix<Eigen::MatrixXf, Eigen::Matrix4f>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::MatrixXf, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::MatrixXi) ) {
+    if( in1.type()==typeid(Eigen::Matrix2i) ) { return SubtractEigenMatrix<Eigen::MatrixXi, Eigen::Matrix2i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3i) ) { return SubtractEigenMatrix<Eigen::MatrixXi, Eigen::Matrix3i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4i) ) { return SubtractEigenMatrix<Eigen::MatrixXi, Eigen::Matrix4i>(in0, in1); }
+    return SubtractEigenMatrix<Eigen::MatrixXi, Eigen::MatrixXi>(in0, in1); 
+  }
+  
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::Subtract(boost::any const& in0, boost::any const& in1) const {
+  if( IsScalar(in0.type()) && IsScalar(in1.type()) ) { return SubtractScalar(in0, in1); }
+
+  if( IsEigenVector(in0.type()) && IsEigenVector(in1.type()) ) { return SubtractEigenVector(in0, in1); }
+
+  if( IsEigenMatrix(in0.type()) && IsEigenMatrix(in1.type()) ) { return SubtractEigenMatrix(in0, in1); }
+  
+  // the first type is boost::none --- return the second
+  if( in0.type()==typeid(boost::none) ) { return in1; }
+
+  // the second type is boost::none --- return the first
+  if( in1.type()==typeid(boost::none) ) { return in0; }
+
+  return SubtractImpl(in0, in1);
+}
+
+boost::any AnyAlgebra::SubtractImpl(boost::any const& in0, boost::any const& in1) const {
+  std::cerr << std::endl << "ERROR: No way to subtract type " << boost::core::demangle(in0.type().name()) << " and type " << boost::core::demangle(in1.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::SubtractImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::SubtractImpl()" << std::endl << std::endl;
+  assert(false);
+  
+  return boost::none;
+}
+
+boost::any AnyAlgebra::MultiplyScalar(boost::any const& in0, boost::any const& in1) const {
+  if( in0.type()==typeid(double) ) { return MultiplyScalar<double>(in0, in1); }
+  if( in0.type()==typeid(float) ) { return MultiplyScalar<float>(in0, in1); }
+  if( in0.type()==typeid(int) ) { return MultiplyScalar<int>(in0, in1); }
+  if( in0.type()==typeid(unsigned int) ) { return MultiplyScalar<unsigned int>(in0, in1); }
+  
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::MultiplyEigenMatrix(boost::any const& in0, boost::any const& in1) const {
+  // 2D matrices
+  if( in0.type()==typeid(Eigen::Matrix2d) ) {
+    if( in1.type()==typeid(Eigen::Matrix2d) ) { return MultiplyEigenMatrix<Eigen::Matrix2d, Eigen::Matrix2d>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::Matrix2d, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix2f) ) {
+    if( in1.type()==typeid(Eigen::Matrix2f) ) { return MultiplyEigenMatrix<Eigen::Matrix2f, Eigen::Matrix2f>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::Matrix2f, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix2i) ) {
+    if( in1.type()==typeid(Eigen::Matrix2i) ) { return MultiplyEigenMatrix<Eigen::Matrix2i, Eigen::Matrix2i>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::Matrix2i, Eigen::MatrixXi>(in0, in1); 
+  }
+
+  // 3D matrices
+  if( in0.type()==typeid(Eigen::Matrix3d) ) {
+    if( in1.type()==typeid(Eigen::Matrix3d) ) { return MultiplyEigenMatrix<Eigen::Matrix3d, Eigen::Matrix3d>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::Matrix3d, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix3f) ) {
+    if( in1.type()==typeid(Eigen::Matrix3f) ) { return MultiplyEigenMatrix<Eigen::Matrix3f, Eigen::Matrix3f>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::Matrix3f, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix3i) ) {
+    if( in1.type()==typeid(Eigen::Matrix3i) ) { return MultiplyEigenMatrix<Eigen::Matrix3i, Eigen::Matrix3i>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::Matrix3i, Eigen::MatrixXi>(in0, in1); 
+  }
+
+  // 4D matrices
+  if( in0.type()==typeid(Eigen::Matrix4d) ) {
+    if( in1.type()==typeid(Eigen::Matrix4d) ) { return MultiplyEigenMatrix<Eigen::Matrix4d, Eigen::Matrix4d>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::Matrix4d, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix4f) ) {
+    if( in1.type()==typeid(Eigen::Matrix4f) ) { return MultiplyEigenMatrix<Eigen::Matrix4f, Eigen::Matrix4f>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::Matrix4f, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Matrix4i) ) {
+    if( in1.type()==typeid(Eigen::Matrix4i) ) { return MultiplyEigenMatrix<Eigen::Matrix4i, Eigen::Matrix4i>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::Matrix4i, Eigen::MatrixXi>(in0, in1); 
+  }
+
+  // XD matrices
+  if( in0.type()==typeid(Eigen::MatrixXd) ) {
+    if( in1.type()==typeid(Eigen::Matrix2d) ) { return MultiplyEigenMatrix<Eigen::MatrixXd, Eigen::Matrix2d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3d) ) { return MultiplyEigenMatrix<Eigen::MatrixXd, Eigen::Matrix3d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4d) ) { return MultiplyEigenMatrix<Eigen::MatrixXd, Eigen::Matrix4d>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::MatrixXd, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::MatrixXf) ) {
+    if( in1.type()==typeid(Eigen::Matrix2f) ) { return MultiplyEigenMatrix<Eigen::MatrixXf, Eigen::Matrix2f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3f) ) { return MultiplyEigenMatrix<Eigen::MatrixXf, Eigen::Matrix3f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4f) ) { return MultiplyEigenMatrix<Eigen::MatrixXf, Eigen::Matrix4f>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::MatrixXf, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::MatrixXi) ) {
+    if( in1.type()==typeid(Eigen::Matrix2i) ) { return MultiplyEigenMatrix<Eigen::MatrixXi, Eigen::Matrix2i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3i) ) { return MultiplyEigenMatrix<Eigen::MatrixXi, Eigen::Matrix3i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4i) ) { return MultiplyEigenMatrix<Eigen::MatrixXi, Eigen::Matrix4i>(in0, in1); }
+    return MultiplyEigenMatrix<Eigen::MatrixXi, Eigen::MatrixXi>(in0, in1); 
+  }
+  
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::MultiplyEigenVectorScalar(boost::any const& in0, boost::any const& in1) const {
+  if( in0.type()==typeid(double) ) {
+    if( in1.type()==typeid(Eigen::Vector2d) ) { return MultiplyEigenScalar<double, Eigen::Vector2d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3d) ) { return MultiplyEigenScalar<double, Eigen::Vector3d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4d) ) { return MultiplyEigenScalar<double, Eigen::Vector4d>(in0, in1); }
     
-    return (Eigen::MatrixXd)Eigen::MatrixXd::Identity(inVec.size(), inVec.size());
+    return MultiplyEigenScalar<double, Eigen::VectorXd>(in0, in1); 
   }
-  
-  // double type
-  if( doubleType.compare(in.get().type().name())==0 ) {
-    return 1.0;
-  }
-  
-  return Identity(in);
-}
 
-boost::any AnyAlgebra::Identity(std::reference_wrapper<const boost::any> const& in) const {
-  std::cerr << std::endl << "ERROR: No way to compute identy object with type " << boost::core::demangle(in.get().type().name()) << std::endl;
-  std::cerr << "\tTry overloading boost::any AnyAlgebra::Identity()" << std::endl << std::endl;
-  std::cerr << "\tError in AnyAlgebra::Identity()" << std::endl << std::endl;
+  if( in0.type()==typeid(float) ) {
+    if( in1.type()==typeid(Eigen::Vector2f) ) { return MultiplyEigenScalar<float, Eigen::Vector2f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3f) ) { return MultiplyEigenScalar<float, Eigen::Vector3f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4f) ) { return MultiplyEigenScalar<float, Eigen::Vector4f>(in0, in1); }
+
+    return MultiplyEigenScalar<float, Eigen::VectorXf>(in0, in1); 
+  }
+
+  if( in0.type()==typeid(int) ) {
+    if( in1.type()==typeid(Eigen::Vector2i) ) { return MultiplyEigenScalar<int, Eigen::Vector2i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3i) ) { return MultiplyEigenScalar<int, Eigen::Vector3i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4i) ) { return MultiplyEigenScalar<int, Eigen::Vector4i>(in0, in1); }
+
+    return MultiplyEigenScalar<int, Eigen::VectorXi>(in0, in1); 
+  }
+
+  if( in0.type()==typeid(unsigned int) ) {
+    if( in1.type()==typeid(Eigen::Vector2i) ) { return MultiplyEigenScalar<unsigned int, Eigen::Vector2i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3i) ) { return MultiplyEigenScalar<unsigned int, Eigen::Vector3i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4i) ) { return MultiplyEigenScalar<unsigned int, Eigen::Vector4i>(in0, in1); }
+
+    return MultiplyEigenScalar<unsigned int, Eigen::VectorXi>(in0, in1); 
+  }
+
+  // something went wrong
   assert(false);
-  
   return boost::none;
 }
 
-boost::any AnyAlgebra::AddBase(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const {
-  // the first type is boost::none
-  if( noneType.compare(in0.get().type().name())==0 ) {
-    // return the second
-    return in1.get();
+boost::any AnyAlgebra::MultiplyEigenMatrixScalar(boost::any const& in0, boost::any const& in1) const {
+  if( in0.type()==typeid(double) ) {
+    if( in1.type()==typeid(Eigen::Matrix2d) ) { return MultiplyEigenScalar<double, Eigen::Matrix2d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3d) ) { return MultiplyEigenScalar<double, Eigen::Matrix3d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4d) ) { return MultiplyEigenScalar<double, Eigen::Matrix4d>(in0, in1); }
+
+    return MultiplyEigenScalar<double, Eigen::MatrixXd>(in0, in1); 
   }
 
-  // both in/out are double
-  if( doubleType.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
-    const double in0d = boost::any_cast<const double>(in0);
-    const double in1d = boost::any_cast<const double>(in1);
+  if( in0.type()==typeid(float) ) {
+    if( in1.type()==typeid(Eigen::Matrix2f) ) { return MultiplyEigenScalar<float, Eigen::Matrix2f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3f) ) { return MultiplyEigenScalar<float, Eigen::Matrix3f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4f) ) { return MultiplyEigenScalar<float, Eigen::Matrix4f>(in0, in1); }
 
-    return in0d+in1d;
+    return MultiplyEigenScalar<float, Eigen::MatrixXf>(in0, in1); 
   }
 
-  // both in/out are Eigen::MatrixXd
-  if( eigenMatType.compare(in0.get().type().name())==0 && eigenMatType.compare(in1.get().type().name())==0 ) {
-    const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd>(in0);
-    const Eigen::MatrixXd& in1Mat = boost::any_cast<const Eigen::MatrixXd>(in1);
+  if( in0.type()==typeid(int) ) {
+    if( in1.type()==typeid(Eigen::Matrix2i) ) { return MultiplyEigenScalar<int, Eigen::Matrix2i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3i) ) { return MultiplyEigenScalar<int, Eigen::Matrix3i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4i) ) { return MultiplyEigenScalar<int, Eigen::Matrix4i>(in0, in1); }
 
-    // make sure the sizes match
-    assert(in0Mat.rows()==in1Mat.rows());
-    assert(in0Mat.cols()==in1Mat.cols());
-	
-    return (Eigen::MatrixXd)(in0Mat+in1Mat);
+    return MultiplyEigenScalar<int, Eigen::MatrixXi>(in0, in1); 
   }
 
-  // both in/out are Eigen::VectorXd
-  if( eigenVecType.compare(in0.get().type().name())==0 && eigenVecType.compare(in1.get().type().name())==0 ) {
-    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in0);
-    const Eigen::VectorXd& in1Vec = boost::any_cast<const Eigen::VectorXd>(in1);
+  if( in0.type()==typeid(unsigned int) ) {
+    if( in1.type()==typeid(Eigen::Matrix2i) ) { return MultiplyEigenScalar<unsigned int, Eigen::Matrix2i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix3i) ) { return MultiplyEigenScalar<unsigned int, Eigen::Matrix3i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Matrix4i) ) { return MultiplyEigenScalar<unsigned int, Eigen::Matrix4i>(in0, in1); }
 
-    // make sure the sizes match
-    assert(in0Vec.size()==in1Vec.size());
-	
-    return (Eigen::VectorXd)(in0Vec+in1Vec);
+    return MultiplyEigenScalar<unsigned int, Eigen::MatrixXi>(in0, in1); 
   }
 
-  // both in/out are Eigen::Vector2d
-  if( eigenVec2Type.compare(in0.get().type().name())==0 && eigenVec2Type.compare(in1.get().type().name())==0 ) {
-    const Eigen::Vector2d& in0Vec = boost::any_cast<const Eigen::Vector2d>(in0);
-    const Eigen::Vector2d& in1Vec = boost::any_cast<const Eigen::Vector2d>(in1);
-
-    return (Eigen::Vector2d)(in0Vec+in1Vec);
-  }
-
-  // both in/out are Eigen::Vector3d
-  if( eigenVec3Type.compare(in0.get().type().name())==0 && eigenVec3Type.compare(in1.get().type().name())==0 ) {
-    const Eigen::Vector3d& in0Vec = boost::any_cast<const Eigen::Vector3d>(in0);
-    const Eigen::Vector3d& in1Vec = boost::any_cast<const Eigen::Vector3d>(in1);
-
-    return (Eigen::Vector3d)(in0Vec+in1Vec);
-  }
-
-  // both in/out are Eigen::Vector4d
-  if( eigenVec4Type.compare(in0.get().type().name())==0 && eigenVec4Type.compare(in1.get().type().name())==0 ) {
-    const Eigen::Vector4d& in0Vec = boost::any_cast<const Eigen::Vector4d>(in0);
-    const Eigen::Vector4d& in1Vec = boost::any_cast<const Eigen::Vector4d>(in1);
-
-    return (Eigen::Vector4d)(in0Vec+in1Vec);
-  }
-
-  return Add(in0, in1);
-}
-
-boost::any AnyAlgebra::Add(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const {
-  std::cerr << std::endl << "ERROR: No way to add type " << boost::core::demangle(in0.get().type().name()) << " and type " << boost::core::demangle(in1.get().type().name()) << std::endl;
-  std::cerr << "\tTry overloading boost::any AnyAlgebra::Add()" << std::endl << std::endl;
-  std::cerr << "\tError in AnyAlgebra::Add()" << std::endl << std::endl;
+  // something went wrong
   assert(false);
-  
   return boost::none;
 }
 
-boost::any AnyAlgebra::SubtractBase(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const {
-  // the first type is boost::none
-  if( noneType.compare(in0.get().type().name())==0 ) {
-    // return the second
-    return in1.get();
-  }
+boost::any AnyAlgebra::Multiply(boost::any const& in0, boost::any const& in1) const {
+  if( IsScalar(in0.type()) && IsScalar(in1.type()) ) { return MultiplyScalar(in0, in1); }
 
-  // both in/out are double
-  if( doubleType.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
-    const double in0d = boost::any_cast<const double>(in0);
-    const double in1d = boost::any_cast<const double>(in1);
+  if( IsScalar(in0.type()) && IsEigenVector(in1.type()) ) { return MultiplyEigenVectorScalar(in0, in1); }
+  if( IsScalar(in1.type()) && IsEigenVector(in0.type()) ) { return MultiplyEigenVectorScalar(in1, in0); }
 
-    return in0d-in1d;
-  }
+  if( IsEigenMatrix(in0.type()) && IsEigenMatrix(in1.type()) ) { return MultiplyEigenMatrix(in0, in1); }
 
-  // both in/out are Eigen::MatrixXd
-  if( eigenMatType.compare(in0.get().type().name())==0 && eigenMatType.compare(in1.get().type().name())==0 ) {
-    const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd>(in0);
-    const Eigen::MatrixXd& in1Mat = boost::any_cast<const Eigen::MatrixXd>(in1);
+  if( IsScalar(in0.type()) && IsEigenMatrix(in1.type()) ) { return MultiplyEigenMatrixScalar(in0, in1); }
+  if( IsScalar(in1.type()) && IsEigenMatrix(in0.type()) ) { return MultiplyEigenMatrixScalar(in1, in0); }
 
-    // make sure the sizes match
-    assert(in0Mat.rows()==in1Mat.rows());
-    assert(in0Mat.cols()==in1Mat.cols());
-	
-    return (Eigen::MatrixXd)(in0Mat-in1Mat);
-  }
+  // the first type is boost::none --- return the second
+  if( in0.type()==typeid(boost::none) ) { return in1; }
 
-  // both in/out are Eigen::VectorXd
-  if( eigenVecType.compare(in0.get().type().name())==0 && eigenVecType.compare(in1.get().type().name())==0 ) {
-    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in0);
-    const Eigen::VectorXd& in1Vec = boost::any_cast<const Eigen::VectorXd>(in1);
+  // the second type is boost::none --- return the first
+  if( in1.type()==typeid(boost::none) ) { return in0; }
 
-    // make sure the sizes match
-    assert(in0Vec.size()==in1Vec.size());
-	
-    return (Eigen::VectorXd)(in0Vec-in1Vec);
-  }
-
-  // Eigen::VectorXd and double
-  if( eigenVecType.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
-    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in0);
-    const double& in1Vec = boost::any_cast<const double>(in1);
-  
-    assert(in0Vec.size()==1);
-
-    return (Eigen::VectorXd)Eigen::VectorXd::Constant(1, in0Vec(0)-in1Vec);
-  }
-
-  // double and Eigen::VectorXd
-  if( doubleType.compare(in0.get().type().name())==0 && eigenVecType.compare(in1.get().type().name())==0 ) {
-    const double& in0Vec = boost::any_cast<const double>(in0);
-    const Eigen::VectorXd& in1Vec = boost::any_cast<const Eigen::VectorXd>(in1);
-
-    assert(in1Vec.size()==1);
-
-    return (Eigen::VectorXd)Eigen::VectorXd::Constant(1, in0Vec-in1Vec(1));
-  }
-
-  // both in/out are Eigen::Vector2d
-  if( eigenVec2Type.compare(in0.get().type().name())==0 && eigenVec2Type.compare(in1.get().type().name())==0 ) {
-    const Eigen::Vector2d& in0Vec = boost::any_cast<const Eigen::Vector2d>(in0);
-    const Eigen::Vector2d& in1Vec = boost::any_cast<const Eigen::Vector2d>(in1);
-
-    return (Eigen::Vector2d)(in0Vec-in1Vec);
-  }
-
-  // both in/out are Eigen::Vector3d
-  if( eigenVec3Type.compare(in0.get().type().name())==0 && eigenVec3Type.compare(in1.get().type().name())==0 ) {
-    const Eigen::Vector3d& in0Vec = boost::any_cast<const Eigen::Vector3d>(in0);
-    const Eigen::Vector3d& in1Vec = boost::any_cast<const Eigen::Vector3d>(in1);
-
-    return (Eigen::Vector3d)(in0Vec-in1Vec);
-  }
-  
-  // Eigen::Vector3d and Eigen::VectorXd
-  if( eigenVec3Type.compare(in0.get().type().name())==0 && eigenVecType.compare(in1.get().type().name())==0 ) {
-    const Eigen::Vector3d& in0Vec = boost::any_cast<const Eigen::Vector3d>(in0);
-    const Eigen::VectorXd& in1Vec = boost::any_cast<const Eigen::VectorXd>(in1);
-
-    assert(in1Vec.size()==3);
-
-    return (Eigen::VectorXd)(in0Vec-in1Vec);
-  }
-  
-  // Eigen::VectorXd and Eigen::Vector3d
-  if( eigenVecType.compare(in0.get().type().name())==0 && eigenVec3Type.compare(in1.get().type().name())==0 ) {
-    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in0);
-    const Eigen::Vector3d& in1Vec = boost::any_cast<const Eigen::Vector3d>(in1);
-
-    assert(in0Vec.size()==3);
-
-    return (Eigen::VectorXd)(in0Vec-in1Vec);
-  }
-
-  // both in/out are Eigen::Vector4d
-  if( eigenVec4Type.compare(in0.get().type().name())==0 && eigenVec4Type.compare(in1.get().type().name())==0 ) {
-    const Eigen::Vector4d& in0Vec = boost::any_cast<const Eigen::Vector4d>(in0);
-    const Eigen::Vector4d& in1Vec = boost::any_cast<const Eigen::Vector4d>(in1);
-
-    return (Eigen::Vector4d)(in0Vec-in1Vec);
-  }
-
-  return Subtract(in0, in1);
+  return MultiplyImpl(in0, in1);
 }
 
-boost::any AnyAlgebra::Subtract(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const {
-  std::cerr << std::endl << "ERROR: No way to subtract type " << boost::core::demangle(in0.get().type().name()) << " and type " << boost::core::demangle(in1.get().type().name()) << std::endl;
-  std::cerr << "\tTry overloading boost::any AnyAlgebra::Subtract()" << std::endl << std::endl;
-  std::cerr << "\tError in AnyAlgebra::Subtract()" << std::endl << std::endl;
-  assert(false);
-  
-  return boost::none;
-}
-
-boost::any AnyAlgebra::MultiplyBase(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const {
-  // double times double
-  if( doubleType.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
-    const double in0 = boost::any_cast<double const>(in0);
-    const double in1 = boost::any_cast<double const>(in1);
-
-    return in0*in1;
-  }
-
-  // both in/out are Eigen::MatrixXd
-  if( eigenMatType.compare(in0.get().type().name())==0 && eigenMatType.compare(in1.get().type().name())==0 ) {
-    const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd>(in0);
-    const Eigen::MatrixXd& in1Mat = boost::any_cast<const Eigen::MatrixXd>(in1);
-
-    // make sure the sizes match
-    assert(in0Mat.cols()==in1Mat.rows());
-	
-    return (Eigen::MatrixXd)(in0Mat*in1Mat);
-  }
-
-  // double times Eigen::MatrixXd
-  if( doubleType.compare(in0.get().type().name())==0 && eigenMatType.compare(in1.get().type().name())==0 ) {
-    const double in0Mat = boost::any_cast<double>(in0);
-    const Eigen::MatrixXd& in1Mat = boost::any_cast<const Eigen::MatrixXd>(in1);
-
-    return (Eigen::MatrixXd)(in0Mat*in1Mat);
-  }
-
-  // Eigen::MatrixXd times double 
-  if( eigenMatType.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
-    const Eigen::MatrixXd& in0Mat = boost::any_cast<const Eigen::MatrixXd>(in1);
-    const double in1Mat = boost::any_cast<double>(in0);
-    
-    return (Eigen::MatrixXd)(in0Mat*in1Mat);
-  }
-
-  // Eigen::Vector2d times double 
-  if( eigenVec2Type.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
-    const Eigen::Vector2d& in0Vec = boost::any_cast<const Eigen::Vector2d>(in0);
-    const double in1 = boost::any_cast<double>(in1);
-	
-    return (Eigen::Vector2d)(in0Vec*in1);
-  }
-
-  // double times Eigen::Vector2d
-  if( eigenVec2Type.compare(in1.get().type().name())==0 && doubleType.compare(in0.get().type().name())==0 ) {
-    const Eigen::Vector2d& in0Vec = boost::any_cast<const Eigen::Vector2d>(in1);
-    const double in1 = boost::any_cast<double>(in0);
-	
-    return (Eigen::Vector2d)(in0Vec*in1);
-  }
-
-  // Eigen::Vector3d times double 
-  if( eigenVec3Type.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
-    const Eigen::Vector3d& in0Vec = boost::any_cast<const Eigen::Vector3d>(in0);
-    const double in1 = boost::any_cast<double>(in1);
-	
-    return (Eigen::Vector3d)(in0Vec*in1);
-  }
-
-  // double times Eigen::Vector3d
-  if( eigenVec3Type.compare(in1.get().type().name())==0 && doubleType.compare(in0.get().type().name())==0 ) {
-    const Eigen::Vector3d& in0Vec = boost::any_cast<const Eigen::Vector3d>(in1);
-    const double in1 = boost::any_cast<double>(in0);
-	
-    return (Eigen::Vector3d)(in0Vec*in1);
-  }
-
-  // Eigen::Vector4d times double 
-  if( eigenVec4Type.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
-    const Eigen::Vector4d& in0Vec = boost::any_cast<const Eigen::Vector4d>(in0);
-    const double in1 = boost::any_cast<double>(in1);
-	
-    return (Eigen::Vector4d)(in0Vec*in1);
-  }
-
-  // double times Eigen::Vector4d
-  if( eigenVec4Type.compare(in1.get().type().name())==0 && doubleType.compare(in0.get().type().name())==0 ) {
-    const Eigen::Vector4d& in0Vec = boost::any_cast<const Eigen::Vector4d>(in1);
-    const double in1 = boost::any_cast<double>(in0);
-	
-    return (Eigen::Vector4d)(in0Vec*in1);
-  }
-
-  // Eigen::VectorXd times double 
-  if( eigenVecType.compare(in0.get().type().name())==0 && doubleType.compare(in1.get().type().name())==0 ) {
-    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in0);
-    const double in1 = boost::any_cast<double>(in1);
-	
-    return (Eigen::Vector4d)(in0Vec*in1);
-  }
-
-  // double times Eigen::Vector4d
-  if( eigenVecType.compare(in1.get().type().name())==0 && doubleType.compare(in0.get().type().name())==0 ) {
-    const Eigen::VectorXd& in0Vec = boost::any_cast<const Eigen::VectorXd>(in1);
-    const double in1 = boost::any_cast<double>(in0);
-	
-    return (Eigen::VectorXd)(in0Vec*in1);
-  }
-
-  return Multiply(in0, in1);
-}
-
-boost::any AnyAlgebra::Multiply(std::reference_wrapper<const boost::any> const& in0, std::reference_wrapper<const boost::any> const& in1) const {
-  std::cerr << std::endl << "ERROR: No way to multiply type " << boost::core::demangle(in0.get().type().name()) << " and type " << boost::core::demangle(in1.get().type().name()) << std::endl;
-  std::cerr << "\tTry overloading boost::any AnyAlgebra::Multiply()" << std::endl << std::endl;
-  std::cerr << "\tError in AnyAlgebra::Multiply()" << std::endl << std::endl;
+boost::any AnyAlgebra::MultiplyImpl(boost::any const& in0, boost::any const& in1) const {
+  std::cerr << std::endl << "ERROR: No way to multiply type " << boost::core::demangle(in0.type().name()) << " and type " << boost::core::demangle(in1.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::MultiplyImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::MultiplyImpl()" << std::endl << std::endl;
   assert(false);
   
   return boost::none;
