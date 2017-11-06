@@ -62,9 +62,8 @@ TEST(WorkGraphPiece, FixedInOutNum) {
   EXPECT_DOUBLE_EQ(boost::any_cast<double>(outs[1]), 2.0);
 }
 
-TEST(WorkGraphPiece, Constant) {
-
-    auto graph = std::make_shared<WorkGraph>();
+/*TEST(WorkGraphPiece, Constant) {
+  auto graph = std::make_shared<WorkGraph>();
 
     auto ip = std::make_shared<IdentityPiece>(1);
 
@@ -78,4 +77,4 @@ TEST(WorkGraphPiece, Constant) {
     graph->AddNode(ip,"y");
     graph->AddEdge("x",0,"y",0);
     graph->CreateWorkPiece("y");
-}
+    }*/

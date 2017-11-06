@@ -34,6 +34,7 @@ CreateCompileGroup(
     IdentityPiece.cpp
     
     LinearSDE.cpp
+
 )
 
 if(MUQ_USE_DOLFIN)

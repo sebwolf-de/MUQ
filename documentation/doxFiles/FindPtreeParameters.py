@@ -106,6 +106,7 @@ for x in allData:
 def PrintChild(node, graph, data, isLast):
   if(isLast):
     print('<li class="lastChild">', node.split('.')[-1])
+    return
   else:
     print("<li>", node.split('.')[-1])
   if(len(graph[node])==0):
