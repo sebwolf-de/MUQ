@@ -77,5 +77,5 @@ TEST_F(LocalRegressionTest, Basic) {
   const Eigen::Vector2d& truth = boost::any_cast<Eigen::Vector2d const&>(output_truth[0]);
   
   // the regression and the truth are the same---approximating a quadratic with a quardratic
-  EXPECT_NEAR((truth-result).norm(), 0.0, 1.0e-14);
+  EXPECT_NEAR((truth-result).norm(), 0.0, 1.0e-12);
 }

@@ -13,7 +13,7 @@ Gaussian::Gaussian(unsigned int const dim, double const cov_prec, Gaussian::Mode
 Gaussian::~Gaussian() {}
 
 double Gaussian::LogDensityImpl(ref_vector<boost::any> const& inputs) const {
-  return -0.5*algebra->InnerProductBase(inputs[0].get(), inputs[0].get())/cov;
+  return -0.5*algebra->InnerProduct(inputs[0].get(), inputs[0].get())/cov;
 }
 
 boost::any Gaussian::SampleImpl(ref_vector<boost::any> const& inputs) const {

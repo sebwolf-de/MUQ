@@ -8,6 +8,8 @@ CreateTestGroup(
 
     ConstantPieceTests.cpp
     IdentityPieceTests.cpp
+
+    AnyAlgebraTests.cpp
 )
 
 CreateTestGroup(
