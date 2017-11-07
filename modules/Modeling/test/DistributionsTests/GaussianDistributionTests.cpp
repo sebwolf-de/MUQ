@@ -1,7 +1,12 @@
 #include <gtest/gtest.h>
 
+#include <Eigen/Core>
+
+#include "MUQ/Utilities/RandomGenerator.h"
+
 #include "MUQ/Modeling/Distributions/Gaussian.h"
 
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 TEST(GaussianDistributionTests, IsotropicDensity) {
@@ -59,4 +64,36 @@ TEST(GaussianDistributionTests, ScaledIsotropicDensity) {
 
   EXPECT_NEAR(cov, sigma2, 1.0e-2);
   EXPECT_NEAR(mean, 0.0, 1.0e-2);
+}
+
+TEST(GaussianDistributionTests, DiagonalCovPrec) {
+  // the covariance or precision scale (variance in the cov. case and 1/variance in the prec. case)
+  const unsigned int N = 13;
+  const Eigen::VectorXd covDiag = 1e-2 * Eigen::VectorXd::Ones(N) + RandomGenerator::GetUniform(N);
+  const Eigen::VectorXd precDiag = 1e-2 * Eigen::VectorXd::Ones(N) + RandomGenerator::GetUniform(N);
+
+  auto diagCov = std::make_shared<Gaussian>(covDiag);
+  auto diagPrec = std::make_shared<Gaussian>(precDiag, Gaussian::Mode::Precision);
+    
+  const Eigen::VectorXd x = Eigen::VectorXd::Random(N);
+  const double logDiagCov = diagCov->LogDensity(x);
+  const double logDiagPrec = diagPrec->LogDensity(x);
+
+  EXPECT_DOUBLE_EQ(logDiagCov, -x.dot((1.0/covDiag.array()).matrix().asDiagonal()*x)/2.0);
+  EXPECT_DOUBLE_EQ(logDiagPrec, -x.dot(precDiag.asDiagonal()*x)/2.0);
+
+  /*const unsigned int N = 1.0e6;
+  Eigen::VectorXd samps(N+1);
+  
+  samps(0) = boost::any_cast<double>(scaledIdentityCov1D->Sample());
+  for( unsigned int i=0; i<N; ++i ) {
+    samps(i+1) = boost::any_cast<double>(scaledIdentityCov1D->Sample());
+  }
+
+  const double mean = samps.sum()/(N+1.0);
+  samps = samps.array()-mean;
+  const double cov = (samps.array()*samps.array()).sum()/N;
+
+  EXPECT_NEAR(cov, sigma2, 1.0e-2);
+  EXPECT_NEAR(mean, 0.0, 1.0e-2);*/
 }

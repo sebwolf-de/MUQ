@@ -111,6 +111,24 @@ namespace muq {
        */
       boost::any Multiply(boost::any const& in0, boost::any const& in1) const;
 
+      /// Apply the inverse of a matrix
+      /**
+	 If the input is a vector, treat is as the diagonal of a matrix
+	 @param[in] A We are applying the inverse of this matrix
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      boost::any ApplyInverse(boost::any const& A, boost::any const& x) const;
+
+      /// Apply a matrix (mat-vec)
+      /**
+	 If the input is a vector, treat is as the diagonal of a matrix
+	 @param[in] A We are applying this matrix
+	 @param[in] x We are applying the matrix to this vector
+	 \return The result \f$y=A x\f$
+       */
+      boost::any Apply(boost::any const& A, boost::any const& x) const;
+
     private:
 
       /// Is a boost::any a scalar type (double, float, int, or unsigned int)?
@@ -762,6 +780,92 @@ namespace muq {
 	 \return The multiplication of in0 and in1 (in0*in1)
        */
       virtual boost::any MultiplyImpl(boost::any const& in0, boost::any const& in1) const;
+
+      /// Apply a matrix (mat-vec)
+      /**
+	 If the input is a vector, treat is as the diagonal of a matrix
+	 @param[in] A We are applying this matrix
+	 @param[in] x We are applying the matrix to this vector
+	 \return The result \f$y=A x\f$
+       */
+      virtual boost::any ApplyImpl(boost::any const& A, boost::any const& x) const;
+
+      /// Apply a matrix (mat-vec)
+      /**
+	 If the input is a vector, treat is as the diagonal of a matrix
+	 @param[in] A We are applying this matrix
+	 @param[in] x We are applying the matrix to this vector
+	 \return The result \f$y=A x\f$
+       */
+      boost::any ApplyScalar(boost::any const& A, boost::any const& x) const;
+
+      /// Apply a diagonal matrix (multiply by 1.0/A)
+      /**
+	 If the input is a vector, treat is as the diagonal of a matrix
+	 @param[in] A We are applying this matrix
+	 @param[in] x We are applying the matrix to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      boost::any ApplyEigenVector(boost::any const& A, boost::any const& x) const;
+
+      /// Apply a diagonal matrix (multiply by 1.0/A)
+      /**
+	 If the input is a vector, treat is as the diagonal of a matrix
+	 @param[in] A We are applying this matrix
+	 @param[in] x We are applying the matrix to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      template<typename mattype, typename vectype>
+	inline boost::any ApplyEigenVector(boost::any const& A, boost::any const& x) const {
+	const mattype& mat = boost::any_cast<mattype const&>(A);
+	const vectype& vec = boost::any_cast<vectype const&>(x);
+	assert(mat.size()==vec.size());
+	
+	return (vectype)(mat.asDiagonal()*vec);
+      }
+
+      /// Apply the inverse of a matrix
+      /**
+	 If the input is a vector, treat is as the diagonal of a matrix
+	 @param[in] A We are applying the inverse of this matrix
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      virtual boost::any ApplyInverseImpl(boost::any const& A, boost::any const& x) const;
+
+      /// Apply the inverse of a scalar (multiply by 1.0/A)
+      /**
+	 If the input is a vector, treat is as the diagonal of a matrix
+	 @param[in] A We are applying the inverse of this scalar
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      boost::any ApplyScalarInverse(boost::any const& A, boost::any const& x) const;
+
+      /// Apply the inverse of a diagonal matrix (multiply by 1.0/A)
+      /**
+	 If the input is a vector, treat is as the diagonal of a matrix
+	 @param[in] A We are applying the inverse of this scalar
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      boost::any ApplyEigenVectorInverse(boost::any const& A, boost::any const& x) const;
+
+      /// Apply the inverse of a diagonal matrix (multiply by 1.0/A)
+      /**
+	 If the input is a vector, treat is as the diagonal of a matrix
+	 @param[in] A We are applying the inverse of this scalar
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      template<typename mattype, typename vectype>
+	inline boost::any ApplyEigenVectorInverse(boost::any const& A, boost::any const& x) const {
+	const mattype& mat = boost::any_cast<mattype const&>(A);
+	const vectype& vec = boost::any_cast<vectype const&>(x);
+	assert(mat.size()==vec.size());
+	
+	return (vectype)((1/mat.array()).matrix().asDiagonal()*vec);
+      }
 
       /// Compute a zero object for boost::any
       /** 

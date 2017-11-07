@@ -26,6 +26,13 @@ namespace muq {
        */
       Gaussian(unsigned int const dim = 1, double const cov_prec = 1.0, Gaussian::Mode const mode = Gaussian::Mode::Covariance);
 
+      /// Construct a zero mean Guassian with diagonal covariance/precision
+      /**
+	 @param[in] diag The diagonal of the covariance/precision
+	 @param[in] mode Are we specifying a scaled identity covariance or precision (defaults to covariance)
+       */
+      Gaussian(boost::any const& diag, Gaussian::Mode const mode = Gaussian::Mode::Covariance);
+
       ~Gaussian();
       
     private:
@@ -44,13 +51,20 @@ namespace muq {
       virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) const override;
 
       /// The muq::Modeling::AnyAlgebra
-      std::shared_ptr<AnyAlgebra> algebra;
+      std::shared_ptr<AnyAlgebra> algebra = std::make_shared<AnyAlgebra>();
+
+      /// Have we specified the covariance or the precision
+      const Gaussian::Mode mode;
 
       /// The dimension 
       const unsigned int dim;
 
-      /// The covariance
-      const double cov;
+      /// The covariance (defaults to boost::none)
+      boost::any cov = boost::none;
+
+      /// The precision (defaults to boost::none)
+      boost::any prec = boost::none;
+
     };
   } // namespace Modeling
 } // namespace muq
