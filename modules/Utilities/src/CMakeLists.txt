@@ -45,4 +45,5 @@ CreateCompileGroup(
     LinearAlgebra/ProductOperator.cpp
 
     LinearAlgebra/AnyAlgebra.cpp
+    LinearAlgebra/ScalarAlgebra.cpp
 )

@@ -14,4 +14,5 @@ CreateTestGroup(
     RandomGeneratorTest.cpp
     
     LinearAlgebra/AnyAlgebraTests.cpp
+    LinearAlgebra/ScalarAlgebraTests.cpp
 )

@@ -1,15 +1,11 @@
 #ifndef ANYALGEBRA_H_
 #define ANYALGEBRA_H_
 
-#include <iostream>
-#include <assert.h>
-
-#include "boost/none.hpp"
-#include "boost/any.hpp"
-
 #include <Eigen/Core>
 
 #include "MUQ/config.h"
+
+#include "MUQ/Utilities/LinearAlgebra/ScalarAlgebra.h"
 
 #if MUQ_HAS_SUNDIALS==1
 // Sundials includes
@@ -56,11 +52,11 @@ namespace muq {
       /**
 	 The return type is whatever the elements of the vector/matrix are (doubles, ints, ect ...)
 	 @param[in] obj The vector/matrix whose data we want to access
-	 @param[in] i We want to access the \f$i^{th}\f$ element/row of the vector/matrix
+	 @param[in] i We want to access the \f$i^{th}\f$ element/row of the vector/matrix (defaults to 0)
 	 @param[in] j We want to access the \f$j^{th}\f$ col of the matrix (defaults to 0)
 	 \return The \f$(i,j)^{th}}\f$ element of the vector/matrix
        */
-      boost::any AccessElement(boost::any const& obj, unsigned int const i, unsigned int const j = 0) const;
+      boost::any AccessElement(boost::any const& obj, unsigned int const i = 0, unsigned int const j = 0) const;
 
       /// Compute a zero vector
       /** 
@@ -129,21 +125,14 @@ namespace muq {
        */
       boost::any Apply(boost::any const& A, boost::any const& x) const;
 
+      /// The inverse
+      /**
+	 @param[in] obj We need the inverse of this object
+	 \return The inverse
+       */
+      boost::any Inverse(boost::any const& obj) const;
+
     private:
-
-      /// Is a boost::any a scalar type (double, float, int, or unsigned int)?
-      /**
-	 @param[in] obj_type We want to know if this object type is a scalar type
-	 \return true: it is a scalar type, false: it is not a scalar type
-       */
-      bool IsScalar(std::type_info const& obj_type) const;
-
-      /// Determine if a scalar is zero 
-      /**
-	 @param[in] obj An input scalar
-	 \return true: if obj is zero, false: if obj is not zero
-       */
-      bool IsScalarZero(boost::any const& obj) const;
 
       /// Determine if an Eigen::Vector is zero 
       /**
@@ -181,25 +170,6 @@ namespace muq {
 	const EigenType& v = boost::any_cast<EigenType const&>(obj);
 
 	return (v.array()==EigenType::Zero(v.rows(), v.cols()).array()).all();
-      }
-
-      /// Get the norm of a scalar (the magnitude)
-      /**
-	 @param[in] obj We need the magnitude of this scalar
-	 \return The magnitude
-       */
-      double ScalarNorm(boost::any const& obj) const;
-
-      /// The norm of a scalar
-      /**
-	 @param[in] obj We need the norm of this scalar
-	 \return The norm
-       */
-      template<typename type>
-	inline double ScalarMagnitude(boost::any const& obj) const {
-	const double x = (double)boost::any_cast<type const>(obj);
-
-	return std::abs(x);
       }
 
       /// Is a boost::any an Eigen::Vector type?
@@ -297,45 +267,6 @@ namespace muq {
        */
       virtual double InnerProductImpl(boost::any const& vec1, boost::any const& vec2) const;
       
-      /// The inner product between two scalars
-      /**
-	 @param[in] vec1 The first scalar
-	 @param[in] vec2 The second scalar
-	 \return The inner product
-       */
-      double ScalarInnerProduct(boost::any const& vec1, boost::any const& vec2) const;
-
-      /// The inner product between two scalars
-      /**
-	 @param[in] vec1 The first scalar
-	 @param[in] vec2 The second scalar
-	 \return The inner product
-       */
-      template<typename type>
-	inline double ScalarInProd(boost::any const& vec1, boost::any const& vec2) const {
-	if( typeid(double)==vec1.type() && typeid(type)==vec2.type() ) { return ScalarInProd<double, type>(vec1, vec2); }
-	if( typeid(float)==vec1.type() && typeid(type)==vec2.type() ) { return ScalarInProd<float, type>(vec1, vec2); }
-	if( typeid(int)==vec1.type() && typeid(type)==vec2.type() ) { return ScalarInProd<int, type>(vec1, vec2); }
-	if( typeid(unsigned int)==vec1.type() && typeid(type)==vec2.type() ) { return ScalarInProd<unsigned int, type>(vec1, vec2); }
-
-	// vec1 and vec2 are not any of these pairs
-	return std::numeric_limits<double>::quiet_NaN();
-      }
-
-      /// The inner product between two scalars
-      /**
-	 @param[in] vec1 The first scalar
-	 @param[in] vec2 The second scalar
-	 \return The inner product
-       */
-      template<typename type1, typename type2>
-	inline double ScalarInProd(boost::any const& vec1, boost::any const& vec2) const {
-	const double x1 = (double)boost::any_cast<type1 const>(vec1);
-	const double x2 = (double)boost::any_cast<type2 const>(vec2);
-
-	return x1*x2;
-      }
-
       /// The inner product between two Eigen::Vector's
       /**
 	 @param[in] vec1 The first vector
@@ -453,13 +384,6 @@ namespace muq {
        */
       virtual boost::any AccessElementImpl(boost::any const& vec, unsigned int const i) const;
 
-      /// Compute an identity object for a scalar
-      /**
-	 @param[in] type The type---return an identity of this type
-	 \return An identity of some type
-       */
-      boost::any ScalarIdentity(std::type_info const& type) const;
-
       /// Compute an identity Eigen::Matrix
       /**
 	 @param[in] type The type---return an identity of this type
@@ -534,46 +458,6 @@ namespace muq {
 	return (type0)(x0+x1);
       }
 
-      /// Add two scalars together
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The addition of in0 and in1 (in0+in1)
-       */
-      boost::any AddScalar(boost::any const& in0, boost::any const& in1) const;
-
-      /// Add two scalars together
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The addition of in0 and in1 (in0+in1)
-       */
-      template<typename type0, typename type1> 
-	inline boost::any AddScalar(boost::any const& in0, boost::any const& in1) const {
-	const type0 x0 = boost::any_cast<type0 const>(in0);
-	const type1 x1 = boost::any_cast<type1 const>(in1);
-
-	return x0 + x1;
-      }
-
-      /// Add two scalars together
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The addition of in0 and in1 (in0+in1)
-       */
-      template<typename type0> 
-	inline boost::any AddScalar(boost::any const& in0, boost::any const& in1) const {
-	if( in1.type()==typeid(double) ) { return AddScalar<type0, double>(in0, in1); }
-	if( in1.type()==typeid(float) ) { return AddScalar<type0, float>(in0, in1); }
-	if( in1.type()==typeid(int) ) { return AddScalar<type0, int>(in0, in1); }
-	if( in1.type()==typeid(unsigned int) ) { return AddScalar<type0, unsigned int>(in0, in1); }
-
-	// something went wrong
-	assert(false);
-	return boost::none;
-      }
-
       /// Add two objects together
       /**
 	 MUQ automatically checks for some common pairs.  However, the user may need to overload this function for special types.
@@ -630,46 +514,6 @@ namespace muq {
 	return (type0)(x0-x1);
       }
 
-      /// Subtract two scalars
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The subtraction of in0 and in1 (in0-in1)
-       */
-      boost::any SubtractScalar(boost::any const& in0, boost::any const& in1) const;
-
-      /// Subtract two scalars
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The subtraction of in0 and in1 (in0-in1)
-       */
-      template<typename type0, typename type1> 
-	inline boost::any SubtractScalar(boost::any const& in0, boost::any const& in1) const {
-	const type0 x0 = boost::any_cast<type0 const>(in0);
-	const type1 x1 = boost::any_cast<type1 const>(in1);
-
-	return x0 - x1;
-      }
-
-      /// Subtract two scalars 
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The subtraction of in0 and in1 (in0-in1)
-       */
-      template<typename type0> 
-	inline boost::any SubtractScalar(boost::any const& in0, boost::any const& in1) const {
-	if( in1.type()==typeid(double) ) { return SubtractScalar<type0, double>(in0, in1); }
-	if( in1.type()==typeid(float) ) { return SubtractScalar<type0, float>(in0, in1); }
-	if( in1.type()==typeid(int) ) { return SubtractScalar<type0, int>(in0, in1); }
-	if( in1.type()==typeid(unsigned int) ) { return SubtractScalar<type0, unsigned int>(in0, in1); }
-
-	// something went wrong
-	assert(false);
-	return boost::none;
-      }
-
       /// Subtract two objects 
       /**
 	 MUQ automatically checks for some common pairs.  However, the user may need to overload this function for special types.
@@ -700,46 +544,6 @@ namespace muq {
 	assert(x0.cols()==x1.rows());
 
 	return (type0)(x0*x1);
-      }
-
-      /// Multiply two scalars
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The multiplication of in0 and in1 (in0*in1)
-       */
-      boost::any MultiplyScalar(boost::any const& in0, boost::any const& in1) const;
-
-      /// Multiply two scalars
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The multiplication of in0 and in1 (in0*in1)
-       */
-      template<typename type0, typename type1> 
-	inline boost::any MultiplyScalar(boost::any const& in0, boost::any const& in1) const {
-	const type0 x0 = boost::any_cast<type0 const>(in0);
-	const type1 x1 = boost::any_cast<type1 const>(in1);
-
-	return x0 * x1;
-      }
-
-      /// Multiply two scalars 
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The multiplication of in0 and in1 (in0*in1)
-       */
-      template<typename type0> 
-	inline boost::any MultiplyScalar(boost::any const& in0, boost::any const& in1) const {
-	if( in1.type()==typeid(double) ) { return MultiplyScalar<type0, double>(in0, in1); }
-	if( in1.type()==typeid(float) ) { return MultiplyScalar<type0, float>(in0, in1); }
-	if( in1.type()==typeid(int) ) { return MultiplyScalar<type0, int>(in0, in1); }
-	if( in1.type()==typeid(unsigned int) ) { return MultiplyScalar<type0, unsigned int>(in0, in1); }
-
-	// something went wrong
-	assert(false);
-	return boost::none;
       }
 
       /// Multiply Eigen::Matrix times scalars 
@@ -790,15 +594,6 @@ namespace muq {
        */
       virtual boost::any ApplyImpl(boost::any const& A, boost::any const& x) const;
 
-      /// Apply a matrix (mat-vec)
-      /**
-	 If the input is a vector, treat is as the diagonal of a matrix
-	 @param[in] A We are applying this matrix
-	 @param[in] x We are applying the matrix to this vector
-	 \return The result \f$y=A x\f$
-       */
-      boost::any ApplyScalar(boost::any const& A, boost::any const& x) const;
-
       /// Apply a diagonal matrix (multiply by 1.0/A)
       /**
 	 If the input is a vector, treat is as the diagonal of a matrix
@@ -832,15 +627,6 @@ namespace muq {
 	 \return The result \f$y=A^{-1} x\f$
        */
       virtual boost::any ApplyInverseImpl(boost::any const& A, boost::any const& x) const;
-
-      /// Apply the inverse of a scalar (multiply by 1.0/A)
-      /**
-	 If the input is a vector, treat is as the diagonal of a matrix
-	 @param[in] A We are applying the inverse of this scalar
-	 @param[in] x We are applying the inverse to this vector
-	 \return The result \f$y=A^{-1} x\f$
-       */
-      boost::any ApplyScalarInverse(boost::any const& A, boost::any const& x) const;
 
       /// Apply the inverse of a diagonal matrix (multiply by 1.0/A)
       /**
@@ -902,6 +688,14 @@ namespace muq {
 	 \return true: if obj is the zero object, false: if obj is not the zero object
        */
       virtual bool IsZeroImpl(boost::any const& obj) const;
+
+      /// The inverse
+      /**
+	 @param[in] obj We need the inverse of this object
+	 \return The inverse
+       */
+      virtual boost::any InverseImpl(boost::any const& obj) const;
+
     };
   } // namespace Utilities
 } // namespace muq

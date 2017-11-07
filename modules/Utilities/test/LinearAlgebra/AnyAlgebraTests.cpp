@@ -7,9 +7,6 @@ using namespace muq::Utilities;
 TEST(AnyAlgebraTests, Size) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 
-  // doubles should have size 1
-  EXPECT_EQ(alg->Size(2.0), 1);
-
   // check for the Eigen::Vector's
   const Eigen::Vector2d test2(2.0, 3.0);
   EXPECT_EQ(alg->Size(test2), 2);
@@ -52,9 +49,6 @@ TEST(AnyAlgebraTests, Size) {
 
 TEST(AnyAlgebraTests, AccessElement) {
   auto alg = std::shared_ptr<AnyAlgebra>();
-
-  // test scalar
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->AccessElement(-4.0, 0)), -4.0);
 
   // test Eigen::Vector's
   const Eigen::Vector2d test2d(2.0, 4.0);
@@ -154,12 +148,6 @@ TEST(AnyAlgebraTests, AccessElement) {
 TEST(AnyAlgebraTests, Zero) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 
-  // test the scalar zero
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Zero(typeid(double))), 0.0);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Zero(typeid(float))), 0.0);
-  EXPECT_EQ(boost::any_cast<int const>(alg->Zero(typeid(int))), 0);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Zero(typeid(unsigned int))), 0);
-
   // test the Eigen::Vector zero
   EXPECT_DOUBLE_EQ(boost::any_cast<Eigen::Vector2d const&>(alg->Zero(typeid(Eigen::Vector2d))).norm(), 0.0);
   EXPECT_DOUBLE_EQ(boost::any_cast<Eigen::Vector2f const&>(alg->Zero(typeid(Eigen::Vector2f))).norm(), 0.0);
@@ -212,16 +200,6 @@ TEST(AnyAlgebraTests, Zero) {
 
 TEST(AnyAlgebraTests, IsZero) {
   auto alg = std::shared_ptr<AnyAlgebra>();
-
-  // test the scalar zero
-  EXPECT_TRUE(alg->IsZero((double)0.0));
-  EXPECT_FALSE(alg->IsZero((double)1.0));
-  EXPECT_TRUE(alg->IsZero((float)0.0));
-  EXPECT_FALSE(alg->IsZero((float)-2.3));
-  EXPECT_TRUE(alg->IsZero((int)0));
-  EXPECT_FALSE(alg->IsZero((int)-6));
-  EXPECT_TRUE(alg->IsZero((unsigned int)0));
-  EXPECT_FALSE(alg->IsZero((unsigned int)18));
 
   EXPECT_TRUE(alg->IsZero((Eigen::Vector2d)Eigen::Vector2d::Zero()));
   EXPECT_FALSE(alg->IsZero((Eigen::Vector2d)Eigen::Vector2d::Random()));
@@ -283,12 +261,6 @@ TEST(AnyAlgebraTests, IsZero) {
 TEST(AnyAlgebraTests, Identity) {
     auto alg = std::shared_ptr<AnyAlgebra>();
 
-    // scalars
-    EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Identity(typeid(double))), (double)1.0);
-    EXPECT_DOUBLE_EQ(boost::any_cast<float const>(alg->Identity(typeid(float))), (float)1.0);
-    EXPECT_DOUBLE_EQ(boost::any_cast<int const>(alg->Identity(typeid(int))), (int)1);
-    EXPECT_DOUBLE_EQ(boost::any_cast<unsigned int const>(alg->Identity(typeid(unsigned int))), (unsigned int)1);
-    
     // Eigen::Vector
     EXPECT_TRUE((boost::any_cast<Eigen::Matrix2d>(alg->Identity(typeid(Eigen::Vector2d))).array()==Eigen::Matrix2d::Identity().array()).all());
     EXPECT_TRUE((boost::any_cast<Eigen::Matrix2f>(alg->Identity(typeid(Eigen::Vector2f))).array()==Eigen::Matrix2f::Identity().array()).all());
@@ -327,9 +299,6 @@ TEST(AnyAlgebraTests, Identity) {
 TEST(AnyAlgebraTests, Norm) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 
-  // test scalar norm
-  EXPECT_DOUBLE_EQ(alg->Norm(-4.0), 4.0);
-
   // test Eigen::Vector norm
   const Eigen::Vector2d vec2(2.0, 2.0);
   EXPECT_DOUBLE_EQ(alg->Norm(vec2), vec2.norm());
@@ -354,25 +323,6 @@ TEST(AnyAlgebraTests, Norm) {
 TEST(AnyAlgebraTests, InnerProduct) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 
-  // test the scalar inner product
-  double xd=4.0; float xf=-3.0; int xi=-2; unsigned int xui=8;
-  EXPECT_EQ(alg->InnerProduct(xd, xd), xd*xd);
-  EXPECT_EQ(alg->InnerProduct(xd, xf), xd*xf);
-  EXPECT_EQ(alg->InnerProduct(xd, xi), xd*xi);
-  EXPECT_EQ(alg->InnerProduct(xd, xui), xd*xui);
-  EXPECT_EQ(alg->InnerProduct(xf, xd), xf*xd);
-  EXPECT_EQ(alg->InnerProduct(xf, xf), xf*xf);
-  EXPECT_EQ(alg->InnerProduct(xf, xi), xf*xi);
-  EXPECT_EQ(alg->InnerProduct(xf, xui), xf*xui);
-  EXPECT_EQ(alg->InnerProduct(xi, xd), xi*xd);
-  EXPECT_EQ(alg->InnerProduct(xi, xf), xi*xf);
-  EXPECT_EQ(alg->InnerProduct(xi, xi), xi*xi);
-  EXPECT_EQ(alg->InnerProduct(xi, xui), xi*(double)xui);
-  EXPECT_EQ(alg->InnerProduct(xui, xd), xui*xd);
-  EXPECT_EQ(alg->InnerProduct(xui, xf), xui*xf);
-  EXPECT_EQ(alg->InnerProduct(xui, xi), (double)xui*xi);
-  EXPECT_EQ(alg->InnerProduct(xui, xui), xui*xui);
-
   const Eigen::Vector2d vec2(2.0, 3.0);
   const Eigen::Vector3d vec3(2.0, 3.0, 4.0);
   const Eigen::Vector4d vec4(2.0, 3.0, 4.0, 5.0);
@@ -387,25 +337,6 @@ TEST(AnyAlgebraTests, InnerProduct) {
 
 TEST(AnyAlgebraTests, Add) {
   auto alg = std::shared_ptr<AnyAlgebra>();
-
-  // test the scalar inner product
-  double xd=4.0; float xf=-3.0; int xi=-2; unsigned int xui=8;
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Add(xd, xd)), xd+xd);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Add(xd, xf)), xd+xf);
-  EXPECT_EQ(boost::any_cast<double const>(alg->Add(xd, xi)), xd+xi);
-  EXPECT_EQ(boost::any_cast<double const>(alg->Add(xd, xui)), xd+xui);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Add(xf, xd)), xf+xd);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Add(xf, xf)), xf+xf);
-  EXPECT_EQ(boost::any_cast<float const>(alg->Add(xf, xi)), xf+xi);
-  EXPECT_EQ(boost::any_cast<float const>(alg->Add(xf, xui)), xf+xui);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Add(xi, xd)), xi+xd);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Add(xi, xf)), xi+xf);
-  EXPECT_EQ(boost::any_cast<int const>(alg->Add(xi, xi)), xi+xi);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Add(xi, xui)), xi+xui); 
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Add(xui, xd)), xui+xd);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Add(xui, xf)), xui+xf);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Add(xui, xi)), xui+xi);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Add(xui, xui)), xui+xui);
 
   // test the Eigen::Vectors
   const Eigen::Vector2d vec2d = Eigen::Vector2d::Random();
@@ -534,25 +465,6 @@ TEST(AnyAlgebraTests, Add) {
 
 TEST(AnyAlgebraTests, Subtract) {
   auto alg = std::shared_ptr<AnyAlgebra>();
-
-  // test the scalar inner product
-  double xd=4.0; float xf=-3.0; int xi=-2; unsigned int xui=8;
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Subtract(xd, xd)), xd-xd);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Subtract(xd, xf)), xd-xf);
-  EXPECT_EQ(boost::any_cast<double const>(alg->Subtract(xd, xi)), xd-xi);
-  EXPECT_EQ(boost::any_cast<double const>(alg->Subtract(xd, xui)), xd-xui);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Subtract(xf, xd)), xf-xd);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Subtract(xf, xf)), xf-xf);
-  EXPECT_EQ(boost::any_cast<float const>(alg->Subtract(xf, xi)), xf-xi);
-  EXPECT_EQ(boost::any_cast<float const>(alg->Subtract(xf, xui)), xf-xui);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Subtract(xi, xd)), xi-xd);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Subtract(xi, xf)), xi-xf);
-  EXPECT_EQ(boost::any_cast<int const>(alg->Subtract(xi, xi)), xi-xi);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Subtract(xi, xui)), xi-xui); 
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Subtract(xui, xd)), xui-xd);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Subtract(xui, xf)), xui-xf);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Subtract(xui, xi)), xui-xi);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Subtract(xui, xui)), xui-xui);
 
   // test the Eigen::Vectors
   const Eigen::Vector2d vec2d = Eigen::Vector2d::Random();
@@ -684,22 +596,6 @@ TEST(AnyAlgebraTests, Multiply) {
 
   // test the scalar inner product
   double xd=4.0; float xf=-3.0; int xi=-2; unsigned int xui=8;
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Multiply(xd, xd)), xd*xd);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Multiply(xd, xf)), xd*xf);
-  EXPECT_EQ(boost::any_cast<double const>(alg->Multiply(xd, xi)), xd*xi);
-  EXPECT_EQ(boost::any_cast<double const>(alg->Multiply(xd, xui)), xd*xui);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Multiply(xf, xd)), xf*xd);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Multiply(xf, xf)), xf*xf);
-  EXPECT_EQ(boost::any_cast<float const>(alg->Multiply(xf, xi)), xf*xi);
-  EXPECT_EQ(boost::any_cast<float const>(alg->Multiply(xf, xui)), xf*xui);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Multiply(xi, xd)), xi*xd);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Multiply(xi, xf)), xi*xf);
-  EXPECT_EQ(boost::any_cast<int const>(alg->Multiply(xi, xi)), xi*xi);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Multiply(xi, xui)), xi*xui); 
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Multiply(xui, xd)), xui*xd);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Multiply(xui, xf)), xui*xf);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Multiply(xui, xi)), xui*xi);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Multiply(xui, xui)), xui*xui);
 
   // test the Eigen::Vectors
   const Eigen::Vector2d vec2d = Eigen::Vector2d::Random();
@@ -856,29 +752,6 @@ TEST(AnyAlgebraTests, Multiply) {
 TEST(AnyAlgebraTests, Apply) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 
-  // test the scalar inner product
-  double xd=4.0; float xf=-3.0; int xi=-2; unsigned int xui=8;
-
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Apply(xd, xd)), xd*xd);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Apply(xd, xf)), xf*xd);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Apply(xd, xi)), xi*xd);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Apply(xd, xui)), xui*xd);
-
-  EXPECT_FLOAT_EQ(boost::any_cast<double const>(alg->Apply(xf, xd)), xd*xf); // use FLOAT_EQ because the precision is lower
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Apply(xf, xf)), xf*xf);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Apply(xf, xi)), xi*xf);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Apply(xf, xui)), xui*xf);
-  
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Apply(xi, xd)), xd*xi);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Apply(xi, xf)), xf*xi);
-  EXPECT_EQ(boost::any_cast<int const>(alg->Apply(xi, xi)), xi*xi);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Apply(xi, xui)), xui*xi);
-
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Apply(xui, xd)), xd*xui);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Apply(xui, xf)), xf*xui);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Apply(xui, xi)), xi*xui);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Apply(xui, xui)), xui*xui);
-
   const Eigen::Vector2d vec2d = Eigen::Vector2d::Random();
   const Eigen::VectorXd vec2Xd = Eigen::VectorXd::Random(2);
   const Eigen::Vector2d vm_2d2d = vec2d.asDiagonal()*vec2d;
@@ -975,29 +848,6 @@ TEST(AnyAlgebraTests, Apply) {
 
 TEST(AnyAlgebraTests, ApplyInverse) {
   auto alg = std::shared_ptr<AnyAlgebra>();
-
-  // test the scalar inner product
-  double xd=4.0; float xf=-3.0; int xi=-2; unsigned int xui=8;
-
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xd, xd)), 1.0);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xd, xf)), xf/xd);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xd, xi)), xi/xd);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xd, xui)), xui/xd);
-
-  EXPECT_FLOAT_EQ(boost::any_cast<double const>(alg->ApplyInverse(xf, xd)), xd/xf); // use FLOAT_EQ because the precision is lower
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->ApplyInverse(xf, xf)), 1.0);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->ApplyInverse(xf, xi)), xi/xf);
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->ApplyInverse(xf, xui)), xui/xf);
-  
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xi, xd)), xd/xi);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xi, xf)), xf/xi);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xi, xi)), 1.0);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xi, xui)), (double)xui/(double)xi);
-
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xui, xd)), xd/xui);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xui, xf)), xf/xui);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xui, xi)), (double)xi/(double)xui);
-  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xui, xui)), 1);
 
   const Eigen::Vector2d vec2d = Eigen::Vector2d::Random();
   const Eigen::VectorXd vec2Xd = Eigen::VectorXd::Random(2);

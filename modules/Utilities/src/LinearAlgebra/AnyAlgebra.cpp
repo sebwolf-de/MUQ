@@ -4,11 +4,6 @@ using namespace muq::Utilities;
 
 AnyAlgebra::AnyAlgebra() {}
 
-bool AnyAlgebra::IsScalar(std::type_info const& obj_type) const {
-  // is this a scalar type?
-  return typeid(double)==obj_type || typeid(float)==obj_type || typeid(int)==obj_type || typeid(unsigned int)==obj_type;
-}
-
 bool AnyAlgebra::IsEigenVector(std::type_info const& obj_type) const {
   // is this an Eigen::Vector type?
   return typeid(Eigen::Vector2d)==obj_type
@@ -86,7 +81,7 @@ unsigned int AnyAlgebra::SundialsVectorSize(boost::any const& vec) const {
 
 unsigned int AnyAlgebra::Size(boost::any const& obj, int const dim) const {
   // scalars are size one
-  if( IsScalar(obj.type()) ) { return 1; }
+  if( ScalarAlgebra::IsScalar(obj.type()) ) { return 1; }
 
   // get the size of an Eigen::VectorXd
   if( IsEigenVector(obj.type()) ) { return EigenVectorSize(obj); }
@@ -165,7 +160,7 @@ boost::any AnyAlgebra::ZeroScalar(std::type_info const& type) const {
 }
 
 boost::any AnyAlgebra::Zero(std::type_info const& type, unsigned int rows, unsigned int const cols) const {
-  if( IsScalar(type) ) { return ZeroScalar(type); }
+  if( ScalarAlgebra::IsScalar(type) ) { return ZeroScalar(type); }
   
   if( IsEigenVector(type) ) { return ZeroEigenVector(type, rows); }
 
@@ -187,17 +182,6 @@ boost::any AnyAlgebra::ZeroImpl(std::type_info const& type, unsigned int const r
   return boost::none;
 }
 
-double AnyAlgebra::ScalarNorm(boost::any const& obj) const {
-  if( typeid(double)==obj.type() ) { return ScalarMagnitude<double>(obj); }
-  if( typeid(float)==obj.type() ) { return ScalarMagnitude<float>(obj); }
-  if( typeid(int)==obj.type() ) { return ScalarMagnitude<int>(obj); }
-  if( typeid(unsigned int)==obj.type() ) { return ScalarMagnitude<unsigned int>(obj); }
-
-  // something went wrong
-  assert(false);
-  return -1.0;
-}
-
 double AnyAlgebra::EigenVectorNorm(boost::any const& vec) const {
   if( typeid(Eigen::Vector2d)==vec.type() ) { return EigenNorm<Eigen::Vector2d>(vec); }
   if( typeid(Eigen::Vector3d)==vec.type() ) { return EigenNorm<Eigen::Vector3d>(vec); }
@@ -215,7 +199,7 @@ double AnyAlgebra::EigenMatrixNorm(boost::any const& mat) const {
 }
 
 double AnyAlgebra::Norm(boost::any const& obj) const {
-  if( IsScalar(obj.type()) ) { return ScalarNorm(obj); }
+  if( ScalarAlgebra::IsScalar(obj.type()) ) { return ScalarAlgebra::Norm(obj); }
 
   if( IsEigenVector(obj.type()) ) { return EigenVectorNorm(obj); }
 
@@ -233,23 +217,6 @@ double AnyAlgebra::NormImpl(boost::any const& obj) const {
   return -1.0;
 }
 
-double AnyAlgebra::ScalarInnerProduct(boost::any const& vec1, boost::any const& vec2) const {
-  double ip = ScalarInProd<double>(vec1, vec2);
-  if( !std::isnan(ip) ) { return ip; }
-
-  ip = ScalarInProd<float>(vec1, vec2);
-  if( !std::isnan(ip) ) { return ip; }
-
-  ip = ScalarInProd<int>(vec1, vec2);
-  if( !std::isnan(ip) ) { return ip; }
-
-  ip = ScalarInProd<unsigned int>(vec1, vec2);
-  if( !std::isnan(ip) ) { return ip; }
-
-  // something went wrong
-  return std::numeric_limits<double>::quiet_NaN();
-}
-
 double AnyAlgebra::EigenVectorInnerProduct(boost::any const& vec1, boost::any const& vec2) const {
   double ip = EigenVectorInProd<Eigen::Vector2d>(vec1, vec2);
   if( !std::isnan(ip) ) { return ip; }
@@ -264,7 +231,7 @@ double AnyAlgebra::EigenVectorInnerProduct(boost::any const& vec1, boost::any co
 }
 
 double AnyAlgebra::InnerProduct(boost::any const& vec1, boost::any const& vec2) const {
-  if( IsScalar(vec1.type()) && IsScalar(vec2.type()) ) { return ScalarInnerProduct(vec1, vec2); }
+  if( ScalarAlgebra::IsScalar(vec1.type()) && ScalarAlgebra::IsScalar(vec2.type()) ) { return ScalarAlgebra::InnerProduct(vec1, vec2); }
 
   if( IsEigenVector(vec1.type()) && IsEigenVector(vec2.type()) ) { return EigenVectorInnerProduct(vec1, vec2); }
 
@@ -278,17 +245,6 @@ double AnyAlgebra::InnerProductImpl(boost::any const& vec1, boost::any const& ve
   assert(false);
 
   return 0.0;
-}
-
-bool AnyAlgebra::IsScalarZero(boost::any const& obj) const {
-  if( obj.type()==typeid(double) ) { return boost::any_cast<double const>(obj)==0.0; }
-  if( obj.type()==typeid(float) ) { return boost::any_cast<float const>(obj)==0.0; }
-  if( obj.type()==typeid(int) ) { return boost::any_cast<int const>(obj)==0; }
-  if( obj.type()==typeid(unsigned int) ) { return boost::any_cast<unsigned int const>(obj)==0; }
-
-  // something when wrong
-  assert(false);
-  return false;
 }
 
 bool AnyAlgebra::IsEigenVectorZero(boost::any const& obj) const {
@@ -336,7 +292,7 @@ bool AnyAlgebra::IsEigenMatrixZero(boost::any const& obj) const {
 }
 
 bool AnyAlgebra::IsZero(boost::any const& obj) const {
-  if( IsScalar(obj.type()) ) { return IsScalarZero(obj); }
+  if( ScalarAlgebra::IsScalar(obj.type()) ) { return ScalarAlgebra::IsZero(obj); }
 
   if( IsEigenVector(obj.type()) ) { return IsEigenVectorZero(obj); }
   
@@ -409,7 +365,7 @@ boost::any AnyAlgebra::AccessSundialsVector(N_Vector const& vec, unsigned int co
 #endif
 
 boost::any AnyAlgebra::AccessElement(boost::any const& obj, unsigned int const i, unsigned int const j) const {
-  if( IsScalar(obj.type()) ) { return obj; }
+  if( ScalarAlgebra::IsScalar(obj.type()) ) { return obj; }
 
   if( IsEigenVector(obj.type()) ) { return AccessEigenVector(obj, i); }
 
@@ -428,17 +384,6 @@ boost::any AnyAlgebra::AccessElementImpl(boost::any const& vec, unsigned int con
   std::cerr << "\tError in AnyAlgebra::AccessElement()" << std::endl << std::endl;
   assert(false);
 
-  return boost::none;
-}
-
-boost::any AnyAlgebra::ScalarIdentity(std::type_info const& type) const {
-  if( type==typeid(double) ) { return (double)1.0; }
-  if( type==typeid(float) ) { return (float)1.0; }
-  if( type==typeid(int) ) { return (int)1; }
-  if( type==typeid(unsigned int) ) { return (unsigned int)1; }
-
-  // something went wrong
-  assert(false);
   return boost::none;
 }
 
@@ -487,7 +432,7 @@ boost::any AnyAlgebra::EigenVectorIdentity(std::type_info const& type, unsigned 
 }
 
 boost::any AnyAlgebra::Identity(std::type_info const& type, unsigned int const rows, unsigned int const cols) const {
-  if( IsScalar(type) ) { return ScalarIdentity(type); }
+  if( ScalarAlgebra::IsScalar(type) ) { return ScalarAlgebra::Identity(type); }
 
   if( IsEigenVector(type) ) { return EigenVectorIdentity(type, rows, cols); }
 
@@ -502,17 +447,6 @@ boost::any AnyAlgebra::IdentityImpl(std::type_info const& type, unsigned int con
   std::cerr << "\tError in AnyAlgebra::IdentityImpl()" << std::endl << std::endl;
   assert(false);
   
-  return boost::none;
-}
-
-boost::any AnyAlgebra::AddScalar(boost::any const& in0, boost::any const& in1) const {
-  if( in0.type()==typeid(double) ) { return AddScalar<double>(in0, in1); }
-  if( in0.type()==typeid(float) ) { return AddScalar<float>(in0, in1); }
-  if( in0.type()==typeid(int) ) { return AddScalar<int>(in0, in1); }
-  if( in0.type()==typeid(unsigned int) ) { return AddScalar<unsigned int>(in0, in1); }
-  
-  // something went wrong
-  assert(false);
   return boost::none;
 }
 
@@ -653,7 +587,7 @@ boost::any AnyAlgebra::AddEigenMatrix(boost::any const& in0, boost::any const& i
 }
 
 boost::any AnyAlgebra::Add(boost::any const& in0, boost::any const& in1) const {
-  if( IsScalar(in0.type()) && IsScalar(in1.type()) ) { return AddScalar(in0, in1); }
+  if( ScalarAlgebra::IsScalar(in0.type()) && ScalarAlgebra::IsScalar(in1.type()) ) { return ScalarAlgebra::Add(in0, in1); }
 
   if( IsEigenVector(in0.type()) && IsEigenVector(in1.type()) ) { return AddEigenVector(in0, in1); }
 
@@ -674,17 +608,6 @@ boost::any AnyAlgebra::AddImpl(boost::any const& in0, boost::any const& in1) con
   std::cerr << "\tError in AnyAlgebra::AddImpl()" << std::endl << std::endl;
   assert(false);
   
-  return boost::none;
-}
-
-boost::any AnyAlgebra::SubtractScalar(boost::any const& in0, boost::any const& in1) const {
-  if( in0.type()==typeid(double) ) { return SubtractScalar<double>(in0, in1); }
-  if( in0.type()==typeid(float) ) { return SubtractScalar<float>(in0, in1); }
-  if( in0.type()==typeid(int) ) { return SubtractScalar<int>(in0, in1); }
-  if( in0.type()==typeid(unsigned int) ) { return SubtractScalar<unsigned int>(in0, in1); }
-  
-  // something went wrong
-  assert(false);
   return boost::none;
 }
 
@@ -825,7 +748,7 @@ boost::any AnyAlgebra::SubtractEigenMatrix(boost::any const& in0, boost::any con
 }
 
 boost::any AnyAlgebra::Subtract(boost::any const& in0, boost::any const& in1) const {
-  if( IsScalar(in0.type()) && IsScalar(in1.type()) ) { return SubtractScalar(in0, in1); }
+  if( ScalarAlgebra::IsScalar(in0.type()) && ScalarAlgebra::IsScalar(in1.type()) ) { return ScalarAlgebra::Subtract(in0, in1); }
 
   if( IsEigenVector(in0.type()) && IsEigenVector(in1.type()) ) { return SubtractEigenVector(in0, in1); }
 
@@ -846,17 +769,6 @@ boost::any AnyAlgebra::SubtractImpl(boost::any const& in0, boost::any const& in1
   std::cerr << "\tError in AnyAlgebra::SubtractImpl()" << std::endl << std::endl;
   assert(false);
   
-  return boost::none;
-}
-
-boost::any AnyAlgebra::MultiplyScalar(boost::any const& in0, boost::any const& in1) const {
-  if( in0.type()==typeid(double) ) { return MultiplyScalar<double>(in0, in1); }
-  if( in0.type()==typeid(float) ) { return MultiplyScalar<float>(in0, in1); }
-  if( in0.type()==typeid(int) ) { return MultiplyScalar<int>(in0, in1); }
-  if( in0.type()==typeid(unsigned int) ) { return MultiplyScalar<unsigned int>(in0, in1); }
-  
-  // something went wrong
-  assert(false);
   return boost::none;
 }
 
@@ -1005,15 +917,15 @@ boost::any AnyAlgebra::MultiplyEigenMatrixScalar(boost::any const& in0, boost::a
 }
 
 boost::any AnyAlgebra::Multiply(boost::any const& in0, boost::any const& in1) const {
-  if( IsScalar(in0.type()) && IsScalar(in1.type()) ) { return MultiplyScalar(in0, in1); }
+  if( ScalarAlgebra::IsScalar(in0.type()) && ScalarAlgebra::IsScalar(in1.type()) ) { return ScalarAlgebra::Multiply(in0, in1); }
 
-  if( IsScalar(in0.type()) && IsEigenVector(in1.type()) ) { return MultiplyEigenVectorScalar(in0, in1); }
-  if( IsScalar(in1.type()) && IsEigenVector(in0.type()) ) { return MultiplyEigenVectorScalar(in1, in0); }
+  if( ScalarAlgebra::IsScalar(in0.type()) && IsEigenVector(in1.type()) ) { return MultiplyEigenVectorScalar(in0, in1); }
+  if( ScalarAlgebra::IsScalar(in1.type()) && IsEigenVector(in0.type()) ) { return MultiplyEigenVectorScalar(in1, in0); }
 
   if( IsEigenMatrix(in0.type()) && IsEigenMatrix(in1.type()) ) { return MultiplyEigenMatrix(in0, in1); }
 
-  if( IsScalar(in0.type()) && IsEigenMatrix(in1.type()) ) { return MultiplyEigenMatrixScalar(in0, in1); }
-  if( IsScalar(in1.type()) && IsEigenMatrix(in0.type()) ) { return MultiplyEigenMatrixScalar(in1, in0); }
+  if( ScalarAlgebra::IsScalar(in0.type()) && IsEigenMatrix(in1.type()) ) { return MultiplyEigenMatrixScalar(in0, in1); }
+  if( ScalarAlgebra::IsScalar(in1.type()) && IsEigenMatrix(in0.type()) ) { return MultiplyEigenMatrixScalar(in1, in0); }
 
   // the first type is boost::none --- return the second
   if( in0.type()==typeid(boost::none) ) { return in1; }
@@ -1030,17 +942,6 @@ boost::any AnyAlgebra::MultiplyImpl(boost::any const& in0, boost::any const& in1
   std::cerr << "\tError in AnyAlgebra::MultiplyImpl()" << std::endl << std::endl;
   assert(false);
   
-  return boost::none;
-}
-
-boost::any AnyAlgebra::ApplyScalarInverse(boost::any const& A, boost::any const& x) const {
-  if( A.type()==typeid(double) ) { return Multiply(1.0/boost::any_cast<double const>(A), x); }
-  if( A.type()==typeid(float) ) { return Multiply((float)1.0/boost::any_cast<float const>(A), x); }
-  if( A.type()==typeid(int) ) { return Multiply(1.0/boost::any_cast<int const>(A), x); }
-  if( A.type()==typeid(unsigned int) ) { return Multiply(1.0/boost::any_cast<unsigned int const>(A), x); }
-
-  // something went wrong
-  assert(false);
   return boost::none;
 }
 
@@ -1112,7 +1013,7 @@ boost::any AnyAlgebra::ApplyEigenVectorInverse(boost::any const& A, boost::any c
 }
 
 boost::any AnyAlgebra::ApplyInverse(boost::any const& A, boost::any const& x) const {
-  if( IsScalar(A.type()) ) { return ApplyScalarInverse(A, x); }
+  if( ScalarAlgebra::IsScalar(A.type()) ) { return Multiply(Inverse(A), x); }
 
   if( IsEigenVector(A.type()) ) { return ApplyEigenVectorInverse(A, x); }
   
@@ -1125,17 +1026,6 @@ boost::any AnyAlgebra::ApplyInverseImpl(boost::any const& A, boost::any const& x
   std::cerr << "\tError in AnyAlgebra::ApplyInverseImpl()" << std::endl << std::endl;
   assert(false);
   
-  return boost::none;
-}
-
-boost::any AnyAlgebra::ApplyScalar(boost::any const& A, boost::any const& x) const {
-  if( A.type()==typeid(double) ) { return Multiply(boost::any_cast<double const>(A), x); }
-  if( A.type()==typeid(float) ) { return Multiply(boost::any_cast<float const>(A), x); }
-  if( A.type()==typeid(int) ) { return Multiply(boost::any_cast<int const>(A), x); }
-  if( A.type()==typeid(unsigned int) ) { return Multiply(boost::any_cast<unsigned int const>(A), x); }
-
-  // something went wrong
-  assert(false);
   return boost::none;
 }
 
@@ -1207,7 +1097,7 @@ boost::any AnyAlgebra::ApplyEigenVector(boost::any const& A, boost::any const& x
 }
 
 boost::any AnyAlgebra::Apply(boost::any const& A, boost::any const& x) const {
-  if( IsScalar(A.type()) ) { return ApplyScalar(A, x); }
+  if( ScalarAlgebra::IsScalar(A.type()) ) { return Multiply(A, x); }
 
   if( IsEigenVector(A.type()) ) { return ApplyEigenVector(A, x); }
   
@@ -1218,6 +1108,21 @@ boost::any AnyAlgebra::ApplyImpl(boost::any const& A, boost::any const& x) const
   std::cerr << std::endl << "ERROR: No way to apply " << boost::core::demangle(A.type().name()) << " type to type " << boost::core::demangle(x.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::ApplyImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::ApplyImpl()" << std::endl << std::endl;
+  assert(false);
+  
+  return boost::none;
+}
+
+boost::any AnyAlgebra::Inverse(boost::any const& obj) const {
+  if( ScalarAlgebra::IsScalar(obj.type()) ) { return ScalarAlgebra::Inverse(obj); }
+  
+  return InverseImpl(obj);
+}
+
+boost::any AnyAlgebra::InverseImpl(boost::any const& obj) const {
+  std::cerr << std::endl << "ERROR: No way to compute the inverse of type " << boost::core::demangle(obj.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::inverseImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::InverseImpl()" << std::endl << std::endl;
   assert(false);
   
   return boost::none;
