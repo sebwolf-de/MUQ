@@ -1032,3 +1032,193 @@ boost::any AnyAlgebra::MultiplyImpl(boost::any const& in0, boost::any const& in1
   
   return boost::none;
 }
+
+boost::any AnyAlgebra::ApplyScalarInverse(boost::any const& A, boost::any const& x) const {
+  if( A.type()==typeid(double) ) { return Multiply(1.0/boost::any_cast<double const>(A), x); }
+  if( A.type()==typeid(float) ) { return Multiply((float)1.0/boost::any_cast<float const>(A), x); }
+  if( A.type()==typeid(int) ) { return Multiply(1.0/boost::any_cast<int const>(A), x); }
+  if( A.type()==typeid(unsigned int) ) { return Multiply(1.0/boost::any_cast<unsigned int const>(A), x); }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::ApplyEigenVectorInverse(boost::any const& A, boost::any const& x) const {
+  if( A.type()==typeid(Eigen::Vector2d) ) {
+    if( x.type()==typeid(Eigen::Vector2d) ) { return ApplyEigenVectorInverse<Eigen::Vector2d, Eigen::Vector2d>(A, x); }
+    return ApplyEigenVectorInverse<Eigen::Vector2d, Eigen::VectorXd>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector2f) ) {
+    if( x.type()==typeid(Eigen::Vector2f) ) { return ApplyEigenVectorInverse<Eigen::Vector2f, Eigen::Vector2f>(A, x); }
+    return ApplyEigenVectorInverse<Eigen::Vector2f, Eigen::VectorXf>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector2i) ) {
+    if( x.type()==typeid(Eigen::Vector2i) ) { return ApplyEigenVectorInverse<Eigen::Vector2i, Eigen::Vector2i>(A, x); }
+    return ApplyEigenVectorInverse<Eigen::Vector2i, Eigen::VectorXi>(A, x);
+  }
+
+  if( A.type()==typeid(Eigen::Vector3d) ) {
+    if( x.type()==typeid(Eigen::Vector3d) ) { return ApplyEigenVectorInverse<Eigen::Vector3d, Eigen::Vector3d>(A, x); }
+    return ApplyEigenVectorInverse<Eigen::Vector3d, Eigen::VectorXd>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector3f) ) {
+    if( x.type()==typeid(Eigen::Vector3f) ) { return ApplyEigenVectorInverse<Eigen::Vector3f, Eigen::Vector3f>(A, x); }
+    return ApplyEigenVectorInverse<Eigen::Vector3f, Eigen::VectorXf>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector3i) ) {
+    if( x.type()==typeid(Eigen::Vector3i) ) { return ApplyEigenVectorInverse<Eigen::Vector3i, Eigen::Vector3i>(A, x); }
+    return ApplyEigenVectorInverse<Eigen::Vector3i, Eigen::VectorXi>(A, x);
+  }
+
+  if( A.type()==typeid(Eigen::Vector4d) ) {
+    if( x.type()==typeid(Eigen::Vector4d) ) { return ApplyEigenVectorInverse<Eigen::Vector4d, Eigen::Vector4d>(A, x); }
+    return ApplyEigenVectorInverse<Eigen::Vector4d, Eigen::VectorXd>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector4f) ) {
+    if( x.type()==typeid(Eigen::Vector4f) ) { return ApplyEigenVectorInverse<Eigen::Vector4f, Eigen::Vector4f>(A, x); }
+    return ApplyEigenVectorInverse<Eigen::Vector4f, Eigen::VectorXf>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector4i) ) {
+    if( x.type()==typeid(Eigen::Vector4i) ) { return ApplyEigenVectorInverse<Eigen::Vector4i, Eigen::Vector4i>(A, x); }
+    return ApplyEigenVectorInverse<Eigen::Vector4i, Eigen::VectorXi>(A, x);
+  }
+
+  if( A.type()==typeid(Eigen::VectorXd) ) {
+    if( x.type()==typeid(Eigen::Vector2d) ) { return ApplyEigenVectorInverse<Eigen::VectorXd, Eigen::Vector2d>(A, x); }
+    if( x.type()==typeid(Eigen::Vector3d) ) { return ApplyEigenVectorInverse<Eigen::VectorXd, Eigen::Vector3d>(A, x); }
+    if( x.type()==typeid(Eigen::Vector4d) ) { return ApplyEigenVectorInverse<Eigen::VectorXd, Eigen::Vector4d>(A, x); }
+
+    return ApplyEigenVectorInverse<Eigen::VectorXd, Eigen::VectorXd>(A, x);
+  }
+  if( A.type()==typeid(Eigen::VectorXf) ) {
+    if( x.type()==typeid(Eigen::Vector2f) ) { return ApplyEigenVectorInverse<Eigen::VectorXf, Eigen::Vector2f>(A, x); }
+    if( x.type()==typeid(Eigen::Vector3f) ) { return ApplyEigenVectorInverse<Eigen::VectorXf, Eigen::Vector3f>(A, x); }
+    if( x.type()==typeid(Eigen::Vector4f) ) { return ApplyEigenVectorInverse<Eigen::VectorXf, Eigen::Vector4f>(A, x); }
+
+    return ApplyEigenVectorInverse<Eigen::VectorXf, Eigen::VectorXf>(A, x);
+  }
+  if( A.type()==typeid(Eigen::VectorXi) ) {
+    if( x.type()==typeid(Eigen::Vector2i) ) { return ApplyEigenVectorInverse<Eigen::VectorXi, Eigen::Vector2i>(A, x); }
+    if( x.type()==typeid(Eigen::Vector3i) ) { return ApplyEigenVectorInverse<Eigen::VectorXi, Eigen::Vector3i>(A, x); }
+    if( x.type()==typeid(Eigen::Vector4i) ) { return ApplyEigenVectorInverse<Eigen::VectorXi, Eigen::Vector4i>(A, x); }
+
+    return ApplyEigenVectorInverse<Eigen::VectorXi, Eigen::VectorXi>(A, x);
+  }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::ApplyInverse(boost::any const& A, boost::any const& x) const {
+  if( IsScalar(A.type()) ) { return ApplyScalarInverse(A, x); }
+
+  if( IsEigenVector(A.type()) ) { return ApplyEigenVectorInverse(A, x); }
+  
+  return ApplyInverseImpl(A, x);
+}
+
+boost::any AnyAlgebra::ApplyInverseImpl(boost::any const& A, boost::any const& x) const {
+  std::cerr << std::endl << "ERROR: No way to apply the inverse " << boost::core::demangle(A.type().name()) << " type to type " << boost::core::demangle(x.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::ApplyInverseImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::ApplyInverseImpl()" << std::endl << std::endl;
+  assert(false);
+  
+  return boost::none;
+}
+
+boost::any AnyAlgebra::ApplyScalar(boost::any const& A, boost::any const& x) const {
+  if( A.type()==typeid(double) ) { return Multiply(boost::any_cast<double const>(A), x); }
+  if( A.type()==typeid(float) ) { return Multiply(boost::any_cast<float const>(A), x); }
+  if( A.type()==typeid(int) ) { return Multiply(boost::any_cast<int const>(A), x); }
+  if( A.type()==typeid(unsigned int) ) { return Multiply(boost::any_cast<unsigned int const>(A), x); }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::ApplyEigenVector(boost::any const& A, boost::any const& x) const {
+  if( A.type()==typeid(Eigen::Vector2d) ) {
+    if( x.type()==typeid(Eigen::Vector2d) ) { return ApplyEigenVector<Eigen::Vector2d, Eigen::Vector2d>(A, x); }
+    return ApplyEigenVector<Eigen::Vector2d, Eigen::VectorXd>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector2f) ) {
+    if( x.type()==typeid(Eigen::Vector2f) ) { return ApplyEigenVector<Eigen::Vector2f, Eigen::Vector2f>(A, x); }
+    return ApplyEigenVector<Eigen::Vector2f, Eigen::VectorXf>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector2i) ) {
+    if( x.type()==typeid(Eigen::Vector2i) ) { return ApplyEigenVector<Eigen::Vector2i, Eigen::Vector2i>(A, x); }
+    return ApplyEigenVector<Eigen::Vector2i, Eigen::VectorXi>(A, x);
+  }
+
+  if( A.type()==typeid(Eigen::Vector3d) ) {
+    if( x.type()==typeid(Eigen::Vector3d) ) { return ApplyEigenVector<Eigen::Vector3d, Eigen::Vector3d>(A, x); }
+    return ApplyEigenVector<Eigen::Vector3d, Eigen::VectorXd>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector3f) ) {
+    if( x.type()==typeid(Eigen::Vector3f) ) { return ApplyEigenVector<Eigen::Vector3f, Eigen::Vector3f>(A, x); }
+    return ApplyEigenVector<Eigen::Vector3f, Eigen::VectorXf>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector3i) ) {
+    if( x.type()==typeid(Eigen::Vector3i) ) { return ApplyEigenVector<Eigen::Vector3i, Eigen::Vector3i>(A, x); }
+    return ApplyEigenVector<Eigen::Vector3i, Eigen::VectorXi>(A, x);
+  }
+
+  if( A.type()==typeid(Eigen::Vector4d) ) {
+    if( x.type()==typeid(Eigen::Vector4d) ) { return ApplyEigenVector<Eigen::Vector4d, Eigen::Vector4d>(A, x); }
+    return ApplyEigenVector<Eigen::Vector4d, Eigen::VectorXd>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector4f) ) {
+    if( x.type()==typeid(Eigen::Vector4f) ) { return ApplyEigenVector<Eigen::Vector4f, Eigen::Vector4f>(A, x); }
+    return ApplyEigenVector<Eigen::Vector4f, Eigen::VectorXf>(A, x);
+  }
+  if( A.type()==typeid(Eigen::Vector4i) ) {
+    if( x.type()==typeid(Eigen::Vector4i) ) { return ApplyEigenVector<Eigen::Vector4i, Eigen::Vector4i>(A, x); }
+    return ApplyEigenVector<Eigen::Vector4i, Eigen::VectorXi>(A, x);
+  }
+
+  if( A.type()==typeid(Eigen::VectorXd) ) {
+    if( x.type()==typeid(Eigen::Vector2d) ) { return ApplyEigenVector<Eigen::VectorXd, Eigen::Vector2d>(A, x); }
+    if( x.type()==typeid(Eigen::Vector3d) ) { return ApplyEigenVector<Eigen::VectorXd, Eigen::Vector3d>(A, x); }
+    if( x.type()==typeid(Eigen::Vector4d) ) { return ApplyEigenVector<Eigen::VectorXd, Eigen::Vector4d>(A, x); }
+
+    return ApplyEigenVector<Eigen::VectorXd, Eigen::VectorXd>(A, x);
+  }
+  if( A.type()==typeid(Eigen::VectorXf) ) {
+    if( x.type()==typeid(Eigen::Vector2f) ) { return ApplyEigenVector<Eigen::VectorXf, Eigen::Vector2f>(A, x); }
+    if( x.type()==typeid(Eigen::Vector3f) ) { return ApplyEigenVector<Eigen::VectorXf, Eigen::Vector3f>(A, x); }
+    if( x.type()==typeid(Eigen::Vector4f) ) { return ApplyEigenVector<Eigen::VectorXf, Eigen::Vector4f>(A, x); }
+
+    return ApplyEigenVector<Eigen::VectorXf, Eigen::VectorXf>(A, x);
+  }
+  if( A.type()==typeid(Eigen::VectorXi) ) {
+    if( x.type()==typeid(Eigen::Vector2i) ) { return ApplyEigenVector<Eigen::VectorXi, Eigen::Vector2i>(A, x); }
+    if( x.type()==typeid(Eigen::Vector3i) ) { return ApplyEigenVector<Eigen::VectorXi, Eigen::Vector3i>(A, x); }
+    if( x.type()==typeid(Eigen::Vector4i) ) { return ApplyEigenVector<Eigen::VectorXi, Eigen::Vector4i>(A, x); }
+
+    return ApplyEigenVector<Eigen::VectorXi, Eigen::VectorXi>(A, x);
+  }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
+boost::any AnyAlgebra::Apply(boost::any const& A, boost::any const& x) const {
+  if( IsScalar(A.type()) ) { return ApplyScalar(A, x); }
+
+  if( IsEigenVector(A.type()) ) { return ApplyEigenVector(A, x); }
+  
+  return ApplyImpl(A, x);
+}
+
+boost::any AnyAlgebra::ApplyImpl(boost::any const& A, boost::any const& x) const {
+  std::cerr << std::endl << "ERROR: No way to apply " << boost::core::demangle(A.type().name()) << " type to type " << boost::core::demangle(x.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::ApplyImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::ApplyImpl()" << std::endl << std::endl;
+  assert(false);
+  
+  return boost::none;
+}
