@@ -18,7 +18,7 @@
 #endif
 
 namespace muq {
-  namespace Modeling {
+  namespace Utilities {
     /// Implement a generic way to do algebric operations on boost::any's
     class AnyAlgebra {
     public:
@@ -903,7 +903,7 @@ namespace muq {
        */
       virtual bool IsZeroImpl(boost::any const& obj) const;
     };
-  } // namespace Modeling
+  } // namespace Utilities
 } // namespace muq
 
 #endif

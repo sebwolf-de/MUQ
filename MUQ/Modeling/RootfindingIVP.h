@@ -43,9 +43,9 @@ namespace muq {
 	 @param[in] rhs A muq::Modeling::WorkPiece that evaluates the right hand side of the ODE
 	 @param[in] root A muq::Modeling::WorkPiece whose outputs are double's --- we integrate the ODE until we find the first root of one of these outputs
 	 @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
-	 @param[in] algebra A muq::Modeling::AnyAlgebra used to manipulate the state and input parameters (defaults to the MUQ default)
+	 @param[in] algebra A muq::Utilities::AnyAlgebra used to manipulate the state and input parameters (defaults to the MUQ default)
        */
-      RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, boost::property_tree::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra = std::make_shared<AnyAlgebra>());
+      RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, boost::property_tree::ptree const& pt, std::shared_ptr<muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>());
 
       virtual ~RootfindingIVP();
       

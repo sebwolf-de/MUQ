@@ -3,7 +3,8 @@
 
 #include "boost/property_tree/ptree.hpp"
 
-#include "MUQ/Modeling/AnyAlgebra.h"
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+
 #include "MUQ/Modeling/WorkPiece.h"
 #include "MUQ/Modeling/ODEData.h"
 
@@ -59,9 +60,9 @@ namespace muq {
 	 </ol>
 	 @param[in] rhs The right hand side of the ODE
 	 @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
-	 @param[in] algebra A muq::Modeling::AnyAlgebra used to manipulate the state and input parameters
+	 @param[in] algebra A muq::Utilities::AnyAlgebra used to manipulate the state and input parameters
        */
-      ODEBase(std::shared_ptr<WorkPiece> rhs, boost::property_tree::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra);
+      ODEBase(std::shared_ptr<WorkPiece> rhs, boost::property_tree::ptree const& pt, std::shared_ptr<muq::Utilities::AnyAlgebra> algebra);
 
       virtual ~ODEBase();
       
@@ -218,7 +219,7 @@ namespace muq {
       std::shared_ptr<WorkPiece> rhs;
 
       /// An algebra to manipulate the state and parameters
-      std::shared_ptr<AnyAlgebra> algebra;
+      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra;
 
       /// Linear solver method
       const std::string linSolver;

@@ -2,10 +2,10 @@
 #define SCALARALGEBRA_H_
 
 namespace muq {
-  namespace Modeling { 
+  namespace Utilities { 
     class ScalarAlgebra {
     };
-  } // namespace Modeling
+  } // namespace Utilities
 } // namespace muq
 
 #endif

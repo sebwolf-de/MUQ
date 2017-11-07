@@ -6,6 +6,7 @@
 
 #include <Eigen/Core>
 
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 DependentPredicate::DependentPredicate() {}

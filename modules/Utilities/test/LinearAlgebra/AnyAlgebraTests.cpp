@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "MUQ/Modeling/AnyAlgebra.h"
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
-using namespace muq::Modeling;
+using namespace muq::Utilities;
 
 TEST(AnyAlgebraTests, Size) {
   auto alg = std::shared_ptr<AnyAlgebra>();

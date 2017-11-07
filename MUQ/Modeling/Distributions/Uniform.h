@@ -1,8 +1,9 @@
 #ifndef UNIFORM_H_
 #define UNIFORM_H_
 
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+
 #include "MUQ/Modeling/Distributions/Distribution.h"
-#include "MUQ/Modeling/AnyAlgebra.h"
 
 namespace muq {
   namespace Modeling {
@@ -87,8 +88,8 @@ namespace muq {
        */
       const std::vector<std::pair<double, double> > bounds;
 
-      /// The muq::Modeling::AnyAlgebra
-      std::shared_ptr<AnyAlgebra> algebra;
+      /// The muq::Utilities::AnyAlgebra
+      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra;
     };
   } // namespace Modeling
 } // namespace muq

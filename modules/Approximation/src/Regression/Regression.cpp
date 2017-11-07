@@ -4,6 +4,7 @@
 #include "MUQ/Approximation/Regression/Hermite.h"
 #include "MUQ/Approximation/Regression/Legendre.h"
 
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 using namespace muq::Approximation;
 

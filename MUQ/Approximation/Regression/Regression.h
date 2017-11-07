@@ -1,11 +1,11 @@
-
 #ifndef REGRESSION_H_
 #define REGRESSION_H_
 
 #include <Eigen/QR>
 
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+
 #include "MUQ/Modeling/WorkPiece.h"
-#include "MUQ/Modeling/AnyAlgebra.h"
 
 #include "MUQ/Approximation/Regression/MultiIndex.h"
 #include "MUQ/Approximation/Regression/Polynomial.h"
@@ -217,8 +217,8 @@ namespace muq {
       /// The order of the regression
       const unsigned int order;
 
-      /// An muq::Modeling::AnyAlgebra to do the algebric manipulations
-      std::shared_ptr<muq::Modeling::AnyAlgebra> algebra;
+      /// An muq::Utilities::AnyAlgebra to do the algebric manipulations
+      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra;
 
       /// The multi-index to so we know the order of each term
       std::shared_ptr<MultiIndex> multi;

@@ -43,4 +43,6 @@ CreateCompileGroup(
     LinearAlgebra/ConcatenateOperator.cpp
     LinearAlgebra/DiagonalOperator.cpp
     LinearAlgebra/ProductOperator.cpp
+
+    LinearAlgebra/AnyAlgebra.cpp
 )

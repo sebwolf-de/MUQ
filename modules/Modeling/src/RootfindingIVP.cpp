@@ -6,6 +6,7 @@
 #include <cvodes/cvodes_dense.h>     /* prototype for CVDense */
 
 namespace pt = boost::property_tree;
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 RootfindingIVP::RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : ODEBase(rhs, pt, algebra), root(root), maxSteps(pt.get<unsigned int>("Rootfinder.MaxSteps", (int)1e10)), maxTime(pt.get<double>("Rootfinder.MaxTime", 1.0e3)), maxErrorTests(pt.get<unsigned int>("Rootfinder.MaxErrorTests", 100)) {

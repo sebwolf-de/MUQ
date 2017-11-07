@@ -10,6 +10,7 @@
 #include <sundials/sundials_math.h>  // contains the macros ABS, SQR, and EXP 
 
 namespace pt = boost::property_tree;
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 ODEBase::ODEBase(std::shared_ptr<WorkPiece> rhs, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : WorkPiece(), rhs(rhs), algebra(algebra), linSolver(pt.get<std::string>("ODESolver.LinearSolver", "Dense")), reltol(pt.get<double>("ODESolver.RelativeTolerance", 1.0e-8)), abstol(pt.get<double>("ODESolver.AbsoluteTolerance", 1.0e-8)), maxStepSize(pt.get<double>("ODESolver.MaxStepSize", 1.0)), autonomous(pt.get<bool>("ODESolver.Autonomous", true)) {

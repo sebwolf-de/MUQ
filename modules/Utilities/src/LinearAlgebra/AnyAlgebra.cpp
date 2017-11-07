@@ -1,6 +1,6 @@
-#include "MUQ/Modeling/AnyAlgebra.h"
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
-using namespace muq::Modeling;
+using namespace muq::Utilities;
 
 AnyAlgebra::AnyAlgebra() {}
 
