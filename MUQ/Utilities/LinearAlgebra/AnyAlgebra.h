@@ -1,11 +1,12 @@
 #ifndef ANYALGEBRA_H_
 #define ANYALGEBRA_H_
 
-#include <Eigen/Core>
+#include <iostream>
 
 #include "MUQ/config.h"
 
 #include "MUQ/Utilities/LinearAlgebra/ScalarAlgebra.h"
+#include "MUQ/Utilities/LinearAlgebra/EigenVectorAlgebra.h"
 
 #if MUQ_HAS_SUNDIALS==1
 // Sundials includes
@@ -134,31 +135,12 @@ namespace muq {
 
     private:
 
-      /// Determine if an Eigen::Vector is zero 
-      /**
-	 @param[in] obj An input vector
-	 \return true: if obj is zero, false: if obj is not zero
-       */
-      bool IsEigenVectorZero(boost::any const& obj) const;
-
       /// Determine if an Eigen::Matrix is zero 
       /**
 	 @param[in] obj An input matrix
 	 \return true: if obj is zero, false: if obj is not zero
        */
       bool IsEigenMatrixZero(boost::any const& obj) const;
-
-      /// Determine if an Eigen::Vector is zero 
-      /**
-	 @param[in] obj An input vector
-	 \return true: if obj is zero, false: if obj is not zero
-       */
-      template<typename EigenType>
-	inline bool IsEigVecZero(boost::any const& obj) const {
-	const EigenType& v = boost::any_cast<EigenType const&>(obj);
-
-	return (v.array()==EigenType::Zero(v.size()).array()).all();
-      }
 
       /// Determine if an Eigen::Matrix is zero 
       /**
@@ -171,13 +153,6 @@ namespace muq {
 
 	return (v.array()==EigenType::Zero(v.rows(), v.cols()).array()).all();
       }
-
-      /// Is a boost::any an Eigen::Vector type?
-      /**
-	 @param[in] obj_type We want to know if this object type is a Eigen::Vector type
-	 \return true: it is an Eigen::Vector2d, Eigen::Vector3d, Eigen::Vector4d, or Eigen::VectorXd, false: it is not an Eigen::Vector type
-       */
-      bool IsEigenVector(std::type_info const& obj_type) const;
       
       /// Is a boost::any an Eigen::Matrix type?
       /**
@@ -194,20 +169,6 @@ namespace muq {
        */
       bool IsSundialsVector(std::type_info const& obj) const;
 #endif
-
-      /// The size of an Eigen::Vector
-      /**
-	 @param[in] vec We will get the size of this vector
-	 \return The size
-       */
-      unsigned int EigenVectorSize(boost::any const& vec) const;
-
-      /// The norm of an Eigen::Vector
-      /**
-	 @param[in] vec We will get the norm of this vector
-	 \return The norm
-       */
-      double EigenVectorNorm(boost::any const& vec) const;
 
       /// The norm of an Eigen::Vector or Eigen::Matrix
       /**
@@ -265,46 +226,7 @@ namespace muq {
 	 @param[in] vec2 The second vector
 	 \return The inner product
        */
-      virtual double InnerProductImpl(boost::any const& vec1, boost::any const& vec2) const;
-      
-      /// The inner product between two Eigen::Vector's
-      /**
-	 @param[in] vec1 The first vector
-	 @param[in] vec2 The second vector
-	 \return The inner product
-       */
-      double EigenVectorInnerProduct(boost::any const& vec1, boost::any const& vec2) const;
-
-      /// The inner product between two Eigen::Vector's
-      /**
-	 @param[in] vec1 The first vector
-	 @param[in] vec2 The second vector
-	 \return The inner product
-       */
-      template<typename EigenType>
-	inline double EigenVectorInProd(boost::any const& vec1, boost::any const& vec2) const {
-	if( typeid(EigenType)==vec1.type() && typeid(EigenType)==vec2.type() ) { return EigenVectorInProd<EigenType, EigenType>(vec1, vec2); }
-	if( typeid(EigenType)==vec1.type() && typeid(Eigen::VectorXd)==vec2.type() ) { return EigenVectorInProd<EigenType, Eigen::VectorXd>(vec1, vec2); }
-	if( typeid(Eigen::VectorXd)==vec1.type() && typeid(EigenType)==vec2.type() ) { return EigenVectorInProd<Eigen::VectorXd, EigenType>(vec1, vec2); }
-	
-	// vec1 and vec2 are not any of these pairs
-	return std::numeric_limits<double>::quiet_NaN();
-      }
-
-      /// The inner product between two Eigen::Vector's
-      /**
-	 @param[in] vec1 The first vector
-	 @param[in] vec2 The second vector
-	 \return The inner product
-       */
-      template<typename EigenType1, typename EigenType2>
-	inline double EigenVectorInProd(boost::any const& vec1, boost::any const& vec2) const {
-	const EigenType1& x1 = boost::any_cast<EigenType1 const&>(vec1);
-	const EigenType2& x2 = boost::any_cast<EigenType2 const&>(vec2);
-	assert(x1.size()==x2.size());
-	
-	return x1.dot(x2);    
-      }
+      virtual double InnerProductImpl(boost::any const& vec1, boost::any const& vec2) const;      
 
 #if MUQ_HAS_SUNDIALS==1
       /// Access an element of a Sundials vector
@@ -315,15 +237,6 @@ namespace muq {
        */
       boost::any AccessSundialsVector(N_Vector const& obj, unsigned int const i) const;
 #endif
-
-      /// Access an element of an Eigen::Vector
-      /**
-	 The return type is whatever the elements of the vector are (doubles, ints, ect ...)
-	 @param[in] vec The vector whose data we want to access
-	 @param[in] i We want to access the \f$i^{th}\f$ element of the vector
-	 \return The \f$i^{th}\f$ element of the vector
-       */
-      boost::any AccessEigenVector(boost::any const& obj, unsigned int const i) const;
 
       /// Access an element of an Eigen::Matrix
       /**
@@ -356,25 +269,6 @@ namespace muq {
 	return matref(i,j);
       }
 
-      /// Access an element of an Eigen::Vector
-      /**
-	 The return type is whatever the elements of the vector are (doubles, ints, ect ...)
-	 @param[in] vec The vector whose data we want to access
-	 @param[in] i We want to access the \f$i^{th}\f$ element of the vector
-	 \return The \f$i^{th}\f$ element of the vector
-       */
-      template<typename vectype>
-	inline boost::any AccessEigenVec(boost::any const& vec, unsigned int const i) const {
-	// get a constant reference to the vector
-	const vectype& vecref = boost::any_cast<const vectype&>(vec);
-	
-	// check the size
-	assert(i<vecref.size());
-	
-	// return ith element
-	return vecref(i);
-      }
-
       /// Access an element of a vector
       /**
 	 MUQ automatically checks for some common input types.  However, the user may need to overload this function for special types.
@@ -393,15 +287,6 @@ namespace muq {
        */
       boost::any EigenMatrixIdentity(std::type_info const& type, unsigned int const rows, unsigned int const cols) const;
 
-      /// Compute an identity Eigen::Matrix
-      /**
-	 @param[in] type The type---return an identity of this type
-	 @param[in] rows The number of rows (e.g., for a matrix)
-	 @param[in] cols The number of columns (e.g., for a matrix) 
-	 \return An identity of some type
-       */
-      boost::any EigenVectorIdentity(std::type_info const& type, unsigned int const rows, unsigned int const cols) const;
-
       /// Compute an identity object 
       /**
 	 @param[in] type The type---return an identity of this type
@@ -410,29 +295,6 @@ namespace muq {
 	 \return An identity of some type
        */
       virtual boost::any IdentityImpl(std::type_info const& type, unsigned int const rows, unsigned int const cols) const;
-
-      /// Add two Eigen::Vectors together
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The addition of in0 and in1 (in0+in1)
-       */
-      boost::any AddEigenVector(boost::any const& in0, boost::any const& in1) const;
-
-      /// Add two Eigen::Vectors together
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The addition of in0 and in1 (in0+in1)
-       */
-      template<typename type0, typename type1>
-	inline boost::any AddEigenVector(boost::any const& in0, boost::any const& in1) const {
-	const type0& x0 = boost::any_cast<type0 const&>(in0);
-	const type1& x1 = boost::any_cast<type1 const&>(in1);
-	assert(x0.size()==x1.size());
-
-	return (type0)(x0+x1);
-      }
       
       /// Add two Eigen::Matrices together
       /**
@@ -466,29 +328,6 @@ namespace muq {
 	 \return The addition of in0 and in1 (in0+in1)
        */
       virtual boost::any AddImpl(boost::any const& in0, boost::any const& in1) const;
-
-      /// Subtract two Eigen::Vectors 
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The subtraction of in0 and in1 (in0-in1)
-       */
-      boost::any SubtractEigenVector(boost::any const& in0, boost::any const& in1) const;
-
-      /// Subtract two Eigen::Vectors
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The subtraction of in0 and in1 (in0-in1)
-       */
-      template<typename type0, typename type1>
-	inline boost::any SubtractEigenVector(boost::any const& in0, boost::any const& in1) const {
-	const type0& x0 = boost::any_cast<type0 const&>(in0);
-	const type1& x1 = boost::any_cast<type1 const&>(in1);
-	assert(x0.size()==x1.size());
-
-	return (type0)(x0-x1);
-      }
       
       /// Subtract two Eigen::Matrices together
       /**
@@ -554,14 +393,6 @@ namespace muq {
        */
       boost::any MultiplyEigenMatrixScalar(boost::any const& in0, boost::any const& in1) const;
 
-      /// Multiply Eigen::Vector times scalars 
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The multiplication of in0 and in1 (in0*in1)
-       */
-      boost::any MultiplyEigenVectorScalar(boost::any const& in0, boost::any const& in1) const;
-
       /// Multiply Eigen::Matrix times scalars 
       /**
 	 @param[in] in0 The first input
@@ -593,32 +424,7 @@ namespace muq {
 	 \return The result \f$y=A x\f$
        */
       virtual boost::any ApplyImpl(boost::any const& A, boost::any const& x) const;
-
-      /// Apply a diagonal matrix (multiply by 1.0/A)
-      /**
-	 If the input is a vector, treat is as the diagonal of a matrix
-	 @param[in] A We are applying this matrix
-	 @param[in] x We are applying the matrix to this vector
-	 \return The result \f$y=A^{-1} x\f$
-       */
-      boost::any ApplyEigenVector(boost::any const& A, boost::any const& x) const;
-
-      /// Apply a diagonal matrix (multiply by 1.0/A)
-      /**
-	 If the input is a vector, treat is as the diagonal of a matrix
-	 @param[in] A We are applying this matrix
-	 @param[in] x We are applying the matrix to this vector
-	 \return The result \f$y=A^{-1} x\f$
-       */
-      template<typename mattype, typename vectype>
-	inline boost::any ApplyEigenVector(boost::any const& A, boost::any const& x) const {
-	const mattype& mat = boost::any_cast<mattype const&>(A);
-	const vectype& vec = boost::any_cast<vectype const&>(x);
-	assert(mat.size()==vec.size());
-	
-	return (vectype)(mat.asDiagonal()*vec);
-      }
-
+      
       /// Apply the inverse of a matrix
       /**
 	 If the input is a vector, treat is as the diagonal of a matrix
@@ -628,31 +434,6 @@ namespace muq {
        */
       virtual boost::any ApplyInverseImpl(boost::any const& A, boost::any const& x) const;
 
-      /// Apply the inverse of a diagonal matrix (multiply by 1.0/A)
-      /**
-	 If the input is a vector, treat is as the diagonal of a matrix
-	 @param[in] A We are applying the inverse of this scalar
-	 @param[in] x We are applying the inverse to this vector
-	 \return The result \f$y=A^{-1} x\f$
-       */
-      boost::any ApplyEigenVectorInverse(boost::any const& A, boost::any const& x) const;
-
-      /// Apply the inverse of a diagonal matrix (multiply by 1.0/A)
-      /**
-	 If the input is a vector, treat is as the diagonal of a matrix
-	 @param[in] A We are applying the inverse of this scalar
-	 @param[in] x We are applying the inverse to this vector
-	 \return The result \f$y=A^{-1} x\f$
-       */
-      template<typename mattype, typename vectype>
-	inline boost::any ApplyEigenVectorInverse(boost::any const& A, boost::any const& x) const {
-	const mattype& mat = boost::any_cast<mattype const&>(A);
-	const vectype& vec = boost::any_cast<vectype const&>(x);
-	assert(mat.size()==vec.size());
-	
-	return (vectype)((1/mat.array()).matrix().asDiagonal()*vec);
-      }
-
       /// Compute a zero object for boost::any
       /** 
 	  @param[in] type We need a zero object of this type
@@ -660,13 +441,6 @@ namespace muq {
 	  @param[in] cols The number of columns in the matrix (defaults to 0 but, again, some types imply a size)
        */
       virtual boost::any ZeroImpl(std::type_info const& type, unsigned int const rows, unsigned int const cols) const;
-
-      /// Compute a zero Eigen::Vector
-      /** 
-	  @param[in] type We need a zero object of this EigenVectorType
-	  @param[in] size The size of the vector 
-       */
-      boost::any ZeroEigenVector(std::type_info const& type, unsigned int const size) const;
 
       /// Compute a zero Eigen::Matrix
       /** 

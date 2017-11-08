@@ -15,4 +15,5 @@ CreateTestGroup(
     
     LinearAlgebra/AnyAlgebraTests.cpp
     LinearAlgebra/ScalarAlgebraTests.cpp
+    LinearAlgebra/EigenVectorAlgebraTests.cpp
 )

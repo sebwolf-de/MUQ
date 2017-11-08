@@ -1,7 +1,6 @@
 #ifndef SCALARALGEBRA_H_
 #define SCALARALGEBRA_H_
 
-#include <iostream>
 #include <assert.h>
 #include <cmath>
 
