@@ -4,20 +4,6 @@ using namespace muq::Utilities;
 
 AnyAlgebra::AnyAlgebra() {}
 
-#if MUQ_HAS_SUNDIALS==1
-bool AnyAlgebra::IsSundialsVector(std::type_info const& obj_type) const {
-  return typeid(N_Vector)==obj_type;
-}
-#endif
-
-#if MUQ_HAS_SUNDIALS==1
-unsigned int AnyAlgebra::SundialsVectorSize(boost::any const& vec) const {
-  const N_Vector& sun = boost::any_cast<N_Vector const&>(vec);
-
-  return NV_LENGTH_S(sun);
-}
-#endif
-
 unsigned int AnyAlgebra::Size(boost::any const& obj, int const dim) const {
   // scalars are size one
   if( ScalarAlgebra::IsScalar(obj.type()) ) { return 1; }
@@ -29,7 +15,9 @@ unsigned int AnyAlgebra::Size(boost::any const& obj, int const dim) const {
   if( EigenMatrixAlgebra::IsEigenMatrix(obj.type()) ) { return EigenMatrixAlgebra::Size(obj, dim); }
 
   // get the size of Sundials vectors
-  if( IsSundialsVector(obj.type()) ) { return SundialsVectorSize(obj); }
+#if MUQ_HAS_SUNDIALS==1
+  if( SundialsAlgebra::IsSundialsVector(obj.type()) ) { return SundialsAlgebra::Size(obj); }
+#endif
 
   return SizeImpl(obj);
 }
@@ -132,16 +120,6 @@ bool AnyAlgebra::IsZeroImpl(boost::any const& obj) const {
   return false;
 }
 
-#if MUQ_HAS_SUNDIALS==1
-boost::any AnyAlgebra::AccessSundialsVector(N_Vector const& vec, unsigned int const i) const {
-  // check the size
-    assert(i<NV_LENGTH_S(vec));
-
-    // return the ith element
-    return NV_Ith_S(vec, i);
-}
-#endif
-
 boost::any AnyAlgebra::AccessElement(boost::any const& obj, unsigned int const i, unsigned int const j) const {
   if( ScalarAlgebra::IsScalar(obj.type()) ) { return obj; }
 
@@ -150,7 +128,7 @@ boost::any AnyAlgebra::AccessElement(boost::any const& obj, unsigned int const i
   if( EigenMatrixAlgebra::IsEigenMatrix(obj.type()) ) { return EigenMatrixAlgebra::AccessElement(obj, i, j); }
 
 #if MUQ_HAS_SUNDIALS==1
-  if( IsSundialsVector(obj.type()) ) { return AccessSundialsVector(boost::any_cast<const N_Vector&>(obj), i); }
+  if( SundialsAlgebra::IsSundialsVector(obj.type()) ) { return SundialsAlgebra::AccessElement(boost::any_cast<const N_Vector&>(obj), i); }
 #endif
   
   return AccessElementImpl(obj, i);

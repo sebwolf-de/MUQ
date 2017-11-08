@@ -8,11 +8,8 @@
 #include "MUQ/Utilities/LinearAlgebra/ScalarAlgebra.h"
 #include "MUQ/Utilities/LinearAlgebra/EigenVectorAlgebra.h"
 #include "MUQ/Utilities/LinearAlgebra/EigenMatrixAlgebra.h"
-
 #if MUQ_HAS_SUNDIALS==1
-// Sundials includes
-#include <nvector/nvector_serial.h>
-#include <sundials/sundials_dense.h> // definitions DlsMat DENSE_ELEM
+#include "MUQ/Utilities/LinearAlgebra/SundialsAlgebra.h"
 #endif
 
 namespace muq {
@@ -136,24 +133,6 @@ namespace muq {
 
     private:
 
-#if MUQ_HAS_SUNDIALS==1
-      /// Is a boost::any an N_Vector type?
-      /**
-	 @param[in] obj_type We want to know if this object type is a N_Vector type
-	 \return true: it is an N_Vector, false: it is not an N_Vector type
-       */
-      bool IsSundialsVector(std::type_info const& obj) const;
-#endif
-
-#if MUQ_HAS_SUNDIALS==1
-      /// The size of an N_Vector
-      /**
-	 @param[in] vec We will get the size of this vector
-	 \return The size
-       */
-      unsigned int SundialsVectorSize(boost::any const& vec) const;
-#endif
-
       /// The size of an object (implemented by a child for non standard types)
       /**
 	 For vectors/matrices, return the number of elements.
@@ -176,16 +155,6 @@ namespace muq {
 	 \return The inner product
        */
       virtual double InnerProductImpl(boost::any const& vec1, boost::any const& vec2) const;      
-
-#if MUQ_HAS_SUNDIALS==1
-      /// Access an element of a Sundials vector
-      /**
-	 @param[in] vec The vector whose data we want to access
-	 @param[in] i We want to access the \f$i^{th}\f$ element of the vector
-	 \return The \f$i^{th}\f$ element of the vector
-       */
-      boost::any AccessSundialsVector(N_Vector const& obj, unsigned int const i) const;
-#endif
 
       /// Access an element of a vector
       /**

@@ -13,8 +13,8 @@ CreateTestGroup(
     LinearAlgebra/LyapunovSolverTests.cpp
     RandomGeneratorTest.cpp
     
-    LinearAlgebra/AnyAlgebraTests.cpp
     LinearAlgebra/ScalarAlgebraTests.cpp
     LinearAlgebra/EigenVectorAlgebraTests.cpp
     LinearAlgebra/EigenMatrixAlgebraTests.cpp
+    LinearAlgebra/SundialsAlgebraTests.cpp
 )

@@ -4,7 +4,7 @@
 
 using namespace muq::Utilities;
 
-TEST(AnyAlgebraTests, Size) {
+TEST(SundialslgebraTests, Size) {
   auto alg = std::shared_ptr<AnyAlgebra>();
     
   // if muq was compiled with Sundials, check for Sundials types
@@ -18,7 +18,7 @@ TEST(AnyAlgebraTests, Size) {
 #endif
 }
 
-TEST(AnyAlgebraTests, AccessElement) {
+TEST(SundialsAlgebraTests, AccessElement) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 
   // if muq was compiled with Sundials, check for Sundials types
