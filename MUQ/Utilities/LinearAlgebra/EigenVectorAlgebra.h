@@ -8,7 +8,7 @@
 
 namespace muq {
   namespace Utilities {
-    /// Linear algebra for scalar objects
+    /// Linear algebra for Eigen::Vector's
     class EigenVectorAlgebra {
     public:
 

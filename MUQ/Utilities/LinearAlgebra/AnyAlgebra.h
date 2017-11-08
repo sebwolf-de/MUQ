@@ -7,6 +7,7 @@
 
 #include "MUQ/Utilities/LinearAlgebra/ScalarAlgebra.h"
 #include "MUQ/Utilities/LinearAlgebra/EigenVectorAlgebra.h"
+#include "MUQ/Utilities/LinearAlgebra/EigenMatrixAlgebra.h"
 
 #if MUQ_HAS_SUNDIALS==1
 // Sundials includes
@@ -135,32 +136,6 @@ namespace muq {
 
     private:
 
-      /// Determine if an Eigen::Matrix is zero 
-      /**
-	 @param[in] obj An input matrix
-	 \return true: if obj is zero, false: if obj is not zero
-       */
-      bool IsEigenMatrixZero(boost::any const& obj) const;
-
-      /// Determine if an Eigen::Matrix is zero 
-      /**
-	 @param[in] obj An input matrix
-	 \return true: if obj is zero, false: if obj is not zero
-       */
-      template<typename EigenType>
-	inline bool IsEigMatZero(boost::any const& obj) const {
-	const EigenType& v = boost::any_cast<EigenType const&>(obj);
-
-	return (v.array()==EigenType::Zero(v.rows(), v.cols()).array()).all();
-      }
-      
-      /// Is a boost::any an Eigen::Matrix type?
-      /**
-	 @param[in] obj_type We want to know if this object type is a Eigen::Matrix
-	 \return true: it is an Eigen::Matrix2d, Eigen::Matrix3d, Eigen::Matrix4d, or Eigen::MatrixXd, false: it is not an Eigen::Matrixn type
-       */
-      bool IsEigenMatrix(std::type_info const& obj_type) const;
-
 #if MUQ_HAS_SUNDIALS==1
       /// Is a boost::any an N_Vector type?
       /**
@@ -169,32 +144,6 @@ namespace muq {
        */
       bool IsSundialsVector(std::type_info const& obj) const;
 #endif
-
-      /// The norm of an Eigen::Vector or Eigen::Matrix
-      /**
-	 @param[in] obj We will get the norm of this vector/matrix
-	 \return The norm
-       */
-      template<typename EigenType>
-	inline double EigenNorm(boost::any const& obj) const {
-	const EigenType& x = boost::any_cast<EigenType const&>(obj);
-	return x.norm();
-      }
-
-      /// The norm of an Eigen::Matrix
-      /**
-	 @param[in] mat We will get the norm of this matrix
-	 \return The norm
-       */
-      double EigenMatrixNorm(boost::any const& mat) const;
-
-      /// The size of an Eigen::Matrix
-      /**
-	 @param[in] mat We will get the size of this matrix
-	 @param[in] dim The dimension For matrices: for dim=-1 return the total number of elements, for dim=0, return the number of rows, for dim=1, return the number of colums
-	 \return The size
-       */
-      unsigned int EigenMatrixSize(boost::any const& mat, int const dim) const;
 
 #if MUQ_HAS_SUNDIALS==1
       /// The size of an N_Vector
@@ -238,37 +187,6 @@ namespace muq {
       boost::any AccessSundialsVector(N_Vector const& obj, unsigned int const i) const;
 #endif
 
-      /// Access an element of an Eigen::Matrix
-      /**
-	 The return type is whatever the elements of the vector are (doubles, ints, ect ...)
-	 @param[in] mat The matrix whose data we want to access
-	 @param[in] i We want to access the \f$i^{th}\f$ row of the vector
-	 @param[in] j We want to access the \f$j^{th}\f$ col of the vector
-	 \return The \f$(i,j)^{th}\f$ element of the vector
-       */
-      boost::any AccessEigenMatrix(boost::any const& mat, unsigned int const i, unsigned int const j) const;
-
-      /// Access an element of an Eigen::Matrix
-      /**
-	 The return type is whatever the elements of the vector are (doubles, ints, ect ...)
-	 @param[in] mat The matrix whose data we want to access
-	 @param[in] i We want to access the \f$i^{th}\f$ row of the vector
-	 @param[in] j We want to access the \f$j^{th}\f$ col of the vector
-	 \return The \f$(i,j)^{th}\f$ element of the vector
-       */
-      template<typename mattype>
-	inline boost::any AccessEigenMat(boost::any const& mat, unsigned int const i, unsigned int const j) const {
-	// get a constant reference to the matrix
-	const mattype& matref = boost::any_cast<const mattype&>(mat);
-	
-	// check the size
-	assert(i<matref.rows());
-	assert(j<matref.cols());
-	
-	// return ith element
-	return matref(i,j);
-      }
-
       /// Access an element of a vector
       /**
 	 MUQ automatically checks for some common input types.  However, the user may need to overload this function for special types.
@@ -277,15 +195,6 @@ namespace muq {
 	 \return The \f$i^{th}\f$ element/row of the vector
        */
       virtual boost::any AccessElementImpl(boost::any const& vec, unsigned int const i) const;
-
-      /// Compute an identity Eigen::Matrix
-      /**
-	 @param[in] type The type---return an identity of this type
-	 @param[in] rows The number of rows (e.g., for a matrix)
-	 @param[in] cols The number of columns (e.g., for a matrix) 
-	 \return An identity of some type
-       */
-      boost::any EigenMatrixIdentity(std::type_info const& type, unsigned int const rows, unsigned int const cols) const;
 
       /// Compute an identity object 
       /**
@@ -296,30 +205,6 @@ namespace muq {
        */
       virtual boost::any IdentityImpl(std::type_info const& type, unsigned int const rows, unsigned int const cols) const;
       
-      /// Add two Eigen::Matrices together
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The addition of in0 and in1 (in0+in1)
-       */
-      boost::any AddEigenMatrix(boost::any const& in0, boost::any const& in1) const;
-
-      /// Add two Eigen::Matrices together
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The addition of in0 and in1 (in0+in1)
-       */
-      template<typename type0, typename type1>
-	inline boost::any AddEigenMatrix(boost::any const& in0, boost::any const& in1) const {
-	const type0& x0 = boost::any_cast<type0 const&>(in0);
-	const type1& x1 = boost::any_cast<type1 const&>(in1);
-	assert(x0.rows()==x1.rows());
-	assert(x0.cols()==x1.cols());
-
-	return (type0)(x0+x1);
-      }
-
       /// Add two objects together
       /**
 	 MUQ automatically checks for some common pairs.  However, the user may need to overload this function for special types.
@@ -329,30 +214,6 @@ namespace muq {
        */
       virtual boost::any AddImpl(boost::any const& in0, boost::any const& in1) const;
       
-      /// Subtract two Eigen::Matrices together
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The subtraction of in0 and in1 (in0+in1)
-       */
-      boost::any SubtractEigenMatrix(boost::any const& in0, boost::any const& in1) const;
-
-      /// Subtract two Eigen::Matrices
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The subtraction of in0 and in1 (in0-in1)
-       */
-      template<typename type0, typename type1>
-	inline boost::any SubtractEigenMatrix(boost::any const& in0, boost::any const& in1) const {
-	const type0& x0 = boost::any_cast<type0 const&>(in0);
-	const type1& x1 = boost::any_cast<type1 const&>(in1);
-	assert(x0.rows()==x1.rows());
-	assert(x0.cols()==x1.cols());
-
-	return (type0)(x0-x1);
-      }
-
       /// Subtract two objects 
       /**
 	 MUQ automatically checks for some common pairs.  However, the user may need to overload this function for special types.
@@ -361,51 +222,6 @@ namespace muq {
 	 \return The subtraction of in0 and in1 (in0-in1)
        */
       virtual boost::any SubtractImpl(boost::any const& in0, boost::any const& in1) const;
-
-      /// Multiply two Eigen::Matrices together
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The multiplication of in0 and in1 (in0+in1)
-       */
-      boost::any MultiplyEigenMatrix(boost::any const& in0, boost::any const& in1) const;
-
-      /// Multiply two Eigen::Matrices
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The multiplication of in0 and in1 (in0-in1)
-       */
-      template<typename type0, typename type1>
-	inline boost::any MultiplyEigenMatrix(boost::any const& in0, boost::any const& in1) const {
-	const type0& x0 = boost::any_cast<type0 const&>(in0);
-	const type1& x1 = boost::any_cast<type1 const&>(in1);
-	assert(x0.cols()==x1.rows());
-
-	return (type0)(x0*x1);
-      }
-
-      /// Multiply Eigen::Matrix times scalars 
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The multiplication of in0 and in1 (in0*in1)
-       */
-      boost::any MultiplyEigenMatrixScalar(boost::any const& in0, boost::any const& in1) const;
-
-      /// Multiply Eigen::Matrix times scalars 
-      /**
-	 @param[in] in0 The first input
-	 @param[in] in1 The second input
-	 \return The multiplication of in0 and in1 (in0*in1)
-       */
-      template<typename type0, typename type1> 
-	inline boost::any MultiplyEigenScalar(boost::any const& in0, boost::any const& in1) const {
-	const type0 x0 = boost::any_cast<type0 const>(in0);
-	const type1 x1 = boost::any_cast<type1 const>(in1);
-	
-	return (type1)(x0 * x1);
-      }
 
       /// Multiply two objects 
       /**
@@ -441,14 +257,6 @@ namespace muq {
 	  @param[in] cols The number of columns in the matrix (defaults to 0 but, again, some types imply a size)
        */
       virtual boost::any ZeroImpl(std::type_info const& type, unsigned int const rows, unsigned int const cols) const;
-
-      /// Compute a zero Eigen::Matrix
-      /** 
-	  @param[in] type We need a zero object of this EigenMatrixType
-	  @param[in] rows The number of rows
-	  @param[in] cols The number of columns
-       */
-      boost::any ZeroEigenMatrix(std::type_info const& type, unsigned int const rows, unsigned int const cols) const;
 
       /// Compute a zero scalar
       /** 

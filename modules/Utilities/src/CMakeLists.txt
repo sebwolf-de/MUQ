@@ -47,4 +47,5 @@ CreateCompileGroup(
     LinearAlgebra/AnyAlgebra.cpp
     LinearAlgebra/ScalarAlgebra.cpp
     LinearAlgebra/EigenVectorAlgebra.cpp
+    LinearAlgebra/EigenMatrixAlgebra.cpp
 )
