@@ -1,5 +1,6 @@
 #include "MUQ/Modeling/Flann/FlannCache.h"
 
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 FlannCache::Entry::Entry() {}

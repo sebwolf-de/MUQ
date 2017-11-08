@@ -32,7 +32,7 @@ CreateCompileGroup(
     muqUtilities
     ""
     "EIGEN3"
-    ""
+    "SUNDIALS"
     RandomGenerator.cpp
     LinearAlgebra/LinearOperator.cpp
     LinearAlgebra/CompanionMatrix.cpp
@@ -43,4 +43,10 @@ CreateCompileGroup(
     LinearAlgebra/ConcatenateOperator.cpp
     LinearAlgebra/DiagonalOperator.cpp
     LinearAlgebra/ProductOperator.cpp
+
+    LinearAlgebra/AnyAlgebra.cpp
+    LinearAlgebra/ScalarAlgebra.cpp
+    LinearAlgebra/EigenVectorAlgebra.cpp
+    LinearAlgebra/EigenMatrixAlgebra.cpp
+    LinearAlgebra/SundialsAlgebra.cpp
 )

@@ -1,8 +1,9 @@
 #ifndef GAUSSIAN_H_
 #define GAUSSIAN_H_
 
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+
 #include "MUQ/Modeling/Distributions/Distribution.h"
-#include "MUQ/Modeling/AnyAlgebra.h"
 
 namespace muq {
   namespace Modeling {
@@ -50,8 +51,8 @@ namespace muq {
       /// Sample the distribution
       virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) const override;
 
-      /// The muq::Modeling::AnyAlgebra
-      std::shared_ptr<AnyAlgebra> algebra = std::make_shared<AnyAlgebra>();
+      /// The muq::Utilities::AnyAlgebra
+      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>();
 
       /// Have we specified the covariance or the precision
       const Gaussian::Mode mode;

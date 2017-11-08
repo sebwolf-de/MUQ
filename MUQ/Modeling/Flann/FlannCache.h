@@ -3,8 +3,9 @@
 
 #include <flann/flann.hpp>
 
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+
 #include "MUQ/Modeling/WorkPiece.h"
-#include "MUQ/Modeling/AnyAlgebra.h"
 
 namespace muq {
   namespace Modeling {
@@ -95,7 +96,7 @@ namespace muq {
       std::shared_ptr<WorkPiece> function;
 
       /// An algebra for matrix/vector manipulation
-      std::shared_ptr<AnyAlgebra> algebra;
+      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra;
 
       /// The cache---maps unique ids to the FlannCache::Entry
       std::map<unsigned int, std::shared_ptr<Entry> > cache;
