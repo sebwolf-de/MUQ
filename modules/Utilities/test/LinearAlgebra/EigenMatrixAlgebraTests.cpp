@@ -462,8 +462,8 @@ TEST(EigenMatrixAlgebraTests, Multiply) {
 TEST(EigenMatrixAlgebraTests, ApplyInverse) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 
-  Eigen::Matrix2d mat2d = Eigen::Matrix2d::Random();;
-  const Eigen::MatrixXd mat2Xd = Eigen::MatrixXd::Random(2,2);;
+  Eigen::Matrix2d mat2d = Eigen::Matrix2d::Random();
+  const Eigen::MatrixXd mat2Xd = Eigen::MatrixXd::Random(2,2);
   const Eigen::Vector2d vec2d = Eigen::Vector2d::Random();
   const Eigen::VectorXd vec2Xd = Eigen::VectorXd::Random(2);
   Eigen::VectorXd soln2d = boost::any_cast<Eigen::Vector2d const>(alg->ApplyInverse(mat2d, vec2d));
@@ -481,12 +481,15 @@ TEST(EigenMatrixAlgebraTests, ApplyInverse) {
   EXPECT_NEAR((mat2d*soln2d-vec2d).norm(), 0.0, 1.0e-10);
   EXPECT_NEAR((mat2d*soln2Xd-vec2Xd).norm(), 0.0, 1.0e-10);
 
-  Eigen::Matrix2f mat2f = Eigen::Matrix2f::Random();;
+  Eigen::Matrix2f mat2f = Eigen::Matrix2f::Random();
+  const Eigen::MatrixXf mat2Xf = Eigen::MatrixXf::Random(2,2);
   const Eigen::Vector2f vec2f = Eigen::Vector2f::Random();
   const Eigen::VectorXf vec2Xf = Eigen::VectorXf::Random(2);
   Eigen::Vector2f soln2f = boost::any_cast<Eigen::Vector2f const>(alg->ApplyInverse(mat2f, vec2f));
   Eigen::VectorXf soln2Xf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(mat2f, vec2Xf));
+  Eigen::Vector2f soln2f_mat = boost::any_cast<Eigen::Vector2f const>(alg->ApplyInverse(mat2Xf, vec2f));
   EXPECT_NEAR((mat2f*soln2f-vec2f).norm(), 0.0, 1.0e-5);
+  EXPECT_NEAR((mat2Xf*soln2f_mat-vec2f).norm(), 0.0, 1.0e-5);
   EXPECT_NEAR((mat2f*soln2Xf-vec2Xf).norm(), 0.0, 1.0e-5);
 
   mat2f = Eigen::Matrix2f::Identity() + 1.0e-2*mat2f*mat2f.transpose();
@@ -497,12 +500,15 @@ TEST(EigenMatrixAlgebraTests, ApplyInverse) {
   EXPECT_NEAR((mat2f*soln2f-vec2f).norm(), 0.0, 1.0e-5);
   EXPECT_NEAR((mat2f*soln2Xf-vec2Xf).norm(), 0.0, 1.0e-5);
 
-  Eigen::Matrix3d mat3d = Eigen::Matrix3d::Random();;
+  Eigen::Matrix3d mat3d = Eigen::Matrix3d::Random();
+  const Eigen::MatrixXd mat3Xd = Eigen::MatrixXd::Random(3,3);
   const Eigen::Vector3d vec3d = Eigen::Vector3d::Random();
   const Eigen::VectorXd vec3Xd = Eigen::VectorXd::Random(3);
   Eigen::VectorXd soln3d = boost::any_cast<Eigen::Vector3d const>(alg->ApplyInverse(mat3d, vec3d));
   Eigen::VectorXd soln3Xd = boost::any_cast<Eigen::VectorXd const>(alg->ApplyInverse(mat3d, vec3Xd));
+  Eigen::Vector3d soln3d_mat = boost::any_cast<Eigen::Vector3d const>(alg->ApplyInverse(mat3Xd, vec3d));
   EXPECT_NEAR((mat3d*soln3d-vec3d).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((mat3Xd*soln3d_mat-vec3d).norm(), 0.0, 1.0e-10);
   EXPECT_NEAR((mat3d*soln3Xd-vec3Xd).norm(), 0.0, 1.0e-10);
 
   mat3d = Eigen::Matrix3d::Identity() + 1.0e-3*mat3d*mat3d.transpose();
@@ -513,12 +519,15 @@ TEST(EigenMatrixAlgebraTests, ApplyInverse) {
   EXPECT_NEAR((mat3d*soln3d-vec3d).norm(), 0.0, 1.0e-10);
   EXPECT_NEAR((mat3d*soln3Xd-vec3Xd).norm(), 0.0, 1.0e-10);
 
-  Eigen::Matrix3f mat3f = Eigen::Matrix3f::Random();;
+  Eigen::Matrix3f mat3f = Eigen::Matrix3f::Random();
+  const Eigen::MatrixXf mat3Xf = Eigen::MatrixXf::Random(3,3);
   const Eigen::Vector3f vec3f = Eigen::Vector3f::Random();
   const Eigen::VectorXf vec3Xf = Eigen::VectorXf::Random(3);
   Eigen::Vector3f soln3f = boost::any_cast<Eigen::Vector3f const>(alg->ApplyInverse(mat3f, vec3f));
   Eigen::VectorXf soln3Xf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(mat3f, vec3Xf));
+  Eigen::Vector3f soln3f_mat = boost::any_cast<Eigen::Vector3f const>(alg->ApplyInverse(mat3Xf, vec3f));
   EXPECT_NEAR((mat3f*soln3f-vec3f).norm(), 0.0, 1.0e-5);
+  EXPECT_NEAR((mat3Xf*soln3f_mat-vec3f).norm(), 0.0, 1.0e-5);
   EXPECT_NEAR((mat3f*soln3Xf-vec3Xf).norm(), 0.0, 1.0e-5);
 
   mat3f = Eigen::Matrix3f::Identity() + 1.0e-3*mat3f*mat3f.transpose();
@@ -529,12 +538,15 @@ TEST(EigenMatrixAlgebraTests, ApplyInverse) {
   EXPECT_NEAR((mat3f*soln3f-vec3f).norm(), 0.0, 1.0e-5);
   EXPECT_NEAR((mat3f*soln3Xf-vec3Xf).norm(), 0.0, 1.0e-5);
 
-  Eigen::Matrix4d mat4d = Eigen::Matrix4d::Random();;
+  Eigen::Matrix4d mat4d = Eigen::Matrix4d::Random();
+  const Eigen::MatrixXd mat4Xd = Eigen::MatrixXd::Random(4,4);
   const Eigen::Vector4d vec4d = Eigen::Vector4d::Random();
   const Eigen::VectorXd vec4Xd = Eigen::VectorXd::Random(4);
   Eigen::VectorXd soln4d = boost::any_cast<Eigen::Vector4d const>(alg->ApplyInverse(mat4d, vec4d));
   Eigen::VectorXd soln4Xd = boost::any_cast<Eigen::VectorXd const>(alg->ApplyInverse(mat4d, vec4Xd));
+  Eigen::Vector4d soln4d_mat = boost::any_cast<Eigen::Vector4d const>(alg->ApplyInverse(mat4Xd, vec4d));
   EXPECT_NEAR((mat4d*soln4d-vec4d).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((mat4Xd*soln4d_mat-vec4d).norm(), 0.0, 1.0e-10);
   EXPECT_NEAR((mat4d*soln4Xd-vec4Xd).norm(), 0.0, 1.0e-10);
 
   mat4d = Eigen::Matrix4d::Identity() + 1.0e-4*mat4d*mat4d.transpose();
@@ -545,12 +557,15 @@ TEST(EigenMatrixAlgebraTests, ApplyInverse) {
   EXPECT_NEAR((mat4d*soln4d-vec4d).norm(), 0.0, 1.0e-10);
   EXPECT_NEAR((mat4d*soln4Xd-vec4Xd).norm(), 0.0, 1.0e-10);
 
-  Eigen::Matrix4f mat4f = Eigen::Matrix4f::Random();;
+  Eigen::Matrix4f mat4f = Eigen::Matrix4f::Random();
+  const Eigen::MatrixXf mat4Xf = Eigen::MatrixXf::Random(4,4);
   const Eigen::Vector4f vec4f = Eigen::Vector4f::Random();
   const Eigen::VectorXf vec4Xf = Eigen::VectorXf::Random(4);
   Eigen::Vector4f soln4f = boost::any_cast<Eigen::Vector4f const>(alg->ApplyInverse(mat4f, vec4f));
   Eigen::VectorXf soln4Xf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(mat4f, vec4Xf));
+  Eigen::Vector4f soln4f_mat = boost::any_cast<Eigen::Vector4f const>(alg->ApplyInverse(mat4Xf, vec4f));
   EXPECT_NEAR((mat4f*soln4f-vec4f).norm(), 0.0, 1.0e-5);
+  EXPECT_NEAR((mat4Xf*soln4f_mat-vec4f).norm(), 0.0, 1.0e-5);
   EXPECT_NEAR((mat4f*soln4Xf-vec4Xf).norm(), 0.0, 1.0e-5);
 
   mat4f = Eigen::Matrix4f::Identity() + 1.0e-4*mat4f*mat4f.transpose();
@@ -560,7 +575,7 @@ TEST(EigenMatrixAlgebraTests, ApplyInverse) {
   soln4Xf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(chol4f, vec4Xf));
   EXPECT_NEAR((mat4f*soln4f-vec4f).norm(), 0.0, 1.0e-5);
   EXPECT_NEAR((mat4f*soln4Xf-vec4Xf).norm(), 0.0, 1.0e-5);
-  
+
   Eigen::MatrixXd matXd = Eigen::MatrixXd::Random(5, 5);;
   const Eigen::VectorXd vecXd = Eigen::VectorXd::Random(5);
   Eigen::VectorXd solnXd = boost::any_cast<Eigen::VectorXd const>(alg->ApplyInverse(matXd, vecXd));
