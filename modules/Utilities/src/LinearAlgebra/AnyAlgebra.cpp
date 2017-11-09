@@ -242,6 +242,8 @@ boost::any AnyAlgebra::Apply(boost::any const& A, boost::any const& x) const {
   if( ScalarAlgebra::IsScalar(A.type()) ) { return Multiply(A, x); }
 
   if( EigenVectorAlgebra::IsEigenVector(A.type()) ) { return EigenVectorAlgebra::Apply(A, x); }
+
+  if( EigenMatrixAlgebra::IsEigenMatrix(A.type()) ) { return EigenMatrixAlgebra::Apply(A, x); }
   
   return ApplyImpl(A, x);
 }

@@ -459,6 +459,163 @@ TEST(EigenMatrixAlgebraTests, Multiply) {
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Multiply(mati, mati)).array()==(mati*mati).array()).all());
 }
 
+TEST(EigenMatrixAlgebraTests, Apply) {
+  auto alg = std::shared_ptr<AnyAlgebra>();
+
+  Eigen::Matrix2d mat2d = Eigen::Matrix2d::Random();
+  Eigen::MatrixXd mat2Xd = Eigen::MatrixXd::Random(2,2);
+  const Eigen::Vector2d vec2d = Eigen::Vector2d::Random();
+  const Eigen::VectorXd vec2Xd = Eigen::VectorXd::Random(2);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector2d>(alg->Apply(mat2d, vec2d)).array()==(mat2d*vec2d).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(mat2d, vec2Xd)).array()==(mat2d*vec2Xd).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector2d>(alg->Apply(mat2Xd, vec2d)).array()==(mat2Xd*vec2d).array()).all());
+
+  mat2d = Eigen::Matrix2d::Identity() + 1.0e-5*mat2d*mat2d.transpose();
+  Eigen::LLT<Eigen::Matrix2d> chol2d;
+  chol2d.compute(mat2d);
+  mat2Xd = Eigen::MatrixXd::Identity(2,2) + 1.0e-5*mat2Xd*mat2Xd.transpose();
+  Eigen::LLT<Eigen::Matrix2d> chol2Xd;
+  chol2Xd.compute(mat2Xd);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector2d>(alg->Apply(chol2d, vec2d)).array()==(chol2d.matrixLLT()*vec2d).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(chol2d, vec2Xd)).array()==(chol2d.matrixLLT()*vec2Xd).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector2d>(alg->Apply(chol2Xd, vec2d)).array()==(chol2Xd.matrixLLT()*vec2d).array()).all());
+
+  Eigen::Matrix2f mat2f = Eigen::Matrix2f::Random();
+  Eigen::MatrixXf mat2Xf = Eigen::MatrixXf::Random(2,2);
+  const Eigen::Vector2f vec2f = Eigen::Vector2f::Random();
+  const Eigen::VectorXf vec2Xf = Eigen::VectorXf::Random(2);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector2f>(alg->Apply(mat2f, vec2f)).array()==(mat2f*vec2f).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(mat2f, vec2Xf)).array()==(mat2f*vec2Xf).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector2f>(alg->Apply(mat2Xf, vec2f)).array()==(mat2Xf*vec2f).array()).all());
+
+  mat2f = Eigen::Matrix2f::Identity() + 1.0e-5*mat2f*mat2f.transpose();
+  Eigen::LLT<Eigen::Matrix2f> chol2f;
+  chol2f.compute(mat2f);
+  mat2Xf = Eigen::MatrixXf::Identity(2,2) + 1.0e-5*mat2Xf*mat2Xf.transpose();
+  Eigen::LLT<Eigen::Matrix2f> chol2Xf;
+  chol2Xf.compute(mat2Xf);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector2f>(alg->Apply(chol2f, vec2f)).array()==(chol2f.matrixLLT()*vec2f).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(chol2f, vec2Xf)).array()==(chol2f.matrixLLT()*vec2Xf).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector2f>(alg->Apply(chol2Xf, vec2f)).array()==(chol2Xf.matrixLLT()*vec2f).array()).all());
+
+  const Eigen::Matrix2i mat2i = Eigen::Matrix2i::Random();
+  const Eigen::MatrixXi mat2Xi = Eigen::MatrixXi::Random(2,2);
+  const Eigen::Vector2i vec2i = Eigen::Vector2i::Random();
+  const Eigen::VectorXi vec2Xi = Eigen::VectorXi::Random(2);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector2i>(alg->Apply(mat2i, vec2i)).array()==(mat2i*vec2i).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXi>(alg->Apply(mat2i, vec2Xi)).array()==(mat2i*vec2Xi).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector2i>(alg->Apply(mat2Xi, vec2i)).array()==(mat2Xi*vec2i).array()).all());
+
+  Eigen::Matrix3d mat3d = Eigen::Matrix3d::Random();
+  Eigen::MatrixXd mat3Xd = Eigen::MatrixXd::Random(3,3);
+  const Eigen::Vector3d vec3d = Eigen::Vector3d::Random();
+  const Eigen::VectorXd vec3Xd = Eigen::VectorXd::Random(3);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector3d>(alg->Apply(mat3d, vec3d)).array()==(mat3d*vec3d).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(mat3d, vec3Xd)).array()==(mat3d*vec3Xd).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector3d>(alg->Apply(mat3Xd, vec3d)).array()==(mat3Xd*vec3d).array()).all());
+
+  mat3d = Eigen::Matrix3d::Identity() + 1.0e-5*mat3d*mat3d.transpose();
+  Eigen::LLT<Eigen::Matrix3d> chol3d;
+  chol3d.compute(mat3d);
+  mat3Xd = Eigen::MatrixXd::Identity(3,3) + 1.0e-5*mat3Xd*mat3Xd.transpose();
+  Eigen::LLT<Eigen::Matrix3d> chol3Xd;
+  chol3Xd.compute(mat3Xd);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector3d>(alg->Apply(chol3d, vec3d)).array()==(chol3d.matrixLLT()*vec3d).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(chol3d, vec3Xd)).array()==(chol3d.matrixLLT()*vec3Xd).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector3d>(alg->Apply(chol3Xd, vec3d)).array()==(chol3Xd.matrixLLT()*vec3d).array()).all());
+
+  Eigen::Matrix3f mat3f = Eigen::Matrix3f::Random();
+  Eigen::MatrixXf mat3Xf = Eigen::MatrixXf::Random(3,3);
+  const Eigen::Vector3f vec3f = Eigen::Vector3f::Random();
+  const Eigen::VectorXf vec3Xf = Eigen::VectorXf::Random(3);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector3f>(alg->Apply(mat3f, vec3f)).array()==(mat3f*vec3f).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(mat3f, vec3Xf)).array()==(mat3f*vec3Xf).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector3f>(alg->Apply(mat3Xf, vec3f)).array()==(mat3Xf*vec3f).array()).all());
+
+  mat3f = Eigen::Matrix3f::Identity() + 1.0e-5*mat3f*mat3f.transpose();
+  Eigen::LLT<Eigen::Matrix3f> chol3f;
+  chol3f.compute(mat3f);
+  mat3Xf = Eigen::MatrixXf::Identity(3,3) + 1.0e-5*mat3Xf*mat3Xf.transpose();
+  Eigen::LLT<Eigen::Matrix3f> chol3Xf;
+  chol3Xf.compute(mat3Xf);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector3f>(alg->Apply(chol3f, vec3f)).array()==(chol3f.matrixLLT()*vec3f).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(chol3f, vec3Xf)).array()==(chol3f.matrixLLT()*vec3Xf).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector3f>(alg->Apply(chol3Xf, vec3f)).array()==(chol3Xf.matrixLLT()*vec3f).array()).all());
+
+  const Eigen::Matrix3i mat3i = Eigen::Matrix3i::Random();
+  const Eigen::MatrixXi mat3Xi = Eigen::MatrixXi::Random(3,3);
+  const Eigen::Vector3i vec3i = Eigen::Vector3i::Random();
+  const Eigen::VectorXi vec3Xi = Eigen::VectorXi::Random(3);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector3i>(alg->Apply(mat3i, vec3i)).array()==(mat3i*vec3i).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXi>(alg->Apply(mat3i, vec3Xi)).array()==(mat3i*vec3Xi).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector3i>(alg->Apply(mat3Xi, vec3i)).array()==(mat3Xi*vec3i).array()).all());
+
+  Eigen::Matrix4d mat4d = Eigen::Matrix4d::Random();
+  Eigen::MatrixXd mat4Xd = Eigen::MatrixXd::Random(4,4);
+  const Eigen::Vector4d vec4d = Eigen::Vector4d::Random();
+  const Eigen::VectorXd vec4Xd = Eigen::VectorXd::Random(4);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector4d>(alg->Apply(mat4d, vec4d)).array()==(mat4d*vec4d).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(mat4d, vec4Xd)).array()==(mat4d*vec4Xd).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector4d>(alg->Apply(mat4Xd, vec4d)).array()==(mat4Xd*vec4d).array()).all());
+
+  mat4d = Eigen::Matrix4d::Identity() + 1.0e-5*mat4d*mat4d.transpose();
+  Eigen::LLT<Eigen::Matrix4d> chol4d;
+  chol4d.compute(mat4d);
+  mat4Xd = Eigen::MatrixXd::Identity(4,4) + 1.0e-5*mat4Xd*mat4Xd.transpose();
+  Eigen::LLT<Eigen::Matrix4d> chol4Xd;
+  chol4Xd.compute(mat4Xd);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector4d>(alg->Apply(chol4d, vec4d)).array()==(chol4d.matrixLLT()*vec4d).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(chol4d, vec4Xd)).array()==(chol4d.matrixLLT()*vec4Xd).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector4d>(alg->Apply(chol4Xd, vec4d)).array()==(chol4Xd.matrixLLT()*vec4d).array()).all());
+
+  Eigen::Matrix4f mat4f = Eigen::Matrix4f::Random();
+  Eigen::MatrixXf mat4Xf = Eigen::MatrixXf::Random(4,4);
+  const Eigen::Vector4f vec4f = Eigen::Vector4f::Random();
+  const Eigen::VectorXf vec4Xf = Eigen::VectorXf::Random(4);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector4f>(alg->Apply(mat4f, vec4f)).array()==(mat4f*vec4f).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(mat4f, vec4Xf)).array()==(mat4f*vec4Xf).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector4f>(alg->Apply(mat4Xf, vec4f)).array()==(mat4Xf*vec4f).array()).all());
+
+  mat4f = Eigen::Matrix4f::Identity() + 1.0e-5*mat4f*mat4f.transpose();
+  Eigen::LLT<Eigen::Matrix4f> chol4f;
+  chol4f.compute(mat4f);
+  mat4Xf = Eigen::MatrixXf::Identity(4,4) + 1.0e-5*mat4Xf*mat4Xf.transpose();
+  Eigen::LLT<Eigen::Matrix4f> chol4Xf;
+  chol4Xf.compute(mat4Xf);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector4f>(alg->Apply(chol4f, vec4f)).array()==(chol4f.matrixLLT()*vec4f).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(chol4f, vec4Xf)).array()==(chol4f.matrixLLT()*vec4Xf).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector4f>(alg->Apply(chol4Xf, vec4f)).array()==(chol4Xf.matrixLLT()*vec4f).array()).all());
+
+  const Eigen::Matrix4i mat4i = Eigen::Matrix4i::Random();
+  const Eigen::MatrixXi mat4Xi = Eigen::MatrixXi::Random(4,4);
+  const Eigen::Vector4i vec4i = Eigen::Vector4i::Random();
+  const Eigen::VectorXi vec4Xi = Eigen::VectorXi::Random(4);
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector4i>(alg->Apply(mat4i, vec4i)).array()==(mat4i*vec4i).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXi>(alg->Apply(mat4i, vec4Xi)).array()==(mat4i*vec4Xi).array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Vector4i>(alg->Apply(mat4Xi, vec4i)).array()==(mat4Xi*vec4i).array()).all());
+
+  Eigen::MatrixXd matXd = Eigen::MatrixXd::Random(5,8);
+  const Eigen::VectorXd vecXd = Eigen::VectorXd::Random(8);
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(matXd, vecXd)).array()==(matXd*vecXd).array()).all());
+  matXd = Eigen::MatrixXd::Random(8,8);
+  matXd = Eigen::MatrixXd::Identity(8,8) + 1.0e-5*matXd*matXd.transpose();
+  Eigen::LLT<Eigen::MatrixXd> cholXd;
+  cholXd.compute(matXd);
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(cholXd, vecXd)).array()==(cholXd.matrixLLT()*vecXd).array()).all());
+
+  Eigen::MatrixXf matXf = Eigen::MatrixXf::Random(13,13);
+  const Eigen::VectorXf vecXf = Eigen::VectorXf::Random(13);
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(matXf, vecXf)).array()==(matXf*vecXf).array()).all());
+  matXf = Eigen::MatrixXf::Identity(13,13) + 1.0e-5*matXf*matXf.transpose();
+  Eigen::LLT<Eigen::MatrixXf> cholXf;
+  cholXf.compute(matXf);
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(cholXf, vecXf)).array()==(cholXf.matrixLLT()*vecXf).array()).all());
+
+  const Eigen::MatrixXi matXi = Eigen::MatrixXi::Random(4,2);
+  const Eigen::VectorXi vecXi = Eigen::VectorXi::Random(2);
+  EXPECT_TRUE((boost::any_cast<Eigen::VectorXi>(alg->Apply(matXi, vecXi)).array()==(matXi*vecXi).array()).all());
+}
+
 TEST(EigenMatrixAlgebraTests, ApplyInverse) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 

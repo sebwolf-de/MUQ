@@ -536,3 +536,120 @@ boost::any EigenMatrixAlgebra::ApplyCholeskyInverseXf(boost::any const& A, boost
 
   return soln;
 }
+
+boost::any EigenMatrixAlgebra::Apply(boost::any const& A, boost::any const& x) {
+  if( typeid(Eigen::Matrix2d)==A.type() ) {
+    if( typeid(Eigen::Vector2d)==x.type() ) { return Apply<Eigen::Matrix2d, Eigen::Vector2d>(A, x); }
+
+    return Apply<Eigen::Matrix2d, Eigen::VectorXd>(A, x);
+  }
+  if( typeid(Eigen::LLT<Eigen::Matrix2d>)==A.type() ) {
+    if( typeid(Eigen::Vector2d)==x.type() ) { return ApplyCholesky<Eigen::Matrix2d, Eigen::Vector2d>(A, x); }
+    return ApplyCholesky<Eigen::Matrix2d, Eigen::VectorXd>(A, x);
+  }
+  if( typeid(Eigen::Matrix2f)==A.type() ) {
+    if( typeid(Eigen::Vector2f)==x.type() ) { return Apply<Eigen::Matrix2f, Eigen::Vector2f>(A, x); }
+
+    return Apply<Eigen::Matrix2f, Eigen::VectorXf>(A, x);
+  }
+  if( typeid(Eigen::LLT<Eigen::Matrix2f>)==A.type() ) {
+    if( typeid(Eigen::Vector2f)==x.type() ) { return ApplyCholesky<Eigen::Matrix2f, Eigen::Vector2f>(A, x); }
+    return ApplyCholesky<Eigen::Matrix2f, Eigen::VectorXf>(A, x);
+  }
+  if( typeid(Eigen::Matrix2i)==A.type() ) {
+    if( typeid(Eigen::Vector2i)==x.type() ) { return Apply<Eigen::Matrix2i, Eigen::Vector2i>(A, x); }
+
+    return Apply<Eigen::Matrix2i, Eigen::VectorXi>(A, x);
+  } 
+
+  if( typeid(Eigen::Matrix3d)==A.type() ) {
+    if( typeid(Eigen::Vector3d)==x.type() ) { return Apply<Eigen::Matrix3d, Eigen::Vector3d>(A, x); }
+
+    return Apply<Eigen::Matrix3d, Eigen::VectorXd>(A, x);
+  }
+  if( typeid(Eigen::LLT<Eigen::Matrix3d>)==A.type() ) {
+    if( typeid(Eigen::Vector3d)==x.type() ) { return ApplyCholesky<Eigen::Matrix3d, Eigen::Vector3d>(A, x); }
+    return ApplyCholesky<Eigen::Matrix3d, Eigen::VectorXd>(A, x);
+  }
+  if( typeid(Eigen::Matrix3f)==A.type() ) {
+    if( typeid(Eigen::Vector3f)==x.type() ) { return Apply<Eigen::Matrix3f, Eigen::Vector3f>(A, x); }
+
+    return Apply<Eigen::Matrix3f, Eigen::VectorXf>(A, x);
+  }
+  if( typeid(Eigen::LLT<Eigen::Matrix3f>)==A.type() ) {
+    if( typeid(Eigen::Vector3f)==x.type() ) { return ApplyCholesky<Eigen::Matrix3f, Eigen::Vector3f>(A, x); }
+    return ApplyCholesky<Eigen::Matrix3f, Eigen::VectorXf>(A, x);
+  }
+  if( typeid(Eigen::Matrix3i)==A.type() ) {
+    if( typeid(Eigen::Vector3i)==x.type() ) { return Apply<Eigen::Matrix3i, Eigen::Vector3i>(A, x); }
+
+    return Apply<Eigen::Matrix3i, Eigen::VectorXi>(A, x);
+  } 
+
+  if( typeid(Eigen::Matrix4d)==A.type() ) {
+    if( typeid(Eigen::Vector4d)==x.type() ) { return Apply<Eigen::Matrix4d, Eigen::Vector4d>(A, x); }
+
+    return Apply<Eigen::Matrix4d, Eigen::VectorXd>(A, x);
+  }
+  if( typeid(Eigen::LLT<Eigen::Matrix4d>)==A.type() ) {
+    if( typeid(Eigen::Vector4d)==x.type() ) { return ApplyCholesky<Eigen::Matrix4d, Eigen::Vector4d>(A, x); }
+    return ApplyCholesky<Eigen::Matrix4d, Eigen::VectorXd>(A, x);
+  }
+  if( typeid(Eigen::Matrix4f)==A.type() ) {
+    if( typeid(Eigen::Vector4f)==x.type() ) { return Apply<Eigen::Matrix4f, Eigen::Vector4f>(A, x); }
+
+    return Apply<Eigen::Matrix4f, Eigen::VectorXf>(A, x);
+  }
+  if( typeid(Eigen::LLT<Eigen::Matrix4f>)==A.type() ) {
+    if( typeid(Eigen::Vector4f)==x.type() ) { return ApplyCholesky<Eigen::Matrix4f, Eigen::Vector4f>(A, x); }
+    return ApplyCholesky<Eigen::Matrix4f, Eigen::VectorXf>(A, x);
+  }
+  if( typeid(Eigen::Matrix4i)==A.type() ) {
+    if( typeid(Eigen::Vector4i)==x.type() ) { return Apply<Eigen::Matrix4i, Eigen::Vector4i>(A, x); }
+
+    return Apply<Eigen::Matrix4i, Eigen::VectorXi>(A, x);
+  } 
+
+  if( typeid(Eigen::MatrixXd)==A.type() ) {
+    if( typeid(Eigen::Vector2d)==x.type() ) { return Apply<Eigen::MatrixXd, Eigen::Vector2d>(A, x); }
+    if( typeid(Eigen::Vector3d)==x.type() ) { return Apply<Eigen::MatrixXd, Eigen::Vector3d>(A, x); }
+    if( typeid(Eigen::Vector4d)==x.type() ) { return Apply<Eigen::MatrixXd, Eigen::Vector4d>(A, x); }
+
+    return Apply<Eigen::MatrixXd, Eigen::VectorXd>(A, x);
+  }
+  if( typeid(Eigen::LLT<Eigen::MatrixXd>)==A.type() ) {
+    if( typeid(Eigen::Vector2d)==x.type() ) { return ApplyCholesky<Eigen::MatrixXd, Eigen::Vector2d>(A, x); }
+    if( typeid(Eigen::Vector3d)==x.type() ) { return ApplyCholesky<Eigen::MatrixXd, Eigen::Vector3d>(A, x); }
+    if( typeid(Eigen::Vector4d)==x.type() ) { return ApplyCholesky<Eigen::MatrixXd, Eigen::Vector4d>(A, x); }
+    
+    return ApplyCholesky<Eigen::MatrixXd, Eigen::VectorXd>(A, x);
+  }
+
+  if( typeid(Eigen::MatrixXf)==A.type() ) {
+    if( typeid(Eigen::Vector2f)==x.type() ) { return Apply<Eigen::MatrixXf, Eigen::Vector2f>(A, x); }
+    if( typeid(Eigen::Vector3f)==x.type() ) { return Apply<Eigen::MatrixXf, Eigen::Vector3f>(A, x); }
+    if( typeid(Eigen::Vector4f)==x.type() ) { return Apply<Eigen::MatrixXf, Eigen::Vector4f>(A, x); }
+
+    return Apply<Eigen::MatrixXf, Eigen::VectorXf>(A, x);
+  }
+  if( typeid(Eigen::LLT<Eigen::MatrixXf>)==A.type() ) {
+    if( typeid(Eigen::Vector2f)==x.type() ) { return ApplyCholesky<Eigen::MatrixXf, Eigen::Vector2f>(A, x); }
+    if( typeid(Eigen::Vector3f)==x.type() ) { return ApplyCholesky<Eigen::MatrixXf, Eigen::Vector3f>(A, x); }
+    if( typeid(Eigen::Vector4f)==x.type() ) { return ApplyCholesky<Eigen::MatrixXf, Eigen::Vector4f>(A, x); }
+    
+    return ApplyCholesky<Eigen::MatrixXf, Eigen::VectorXf>(A, x);
+  }
+
+
+  if( typeid(Eigen::MatrixXi)==A.type() ) {
+    if( typeid(Eigen::Vector2i)==x.type() ) { return Apply<Eigen::MatrixXi, Eigen::Vector2i>(A, x); }
+    if( typeid(Eigen::Vector3i)==x.type() ) { return Apply<Eigen::MatrixXi, Eigen::Vector3i>(A, x); }
+    if( typeid(Eigen::Vector4i)==x.type() ) { return Apply<Eigen::MatrixXi, Eigen::Vector4i>(A, x); }
+
+    return Apply<Eigen::MatrixXi, Eigen::VectorXi>(A, x);
+  }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}

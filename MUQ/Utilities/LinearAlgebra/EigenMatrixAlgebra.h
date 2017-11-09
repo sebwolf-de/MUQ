@@ -115,6 +115,14 @@ namespace muq {
        */
       static boost::any ApplyInverse(boost::any const& A, boost::any const& x);
 
+      /// Apply a matrix 
+      /**
+	 @param[in] A We are applying this matrix 
+	 @param[in] x We are applying the matrix to this vector
+	 \return The result \f$y=A x\f$
+       */
+      static boost::any Apply(boost::any const& A, boost::any const& x);
+
     private:
 
       /// Add two Eigen::Matrices together
@@ -390,6 +398,38 @@ namespace muq {
 	 \return The result \f$y=A^{-1} x\f$
        */
       static boost::any ApplyCholeskyInverseXf(boost::any const& A, boost::any const& x);
+
+      /// Apply a matrix 
+      /**
+	 @param[in] A We are applying this matrix 
+	 @param[in] x We are applying the matrix to this vector
+	 \return The result \f$y=A x\f$
+       */
+      template<typename mattype, typename vectype>
+	inline static boost::any Apply(boost::any const& A, boost::any const& x) {
+	const mattype& mat = boost::any_cast<mattype const&>(A);
+	const vectype& vec = boost::any_cast<vectype const&>(x);
+	assert(mat.cols()==vec.size());
+
+	return (vectype)(mat*vec);
+      }
+
+      /// Apply a matrix 
+      /**
+	 @param[in] A We are applying this matrix 
+	 @param[in] x We are applying the matrix to this vector
+	 \return The result \f$y=A x\f$
+       */
+      template<typename mattype, typename vectype>
+	inline static boost::any ApplyCholesky(boost::any const& A, boost::any const& x) {
+	const Eigen::LLT<mattype>& chol = boost::any_cast<Eigen::LLT<mattype> const&>(A);
+	const mattype& mat = chol.matrixLLT();
+	const vectype& vec = boost::any_cast<vectype const&>(x);
+	assert(mat.cols()==vec.size());
+
+	return (vectype)(mat*vec);
+      }
+
     };
   } // namespace Utilities
 } // namespace muq
