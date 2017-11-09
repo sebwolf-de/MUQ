@@ -22,6 +22,17 @@ bool ScalarAlgebra::IsZero(boost::any const& obj) {
   return false;
 }
 
+boost::any ScalarAlgebra::Zero(std::type_info const& type) {
+  if( typeid(double)==type ) { return (double)0.0; }
+  if( typeid(float)==type ) { return (float)0.0; }
+  if( typeid(int)==type ) { return (int)0; }
+  if( typeid(unsigned int)==type ) { return (unsigned int)0; }
+  
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
 double ScalarAlgebra::Norm(boost::any const& obj) {
   if( typeid(double)==obj.type() ) { return Magnitude<double>(obj); }
   if( typeid(float)==obj.type() ) { return Magnitude<float>(obj); }
@@ -100,3 +111,13 @@ boost::any ScalarAlgebra::Multiply(boost::any const& in0, boost::any const& in1)
   return boost::none;
 }
 
+boost::any ScalarAlgebra::SquareRoot(boost::any const& obj) {
+  if( obj.type()==typeid(double) ) { return std::sqrt(boost::any_cast<double>(obj)); }
+  if( obj.type()==typeid(float) ) { return std::sqrtf(boost::any_cast<float>(obj)); }
+  if( obj.type()==typeid(int) ) { return std::sqrt(boost::any_cast<int>(obj)); }
+  if( obj.type()==typeid(unsigned int) ) { return std::sqrt(boost::any_cast<unsigned int>(obj)); }
+	    
+  // something went wrong
+  assert(false);
+  return boost::none; 
+}

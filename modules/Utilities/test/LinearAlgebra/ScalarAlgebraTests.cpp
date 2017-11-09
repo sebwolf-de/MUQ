@@ -16,6 +16,17 @@ TEST(ScalarAlgebraTests, Size) {
   EXPECT_EQ(alg->Size(xui), 1);
 }
 
+TEST(ScalarAlgebraTests, SquareRoot) {
+  auto alg = std::shared_ptr<AnyAlgebra>();
+
+  double xd=4.0; float xf=3.0; int xi=2; unsigned int xui=8;
+
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->SquareRoot(xd)), std::sqrt(xd));
+  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->SquareRoot(xf)), std::sqrtf(xf));
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->SquareRoot(xi)), std::sqrt(xi));
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->SquareRoot(xui)), std::sqrt(xui));
+}
+
 TEST(ScalarAlgebraTests, AccessElement) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 

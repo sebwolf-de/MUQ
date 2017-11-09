@@ -38,7 +38,7 @@ namespace muq {
       virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) const override;
 
       /// Sample the distribution
-      virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) const override;
+      virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) override;
 
       /// Create a vector of the upper/lower bound pairs
       /**

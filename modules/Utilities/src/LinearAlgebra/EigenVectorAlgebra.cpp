@@ -516,3 +516,24 @@ boost::any EigenVectorAlgebra::Zero(std::type_info const& type, unsigned int con
   assert(false);
   return boost::none;
 }
+
+boost::any EigenVectorAlgebra::SquareRoot(boost::any const& obj) {
+  if( typeid(Eigen::Vector2d)==obj.type() ) { return (Eigen::Vector2d)boost::any_cast<Eigen::Vector2d>(obj).cwiseSqrt().matrix(); }
+  if( typeid(Eigen::Vector3d)==obj.type() ) { return (Eigen::Vector3d)boost::any_cast<Eigen::Vector3d>(obj).cwiseSqrt().matrix(); }
+  if( typeid(Eigen::Vector4d)==obj.type() ) { return (Eigen::Vector4d)boost::any_cast<Eigen::Vector4d>(obj).cwiseSqrt().matrix(); }
+  if( typeid(Eigen::VectorXd)==obj.type() ) { return (Eigen::VectorXd)boost::any_cast<Eigen::VectorXd>(obj).cwiseSqrt().matrix(); }
+
+  if( typeid(Eigen::Vector2f)==obj.type() ) { return (Eigen::Vector2f)boost::any_cast<Eigen::Vector2f>(obj).cwiseSqrt().matrix(); }
+  if( typeid(Eigen::Vector3f)==obj.type() ) { return (Eigen::Vector3f)boost::any_cast<Eigen::Vector3f>(obj).cwiseSqrt().matrix(); }
+  if( typeid(Eigen::Vector4f)==obj.type() ) { return (Eigen::Vector4f)boost::any_cast<Eigen::Vector4f>(obj).cwiseSqrt().matrix(); }
+  if( typeid(Eigen::VectorXf)==obj.type() ) { return (Eigen::VectorXf)boost::any_cast<Eigen::VectorXf>(obj).cwiseSqrt().matrix(); }
+
+  if( typeid(Eigen::Vector2i)==obj.type() ) { return (Eigen::Vector2i)boost::any_cast<Eigen::Vector2i>(obj).cwiseSqrt().matrix(); }
+  if( typeid(Eigen::Vector3i)==obj.type() ) { return (Eigen::Vector3i)boost::any_cast<Eigen::Vector3i>(obj).cwiseSqrt().matrix(); }
+  if( typeid(Eigen::Vector4i)==obj.type() ) { return (Eigen::Vector4i)boost::any_cast<Eigen::Vector4i>(obj).cwiseSqrt().matrix(); }
+  if( typeid(Eigen::VectorXi)==obj.type() ) { return (Eigen::VectorXi)boost::any_cast<Eigen::VectorXi>(obj).cwiseSqrt().matrix(); }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}

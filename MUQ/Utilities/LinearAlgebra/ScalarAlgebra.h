@@ -31,6 +31,12 @@ namespace muq {
        */
       static bool IsZero(boost::any const& obj);
 
+      /// Compute a zero scalar
+      /** 
+	  @param[in] type We need a zero object of this type
+       */
+      static boost::any Zero(std::type_info const& type);
+
       /// Get the norm of a scalar (the magnitude)
       /**
 	 @param[in] obj We need the magnitude of this scalar
@@ -83,6 +89,13 @@ namespace muq {
 	 \return The inverse
        */
       static boost::any Inverse(boost::any const& obj);
+
+      /// Compute the square root of an object
+      /**
+	 @param[in] obj We need the square root of this object
+	 \return The square root
+       */
+      static boost::any SquareRoot(boost::any const& obj);
 
     private:
 

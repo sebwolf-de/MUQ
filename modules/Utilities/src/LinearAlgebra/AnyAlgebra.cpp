@@ -26,24 +26,12 @@ unsigned int AnyAlgebra::SizeImpl(boost::any const& obj) const {
   std::cerr << std::endl << "ERROR: cannot compute the size of an object with type " << boost::core::demangle(obj.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::SizeImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::SizeImpl()" << std::endl << std::endl;
-  assert(false);
 
   return 0;
 }
 
-boost::any AnyAlgebra::ZeroScalar(std::type_info const& type) const {
-  if( typeid(double)==type ) { return (double)0.0; }
-  if( typeid(float)==type ) { return (float)0.0; }
-  if( typeid(int)==type ) { return (int)0; }
-  if( typeid(unsigned int)==type ) { return (unsigned int)0; }
-
-  // something went wrong
-  assert(false);
-  return boost::none;
-}
-
 boost::any AnyAlgebra::Zero(std::type_info const& type, unsigned int rows, unsigned int const cols) const {
-  if( ScalarAlgebra::IsScalar(type) ) { return ZeroScalar(type); }
+  if( ScalarAlgebra::IsScalar(type) ) { return ScalarAlgebra::Zero(type); }
   
   if( EigenVectorAlgebra::IsEigenVector(type) ) { return EigenVectorAlgebra::Zero(type, rows); }
 
@@ -60,7 +48,6 @@ boost::any AnyAlgebra::ZeroImpl(std::type_info const& type, unsigned int const r
   std::cerr << std::endl << "ERROR: cannot compute zero of an object with type " << boost::core::demangle(type.name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::ZeroImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::ZeroImpl()" << std::endl << std::endl;
-  assert(false);
 
   return boost::none;
 }
@@ -79,7 +66,6 @@ double AnyAlgebra::NormImpl(boost::any const& obj) const {
   std::cerr << std::endl << "ERROR: Cannot compute the norm of an object with type " << boost::core::demangle(obj.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::NormImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::NormImpl()" << std::endl << std::endl;
-  assert(false);
 
   return -1.0;
 }
@@ -96,7 +82,6 @@ double AnyAlgebra::InnerProductImpl(boost::any const& vec1, boost::any const& ve
   std::cerr << std::endl << "ERROR: Cannot compute the inner product between vectors with types " << boost::core::demangle(vec1.type().name()) << " and " << boost::core::demangle(vec2.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::InnerProductImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::InnerProductImpl()" << std::endl << std::endl;
-  assert(false);
 
   return 0.0;
 }
@@ -115,7 +100,6 @@ bool AnyAlgebra::IsZeroImpl(boost::any const& obj) const {
   std::cerr << std::endl << "ERROR: No way to determine if an object with type " << boost::core::demangle(obj.type().name()) << " is the zero vector." << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::IsZero()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::IsZero()" << std::endl << std::endl;
-  assert(false);
 
   return false;
 }
@@ -138,7 +122,6 @@ boost::any AnyAlgebra::AccessElementImpl(boost::any const& vec, unsigned int con
   std::cerr << std::endl << "ERROR: No way to access element " << i << " of a vector with type " << boost::core::demangle(vec.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::AccessElement()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::AccessElement()" << std::endl << std::endl;
-  assert(false);
 
   return boost::none;
 }
@@ -157,7 +140,6 @@ boost::any AnyAlgebra::IdentityImpl(std::type_info const& type, unsigned int con
   std::cerr << std::endl << "ERROR: No way to compute identy object with type " << boost::core::demangle(type.name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::IdentityImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::IdentityImpl()" << std::endl << std::endl;
-  assert(false);
   
   return boost::none;
 }
@@ -182,7 +164,6 @@ boost::any AnyAlgebra::AddImpl(boost::any const& in0, boost::any const& in1) con
   std::cerr << std::endl << "ERROR: No way to add type " << boost::core::demangle(in0.type().name()) << " and type " << boost::core::demangle(in1.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::AddImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::AddImpl()" << std::endl << std::endl;
-  assert(false);
   
   return boost::none;
 }
@@ -207,7 +188,6 @@ boost::any AnyAlgebra::SubtractImpl(boost::any const& in0, boost::any const& in1
   std::cerr << std::endl << "ERROR: No way to subtract type " << boost::core::demangle(in0.type().name()) << " and type " << boost::core::demangle(in1.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::SubtractImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::SubtractImpl()" << std::endl << std::endl;
-  assert(false);
   
   return boost::none;
 }
@@ -236,7 +216,6 @@ boost::any AnyAlgebra::MultiplyImpl(boost::any const& in0, boost::any const& in1
   std::cerr << std::endl << "ERROR: No way to multiply type " << boost::core::demangle(in0.type().name()) << " and type " << boost::core::demangle(in1.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::MultiplyImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::MultiplyImpl()" << std::endl << std::endl;
-  assert(false);
   
   return boost::none;
 }
@@ -246,6 +225,8 @@ boost::any AnyAlgebra::ApplyInverse(boost::any const& A, boost::any const& x) co
 
   if( EigenVectorAlgebra::IsEigenVector(A.type()) ) { return EigenVectorAlgebra::ApplyInverse(A, x); }
   
+  if( EigenMatrixAlgebra::IsEigenMatrix(A.type()) ) { return EigenMatrixAlgebra::ApplyInverse(A, x); }
+  
   return ApplyInverseImpl(A, x);
 }
 
@@ -253,7 +234,6 @@ boost::any AnyAlgebra::ApplyInverseImpl(boost::any const& A, boost::any const& x
   std::cerr << std::endl << "ERROR: No way to apply the inverse " << boost::core::demangle(A.type().name()) << " type to type " << boost::core::demangle(x.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::ApplyInverseImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::ApplyInverseImpl()" << std::endl << std::endl;
-  assert(false);
   
   return boost::none;
 }
@@ -270,7 +250,6 @@ boost::any AnyAlgebra::ApplyImpl(boost::any const& A, boost::any const& x) const
   std::cerr << std::endl << "ERROR: No way to apply " << boost::core::demangle(A.type().name()) << " type to type " << boost::core::demangle(x.type().name()) << std::endl;
   std::cerr << "\tTry overloading boost::any AnyAlgebra::ApplyImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::ApplyImpl()" << std::endl << std::endl;
-  assert(false);
   
   return boost::none;
 }
@@ -283,9 +262,24 @@ boost::any AnyAlgebra::Inverse(boost::any const& obj) const {
 
 boost::any AnyAlgebra::InverseImpl(boost::any const& obj) const {
   std::cerr << std::endl << "ERROR: No way to compute the inverse of type " << boost::core::demangle(obj.type().name()) << std::endl;
-  std::cerr << "\tTry overloading boost::any AnyAlgebra::inverseImpl()" << std::endl << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::InverseImpl()" << std::endl << std::endl;
   std::cerr << "\tError in AnyAlgebra::InverseImpl()" << std::endl << std::endl;
-  assert(false);
+  
+  return boost::none;
+}
+
+boost::any AnyAlgebra::SquareRoot(boost::any const& obj) const {
+  if( ScalarAlgebra::IsScalar(obj.type()) ) { return ScalarAlgebra::SquareRoot(obj); }
+
+  if( EigenVectorAlgebra::IsEigenVector(obj.type()) ) { return EigenVectorAlgebra::SquareRoot(obj); }
+  
+  return SquareRootImpl(obj);
+}
+
+boost::any AnyAlgebra::SquareRootImpl(boost::any const& obj) const {
+  std::cerr << std::endl << "ERROR: No way to compute the square root of type " << boost::core::demangle(obj.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::SquareRootImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::SquareRootImpl()" << std::endl << std::endl;
   
   return boost::none;
 }

@@ -131,6 +131,14 @@ namespace muq {
        */
       boost::any Inverse(boost::any const& obj) const;
 
+      /// Compute the square root of an object
+      /**
+	 In the vector case, compute the square root of each component.  In the matrix case, compute the Cholesky
+	 @param[in] obj We need the square root of this object
+	 \return The square root
+       */
+      boost::any SquareRoot(boost::any const& obj) const;
+
     private:
 
       /// The size of an object (implemented by a child for non standard types)
@@ -227,12 +235,6 @@ namespace muq {
        */
       virtual boost::any ZeroImpl(std::type_info const& type, unsigned int const rows, unsigned int const cols) const;
 
-      /// Compute a zero scalar
-      /** 
-	  @param[in] type We need a zero object of this type
-       */
-      boost::any ZeroScalar(std::type_info const& type) const;
-
       /// Determine if an object is the zero object
       /**
 	 @param[in] obj An input object
@@ -247,6 +249,13 @@ namespace muq {
        */
       virtual boost::any InverseImpl(boost::any const& obj) const;
 
+      /// Compute the square root of an object
+      /**
+	 In the vector case, compute the square root of each component.  In the matrix case, compute the Cholesky
+	 @param[in] obj We need the square root of this object
+	 \return The square root
+       */
+      boost::any SquareRootImpl(boost::any const& obj) const;
     };
   } // namespace Utilities
 } // namespace muq

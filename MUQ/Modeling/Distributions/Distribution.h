@@ -59,14 +59,14 @@ namespace muq {
 	 @param[in] inputs the vector of inputs to the log-density
 	 \return A sample
        */
-      boost::any Sample(ref_vector<boost::any> const& inputs) const;
+      boost::any Sample(ref_vector<boost::any> const& inputs);
 
       /// Sample the distribution with no inputs
       /**
 	 Allows the user to call Sample without any inputs
 	 \return A sample
        */
-      boost::any Sample() const;
+      boost::any Sample();
 
       /// Sample the distribution
       /**
@@ -75,7 +75,7 @@ namespace muq {
 	 \return A sample
        */
       template<typename... Args>
-	inline double Sample(Args... args) const {
+	inline double Sample(Args... args) {
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
 	inputs.reserve(numInputs<0? 0 : numInputs-1); // the first input is always whether we are evaluting the log-density or sampling
@@ -98,7 +98,7 @@ namespace muq {
       /**
 	 Should be overwritten by a child.  The default behavior is to return boost::none
        */
-      virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) const;
+      virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs);
 
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 
@@ -137,7 +137,7 @@ namespace muq {
 	 \return A sample
        */
       template<typename ith, typename... Args>
-	inline double Sample(ref_vector<boost::any>& inputs, ith const& in, Args... args) const {
+	inline double Sample(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size()+1; // add one, the first input is always whether we are evaluting the log-density or sampling
 		
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number

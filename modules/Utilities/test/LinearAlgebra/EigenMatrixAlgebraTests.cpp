@@ -458,3 +458,128 @@ TEST(EigenMatrixAlgebraTests, Multiply) {
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Multiply(mati, xui)).array()==(xui*mati).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Multiply(mati, mati)).array()==(mati*mati).array()).all());
 }
+
+TEST(EigenMatrixAlgebraTests, ApplyInverse) {
+  auto alg = std::shared_ptr<AnyAlgebra>();
+
+  Eigen::Matrix2d mat2d = Eigen::Matrix2d::Random();;
+  const Eigen::MatrixXd mat2Xd = Eigen::MatrixXd::Random(2,2);;
+  const Eigen::Vector2d vec2d = Eigen::Vector2d::Random();
+  const Eigen::VectorXd vec2Xd = Eigen::VectorXd::Random(2);
+  Eigen::VectorXd soln2d = boost::any_cast<Eigen::Vector2d const>(alg->ApplyInverse(mat2d, vec2d));
+  Eigen::VectorXd soln2Xd = boost::any_cast<Eigen::VectorXd const>(alg->ApplyInverse(mat2d, vec2Xd));
+  Eigen::Vector2d soln2d_mat = boost::any_cast<Eigen::Vector2d const>(alg->ApplyInverse(mat2Xd, vec2d));
+  EXPECT_NEAR((mat2d*soln2d-vec2d).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((mat2Xd*soln2d_mat-vec2d).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((mat2d*soln2Xd-vec2Xd).norm(), 0.0, 1.0e-10);
+
+  mat2d = Eigen::Matrix2d::Identity() + 1.0e-2*mat2d*mat2d.transpose();
+  Eigen::LLT<Eigen::Matrix2d> chol2d;
+  chol2d.compute(mat2d);
+  soln2d = boost::any_cast<Eigen::Vector2d const>(alg->ApplyInverse(chol2d, vec2d));
+  soln2Xd = boost::any_cast<Eigen::VectorXd const>(alg->ApplyInverse(chol2d, vec2Xd));
+  EXPECT_NEAR((mat2d*soln2d-vec2d).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((mat2d*soln2Xd-vec2Xd).norm(), 0.0, 1.0e-10);
+
+  Eigen::Matrix2f mat2f = Eigen::Matrix2f::Random();;
+  const Eigen::Vector2f vec2f = Eigen::Vector2f::Random();
+  const Eigen::VectorXf vec2Xf = Eigen::VectorXf::Random(2);
+  Eigen::Vector2f soln2f = boost::any_cast<Eigen::Vector2f const>(alg->ApplyInverse(mat2f, vec2f));
+  Eigen::VectorXf soln2Xf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(mat2f, vec2Xf));
+  EXPECT_NEAR((mat2f*soln2f-vec2f).norm(), 0.0, 1.0e-5);
+  EXPECT_NEAR((mat2f*soln2Xf-vec2Xf).norm(), 0.0, 1.0e-5);
+
+  mat2f = Eigen::Matrix2f::Identity() + 1.0e-2*mat2f*mat2f.transpose();
+  Eigen::LLT<Eigen::Matrix2f> chol2f;
+  chol2f.compute(mat2f);
+  soln2f = boost::any_cast<Eigen::Vector2f const>(alg->ApplyInverse(chol2f, vec2f));
+  soln2Xf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(chol2f, vec2Xf));
+  EXPECT_NEAR((mat2f*soln2f-vec2f).norm(), 0.0, 1.0e-5);
+  EXPECT_NEAR((mat2f*soln2Xf-vec2Xf).norm(), 0.0, 1.0e-5);
+
+  Eigen::Matrix3d mat3d = Eigen::Matrix3d::Random();;
+  const Eigen::Vector3d vec3d = Eigen::Vector3d::Random();
+  const Eigen::VectorXd vec3Xd = Eigen::VectorXd::Random(3);
+  Eigen::VectorXd soln3d = boost::any_cast<Eigen::Vector3d const>(alg->ApplyInverse(mat3d, vec3d));
+  Eigen::VectorXd soln3Xd = boost::any_cast<Eigen::VectorXd const>(alg->ApplyInverse(mat3d, vec3Xd));
+  EXPECT_NEAR((mat3d*soln3d-vec3d).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((mat3d*soln3Xd-vec3Xd).norm(), 0.0, 1.0e-10);
+
+  mat3d = Eigen::Matrix3d::Identity() + 1.0e-3*mat3d*mat3d.transpose();
+  Eigen::LLT<Eigen::Matrix3d> chol3d;
+  chol3d.compute(mat3d);
+  soln3d = boost::any_cast<Eigen::Vector3d const>(alg->ApplyInverse(chol3d, vec3d));
+  soln3Xd = boost::any_cast<Eigen::VectorXd const>(alg->ApplyInverse(chol3d, vec3Xd));
+  EXPECT_NEAR((mat3d*soln3d-vec3d).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((mat3d*soln3Xd-vec3Xd).norm(), 0.0, 1.0e-10);
+
+  Eigen::Matrix3f mat3f = Eigen::Matrix3f::Random();;
+  const Eigen::Vector3f vec3f = Eigen::Vector3f::Random();
+  const Eigen::VectorXf vec3Xf = Eigen::VectorXf::Random(3);
+  Eigen::Vector3f soln3f = boost::any_cast<Eigen::Vector3f const>(alg->ApplyInverse(mat3f, vec3f));
+  Eigen::VectorXf soln3Xf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(mat3f, vec3Xf));
+  EXPECT_NEAR((mat3f*soln3f-vec3f).norm(), 0.0, 1.0e-5);
+  EXPECT_NEAR((mat3f*soln3Xf-vec3Xf).norm(), 0.0, 1.0e-5);
+
+  mat3f = Eigen::Matrix3f::Identity() + 1.0e-3*mat3f*mat3f.transpose();
+  Eigen::LLT<Eigen::Matrix3f> chol3f;
+  chol3f.compute(mat3f);
+  soln3f = boost::any_cast<Eigen::Vector3f const>(alg->ApplyInverse(chol3f, vec3f));
+  soln3Xf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(chol3f, vec3Xf));
+  EXPECT_NEAR((mat3f*soln3f-vec3f).norm(), 0.0, 1.0e-5);
+  EXPECT_NEAR((mat3f*soln3Xf-vec3Xf).norm(), 0.0, 1.0e-5);
+
+  Eigen::Matrix4d mat4d = Eigen::Matrix4d::Random();;
+  const Eigen::Vector4d vec4d = Eigen::Vector4d::Random();
+  const Eigen::VectorXd vec4Xd = Eigen::VectorXd::Random(4);
+  Eigen::VectorXd soln4d = boost::any_cast<Eigen::Vector4d const>(alg->ApplyInverse(mat4d, vec4d));
+  Eigen::VectorXd soln4Xd = boost::any_cast<Eigen::VectorXd const>(alg->ApplyInverse(mat4d, vec4Xd));
+  EXPECT_NEAR((mat4d*soln4d-vec4d).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((mat4d*soln4Xd-vec4Xd).norm(), 0.0, 1.0e-10);
+
+  mat4d = Eigen::Matrix4d::Identity() + 1.0e-4*mat4d*mat4d.transpose();
+  Eigen::LLT<Eigen::Matrix4d> chol4d;
+  chol4d.compute(mat4d);
+  soln4d = boost::any_cast<Eigen::Vector4d const>(alg->ApplyInverse(chol4d, vec4d));
+  soln4Xd = boost::any_cast<Eigen::VectorXd const>(alg->ApplyInverse(chol4d, vec4Xd));
+  EXPECT_NEAR((mat4d*soln4d-vec4d).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((mat4d*soln4Xd-vec4Xd).norm(), 0.0, 1.0e-10);
+
+  Eigen::Matrix4f mat4f = Eigen::Matrix4f::Random();;
+  const Eigen::Vector4f vec4f = Eigen::Vector4f::Random();
+  const Eigen::VectorXf vec4Xf = Eigen::VectorXf::Random(4);
+  Eigen::Vector4f soln4f = boost::any_cast<Eigen::Vector4f const>(alg->ApplyInverse(mat4f, vec4f));
+  Eigen::VectorXf soln4Xf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(mat4f, vec4Xf));
+  EXPECT_NEAR((mat4f*soln4f-vec4f).norm(), 0.0, 1.0e-5);
+  EXPECT_NEAR((mat4f*soln4Xf-vec4Xf).norm(), 0.0, 1.0e-5);
+
+  mat4f = Eigen::Matrix4f::Identity() + 1.0e-4*mat4f*mat4f.transpose();
+  Eigen::LLT<Eigen::Matrix4f> chol4f;
+  chol4f.compute(mat4f);
+  soln4f = boost::any_cast<Eigen::Vector4f const>(alg->ApplyInverse(chol4f, vec4f));
+  soln4Xf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(chol4f, vec4Xf));
+  EXPECT_NEAR((mat4f*soln4f-vec4f).norm(), 0.0, 1.0e-5);
+  EXPECT_NEAR((mat4f*soln4Xf-vec4Xf).norm(), 0.0, 1.0e-5);
+  
+  Eigen::MatrixXd matXd = Eigen::MatrixXd::Random(5, 5);;
+  const Eigen::VectorXd vecXd = Eigen::VectorXd::Random(5);
+  Eigen::VectorXd solnXd = boost::any_cast<Eigen::VectorXd const>(alg->ApplyInverse(matXd, vecXd));
+  EXPECT_NEAR((matXd*solnXd-vecXd).norm(), 0.0, 1.0e-10);
+
+  matXd = Eigen::MatrixXd::Identity(5,5) + 1.0e-4*matXd*matXd.transpose();
+  Eigen::LLT<Eigen::MatrixXd> cholXd;
+  cholXd.compute(matXd);
+  solnXd = boost::any_cast<Eigen::VectorXd const>(alg->ApplyInverse(cholXd, vecXd));
+  EXPECT_NEAR((matXd*solnXd-vecXd).norm(), 0.0, 1.0e-10);
+
+  Eigen::MatrixXf matXf = Eigen::MatrixXf::Random(5, 5);;
+  const Eigen::VectorXf vecXf = Eigen::VectorXf::Random(5);
+  Eigen::VectorXf solnXf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(matXf, vecXf));
+  EXPECT_NEAR((matXf*solnXf-vecXf).norm(), 0.0, 1.0e-5);
+
+  matXf = Eigen::MatrixXf::Identity(5,5) + 1.0e-4*matXf*matXf.transpose();
+  Eigen::LLT<Eigen::MatrixXf> cholXf;
+  cholXf.compute(matXf);
+  solnXf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(cholXf, vecXf));
+  EXPECT_NEAR((matXf*solnXf-vecXf).norm(), 0.0, 1.0e-5);
+}

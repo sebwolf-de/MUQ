@@ -51,7 +51,7 @@ double Uniform::LogDensityImpl(ref_vector<boost::any> const& inputs) const {
   return 1.0;
 }
 
-boost::any Uniform::SampleImpl(ref_vector<boost::any> const& inputs) const {
+boost::any Uniform::SampleImpl(ref_vector<boost::any> const& inputs) {
   assert(bounds.size()>0);
   
   if( bounds.size()==1 ) { // one dimensional

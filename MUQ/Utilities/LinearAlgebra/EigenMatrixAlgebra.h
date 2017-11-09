@@ -1,7 +1,10 @@
 #ifndef EIGENMATRIXALGEBRA_H_
 #define EIGENMATRIXALGEBRA_H_
 
+#include <iostream>
+
 #include <Eigen/Core>
+#include <Eigen/Dense>
 
 #include <boost/none.hpp>
 #include <boost/any.hpp>
@@ -103,6 +106,14 @@ namespace muq {
 	  @param[in] cols The number of columns
        */
       static boost::any Zero(std::type_info const& type, unsigned int const rows, unsigned int const cols);
+
+      /// Apply the inverse of a matrix 
+      /**
+	 @param[in] A We are applying the inverse of this matrix 
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      static boost::any ApplyInverse(boost::any const& A, boost::any const& x);
 
     private:
 
@@ -213,11 +224,172 @@ namespace muq {
        */
       template<typename type0, typename type1> 
 	static inline boost::any ScalarMultiply(boost::any const& in0, boost::any const& in1) {
-	const type0 x0 = boost::any_cast<type0 const>(in0);
-	const type1 x1 = boost::any_cast<type1 const>(in1);
+	const type0& x0 = boost::any_cast<type0 const&>(in0);
+	const type1& x1 = boost::any_cast<type1 const&>(in1);
 	
 	return (type1)(x0 * x1);
       }
+
+      /// Apply the inverse of a matrix 
+      /**
+	 @param[in] A We are applying the inverse of this matrix 
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      template<typename mattype, typename vectype>
+	inline static boost::any ApplyInverse(boost::any const& A, boost::any const& x) {
+	const mattype& mat = boost::any_cast<mattype const&>(A);
+	const vectype& vec = boost::any_cast<vectype const&>(x);
+	assert(mat.rows()==vec.size());
+	assert(mat.cols()==vec.size());
+
+	// solve the system
+	const vectype soln = mat.colPivHouseholderQr().solve(vec);
+
+	return soln;
+      }
+
+      /// Apply the inverse of a matrix 
+      /**
+	 @param[in] A We are applying the inverse of this matrix 
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      template<typename vectype>
+	inline static boost::any ApplyCholeskyInverse2d(Eigen::LLT<Eigen::Matrix2d> const& chol, boost::any const& x) {
+	const Eigen::Matrix2d& L = chol.matrixL();
+
+	const vectype& vec = boost::any_cast<vectype const&>(x);
+	assert(L.rows()==vec.size());
+	assert(L.cols()==vec.size());
+
+	// solve the system
+	vectype soln = L.triangularView<Eigen::Lower>().solve(vec);
+	L.triangularView<Eigen::Lower>().transpose().solveInPlace(soln);
+
+	return soln;
+      }
+
+      /// Apply the inverse of a matrix 
+      /**
+	 @param[in] A We are applying the inverse of this matrix 
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      template<typename vectype>
+	inline static boost::any ApplyCholeskyInverse2f(Eigen::LLT<Eigen::Matrix2f> const& chol, boost::any const& x) {
+	const Eigen::Matrix2f& L = chol.matrixL();
+
+	const vectype& vec = boost::any_cast<vectype const&>(x);
+	assert(L.rows()==vec.size());
+	assert(L.cols()==vec.size());
+
+	// solve the system
+	vectype soln = L.triangularView<Eigen::Lower>().solve(vec);
+	L.triangularView<Eigen::Lower>().transpose().solveInPlace(soln);
+
+	return soln;
+      }
+
+      /// Apply the inverse of a matrix 
+      /**
+	 @param[in] A We are applying the inverse of this matrix 
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      template<typename vectype>
+	inline static boost::any ApplyCholeskyInverse3d(Eigen::LLT<Eigen::Matrix3d> const& chol, boost::any const& x) {
+	const Eigen::Matrix3d& L = chol.matrixL();
+
+	const vectype& vec = boost::any_cast<vectype const&>(x);
+	assert(L.rows()==vec.size());
+	assert(L.cols()==vec.size());
+
+	// solve the system
+	vectype soln = L.triangularView<Eigen::Lower>().solve(vec);
+	L.triangularView<Eigen::Lower>().transpose().solveInPlace(soln);
+
+	return soln;
+      }
+
+      /// Apply the inverse of a matrix 
+      /**
+	 @param[in] A We are applying the inverse of this matrix 
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      template<typename vectype>
+	inline static boost::any ApplyCholeskyInverse3f(Eigen::LLT<Eigen::Matrix3f> const& chol, boost::any const& x) {
+	const Eigen::Matrix3f& L = chol.matrixL();
+
+	const vectype& vec = boost::any_cast<vectype const&>(x);
+	assert(L.rows()==vec.size());
+	assert(L.cols()==vec.size());
+
+	// solve the system
+	vectype soln = L.triangularView<Eigen::Lower>().solve(vec);
+	L.triangularView<Eigen::Lower>().transpose().solveInPlace(soln);
+
+	return soln;
+      }
+
+      /// Apply the inverse of a matrix 
+      /**
+	 @param[in] A We are applying the inverse of this matrix 
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      template<typename vectype>
+	inline static boost::any ApplyCholeskyInverse4d(Eigen::LLT<Eigen::Matrix4d> const& chol, boost::any const& x) {
+	const Eigen::Matrix4d& L = chol.matrixL();
+
+	const vectype& vec = boost::any_cast<vectype const&>(x);
+	assert(L.rows()==vec.size());
+	assert(L.cols()==vec.size());
+
+	// solve the system
+	vectype soln = L.triangularView<Eigen::Lower>().solve(vec);
+	L.triangularView<Eigen::Lower>().transpose().solveInPlace(soln);
+
+	return soln;
+      }
+
+      /// Apply the inverse of a matrix 
+      /**
+	 @param[in] A We are applying the inverse of this matrix 
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      template<typename vectype>
+	inline static boost::any ApplyCholeskyInverse4f(Eigen::LLT<Eigen::Matrix4f> const& chol, boost::any const& x) {
+	const Eigen::Matrix4f& L = chol.matrixL();
+
+	const vectype& vec = boost::any_cast<vectype const&>(x);
+	assert(L.rows()==vec.size());
+	assert(L.cols()==vec.size());
+
+	// solve the system
+	vectype soln = L.triangularView<Eigen::Lower>().solve(vec);
+	L.triangularView<Eigen::Lower>().transpose().solveInPlace(soln);
+
+	return soln;
+      }
+
+      /// Apply the inverse of a matrix 
+      /**
+	 @param[in] A We are applying the inverse of this matrix 
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      static boost::any ApplyCholeskyInverseXd(boost::any const& A, boost::any const& x);
+
+      /// Apply the inverse of a matrix 
+      /**
+	 @param[in] A We are applying the inverse of this matrix 
+	 @param[in] x We are applying the inverse to this vector
+	 \return The result \f$y=A^{-1} x\f$
+       */
+      static boost::any ApplyCholeskyInverseXf(boost::any const& A, boost::any const& x);
     };
   } // namespace Utilities
 } // namespace muq

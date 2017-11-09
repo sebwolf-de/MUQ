@@ -117,6 +117,13 @@ namespace muq {
        */
       static boost::any Zero(std::type_info const& type, unsigned int const size);
 
+      /// Compute the square root of an object
+      /**
+	 @param[in] obj We need the square root of this object
+	 \return The square root
+       */
+      static boost::any SquareRoot(boost::any const& obj);
+
     private:
       
       /// Determine if an Eigen::Vector is zero 
