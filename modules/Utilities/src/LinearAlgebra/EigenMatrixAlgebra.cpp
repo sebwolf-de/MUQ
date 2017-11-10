@@ -414,9 +414,9 @@ boost::any EigenMatrixAlgebra::ApplyInverse(boost::any const& A, boost::any cons
     // the cholesky
     const Eigen::LLT<Eigen::Matrix2d>& chol = boost::any_cast<Eigen::LLT<Eigen::Matrix2d> const&>(A);
 
-    if( typeid(Eigen::Vector2d)==x.type() ) { return ApplyCholeskyInverse2d<Eigen::Vector2d>(chol, x); }
+    if( typeid(Eigen::Vector2d)==x.type() ) { return ApplyCholeskyInverse<Eigen::Matrix2d, Eigen::Vector2d>(chol, x); }
 
-    return ApplyCholeskyInverse2d<Eigen::VectorXd>(chol, x);
+    return ApplyCholeskyInverse<Eigen::Matrix2d, Eigen::VectorXd>(chol, x);
   }
   
   if( typeid(Eigen::Matrix2f)==A.type() ) {
@@ -427,9 +427,9 @@ boost::any EigenMatrixAlgebra::ApplyInverse(boost::any const& A, boost::any cons
     // the cholesky
     const Eigen::LLT<Eigen::Matrix2f>& chol = boost::any_cast<Eigen::LLT<Eigen::Matrix2f> const&>(A);
 
-    if( typeid(Eigen::Vector2f)==x.type() ) { return ApplyCholeskyInverse2f<Eigen::Vector2f>(chol, x); }
+    if( typeid(Eigen::Vector2f)==x.type() ) { return ApplyCholeskyInverse<Eigen::Matrix2f, Eigen::Vector2f>(chol, x); }
 
-    return ApplyCholeskyInverse2f<Eigen::VectorXf>(chol, x);
+    return ApplyCholeskyInverse<Eigen::Matrix2f, Eigen::VectorXf>(chol, x);
   }
 
   if( typeid(Eigen::Matrix3d)==A.type() ) {
@@ -440,9 +440,9 @@ boost::any EigenMatrixAlgebra::ApplyInverse(boost::any const& A, boost::any cons
     // the cholesky
     const Eigen::LLT<Eigen::Matrix3d>& chol = boost::any_cast<Eigen::LLT<Eigen::Matrix3d> const&>(A);
 
-    if( typeid(Eigen::Vector3d)==x.type() ) { return ApplyCholeskyInverse3d<Eigen::Vector3d>(chol, x); }
+    if( typeid(Eigen::Vector3d)==x.type() ) { return ApplyCholeskyInverse<Eigen::Matrix3d, Eigen::Vector3d>(chol, x); }
 
-    return ApplyCholeskyInverse3d<Eigen::VectorXd>(chol, x);
+    return ApplyCholeskyInverse<Eigen::Matrix3d, Eigen::VectorXd>(chol, x);
   }
   
   if( typeid(Eigen::Matrix3f)==A.type() ) {
@@ -453,9 +453,9 @@ boost::any EigenMatrixAlgebra::ApplyInverse(boost::any const& A, boost::any cons
     // the cholesky
     const Eigen::LLT<Eigen::Matrix3f>& chol = boost::any_cast<Eigen::LLT<Eigen::Matrix3f> const&>(A);
     
-    if( typeid(Eigen::Vector3f)==x.type() ) { return ApplyCholeskyInverse3f<Eigen::Vector3f>(chol, x); }
+    if( typeid(Eigen::Vector3f)==x.type() ) { return ApplyCholeskyInverse<Eigen::Matrix3f, Eigen::Vector3f>(chol, x); }
     
-    return ApplyCholeskyInverse3f<Eigen::VectorXf>(chol, x);
+    return ApplyCholeskyInverse<Eigen::Matrix3f, Eigen::VectorXf>(chol, x);
   }
 
   if( typeid(Eigen::Matrix4d)==A.type() ) {
@@ -466,9 +466,9 @@ boost::any EigenMatrixAlgebra::ApplyInverse(boost::any const& A, boost::any cons
     // the cholesky
     const Eigen::LLT<Eigen::Matrix4d>& chol = boost::any_cast<Eigen::LLT<Eigen::Matrix4d> const&>(A);
 
-    if( typeid(Eigen::Vector4d)==x.type() ) { return ApplyCholeskyInverse4d<Eigen::Vector4d>(chol, x); }
+    if( typeid(Eigen::Vector4d)==x.type() ) { return ApplyCholeskyInverse<Eigen::Matrix4d, Eigen::Vector4d>(chol, x); }
 
-    return ApplyCholeskyInverse4d<Eigen::VectorXd>(chol, x);
+    return ApplyCholeskyInverse<Eigen::Matrix4d, Eigen::VectorXd>(chol, x);
   }
   
   if( typeid(Eigen::Matrix4f)==A.type() ) {
@@ -479,9 +479,9 @@ boost::any EigenMatrixAlgebra::ApplyInverse(boost::any const& A, boost::any cons
     // the cholesky
     const Eigen::LLT<Eigen::Matrix4f>& chol = boost::any_cast<Eigen::LLT<Eigen::Matrix4f> const&>(A);
     
-    if( typeid(Eigen::Vector4f)==x.type() ) { return ApplyCholeskyInverse4f<Eigen::Vector4f>(chol, x); }
+    if( typeid(Eigen::Vector4f)==x.type() ) { return ApplyCholeskyInverse<Eigen::Matrix4f, Eigen::Vector4f>(chol, x); }
     
-    return ApplyCholeskyInverse4f<Eigen::VectorXf>(chol, x);
+    return ApplyCholeskyInverse<Eigen::Matrix4f, Eigen::VectorXf>(chol, x);
   }
   
   if( typeid(Eigen::MatrixXd)==A.type() ) {
@@ -491,7 +491,7 @@ boost::any EigenMatrixAlgebra::ApplyInverse(boost::any const& A, boost::any cons
     
     return ApplyInverse<Eigen::MatrixXd, Eigen::VectorXd>(A, x); 
   }
-  if( typeid(Eigen::LLT<Eigen::MatrixXd>)==A.type() ) { return ApplyCholeskyInverseXd(A, x); }
+  if( typeid(Eigen::LLT<Eigen::MatrixXd>)==A.type() ) { return ApplyCholeskyInverse<Eigen::MatrixXd, Eigen::VectorXd>(A, x); }
 
   if( typeid(Eigen::MatrixXf)==A.type() ) {
     if( typeid(Eigen::Vector2f)==x.type() ) { return ApplyInverse<Eigen::MatrixXf, Eigen::Vector2f>(A, x); }
@@ -500,41 +500,11 @@ boost::any EigenMatrixAlgebra::ApplyInverse(boost::any const& A, boost::any cons
     
     return ApplyInverse<Eigen::MatrixXf, Eigen::VectorXf>(A, x); 
   }
-  if( typeid(Eigen::LLT<Eigen::MatrixXf>)==A.type() ) { return ApplyCholeskyInverseXf(A, x); }
+  if( typeid(Eigen::LLT<Eigen::MatrixXf>)==A.type() ) { return ApplyCholeskyInverse<Eigen::MatrixXf, Eigen::VectorXf>(A, x); }
 
   // something went wrong
   assert(false);
   return boost::none;
-}
-
-boost::any EigenMatrixAlgebra::ApplyCholeskyInverseXd(boost::any const& A, boost::any const& x) {
-  const Eigen::LLT<Eigen::MatrixXd>& chol = boost::any_cast<Eigen::LLT<Eigen::MatrixXd> const&>(A);
-  const Eigen::MatrixXd& L = chol.matrixL();
-  
-  const Eigen::VectorXd& vec = boost::any_cast<Eigen::VectorXd const&>(x);
-  assert(L.rows()==vec.size());
-  assert(L.cols()==vec.size());
-  
-  // solve the system
-  Eigen::VectorXd soln = L.triangularView<Eigen::Lower>().solve(vec);
-  L.triangularView<Eigen::Lower>().transpose().solveInPlace(soln);
-  
-  return soln;
-}
-
-boost::any EigenMatrixAlgebra::ApplyCholeskyInverseXf(boost::any const& A, boost::any const& x) {
-  const Eigen::LLT<Eigen::MatrixXf>& chol = boost::any_cast<Eigen::LLT<Eigen::MatrixXf> const&>(A);
-  const Eigen::MatrixXf& L = chol.matrixL();
-  
-  const Eigen::VectorXf& vec = boost::any_cast<Eigen::VectorXf const&>(x);
-  assert(L.rows()==vec.size());
-  assert(L.cols()==vec.size());
-  
-  // solve the system
-  Eigen::VectorXf soln = L.triangularView<Eigen::Lower>().solve(vec);
-  L.triangularView<Eigen::Lower>().transpose().solveInPlace(soln);
-
-  return soln;
 }
 
 boost::any EigenMatrixAlgebra::Apply(boost::any const& A, boost::any const& x) {
