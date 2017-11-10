@@ -11,7 +11,9 @@ Gaussian::Gaussian(boost::any const& obj, Gaussian::Mode const mode) :
   dim(algebra->Size(obj,0)),
   mean(mode==Gaussian::Mode::Mean? obj : boost::none),
   cov(mode==Gaussian::Mode::Covariance? SaveCovPrec(obj) : boost::none),
-  prec(mode==Gaussian::Mode::Precision? SaveCovPrec(obj) : boost::none) {}
+  prec(mode==Gaussian::Mode::Precision? SaveCovPrec(obj) : boost::none) {
+  ComputeScalingConstant();
+}
 
 Gaussian::Gaussian(boost::any const& mean, boost::any const& obj, Gaussian::Mode const mode) :
   Distribution(),
@@ -19,9 +21,21 @@ Gaussian::Gaussian(boost::any const& mean, boost::any const& obj, Gaussian::Mode
   dim(algebra->Size(obj,0)),
   mean(mean),
   cov(mode==Gaussian::Mode::Covariance? SaveCovPrec(obj) : boost::none),
-  prec(mode==Gaussian::Mode::Precision? SaveCovPrec(obj) : boost::none) {}
+  prec(mode==Gaussian::Mode::Precision? SaveCovPrec(obj) : boost::none) {
+  ComputeScalingConstant();
+}
 
 Gaussian::~Gaussian() {}
+
+void Gaussian::ComputeScalingConstant() {
+  scalingConstant = dim*std::log(2.0*M_PI);
+
+  if( mode==Gaussian::Mode::Covariance ) {
+    scalingConstant += algebra->LogDeterminate(*cov);
+  } else if( mode==Gaussian::Mode::Precision ) {
+    scalingConstant -= algebra->LogDeterminate(*prec);
+  }
+}
 
 boost::any Gaussian::SaveCovPrec(boost::any const& in) {
   // for Eigen matrices, we can pre compute the cholesky
@@ -39,17 +53,15 @@ double Gaussian::LogDensityImpl(ref_vector<boost::any> const& inputs) const {
   boost::any delta = inputs[0].get();
   if( mean ) { delta = algebra->Subtract(delta, *mean); }
 
-  const double C = dim*std::log(2.0*M_PI);
-
   switch( mode ) {
   case Gaussian::Mode::Covariance: {
-    return -0.5*(algebra->LogDeterminate(*cov)+C+algebra->InnerProduct(delta, algebra->ApplyInverse(*cov, delta)));
+    return -0.5*(scalingConstant+algebra->InnerProduct(delta, algebra->ApplyInverse(*cov, delta)));
   }
   case Gaussian::Mode::Precision: {
-    return -0.5*(-1.0*algebra->LogDeterminate(*prec)+C+algebra->InnerProduct(delta, algebra->Apply(*prec, delta)));
+    return -0.5*(scalingConstant+algebra->InnerProduct(delta, algebra->Apply(*prec, delta)));
   }
   case Gaussian::Mode::Mean: {
-    return -0.5*(C+algebra->InnerProduct(delta, delta));
+    return -0.5*(scalingConstant+algebra->InnerProduct(delta, delta));
   }
   default: {
     assert(false);

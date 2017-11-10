@@ -47,6 +47,12 @@ namespace muq {
       
     private:
 
+      /// Compute the distribution's scaling constant
+      /**
+	 \return Scaling constant
+       */
+      void ComputeScalingConstant();
+
       static boost::any SaveCovPrec(boost::any const& in);
 
       /// Implement the log-density for a Gaussian distribution
@@ -85,6 +91,9 @@ namespace muq {
 
       /// The square root of the precision
       boost::optional<boost::any> precSqrt;
+
+      /// The scaling constant for the density
+      double scalingConstant;
 
     };
   } // namespace Modeling
