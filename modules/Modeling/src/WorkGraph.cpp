@@ -14,6 +14,7 @@
 #include <boost/graph/copy.hpp>
 #include <boost/graph/graphviz.hpp>
 
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 /// A helper struct that determines if an edge has the same input number 

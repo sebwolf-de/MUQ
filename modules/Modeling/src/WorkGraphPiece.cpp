@@ -6,6 +6,7 @@
 
 #include <Eigen/Core>
 
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 DependentPredicate::DependentPredicate() {}
@@ -130,7 +131,7 @@ void WorkGraphPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const w
     for( auto out : requiredOuts ) {
       if( requiredIns.size()==0 ) {
 	// if there are no inputs, it is the input so set the Jacobian to the identity
-	jacMap[nodeID][out] = algebra->IdentityBase(valMap[nodeID][out]);
+	jacMap[nodeID][out] = algebra->Identity(valMap[nodeID][out].get().type(), algebra->Size(valMap[nodeID][out]), algebra->Size(valMap[nodeID][out]));
       } else { 
 	// initize the jacobian to nothing
 	jacMap[nodeID][out] = boost::none;
@@ -140,8 +141,8 @@ void WorkGraphPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const w
 	  graph->operator[](node)->piece->Jacobian(std::get<2>(in), out, ins);
 	  
 	  // use chain rule to get the jacobian wrt to the required input
-	  const boost::any tempJac = algebra->MultiplyBase(*(graph->operator[](node)->piece->jacobian), jacMap[std::get<0>(in)][std::get<1>(in)]);
-	  jacMap[nodeID][out] = algebra->AddBase(jacMap[nodeID][out], tempJac);
+	  const boost::any tempJac = algebra->Multiply(*(graph->operator[](node)->piece->jacobian), jacMap[std::get<0>(in)][std::get<1>(in)]);
+	  jacMap[nodeID][out] = algebra->Add(jacMap[nodeID][out], tempJac);
 	}
       }
     }
@@ -198,7 +199,7 @@ void WorkGraphPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int c
 	  graph->operator[](node)->piece->JacobianAction(std::get<2>(in), out, jacActionMap[std::get<0>(in)][std::get<1>(in)], ins);
 	  
 	  // use chain rule to get the jacobian wrt to the required input
-	  jacActionMap[nodeID][out] = algebra->AddBase(jacActionMap[nodeID][out], *(graph->operator[](node)->piece->jacobianAction));
+	  jacActionMap[nodeID][out] = algebra->Add(jacActionMap[nodeID][out], *(graph->operator[](node)->piece->jacobianAction));
 	}
       }
     }
@@ -249,7 +250,7 @@ void WorkGraphPiece::JacobianTransposeActionImpl(unsigned int const wrtIn, unsig
 	  // compute the jacobian transpose action for this output
 	  graph->operator[](node)->piece->JacobianTransposeAction(std::get<2>(in), std::get<1>(out), jacTransActionMap[std::get<0>(out)][std::get<2>(out)], ins);
 	  // add it (chain rule)
-	  jacTransActionMap[nodeID][std::get<2>(in)] = algebra->AddBase(jacTransActionMap[nodeID][std::get<2>(in)], *(graph->operator[](node)->piece->jacobianTransposeAction));
+	  jacTransActionMap[nodeID][std::get<2>(in)] = algebra->Add(jacTransActionMap[nodeID][std::get<2>(in)], *(graph->operator[](node)->piece->jacobianTransposeAction));
 	}
       }
     }
@@ -260,7 +261,7 @@ void WorkGraphPiece::JacobianTransposeActionImpl(unsigned int const wrtIn, unsig
       for( auto out : requiredOuts ) {
 	if( jacobianTransposeAction ) { // if the jacobian transpose action has not be initilized ...
 	  // it is equal to the action of the output
-	  *jacobianTransposeAction = algebra->AddBase(*jacobianTransposeAction, jacTransActionMap[std::get<0>(out)][std::get<1>(out)]);
+	  *jacobianTransposeAction = algebra->Add(*jacobianTransposeAction, jacTransActionMap[std::get<0>(out)][std::get<1>(out)]);
 	} else {
 	  // add it to the existing jacobian transpose action (chain rule)
 	  jacobianTransposeAction = jacTransActionMap[std::get<0>(out)][std::get<1>(out)];

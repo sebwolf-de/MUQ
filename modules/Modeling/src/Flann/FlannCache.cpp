@@ -1,5 +1,6 @@
 #include "MUQ/Modeling/Flann/FlannCache.h"
 
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 FlannCache::Entry::Entry() {}
@@ -19,7 +20,7 @@ void FlannCache::EvaluateImpl(ref_vector<boost::any> const& inputs) {}
 
 void FlannCache::DeepVectorCopy(boost::any const& vec, flann::Matrix<double>& fvec) const {
   // get the dimension of the vector
-  const unsigned int dim = algebra->VectorDimensionBase(vec);
+  const unsigned int dim = algebra->Size(vec);
 
   // create a flann vector of the same size
   fvec = flann::Matrix<double>(new double[dim], 1, dim);
@@ -27,7 +28,7 @@ void FlannCache::DeepVectorCopy(boost::any const& vec, flann::Matrix<double>& fv
 
   // copy all of the elements into the flann vector
   for( unsigned int i=0; i<dim; ++i ) {
-    fvec[0][i] = boost::any_cast<double const>(algebra->AccessElementBase(i, vec));
+    fvec[0][i] = boost::any_cast<double const>(algebra->AccessElement(vec, i));
   }
 }
 
@@ -60,7 +61,7 @@ int FlannCache::InCache(boost::any const& input) const {
 
 void FlannCache::Add(boost::any const& input) {
   // the input dimension
-  const unsigned int dimIn = algebra->VectorDimensionBase(input);
+  const unsigned int dimIn = algebra->Size(input);
   
   if( !nnIndex ) { // if the nearest neighbor index does not exist ...
     // ... create the nearest neighbor index
@@ -85,11 +86,11 @@ void FlannCache::Add(boost::any const& input) {
   auto entry = std::make_shared<Entry>();
   
   // store the result
-  const unsigned int dim = algebra->VectorDimensionBase(result[0]);
+  const unsigned int dim = algebra->Size(result[0]);
   // copy all of the elements into the Eigen::VectorXd
   entry->output = Eigen::VectorXd::Constant(dim, std::numeric_limits<double>::quiet_NaN());
   for( unsigned int i=0; i<dim; ++i ) {
-    entry->output(i) = boost::any_cast<double const>(algebra->AccessElementBase(i, result[0]));
+    entry->output(i) = boost::any_cast<double const>(algebra->AccessElement(result[0], i));
   }
   
   // add the entry to the cache

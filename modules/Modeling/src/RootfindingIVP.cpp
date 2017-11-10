@@ -6,6 +6,7 @@
 #include <cvodes/cvodes_dense.h>     /* prototype for CVDense */
 
 namespace pt = boost::property_tree;
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 RootfindingIVP::RootfindingIVP(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : ODEBase(rhs, pt, algebra), root(root), maxSteps(pt.get<unsigned int>("Rootfinder.MaxSteps", (int)1e10)), maxTime(pt.get<double>("Rootfinder.MaxTime", 1.0e3)), maxErrorTests(pt.get<unsigned int>("Rootfinder.MaxErrorTests", 100)) {
@@ -55,7 +56,7 @@ Eigen::VectorXi RootfindingIVP::FindRoot(ref_vector<boost::any> const& inputs, i
   int paramSize = -1;
 
   if( wrtIn>=0 && wrtOut==0 && wrtIn<rhs->numInputs ) { // we are computing the derivative wrt one of the rhs parameters
-    paramSize = algebra->VectorDimensionBase(inputs[wrtIn]); // the dimension of the parameter
+    paramSize = algebra->Size(inputs[wrtIn]); // the dimension of the parameter
 
     // set up sensitivity vector
     sensState = N_VCloneVectorArray_Serial(paramSize, state);

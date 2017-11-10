@@ -10,6 +10,7 @@
 #include <sundials/sundials_math.h>  // contains the macros ABS, SQR, and EXP 
 
 namespace pt = boost::property_tree;
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 ODEBase::ODEBase(std::shared_ptr<WorkPiece> rhs, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : WorkPiece(), rhs(rhs), algebra(algebra), linSolver(pt.get<std::string>("ODESolver.LinearSolver", "Dense")), reltol(pt.get<double>("ODESolver.RelativeTolerance", 1.0e-8)), abstol(pt.get<double>("ODESolver.AbsoluteTolerance", 1.0e-8)), maxStepSize(pt.get<double>("ODESolver.MaxStepSize", 1.0)), autonomous(pt.get<bool>("ODESolver.Autonomous", true)) {
@@ -114,7 +115,7 @@ void ODEBase::InitializeState(N_Vector& state, boost::any const& ic, unsigned in
   // set the values to the initial conditions
   for( unsigned int i=0; i<dim; ++i ) {
     // NV_Ith_S references the ith component of the vector v
-    NV_Ith_S(state, i) = boost::any_cast<double>(algebra->AccessElementBase(i, ic));
+    NV_Ith_S(state, i) = boost::any_cast<double>(algebra->AccessElement(ic, i));
   }
 }
 
@@ -372,7 +373,7 @@ std::vector<std::pair<unsigned int, unsigned int> > ODEBase::TimeIndices(ref_vec
   // loop through the desired outputs
   for( unsigned int i=0; i<nOuts; ++i ) { 
     timeIndices[i].first = 0; // the first index is zero ...
-    timeIndices[i].second = algebra->VectorDimensionBase(outputTimes[i]); // the size of the vector
+    timeIndices[i].second = algebra->Size(outputTimes[i]); // the size of the vector
 
     // the the size is of this output >1, set the size of that output vector
     if( timeIndices[i].second>1 ) {
@@ -400,7 +401,7 @@ bool ODEBase::NextTime(std::pair<double, int>& nextTime, std::vector<std::pair<u
     if( timeIndices[i].first==timeIndices[i].second ) { continue; }
 
     // the next time at that vector
-    const double t = boost::any_cast<double>(algebra->AccessElementBase(timeIndices[i].first, outputTimes[i]));
+    const double t = boost::any_cast<double>(algebra->AccessElement(outputTimes[i], timeIndices[i].first));
 
     if( t<nextTime.first ) { // if it is the smallest so far ...
       // ... it is the next time and save the corresponding time vector

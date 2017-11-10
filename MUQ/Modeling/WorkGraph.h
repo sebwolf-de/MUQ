@@ -65,9 +65,9 @@ namespace muq {
       /**
 	 @param[in] node The name of the output node
 	 @param[in] algebra Algebra to preform basic operations between different types (defaults to base class, which has common types)
-	 \return A muq::Modeling::WorkPiece whose outputs are the same as the output node
+	 \return A muq::Utilities::WorkPiece whose outputs are the same as the output node
        */
-      std::shared_ptr<WorkGraphPiece> CreateWorkPiece(std::string const& node, std::shared_ptr<const AnyAlgebra> algebra = std::make_shared<AnyAlgebra>()) const;
+      std::shared_ptr<WorkGraphPiece> CreateWorkPiece(std::string const& node, std::shared_ptr<const muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>()) const;
 
       /// Check to see if a node is constant?
       /**

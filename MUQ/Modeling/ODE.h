@@ -15,9 +15,9 @@ namespace muq {
 	 Any inputs after the right hand sides inputs are either doubles or vectors of doubles.  The output type is the state at these times.  For example, if the last three inputs (after the RHS inputs) were 2.0 and std::vector<double>({1.0, 2.0}) and 1.5 then there would be three outputs --- the state at time 2.0, a vector of the state at times 1.0 and 2.0, and the state at time 1.5.
 	 @param[in] rhs The right hand side of the ODE
 	 @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
-	 @param[in] algebra A muq::Modeling::AnyAlgebra used to manipulate the state and input parameters (defaults to the MUQ default)
+	 @param[in] algebra A muq::Utitlities::Modeling::AnyAlgebra used to manipulate the state and input parameters (defaults to the MUQ default)
        */
-      ODE(std::shared_ptr<WorkPiece> rhs,  boost::property_tree::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra = std::make_shared<AnyAlgebra>());
+      ODE(std::shared_ptr<WorkPiece> rhs,  boost::property_tree::ptree const& pt, std::shared_ptr<muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>());
 
       virtual ~ODE();
 

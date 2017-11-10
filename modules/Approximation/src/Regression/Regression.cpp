@@ -4,6 +4,7 @@
 #include "MUQ/Approximation/Regression/Hermite.h"
 #include "MUQ/Approximation/Regression/Legendre.h"
 
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 using namespace muq::Approximation;
 
@@ -40,10 +41,10 @@ void Regression::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   const boost::any normalize = 1.0/currentRadius;
   for( unsigned int i=0; i<inputs.size(); ++i ) {
     // center
-    centered[i] = algebra->SubtractBase(inputs[i].get(), currentCenter);
+    centered[i] = algebra->Subtract(inputs[i].get(), currentCenter);
 
     // normalize
-    centered[i] = algebra->MultiplyBase(normalize, centered[i]);
+    centered[i] = algebra->Multiply(normalize, centered[i]);
   }
 
   // get the Vandermonde matrix of the inputs

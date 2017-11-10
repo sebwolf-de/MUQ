@@ -12,6 +12,7 @@
 #include <sundials/sundials_direct.h>
 
 namespace pt = boost::property_tree;
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 ODE::ODE(std::shared_ptr<WorkPiece> rhs, pt::ptree const& pt, std::shared_ptr<AnyAlgebra> algebra) : ODEBase(rhs, pt, algebra) {}
@@ -50,7 +51,7 @@ void ODE::Integrate(ref_vector<boost::any> const& inputs, int const wrtIn, int c
     // compute the parameter size
     unsigned int paramSize = 1;
     if( wrtIn<rhs->numInputs ) {
-      paramSize = algebra->VectorDimensionBase(inputs[wrtIn]);
+      paramSize = algebra->Size(inputs[wrtIn]);
     }
 
     // integrate forward in time with dervative information
@@ -120,7 +121,7 @@ void ODE::ForwardSensitivity(void *cvode_mem, N_Vector& state, unsigned int cons
   }
   
   // number of output times
-  const unsigned int ntimes = algebra->VectorDimensionBase(outputTimes);
+  const unsigned int ntimes = algebra->Size(outputTimes);
 
   // initialize the derivative information (jacobian jacobianAction, jacobianTransposeAction)
   InitializeDerivative(ntimes, NV_LENGTH_S(state), paramSize, mode);
@@ -131,7 +132,7 @@ void ODE::ForwardSensitivity(void *cvode_mem, N_Vector& state, unsigned int cons
   // loop through each time
   for( unsigned int i=0; i<ntimes; ++i ) {
     // the next time 
-    const double time = boost::any_cast<double>(algebra->AccessElementBase(i, outputTimes));
+    const double time = boost::any_cast<double>(algebra->AccessElement(outputTimes, i));
 
     // if we have to move forward --- i.e., not at the initial time
     if( std::fabs(time-tcurrent)>1.0e-14 ) {
@@ -316,7 +317,7 @@ void ODE::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_
 void ODE::JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
   // check the size of the vector
   if( wrtIn<rhs->numInputs ) {
-    assert(NV_LENGTH_S(boost::any_cast<const N_Vector&>(vec))==algebra->VectorDimensionBase(inputs[wrtIn]));
+    assert(NV_LENGTH_S(boost::any_cast<const N_Vector&>(vec))==algebra->Size(inputs[wrtIn]));
   } else {
     assert(NV_LENGTH_S(boost::any_cast<const N_Vector&>(vec))==1);
   }

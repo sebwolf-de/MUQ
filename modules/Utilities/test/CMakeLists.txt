@@ -12,4 +12,9 @@ CreateTestGroup(
     LinearAlgebra/LinearOperatorTests.cpp
     LinearAlgebra/LyapunovSolverTests.cpp
     RandomGeneratorTest.cpp
+    
+    LinearAlgebra/ScalarAlgebraTests.cpp
+    LinearAlgebra/EigenVectorAlgebraTests.cpp
+    LinearAlgebra/EigenMatrixAlgebraTests.cpp
+    LinearAlgebra/SundialsAlgebraTests.cpp
 )

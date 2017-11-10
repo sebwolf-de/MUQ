@@ -1,11 +1,11 @@
-
 #ifndef REGRESSION_H_
 #define REGRESSION_H_
 
 #include <Eigen/QR>
 
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+
 #include "MUQ/Modeling/WorkPiece.h"
-#include "MUQ/Modeling/AnyAlgebra.h"
 
 #include "MUQ/Approximation/Regression/MultiIndex.h"
 #include "MUQ/Approximation/Regression/Polynomial.h"
@@ -74,8 +74,8 @@ namespace muq {
 	assert(xs.size()==ys.size());
 	
 	// get the zero of this vector type
-	const unsigned int size = algebra->VectorDimensionBase(xs[0]);
-	const boost::any& zero = algebra->ZeroVectorBase(typeid(data).name(), size);
+	const unsigned int size = algebra->Size(xs[0]);
+	const boost::any& zero = algebra->Zero(typeid(data), size);
 
 	// preform the fit with zero center
 	Fit<data>(xs, ys, boost::any_cast<data const&>(zero));
@@ -98,7 +98,7 @@ namespace muq {
 	assert(xs.size()==ys.size());
 
 	// initalize the multi-index
-	multi = std::make_shared<MultiIndex>(algebra->VectorDimensionBase(xs[0]), order);
+	multi = std::make_shared<MultiIndex>(algebra->Size(xs[0]), order);
 
 	// check to make sure we have more than the number of points required to interpolate
 	const unsigned int interp = NumInterpolationPoints();
@@ -129,7 +129,7 @@ namespace muq {
 	inline Eigen::MatrixXd ComputeCoefficientsRHS(Eigen::MatrixXd const& vand, std::vector<data> const& ys_data) const {
 	// the dimension
 	assert(ys_data.size()>0);
-	const unsigned int dim = algebra->VectorDimensionBase(ys_data[0]);
+	const unsigned int dim = algebra->Size(ys_data[0]);
 
 	// initialize space for the data
 	Eigen::MatrixXd ys = Eigen::MatrixXd::Constant(ys_data.size(), dim, std::numeric_limits<double>::quiet_NaN());
@@ -137,7 +137,7 @@ namespace muq {
 	// copy the data into an Eigen type
 	for( unsigned int i=0; i<ys_data.size(); ++i ) {
 	  for( unsigned int j=0; j<dim; ++j ) {
-	    ys(i, j) = boost::any_cast<double const>(algebra->AccessElementBase(j, ys_data[i])); 
+	    ys(i, j) = boost::any_cast<double const>(algebra->AccessElement(ys_data[i], j)); 
 	  }
 	}
 
@@ -169,12 +169,12 @@ namespace muq {
 
 	    // get the point
 	    const data& pnt = xs[pt];
-	    assert(alpha.size()==algebra->VectorDimensionBase(pnt));
+	    assert(alpha.size()==algebra->Size(pnt));
 
 	    // each term is a product of 1D variables
 	    for( unsigned int v=0; v<alpha.size(); ++v ) {
 	      // the point where we are evaluating the polynomial
-	      const double x = boost::any_cast<double const>(algebra->AccessElementBase(v, pnt));
+	      const double x = boost::any_cast<double const>(algebra->AccessElement(pnt, v));
 
 	      // evaluate the polynomial
 	      vand(pt, i) *= boost::any_cast<double const>(poly->Evaluate((unsigned int)alpha(v), x) [0]);
@@ -192,33 +192,33 @@ namespace muq {
 	currentRadius = 0.0;
 
 	// is the center zero?
-	const bool zeroCenter = algebra->IsZeroBase(currentCenter);
+	const bool zeroCenter = algebra->IsZero(currentCenter);
 	
 	// loop through all of the input points
 	for( auto it=xs.begin(); it!=xs.end(); ++it ) {
 	  if( !zeroCenter ) {
 	    // recenter the the point
 	    const boost::any vec = *it;
-	    *it = boost::any_cast<data const&>(algebra->SubtractBase(std::reference_wrapper<boost::any const>(vec), std::reference_wrapper<boost::any const>(currentCenter)));
+	    *it = boost::any_cast<data const&>(algebra->Subtract(std::reference_wrapper<boost::any const>(vec), std::reference_wrapper<boost::any const>(currentCenter)));
 	  }
 	  
 	  // set the radius to the largest distance from the center
-	  currentRadius = std::max(currentRadius, algebra->NormBase(*it));
+	  currentRadius = std::max(currentRadius, algebra->Norm(*it));
 	}
 	
 	// loop through all of the input points to normalize by the radius
 	const boost::any normalize = 1.0/currentRadius;
 	for( auto it=xs.begin(); it!=xs.end(); ++it ) {
 	  const boost::any vec = *it;
-	  *it = boost::any_cast<data const&>(algebra->MultiplyBase(normalize, vec));
+	  *it = boost::any_cast<data const&>(algebra->Multiply(normalize, vec));
 	}
       }
 
       /// The order of the regression
       const unsigned int order;
 
-      /// An muq::Modeling::AnyAlgebra to do the algebric manipulations
-      std::shared_ptr<muq::Modeling::AnyAlgebra> algebra;
+      /// An muq::Utilities::AnyAlgebra to do the algebric manipulations
+      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra;
 
       /// The multi-index to so we know the order of each term
       std::shared_ptr<MultiIndex> multi;

@@ -22,7 +22,6 @@ CreateCompileGroup(
     WorkPiece.cpp
 
     NodeNameFinder.cpp
-    AnyAlgebra.cpp
 
     WorkGraph.cpp
     WorkGraphNode.cpp
@@ -32,6 +31,19 @@ CreateCompileGroup(
 
     ConstantPiece.cpp
     IdentityPiece.cpp
+)
+
+CreateCompileGroup(
+    MODELING_DISTRIBUTIONS
+    "Implement probability distributions, which allow us to evaluate log-densities and/or sample the distirubtion."
+    muqModeling
+    ""
+    "MODELING_CORE"
+    ""
+
+    Distributions/Distribution.cpp
+    Distributions/Uniform.cpp
+    Distributions/Gaussian.cpp
 )
 
 CreateCompileGroup(
