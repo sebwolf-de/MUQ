@@ -10,8 +10,11 @@ namespace muq {
     class Gaussian : public Distribution {
     public:
 
-      /// Are we specifying the covariance or the precision matrix
+      /// Are we specifying the mean, covariance matrix, or precision matrix
       enum Mode {
+	/// We are specifying the mean
+	Mean,
+
 	/// We are specifying the covariance
 	Covariance,
 
@@ -19,21 +22,20 @@ namespace muq {
 	Precision
       };
 
-      /// Construct a zero mean Gaussian with scaled identity covariance/precision
+      /// Construct a Gaussian with scaled identity covariance/precision
       /**
-	 @param[in] dim The dimension of the state (defaults to 1)
-	 @param[in] cov_prec The covariance or the precision; depending on the mode
-	 @param[in] mode Are we specifying a scaled identity covariance or precision (defaults to covariance)
+	 @param[in] obj Either the mean, covariance, or the precision (depending on the second paameter)
+	 @param[in] mode Are we specifying mean, covariance, or precision (defaults to mean)
        */
-      Gaussian(unsigned int const dim = 1, double const cov_prec = 1.0, Gaussian::Mode const mode = Gaussian::Mode::Covariance);
+      Gaussian(boost::any const& obj = 0.0, Gaussian::Mode const mode = Gaussian::Mode::Mean);
 
-      /// Construct a zero mean Guassian with prescirved covariance/precision
+      /// Construct a Gaussian with scaled identity covariance/precision
       /**
-	 If the prescribed object is a vector, it is treated as the diagonal of the covariance or precision.  Otherwise, the prescribed object should be a matrix.  In the special case of Eigen::MatrixXd, we precompute the cholesky.
-	 @param[in] obj The covariance/precision
-	 @param[in] mode Are we specifying a scaled identity covariance or precision (defaults to covariance)
+	 @param[in] mean The mean
+	 @param[in] obj Either the covariance or the precision (depending on the second paameter)
+	 @param[in] mode Are we specifying mean, covariance, or precision (defaults to covariance)
        */
-      Gaussian(boost::any const& obj, Gaussian::Mode const mode = Gaussian::Mode::Covariance);
+      Gaussian(boost::any const& mean, boost::any const& obj, Gaussian::Mode const mode = Gaussian::Mode::Covariance);
 
       ~Gaussian();
 
@@ -69,22 +71,19 @@ namespace muq {
       /// The dimension 
       const unsigned int dim;
 
-      /// The covariance (defaults to boost::none)
-      boost::any cov = boost::none;
+      /// The mean of the distribution
+      const boost::optional<boost::any> mean;
+
+      /// The covariance 
+      const boost::optional<boost::any> cov;
 
       /// The square root of the covariance
-      /**
-	 Cholesky decomposition in the matrix case.
-       */
       boost::optional<boost::any> covSqrt;
 
-      /// The precision (defaults to boost::none)
-      boost::any prec = boost::none;
+      /// The precision
+      const boost::optional<boost::any> prec;
 
       /// The square root of the precision
-      /**
-	 Cholesky decomposition in the matrix case.
-       */
       boost::optional<boost::any> precSqrt;
 
     };
