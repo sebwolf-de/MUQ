@@ -107,9 +107,9 @@ TEST(GaussianDistributionTests, DiagonalCovPrec) {
 TEST(GaussianDistributionTests, MatrixCovPrec) {
   const unsigned int dim = 5;
   Eigen::MatrixXd cov = Eigen::MatrixXd::Random(dim, dim);
-  cov = 1e-4*Eigen::MatrixXd::Identity(dim, dim) + cov*cov.transpose();
+  cov = Eigen::MatrixXd::Identity(dim, dim) + cov*cov.transpose();
   Eigen::MatrixXd prec = Eigen::MatrixXd::Random(dim, dim);
-  prec = 1e-4*Eigen::MatrixXd::Identity(dim, dim) + prec*prec.transpose();
+  prec = Eigen::MatrixXd::Identity(dim, dim) + prec*prec.transpose();
   
   Eigen::LLT<Eigen::MatrixXd> covChol;
   covChol.compute(cov);
@@ -127,6 +127,5 @@ TEST(GaussianDistributionTests, MatrixCovPrec) {
   Eigen::VectorXd delta = covL.triangularView<Eigen::Lower>().solve(x);
   covL.triangularView<Eigen::Lower>().transpose().solveInPlace(delta);
   EXPECT_DOUBLE_EQ(covDist->LogDensity(x), -x.dot(delta)/2.0);
-
-  //EXPECT_DOUBLE_EQ(precDist->LogDensity(x), -x.dot(prec*x)/2.0);
+  EXPECT_DOUBLE_EQ(precDist->LogDensity(x), -x.dot(prec*x)/2.0);
 }
