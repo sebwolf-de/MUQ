@@ -1,0 +1,4 @@
+CreateTestGroup(
+    SAMPLING_ALGORITHM
+    
+)
