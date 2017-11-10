@@ -638,3 +638,21 @@ boost::any EigenMatrixAlgebra::SquareRoot(boost::any const& obj) {
   assert(false);
   return boost::none;
 }
+
+double EigenMatrixAlgebra::LogDeterminate(boost::any const& obj) {
+  if( typeid(Eigen::LLT<Eigen::Matrix2d>)==obj.type() ) { return LogDeterminate<Eigen::Matrix2d>(obj); }
+  if( typeid(Eigen::LLT<Eigen::Matrix2f>)==obj.type() ) { return LogDeterminate<Eigen::Matrix2f>(obj); }
+
+  if( typeid(Eigen::LLT<Eigen::Matrix3d>)==obj.type() ) { return LogDeterminate<Eigen::Matrix3d>(obj); }
+  if( typeid(Eigen::LLT<Eigen::Matrix3f>)==obj.type() ) { return LogDeterminate<Eigen::Matrix3f>(obj); }
+
+  if( typeid(Eigen::LLT<Eigen::Matrix4d>)==obj.type() ) { return LogDeterminate<Eigen::Matrix4d>(obj); }
+  if( typeid(Eigen::LLT<Eigen::Matrix4f>)==obj.type() ) { return LogDeterminate<Eigen::Matrix4f>(obj); }
+
+  if( typeid(Eigen::LLT<Eigen::MatrixXd>)==obj.type() ) { return LogDeterminate<Eigen::MatrixXd>(obj); }
+  if( typeid(Eigen::LLT<Eigen::MatrixXf>)==obj.type() ) { return LogDeterminate<Eigen::MatrixXf>(obj); }
+
+  // something went wrong
+  assert(false);
+  return -1.0;
+}

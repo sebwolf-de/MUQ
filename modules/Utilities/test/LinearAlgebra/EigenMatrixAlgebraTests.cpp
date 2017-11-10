@@ -816,3 +816,63 @@ TEST(EigenMatrixAlgebraTests, SquareRoot) {
   EXPECT_NEAR((LXf*LXf.transpose()-matXf).norm(), 0.0, 1.0e-6);
 
 }
+
+TEST(EigenMatrixAlgebraTests, Determinate) {
+  auto alg = std::shared_ptr<AnyAlgebra>();
+    
+  Eigen::Matrix2d mat2d = Eigen::Matrix2d::Random();
+  mat2d = Eigen::Matrix2d::Identity() + 1.0e-4*mat2d*mat2d.transpose();
+  Eigen::LLT<Eigen::Matrix2d> chol2d;
+  chol2d.compute(mat2d);
+  Eigen::Matrix2d L2d = chol2d.matrixL();
+  EXPECT_DOUBLE_EQ(alg->LogDeterminate(chol2d), 2.0*L2d.diagonal().array().log().sum());
+
+  Eigen::Matrix2f mat2f = Eigen::Matrix2f::Random();
+  mat2f = Eigen::Matrix2f::Identity() + 1.0e-4*mat2f*mat2f.transpose();
+  Eigen::LLT<Eigen::Matrix2f> chol2f;
+  chol2f.compute(mat2f);
+  Eigen::Matrix2f L2f = chol2f.matrixL();
+  EXPECT_FLOAT_EQ(alg->LogDeterminate(chol2f), 2.0*L2f.diagonal().array().log().sum());
+
+  Eigen::Matrix3d mat3d = Eigen::Matrix3d::Random();
+  mat3d = Eigen::Matrix3d::Identity() + 1.0e-4*mat3d*mat3d.transpose();
+  Eigen::LLT<Eigen::Matrix3d> chol3d;
+  chol3d.compute(mat3d);
+  Eigen::Matrix3d L3d = chol3d.matrixL();
+  EXPECT_DOUBLE_EQ(alg->LogDeterminate(chol3d), 2.0*L3d.diagonal().array().log().sum());
+
+  Eigen::Matrix3f mat3f = Eigen::Matrix3f::Random();
+  mat3f = Eigen::Matrix3f::Identity() + 1.0e-4*mat3f*mat3f.transpose();
+  Eigen::LLT<Eigen::Matrix3f> chol3f;
+  chol3f.compute(mat3f);
+  Eigen::Matrix3f L3f = chol3f.matrixL();
+  EXPECT_FLOAT_EQ(alg->LogDeterminate(chol3f), 2.0*L3f.diagonal().array().log().sum());
+
+  Eigen::Matrix4d mat4d = Eigen::Matrix4d::Random();
+  mat4d = Eigen::Matrix4d::Identity() + 1.0e-4*mat4d*mat4d.transpose();
+  Eigen::LLT<Eigen::Matrix4d> chol4d;
+  chol4d.compute(mat4d);
+  Eigen::Matrix4d L4d = chol4d.matrixL();
+  EXPECT_DOUBLE_EQ(alg->LogDeterminate(chol4d), 2.0*L4d.diagonal().array().log().sum());
+
+  Eigen::Matrix4f mat4f = Eigen::Matrix4f::Random();
+  mat4f = Eigen::Matrix4f::Identity() + 1.0e-4*mat4f*mat4f.transpose();
+  Eigen::LLT<Eigen::Matrix4f> chol4f;
+  chol4f.compute(mat4f);
+  Eigen::Matrix4f L4f = chol4f.matrixL();
+  EXPECT_FLOAT_EQ(alg->LogDeterminate(chol4f), 2.0*L4f.diagonal().array().log().sum());
+
+  Eigen::MatrixXd matXd = Eigen::MatrixXd::Random(5,5);
+  matXd = Eigen::MatrixXd::Identity(5,5) + 1.0e-4*matXd*matXd.transpose();
+  Eigen::LLT<Eigen::MatrixXd> cholXd;
+  cholXd.compute(matXd);
+  Eigen::MatrixXd LXd = cholXd.matrixL();
+  EXPECT_DOUBLE_EQ(alg->LogDeterminate(cholXd), 2.0*LXd.diagonal().array().log().sum());
+
+  Eigen::MatrixXf matXf = Eigen::MatrixXf::Random(6,6);
+  matXf = Eigen::MatrixXf::Identity(6,6) + 1.0e-4*matXf*matXf.transpose();
+  Eigen::LLT<Eigen::MatrixXf> cholXf;
+  cholXf.compute(matXf);
+  Eigen::MatrixXf LXf = cholXf.matrixL();
+  EXPECT_FLOAT_EQ(alg->LogDeterminate(cholXf), 2.0*LXf.diagonal().array().log().sum());
+}

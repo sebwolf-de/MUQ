@@ -27,6 +27,18 @@ TEST(ScalarAlgebraTests, SquareRoot) {
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->SquareRoot(xui)), std::sqrt(xui));
 }
 
+TEST(ScalarAlgebraTests, LogDeterminate) {
+  auto alg = std::shared_ptr<AnyAlgebra>();
+
+  double xd=4.0; float xf=3.0; int xi=2; unsigned int xui=8;
+
+  // test scalar norm
+  EXPECT_DOUBLE_EQ(alg->LogDeterminate(xd), std::log(std::fabs(xd)));
+  EXPECT_FLOAT_EQ(alg->LogDeterminate(xf), std::log(std::fabs(xf)));
+  EXPECT_DOUBLE_EQ(alg->LogDeterminate(xi), std::log(std::fabs(xi)));
+  EXPECT_DOUBLE_EQ(alg->LogDeterminate(xui), std::log(xui));
+}
+
 TEST(ScalarAlgebraTests, AccessElement) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 

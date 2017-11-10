@@ -537,3 +537,21 @@ boost::any EigenVectorAlgebra::SquareRoot(boost::any const& obj) {
   assert(false);
   return boost::none;
 }
+
+double EigenVectorAlgebra::LogDeterminate(boost::any const& obj) {
+  if( typeid(Eigen::Vector2d)==obj.type() ) { return LogDeterminate<Eigen::Vector2d>(obj); }
+  if( typeid(Eigen::Vector2f)==obj.type() ) { return LogDeterminate<Eigen::Vector2f>(obj); }
+
+  if( typeid(Eigen::Vector3d)==obj.type() ) { return LogDeterminate<Eigen::Vector3d>(obj); }
+  if( typeid(Eigen::Vector3f)==obj.type() ) { return LogDeterminate<Eigen::Vector3f>(obj); }
+
+  if( typeid(Eigen::Vector4d)==obj.type() ) { return LogDeterminate<Eigen::Vector4d>(obj); }
+  if( typeid(Eigen::Vector4f)==obj.type() ) { return LogDeterminate<Eigen::Vector4f>(obj); }
+
+  if( typeid(Eigen::VectorXd)==obj.type() ) { return LogDeterminate<Eigen::VectorXd>(obj); }
+  if( typeid(Eigen::VectorXf)==obj.type() ) { return LogDeterminate<Eigen::VectorXf>(obj); }
+
+  // something went wrong
+  assert(false);
+  return -1.0;
+}

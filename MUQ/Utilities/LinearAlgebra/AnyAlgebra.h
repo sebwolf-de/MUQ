@@ -139,6 +139,14 @@ namespace muq {
        */
       boost::any SquareRoot(boost::any const& obj) const;
 
+      /// Compute the log-determinate
+      /**
+	 In the vector case, compute the determinate of a diagonal matrix.
+	 @param[in] obj We need the determinate of this object
+	 \return The determinate
+       */
+      double LogDeterminate(boost::any const& obj) const;
+
     private:
 
       /// The size of an object (implemented by a child for non standard types)
@@ -255,7 +263,16 @@ namespace muq {
 	 @param[in] obj We need the square root of this object
 	 \return The square root
        */
-      boost::any SquareRootImpl(boost::any const& obj) const;
+      virtual boost::any SquareRootImpl(boost::any const& obj) const;
+
+      /// Compute the log-determinate
+      /**
+	 In the vector case, compute the determinate of a diagonal matrix.
+	 @param[in] obj We need the determinate of this object
+	 \return The determinate
+       */
+      virtual double LogDeterminateImpl(boost::any const& obj) const;
+
     };
   } // namespace Utilities
 } // namespace muq

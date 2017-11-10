@@ -287,3 +287,22 @@ boost::any AnyAlgebra::SquareRootImpl(boost::any const& obj) const {
   
   return boost::none;
 }
+
+double AnyAlgebra::LogDeterminate(boost::any const& obj) const {
+  if( ScalarAlgebra::IsScalar(obj.type()) ) { return ScalarAlgebra::LogDeterminate(obj); }
+
+  if( EigenVectorAlgebra::IsEigenVector(obj.type()) ) { return EigenVectorAlgebra::LogDeterminate(obj); }
+
+  if( EigenMatrixAlgebra::IsEigenMatrix(obj.type()) ) { return EigenMatrixAlgebra::LogDeterminate(obj); }
+  
+  return LogDeterminateImpl(obj);
+}
+
+double AnyAlgebra::LogDeterminateImpl(boost::any const& obj) const {
+  std::cerr << std::endl << "ERROR: No way to compute the determinate of type " << boost::core::demangle(obj.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::DeterminateImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::DeterminateImpl()" << std::endl << std::endl;
+  
+  return -1.0;
+}
+

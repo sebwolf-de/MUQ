@@ -235,32 +235,55 @@ TEST(EigenVectorAlgebraTests, InnerProduct) {
   EXPECT_EQ(alg->InnerProduct(vec3Xi, vec3Xi), vec3Xi.dot(vec3Xi));
 }
 
+TEST(EigenVectorAlgebraTests, LogDeterminate) {
+  auto alg = std::shared_ptr<AnyAlgebra>();
+
+  // test the Eigen::Vectors
+  const Eigen::Vector2d vec2d = Eigen::Vector2d::Random().cwiseAbs();
+  const Eigen::Vector3d vec3d = Eigen::Vector3d::Random().cwiseAbs();
+  const Eigen::Vector4d vec4d = Eigen::Vector4d::Random().cwiseAbs();
+  const Eigen::VectorXd vecXd = Eigen::VectorXd::Random(13).cwiseAbs();
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->LogDeterminate(vec2d)), vec2d.array().log().sum());
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->LogDeterminate(vec3d)), vec3d.array().log().sum());
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->LogDeterminate(vec4d)), vec4d.array().log().sum());
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->LogDeterminate(vecXd)), vecXd.array().log().sum());
+
+  const Eigen::Vector2f vec2f = Eigen::Vector2f::Random().cwiseAbs();
+  const Eigen::Vector3f vec3f = Eigen::Vector3f::Random().cwiseAbs();
+  const Eigen::Vector4f vec4f = Eigen::Vector4f::Random().cwiseAbs();
+  const Eigen::VectorXf vecXf = Eigen::VectorXf::Random(13).cwiseAbs();
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->LogDeterminate(vec2f)), vec2f.array().log().sum());
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->LogDeterminate(vec3f)), vec3f.array().log().sum());
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->LogDeterminate(vec4f)), vec4f.array().log().sum());
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->LogDeterminate(vecXf)), vecXf.array().log().sum());
+}
+
 TEST(EigenVectorAlgebraTests, SquareRoot) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 
   // test the Eigen::Vectors
-  const Eigen::Vector2d vec2d = Eigen::Vector2d::Random().array().abs();
-  const Eigen::Vector3d vec3d = Eigen::Vector3d::Random().array().abs();
-  const Eigen::Vector4d vec4d = Eigen::Vector4d::Random().array().abs();
-  const Eigen::VectorXd vecXd = Eigen::VectorXd::Random(13).array().abs();
+  const Eigen::Vector2d vec2d = Eigen::Vector2d::Random().cwiseAbs();
+  const Eigen::Vector3d vec3d = Eigen::Vector3d::Random().cwiseAbs();
+  const Eigen::Vector4d vec4d = Eigen::Vector4d::Random().cwiseAbs();
+  const Eigen::VectorXd vecXd = Eigen::VectorXd::Random(13).cwiseAbs();
   EXPECT_TRUE((boost::any_cast<Eigen::Vector2d const&>(alg->SquareRoot(vec2d)).array()==(Eigen::Array2d)vec2d.cwiseSqrt()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Vector3d const&>(alg->SquareRoot(vec3d)).array()==(Eigen::Array3d)vec3d.cwiseSqrt()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Vector4d const&>(alg->SquareRoot(vec4d)).array()==(Eigen::Array4d)vec4d.cwiseSqrt()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::VectorXd const&>(alg->SquareRoot(vecXd)).array()==(Eigen::ArrayXd)vecXd.cwiseSqrt()).all());
 
-  const Eigen::Vector2f vec2f = Eigen::Vector2f::Random().array().abs();
-  const Eigen::Vector3f vec3f = Eigen::Vector3f::Random().array().abs();
-  const Eigen::Vector4f vec4f = Eigen::Vector4f::Random().array().abs();
-  const Eigen::VectorXf vecXf = Eigen::VectorXf::Random(13).array().abs();
+  const Eigen::Vector2f vec2f = Eigen::Vector2f::Random().cwiseAbs();
+  const Eigen::Vector3f vec3f = Eigen::Vector3f::Random().cwiseAbs();
+  const Eigen::Vector4f vec4f = Eigen::Vector4f::Random().cwiseAbs();
+  const Eigen::VectorXf vecXf = Eigen::VectorXf::Random(13).cwiseAbs();
   EXPECT_TRUE((boost::any_cast<Eigen::Vector2f const&>(alg->SquareRoot(vec2f)).array()==(Eigen::Array2f)vec2f.cwiseSqrt()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Vector3f const&>(alg->SquareRoot(vec3f)).array()==(Eigen::Array3f)vec3f.cwiseSqrt()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Vector4f const&>(alg->SquareRoot(vec4f)).array()==(Eigen::Array4f)vec4f.cwiseSqrt()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::VectorXf const&>(alg->SquareRoot(vecXf)).array()==(Eigen::ArrayXf)vecXf.cwiseSqrt()).all());
 
-  const Eigen::Vector2i vec2i = Eigen::Vector2i::Random().array().abs();
-  const Eigen::Vector3i vec3i = Eigen::Vector3i::Random().array().abs();
-  const Eigen::Vector4i vec4i = Eigen::Vector4i::Random().array().abs();
-  const Eigen::VectorXi vecXi = Eigen::VectorXi::Random(13).array().abs();
+  const Eigen::Vector2i vec2i = Eigen::Vector2i::Random().cwiseAbs();
+  const Eigen::Vector3i vec3i = Eigen::Vector3i::Random().cwiseAbs();
+  const Eigen::Vector4i vec4i = Eigen::Vector4i::Random().cwiseAbs();
+  const Eigen::VectorXi vecXi = Eigen::VectorXi::Random(13).cwiseAbs();
   EXPECT_TRUE((boost::any_cast<Eigen::Vector2i const&>(alg->SquareRoot(vec2i)).array()==(Eigen::Array2i)vec2i.cwiseSqrt()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Vector3i const&>(alg->SquareRoot(vec3i)).array()==(Eigen::Array3i)vec3i.cwiseSqrt()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Vector4i const&>(alg->SquareRoot(vec4i)).array()==(Eigen::Array4i)vec4i.cwiseSqrt()).all());

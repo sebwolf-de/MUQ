@@ -121,3 +121,14 @@ boost::any ScalarAlgebra::SquareRoot(boost::any const& obj) {
   assert(false);
   return boost::none; 
 }
+
+double ScalarAlgebra::LogDeterminate(boost::any const& obj) {
+  if( typeid(double)==obj.type() ) { return std::log(Magnitude<double>(obj)); }
+  if( typeid(float)==obj.type() ) { return std::log(Magnitude<float>(obj)); }
+  if( typeid(int)==obj.type() ) { return std::log(Magnitude<int>(obj)); }
+  if( typeid(unsigned int)==obj.type() ) { return std::log(Magnitude<unsigned int>(obj)); }
+
+  // something went wrong
+  assert(false);
+  return -1.0; 
+}

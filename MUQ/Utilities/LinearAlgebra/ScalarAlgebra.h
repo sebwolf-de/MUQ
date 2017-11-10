@@ -97,6 +97,13 @@ namespace muq {
        */
       static boost::any SquareRoot(boost::any const& obj);
 
+      /// Compute the log-determinate
+      /**
+	 @param[in] obj We need the determinate of this object
+	 \return The determinate
+       */
+      static double LogDeterminate(boost::any const& obj);
+
     private:
 
       /// The magnitude of a scalar

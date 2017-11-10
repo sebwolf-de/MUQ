@@ -131,6 +131,13 @@ namespace muq {
        */
       static boost::any SquareRoot(boost::any const& obj);
 
+      /// Compute the log-determinate of a diagonal matrix
+      /**
+	 @param[in] obj We need the determinate of this object
+	 \return The determinate
+       */
+      static double LogDeterminate(boost::any const& obj);
+
     private:
 
       /// Add two Eigen::Matrices together
@@ -333,6 +340,18 @@ namespace muq {
 	return (mattype)(mat.matrixL());
       }
 
+      /// Compute the log-determinate of a diagonal matrix
+      /**
+	 @param[in] obj We need the determinate of this object
+	 \return The determinate
+       */
+      template<typename mattype>
+	inline static double LogDeterminate(boost::any const& obj) {
+	const Eigen::LLT<mattype>& chol = boost::any_cast<Eigen::LLT<mattype> const&>(obj);
+	const mattype& mat = chol.matrixL();
+
+	return 2.0*mat.diagonal().array().log().sum();
+      }
     };
   } // namespace Utilities
 } // namespace muq

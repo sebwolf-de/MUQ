@@ -124,6 +124,13 @@ namespace muq {
        */
       static boost::any SquareRoot(boost::any const& obj);
 
+      /// Compute the log-determinate of a diagonal matrix
+      /**
+	 @param[in] obj We need the determinate of this object
+	 \return The determinate
+       */
+      static double LogDeterminate(boost::any const& obj);
+
     private:
       
       /// Determine if an Eigen::Vector is zero 
@@ -244,6 +251,18 @@ namespace muq {
 	assert(mat.size()==vec.size());
 	
 	return (vectype)((1/mat.array()).matrix().asDiagonal()*vec);
+      }
+      
+      /// Compute the log-determinate of a diagonal matrix
+      /**
+	 @param[in] obj We need the determinate of this object
+	 \return The determinate
+       */
+      template<typename type>
+	inline static double LogDeterminate(boost::any const& obj) {
+	const type& mat = boost::any_cast<type const&>(obj);
+
+	return mat.array().log().sum();
       }
     };
   } // namespace Utilities
