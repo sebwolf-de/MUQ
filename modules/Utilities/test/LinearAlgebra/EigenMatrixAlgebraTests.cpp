@@ -476,9 +476,9 @@ TEST(EigenMatrixAlgebraTests, Apply) {
   mat2Xd = Eigen::MatrixXd::Identity(2,2) + 1.0e-5*mat2Xd*mat2Xd.transpose();
   Eigen::LLT<Eigen::Matrix2d> chol2Xd;
   chol2Xd.compute(mat2Xd);
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector2d>(alg->Apply(chol2d, vec2d)).array()==(chol2d.matrixLLT()*vec2d).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(chol2d, vec2Xd)).array()==(chol2d.matrixLLT()*vec2Xd).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector2d>(alg->Apply(chol2Xd, vec2d)).array()==(chol2Xd.matrixLLT()*vec2d).array()).all());
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector2d>(alg->Apply(chol2d, vec2d))-(mat2d*vec2d)).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((boost::any_cast<Eigen::VectorXd>(alg->Apply(chol2d, vec2Xd))-(mat2d*vec2Xd)).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector2d>(alg->Apply(chol2Xd, vec2d))-(mat2Xd*vec2d)).norm(), 0.0, 1.0e-10);
 
   Eigen::Matrix2f mat2f = Eigen::Matrix2f::Random();
   Eigen::MatrixXf mat2Xf = Eigen::MatrixXf::Random(2,2);
@@ -494,9 +494,9 @@ TEST(EigenMatrixAlgebraTests, Apply) {
   mat2Xf = Eigen::MatrixXf::Identity(2,2) + 1.0e-5*mat2Xf*mat2Xf.transpose();
   Eigen::LLT<Eigen::Matrix2f> chol2Xf;
   chol2Xf.compute(mat2Xf);
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector2f>(alg->Apply(chol2f, vec2f)).array()==(chol2f.matrixLLT()*vec2f).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(chol2f, vec2Xf)).array()==(chol2f.matrixLLT()*vec2Xf).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector2f>(alg->Apply(chol2Xf, vec2f)).array()==(chol2Xf.matrixLLT()*vec2f).array()).all());
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector2f>(alg->Apply(chol2f, vec2f))-(mat2f*vec2f)).norm(), 0.0, 1.0e-6);
+  EXPECT_NEAR((boost::any_cast<Eigen::VectorXf>(alg->Apply(chol2f, vec2Xf))-(mat2f*vec2Xf)).norm(), 0.0, 1.0e-6);
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector2f>(alg->Apply(chol2Xf, vec2f))-(mat2Xf*vec2f)).norm(), 0.0, 1.0e-6);
 
   const Eigen::Matrix2i mat2i = Eigen::Matrix2i::Random();
   const Eigen::MatrixXi mat2Xi = Eigen::MatrixXi::Random(2,2);
@@ -520,9 +520,9 @@ TEST(EigenMatrixAlgebraTests, Apply) {
   mat3Xd = Eigen::MatrixXd::Identity(3,3) + 1.0e-5*mat3Xd*mat3Xd.transpose();
   Eigen::LLT<Eigen::Matrix3d> chol3Xd;
   chol3Xd.compute(mat3Xd);
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector3d>(alg->Apply(chol3d, vec3d)).array()==(chol3d.matrixLLT()*vec3d).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(chol3d, vec3Xd)).array()==(chol3d.matrixLLT()*vec3Xd).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector3d>(alg->Apply(chol3Xd, vec3d)).array()==(chol3Xd.matrixLLT()*vec3d).array()).all());
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector3d>(alg->Apply(chol3d, vec3d))-(mat3d*vec3d)).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((boost::any_cast<Eigen::VectorXd>(alg->Apply(chol3d, vec3Xd))-(mat3d*vec3Xd)).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector3d>(alg->Apply(chol3Xd, vec3d))-(mat3Xd*vec3d)).norm(), 0.0, 1.0e-10);
 
   Eigen::Matrix3f mat3f = Eigen::Matrix3f::Random();
   Eigen::MatrixXf mat3Xf = Eigen::MatrixXf::Random(3,3);
@@ -538,9 +538,9 @@ TEST(EigenMatrixAlgebraTests, Apply) {
   mat3Xf = Eigen::MatrixXf::Identity(3,3) + 1.0e-5*mat3Xf*mat3Xf.transpose();
   Eigen::LLT<Eigen::Matrix3f> chol3Xf;
   chol3Xf.compute(mat3Xf);
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector3f>(alg->Apply(chol3f, vec3f)).array()==(chol3f.matrixLLT()*vec3f).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(chol3f, vec3Xf)).array()==(chol3f.matrixLLT()*vec3Xf).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector3f>(alg->Apply(chol3Xf, vec3f)).array()==(chol3Xf.matrixLLT()*vec3f).array()).all());
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector3f>(alg->Apply(chol3f, vec3f))-(mat3f*vec3f)).norm(), 0.0, 1.0e-6);
+  EXPECT_NEAR((boost::any_cast<Eigen::VectorXf>(alg->Apply(chol3f, vec3Xf))-(mat3f*vec3Xf)).norm(), 0.0, 1.0e-6);
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector3f>(alg->Apply(chol3Xf, vec3f))-(mat3Xf*vec3f)).norm(), 0.0, 1.0e-6);
 
   const Eigen::Matrix3i mat3i = Eigen::Matrix3i::Random();
   const Eigen::MatrixXi mat3Xi = Eigen::MatrixXi::Random(3,3);
@@ -564,9 +564,9 @@ TEST(EigenMatrixAlgebraTests, Apply) {
   mat4Xd = Eigen::MatrixXd::Identity(4,4) + 1.0e-5*mat4Xd*mat4Xd.transpose();
   Eigen::LLT<Eigen::Matrix4d> chol4Xd;
   chol4Xd.compute(mat4Xd);
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector4d>(alg->Apply(chol4d, vec4d)).array()==(chol4d.matrixLLT()*vec4d).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(chol4d, vec4Xd)).array()==(chol4d.matrixLLT()*vec4Xd).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector4d>(alg->Apply(chol4Xd, vec4d)).array()==(chol4Xd.matrixLLT()*vec4d).array()).all());
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector4d>(alg->Apply(chol4d, vec4d))-(mat4d*vec4d)).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((boost::any_cast<Eigen::VectorXd>(alg->Apply(chol4d, vec4Xd))-(mat4d*vec4Xd)).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector4d>(alg->Apply(chol4Xd, vec4d))-(mat4Xd*vec4d)).norm(), 0.0, 1.0e-10);
 
   Eigen::Matrix4f mat4f = Eigen::Matrix4f::Random();
   Eigen::MatrixXf mat4Xf = Eigen::MatrixXf::Random(4,4);
@@ -582,9 +582,9 @@ TEST(EigenMatrixAlgebraTests, Apply) {
   mat4Xf = Eigen::MatrixXf::Identity(4,4) + 1.0e-5*mat4Xf*mat4Xf.transpose();
   Eigen::LLT<Eigen::Matrix4f> chol4Xf;
   chol4Xf.compute(mat4Xf);
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector4f>(alg->Apply(chol4f, vec4f)).array()==(chol4f.matrixLLT()*vec4f).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(chol4f, vec4Xf)).array()==(chol4f.matrixLLT()*vec4Xf).array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::Vector4f>(alg->Apply(chol4Xf, vec4f)).array()==(chol4Xf.matrixLLT()*vec4f).array()).all());
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector4f>(alg->Apply(chol4f, vec4f))-(mat4f*vec4f)).norm(), 0.0, 1.0e-6);
+  EXPECT_NEAR((boost::any_cast<Eigen::VectorXf>(alg->Apply(chol4f, vec4Xf))-(mat4f*vec4Xf)).norm(), 0.0, 1.0e-6);
+  EXPECT_NEAR((boost::any_cast<Eigen::Vector4f>(alg->Apply(chol4Xf, vec4f))-(mat4Xf*vec4f)).norm(), 0.0, 1.0e-6);
 
   const Eigen::Matrix4i mat4i = Eigen::Matrix4i::Random();
   const Eigen::MatrixXi mat4Xi = Eigen::MatrixXi::Random(4,4);
@@ -601,7 +601,7 @@ TEST(EigenMatrixAlgebraTests, Apply) {
   matXd = Eigen::MatrixXd::Identity(8,8) + 1.0e-5*matXd*matXd.transpose();
   Eigen::LLT<Eigen::MatrixXd> cholXd;
   cholXd.compute(matXd);
-  EXPECT_TRUE((boost::any_cast<Eigen::VectorXd>(alg->Apply(cholXd, vecXd)).array()==(cholXd.matrixLLT()*vecXd).array()).all());
+  EXPECT_NEAR((boost::any_cast<Eigen::VectorXd>(alg->Apply(cholXd, vecXd))-(matXd*vecXd)).norm(), 0.0, 1.0e-10);
 
   Eigen::MatrixXf matXf = Eigen::MatrixXf::Random(13,13);
   const Eigen::VectorXf vecXf = Eigen::VectorXf::Random(13);
@@ -609,7 +609,7 @@ TEST(EigenMatrixAlgebraTests, Apply) {
   matXf = Eigen::MatrixXf::Identity(13,13) + 1.0e-5*matXf*matXf.transpose();
   Eigen::LLT<Eigen::MatrixXf> cholXf;
   cholXf.compute(matXf);
-  EXPECT_TRUE((boost::any_cast<Eigen::VectorXf>(alg->Apply(cholXf, vecXf)).array()==(cholXf.matrixLLT()*vecXf).array()).all());
+  EXPECT_NEAR((boost::any_cast<Eigen::VectorXf>(alg->Apply(cholXf, vecXf))-(matXf*vecXf)).norm(), 0.0, 1.0e-6);
 
   const Eigen::MatrixXi matXi = Eigen::MatrixXi::Random(4,2);
   const Eigen::VectorXi vecXi = Eigen::VectorXi::Random(2);

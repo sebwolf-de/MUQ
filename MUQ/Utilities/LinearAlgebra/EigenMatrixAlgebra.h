@@ -423,11 +423,14 @@ namespace muq {
       template<typename mattype, typename vectype>
 	inline static boost::any ApplyCholesky(boost::any const& A, boost::any const& x) {
 	const Eigen::LLT<mattype>& chol = boost::any_cast<Eigen::LLT<mattype> const&>(A);
-	const mattype& mat = chol.matrixLLT();
+	const mattype& mat = chol.matrixL();
 	const vectype& vec = boost::any_cast<vectype const&>(x);
 	assert(mat.cols()==vec.size());
 
-	return (vectype)(mat*vec);
+	vectype soln = mat.template triangularView<Eigen::Lower>().transpose()*vec;
+	soln = mat.template triangularView<Eigen::Lower>()*soln;
+
+	return soln;
       }
 
     };
