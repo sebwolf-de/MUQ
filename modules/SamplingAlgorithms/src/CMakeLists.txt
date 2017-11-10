@@ -20,4 +20,5 @@ CreateCompileGroup(
     ""
     ""
     SamplingAlgorithm.cpp
+    MonteCarlo.cpp
 )
