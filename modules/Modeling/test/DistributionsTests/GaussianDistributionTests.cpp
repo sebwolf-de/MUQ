@@ -20,8 +20,8 @@ TEST(GaussianDistributionTests, SpecifyMean) {
   // compute the log density for a standard normal
   const double x = 2.5;
   const Eigen::Vector3d x3(2.0, 1.4, 3.0);
-  EXPECT_DOUBLE_EQ(standard1D->LogDensity(x), -x*x/2.0);
-  EXPECT_DOUBLE_EQ(standard->LogDensity(x3), -(x3-mu).dot(x3-mu)/2.0);
+  EXPECT_DOUBLE_EQ(standard1D->LogDensity(x), -0.5*std::log(2.0*M_PI)-x*x/2.0);
+  EXPECT_DOUBLE_EQ(standard->LogDensity(x3), -0.5*3.0*std::log(2.0*M_PI)-(x3-mu).dot(x3-mu)/2.0);
 
   const unsigned int N = 1.0e5;
 
@@ -50,8 +50,8 @@ TEST(GaussianDistributionTests, SpecifyBoth) {
 
   // compute the log density for a standard normal
   const Eigen::Vector3d x(2.0, 1.4, 3.0);
-  EXPECT_DOUBLE_EQ(covDist->LogDensity(x), -(x-mu).dot((1.0/cov.array()).matrix().asDiagonal()*(x-mu))/2.0);
-  EXPECT_DOUBLE_EQ(precDist->LogDensity(x), -(x-mu).dot(prec.asDiagonal()*(x-mu))/2.0);
+  EXPECT_DOUBLE_EQ(covDist->LogDensity(x), -0.5*(3.0*std::log(2.0*M_PI)+cov.array().log().sum())-(x-mu).dot((1.0/cov.array()).matrix().asDiagonal()*(x-mu))/2.0);
+  EXPECT_DOUBLE_EQ(precDist->LogDensity(x), -0.5*(3.0*std::log(2.0*M_PI)-prec.array().log().sum())-(x-mu).dot(prec.asDiagonal()*(x-mu))/2.0);
 
   const unsigned int N = 2.0e5;
 
@@ -79,8 +79,8 @@ TEST(GaussianDistributionTests, Scalar) {
 
   // test log density
   const double x = 2.25;
-  EXPECT_DOUBLE_EQ(scalarCov->LogDensity(x), -x*x/(2.0*sigma2));
-  EXPECT_DOUBLE_EQ(scalarPrec->LogDensity(x), -x*x*sigma2/2.0);
+  EXPECT_DOUBLE_EQ(scalarCov->LogDensity(x), -0.5*(std::log(2.0*M_PI)+std::log(sigma2))-x*x/(2.0*sigma2));
+  EXPECT_DOUBLE_EQ(scalarPrec->LogDensity(x), -0.5*(std::log(2.0*M_PI)-std::log(sigma2))-x*x*sigma2/2.0);
 
   const unsigned int N = 1.0e5;
   Eigen::VectorXd sampsCov(N+1);
@@ -117,8 +117,8 @@ TEST(GaussianDistributionTests, DiagonalCovPrec) {
   EXPECT_EQ(diagPrec->Dimension(), 2);
 
   const Eigen::Vector2d x = Eigen::Vector2d::Random();
-  EXPECT_DOUBLE_EQ(diagCov->LogDensity(x), -x.dot((1.0/covDiag.array()).matrix().asDiagonal()*x)/2.0);
-  EXPECT_DOUBLE_EQ(diagPrec->LogDensity(x), -x.dot(precDiag.asDiagonal()*x)/2.0);
+  EXPECT_DOUBLE_EQ(diagCov->LogDensity(x), -0.5*(2.0*std::log(2.0*M_PI)+covDiag.array().log().sum())-x.dot((1.0/covDiag.array()).matrix().asDiagonal()*x)/2.0);
+  EXPECT_DOUBLE_EQ(diagPrec->LogDensity(x), -0.5*(2.0*std::log(2.0*M_PI)-precDiag.array().log().sum())-x.dot(precDiag.asDiagonal()*x)/2.0);
     
   const unsigned int N = 5.0e5;
   Eigen::Vector2d meanCov = boost::any_cast<Eigen::VectorXd>(diagCov->Sample());
@@ -142,9 +142,11 @@ TEST(GaussianDistributionTests, MatrixCovPrec) {
   Eigen::MatrixXd prec = Eigen::MatrixXd::Random(dim, dim);
   prec = Eigen::MatrixXd::Identity(dim, dim) + prec*prec.transpose();
   
-  Eigen::LLT<Eigen::MatrixXd> covChol;
-  covChol.compute(cov);
+  Eigen::LLT<Eigen::MatrixXd> covChol(cov);
   const Eigen::MatrixXd covL = covChol.matrixL();
+
+  Eigen::LLT<Eigen::MatrixXd> precChol(prec);
+  const Eigen::MatrixXd precL = precChol.matrixL();
 
   auto covDist = std::make_shared<Gaussian>(cov, Gaussian::Mode::Covariance);
   auto precDist = std::make_shared<Gaussian>(prec, Gaussian::Mode::Precision);
@@ -153,8 +155,8 @@ TEST(GaussianDistributionTests, MatrixCovPrec) {
   const Eigen::VectorXd x = Eigen::VectorXd::Random(dim);
   Eigen::VectorXd delta = covL.triangularView<Eigen::Lower>().solve(x);
   covL.triangularView<Eigen::Lower>().transpose().solveInPlace(delta);
-  EXPECT_DOUBLE_EQ(covDist->LogDensity(x), -x.dot(delta)/2.0);
-  EXPECT_DOUBLE_EQ(precDist->LogDensity(x), -x.dot(prec*x)/2.0);
+  EXPECT_DOUBLE_EQ(covDist->LogDensity(x), -0.5*(dim*std::log(2.0*M_PI)+2.0*covL.diagonal().array().log().sum())-x.dot(delta)/2.0);
+  EXPECT_DOUBLE_EQ(precDist->LogDensity(x), -0.5*(dim*std::log(2.0*M_PI)-2.0*precL.diagonal().array().log().sum())-x.dot(prec*x)/2.0);
 
   const unsigned int N = 5.0e5;
   Eigen::VectorXd meanCov = boost::any_cast<Eigen::VectorXd>(covDist->Sample());

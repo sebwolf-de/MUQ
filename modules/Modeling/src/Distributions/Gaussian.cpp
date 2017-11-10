@@ -39,15 +39,17 @@ double Gaussian::LogDensityImpl(ref_vector<boost::any> const& inputs) const {
   boost::any delta = inputs[0].get();
   if( mean ) { delta = algebra->Subtract(delta, *mean); }
 
+  const double C = dim*std::log(2.0*M_PI);
+
   switch( mode ) {
   case Gaussian::Mode::Covariance: {
-    return -0.5*algebra->InnerProduct(delta, algebra->ApplyInverse(*cov, delta));
+    return -0.5*(algebra->LogDeterminate(*cov)+C+algebra->InnerProduct(delta, algebra->ApplyInverse(*cov, delta)));
   }
   case Gaussian::Mode::Precision: {
-    return -0.5*algebra->InnerProduct(delta, algebra->Apply(*prec, delta));
+    return -0.5*(-1.0*algebra->LogDeterminate(*prec)+C+algebra->InnerProduct(delta, algebra->Apply(*prec, delta)));
   }
   case Gaussian::Mode::Mean: {
-    return -0.5*algebra->InnerProduct(delta, delta);
+    return -0.5*(C+algebra->InnerProduct(delta, delta));
   }
   default: {
     assert(false);
