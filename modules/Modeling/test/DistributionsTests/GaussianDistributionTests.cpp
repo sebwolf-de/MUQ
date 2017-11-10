@@ -26,7 +26,7 @@ TEST(GaussianDistributionTests, IsotropicDensity) {
   EXPECT_DOUBLE_EQ(logstandard1D, -x*x/2.0);
   EXPECT_DOUBLE_EQ(logstandard, -x3.dot(x3)/2.0);
 
-  const unsigned int N = 1.0e6;
+  const unsigned int N = 1.0e5;
 
   double mean1D = boost::any_cast<double>(standard1D->Sample());
   Eigen::VectorXd mean = boost::any_cast<Eigen::VectorXd>(standard->Sample());
@@ -59,7 +59,7 @@ TEST(GaussianDistributionTests, ScaledIsotropicDensity) {
   EXPECT_DOUBLE_EQ(logIdentityCov, -x.dot(x)/(2.0*sigma2));
   EXPECT_DOUBLE_EQ(logIdentityPrec, -x.dot(x)*sigma2/2.0);
 
-  const unsigned int N = 1.0e6;
+  const unsigned int N = 1.0e5;
   Eigen::VectorXd samps(N+1);
   
   samps(0) = boost::any_cast<double>(scaledIdentityCov1D->Sample());
@@ -89,7 +89,7 @@ TEST(GaussianDistributionTests, DiagonalCovPrec) {
   EXPECT_DOUBLE_EQ(diagCov->LogDensity(x), -x.dot((1.0/covDiag.array()).matrix().asDiagonal()*x)/2.0);
   EXPECT_DOUBLE_EQ(diagPrec->LogDensity(x), -x.dot(precDiag.asDiagonal()*x)/2.0);
     
-  const unsigned int N = 1.0e6;
+  const unsigned int N = 5.0e5;
   Eigen::Vector2d meanCov = boost::any_cast<Eigen::VectorXd>(diagCov->Sample());
   Eigen::Vector2d meanPrec = boost::any_cast<Eigen::VectorXd>(diagCov->Sample());
   
@@ -115,10 +115,6 @@ TEST(GaussianDistributionTests, MatrixCovPrec) {
   covChol.compute(cov);
   const Eigen::MatrixXd covL = covChol.matrixL();
 
-  /*Eigen::LLT<Eigen::MatrixXd> precChol;
-  precChol.compute(prec);
-  const Eigen::MatrixXd precL = precChol.matrixL();*/
-
   auto covDist = std::make_shared<Gaussian>(cov);
   auto precDist = std::make_shared<Gaussian>(prec, Gaussian::Mode::Precision);
   EXPECT_EQ(covDist->Dimension(), dim);
@@ -129,5 +125,16 @@ TEST(GaussianDistributionTests, MatrixCovPrec) {
   EXPECT_DOUBLE_EQ(covDist->LogDensity(x), -x.dot(delta)/2.0);
   EXPECT_DOUBLE_EQ(precDist->LogDensity(x), -x.dot(prec*x)/2.0);
 
-  //Eigen::VectorXd mean = boost::any_cast<Eigen::VectorXd>(covDist->Sample());
+  const unsigned int N = 4.0e5;
+  Eigen::VectorXd meanCov = boost::any_cast<Eigen::VectorXd>(covDist->Sample());
+  Eigen::VectorXd meanPrec = boost::any_cast<Eigen::VectorXd>(precDist->Sample());
+  for( unsigned int i=0; i<N; ++i ) {
+    meanCov += boost::any_cast<Eigen::VectorXd>(covDist->Sample());
+    meanPrec += boost::any_cast<Eigen::VectorXd>(precDist->Sample());
+  }
+  meanCov /= (N+1.0);
+  meanPrec /= (N+1.0);
+
+  EXPECT_NEAR(meanCov.norm(), 0.0, 1.0e-2);
+  EXPECT_NEAR(meanPrec.norm(), 0.0, 1.0e-2);
 }
