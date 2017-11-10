@@ -115,9 +115,9 @@ TEST(GaussianDistributionTests, MatrixCovPrec) {
   covChol.compute(cov);
   const Eigen::MatrixXd covL = covChol.matrixL();
 
-  Eigen::LLT<Eigen::MatrixXd> precChol;
+  /*Eigen::LLT<Eigen::MatrixXd> precChol;
   precChol.compute(prec);
-  const Eigen::MatrixXd precL = precChol.matrixL();
+  const Eigen::MatrixXd precL = precChol.matrixL();*/
 
   auto covDist = std::make_shared<Gaussian>(cov);
   auto precDist = std::make_shared<Gaussian>(prec, Gaussian::Mode::Precision);
@@ -128,4 +128,6 @@ TEST(GaussianDistributionTests, MatrixCovPrec) {
   covL.triangularView<Eigen::Lower>().transpose().solveInPlace(delta);
   EXPECT_DOUBLE_EQ(covDist->LogDensity(x), -x.dot(delta)/2.0);
   EXPECT_DOUBLE_EQ(precDist->LogDensity(x), -x.dot(prec*x)/2.0);
+
+  //Eigen::VectorXd mean = boost::any_cast<Eigen::VectorXd>(covDist->Sample());
 }

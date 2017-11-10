@@ -5,6 +5,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
+#include <unsupported/Eigen/MatrixFunctions>
 
 #include <boost/none.hpp>
 #include <boost/any.hpp>
@@ -122,6 +123,13 @@ namespace muq {
 	 \return The result \f$y=A x\f$
        */
       static boost::any Apply(boost::any const& A, boost::any const& x);
+
+      /// Compute the square root of an object
+      /**
+	 @param[in] obj We need the square root of this object
+	 \return The square root
+       */
+      static boost::any SquareRoot(boost::any const& obj);
 
     private:
 
@@ -311,6 +319,18 @@ namespace muq {
 	soln = mat.template triangularView<Eigen::Lower>()*soln;
 
 	return soln;
+      }
+
+      /// Compute the square root of an object
+      /**
+	 @param[in] obj We need the square root of this object
+	 \return The square root
+       */
+      template<typename mattype>
+	inline static boost::any SquareRoot(boost::any const& obj) {
+	const Eigen::LLT<mattype>& mat = boost::any_cast<Eigen::LLT<mattype> const&>(obj);
+
+	return (mattype)(mat.matrixL());
       }
 
     };

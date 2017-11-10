@@ -274,7 +274,9 @@ boost::any AnyAlgebra::SquareRoot(boost::any const& obj) const {
   if( ScalarAlgebra::IsScalar(obj.type()) ) { return ScalarAlgebra::SquareRoot(obj); }
 
   if( EigenVectorAlgebra::IsEigenVector(obj.type()) ) { return EigenVectorAlgebra::SquareRoot(obj); }
-  
+
+  if( EigenMatrixAlgebra::IsEigenMatrix(obj.type()) ) { return EigenMatrixAlgebra::SquareRoot(obj); }
+    
   return SquareRootImpl(obj);
 }
 

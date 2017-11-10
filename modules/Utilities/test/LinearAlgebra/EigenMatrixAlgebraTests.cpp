@@ -755,3 +755,64 @@ TEST(EigenMatrixAlgebraTests, ApplyInverse) {
   solnXf = boost::any_cast<Eigen::VectorXf const>(alg->ApplyInverse(cholXf, vecXf));
   EXPECT_NEAR((matXf*solnXf-vecXf).norm(), 0.0, 1.0e-5);
 }
+
+TEST(EigenMatrixAlgebraTests, SquareRoot) {
+  auto alg = std::shared_ptr<AnyAlgebra>();
+
+  Eigen::Matrix2d mat2d = Eigen::Matrix2d::Random();
+  mat2d = Eigen::Matrix2d::Identity() + 1.0e-4*mat2d*mat2d.transpose();
+  Eigen::LLT<Eigen::Matrix2d> chol2d;
+  chol2d.compute(mat2d);
+  const Eigen::Matrix2d L2d = boost::any_cast<Eigen::Matrix2d>(alg->SquareRoot(chol2d));
+  EXPECT_NEAR((L2d*L2d.transpose()-mat2d).norm(), 0.0, 1.0e-10);
+
+  Eigen::Matrix2f mat2f = Eigen::Matrix2f::Random();
+  mat2f = Eigen::Matrix2f::Identity() + 1.0e-4*mat2f*mat2f.transpose();
+  Eigen::LLT<Eigen::Matrix2f> chol2f;
+  chol2f.compute(mat2f);
+  const Eigen::Matrix2f L2f = boost::any_cast<Eigen::Matrix2f>(alg->SquareRoot(chol2f));
+  EXPECT_NEAR((L2f*L2f.transpose()-mat2f).norm(), 0.0, 1.0e-6);
+
+  Eigen::Matrix3d mat3d = Eigen::Matrix3d::Random();
+  mat3d = Eigen::Matrix3d::Identity() + 1.0e-4*mat3d*mat3d.transpose();
+  Eigen::LLT<Eigen::Matrix3d> chol3d;
+  chol3d.compute(mat3d);
+  const Eigen::Matrix3d L3d = boost::any_cast<Eigen::Matrix3d>(alg->SquareRoot(chol3d));
+  EXPECT_NEAR((L3d*L3d.transpose()-mat3d).norm(), 0.0, 1.0e-10);
+
+  Eigen::Matrix3f mat3f = Eigen::Matrix3f::Random();
+  mat3f = Eigen::Matrix3f::Identity() + 1.0e-4*mat3f*mat3f.transpose();
+  Eigen::LLT<Eigen::Matrix3f> chol3f;
+  chol3f.compute(mat3f);
+  const Eigen::Matrix3f L3f = boost::any_cast<Eigen::Matrix3f>(alg->SquareRoot(chol3f));
+  EXPECT_NEAR((L3f*L3f.transpose()-mat3f).norm(), 0.0, 1.0e-6);
+
+  Eigen::Matrix4d mat4d = Eigen::Matrix4d::Random();
+  mat4d = Eigen::Matrix4d::Identity() + 1.0e-4*mat4d*mat4d.transpose();
+  Eigen::LLT<Eigen::Matrix4d> chol4d;
+  chol4d.compute(mat4d);
+  const Eigen::Matrix4d L4d = boost::any_cast<Eigen::Matrix4d>(alg->SquareRoot(chol4d));
+  EXPECT_NEAR((L4d*L4d.transpose()-mat4d).norm(), 0.0, 1.0e-10);
+
+  Eigen::Matrix4f mat4f = Eigen::Matrix4f::Random();
+  mat4f = Eigen::Matrix4f::Identity() + 1.0e-4*mat4f*mat4f.transpose();
+  Eigen::LLT<Eigen::Matrix4f> chol4f;
+  chol4f.compute(mat4f);
+  const Eigen::Matrix4f L4f = boost::any_cast<Eigen::Matrix4f>(alg->SquareRoot(chol4f));
+  EXPECT_NEAR((L4f*L4f.transpose()-mat4f).norm(), 0.0, 1.0e-6);
+
+  Eigen::MatrixXd matXd = Eigen::MatrixXd::Random(8,8);
+  matXd = Eigen::MatrixXd::Identity(8,8) + 1.0e-4*matXd*matXd.transpose();
+  Eigen::LLT<Eigen::MatrixXd> cholXd;
+  cholXd.compute(matXd);
+  const Eigen::MatrixXd LXd = boost::any_cast<Eigen::MatrixXd>(alg->SquareRoot(cholXd));
+  EXPECT_NEAR((LXd*LXd.transpose()-matXd).norm(), 0.0, 1.0e-10);
+
+  Eigen::MatrixXf matXf = Eigen::MatrixXf::Random(13,13);
+  matXf = Eigen::MatrixXf::Identity(13,13) + 1.0e-4*matXf*matXf.transpose();
+  Eigen::LLT<Eigen::MatrixXf> cholXf;
+  cholXf.compute(matXf);
+  const Eigen::MatrixXf LXf = boost::any_cast<Eigen::MatrixXf>(alg->SquareRoot(cholXf));
+  EXPECT_NEAR((LXf*LXf.transpose()-matXf).norm(), 0.0, 1.0e-6);
+
+}
