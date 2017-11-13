@@ -3,6 +3,16 @@
 
 namespace muq {
   namespace SamplingAlgorithms {
+    class SamplingProblem {
+    public:
+
+      SamplingProblem();
+
+      ~SamplingProblem();
+      
+    private:
+      
+    };
   } // namespace SamplingAlgorithms
 } // namespace muq
 

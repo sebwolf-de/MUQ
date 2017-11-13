@@ -23,4 +23,11 @@ CreateCompileGroup(
     MonteCarlo.cpp
     ImportanceSampling.cpp
     MCMC.cpp
+
+    TransitionKernel.cpp
+    MCKernel.cpp
+    IPKernel.cpp
+    MHKernel.cpp
+
+    SamplingProblem.cpp
 )

@@ -15,6 +15,9 @@ TEST(ImportanceSampling, Setup) {
   pt::ptree pt;
   pt.put<unsigned int>("SamplingAlgorithm.NumSamples", 100); // number of Monte Carlo samples
 
+  // create a sampling problem
+  auto problem = std::make_shared<SamplingProblem>();
+
   // evaluate
-  ip->Evaluate(pt);
+  ip->Evaluate(pt, problem);
 }
