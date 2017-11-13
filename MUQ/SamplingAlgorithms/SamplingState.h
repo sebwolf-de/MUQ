@@ -22,7 +22,7 @@ namespace muq {
       const boost::any state;
 
       /// The weight of this state
-      const double weight;
+      double weight;
 
     private:
       

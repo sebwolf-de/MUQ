@@ -32,10 +32,18 @@ void SamplingAlgorithm::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   outputs[0] = std::vector<std::shared_ptr<SamplingState> >(T);
   std::vector<std::shared_ptr<SamplingState> >& samples = boost::any_cast<std::vector<std::shared_ptr<SamplingState> >&>(outputs[0]);
 
+  double totalWeight = 0.0;
   for( unsigned int t=0; t<T; ++t ) { // loop through each sample
     const std::vector<boost::any>& result = kernel->Evaluate(ref_vector<boost::any>(inputs.begin()+2, inputs.end()));
 
     samples[t] = boost::any_cast<std::shared_ptr<SamplingState> >(result[0]);
+
+    totalWeight += samples[t]->weight;
+  }
+
+  // normalize the weights
+  for( unsigned int t=0; t<T; ++t ) { // loop through each sample
+    samples[t]->weight /= totalWeight;
   }
 }
 

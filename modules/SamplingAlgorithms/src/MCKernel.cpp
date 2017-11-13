@@ -14,5 +14,5 @@ void MCKernel::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   const boost::any state = problem->SampleTarget(inputs);
 
   outputs.resize(1);
-  outputs[0] = std::make_shared<SamplingState>(state, 1.0/(double)N);
+  outputs[0] = std::make_shared<SamplingState>(state, 1.0);
 }

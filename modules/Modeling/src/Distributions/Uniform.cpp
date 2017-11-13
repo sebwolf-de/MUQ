@@ -41,7 +41,7 @@ double Uniform::LogDensityImpl(ref_vector<boost::any> const& inputs) const {
     const double x = boost::any_cast<double const>(algebra->AccessElement(inputs[0].get(), i));
 
     // if this dimension is outside the hypercube
-    if( x<bounds[i].first || x>bounds[i].second ) {
+    if( x<bounds[i].first || x>bounds[i].first+bounds[i].second ) {
       // return negative infinity
       return -std::numeric_limits<double>::infinity();
     }

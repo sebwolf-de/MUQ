@@ -10,7 +10,7 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
-TEST(MonteCarlo, Setup) {
+TEST(MonteCarlo, GaussianTarget) {
   // create an instance of Monte Carlo
   auto mc = std::make_shared<MonteCarlo>();
 
@@ -29,6 +29,8 @@ TEST(MonteCarlo, Setup) {
 
   // evaluate
   const std::vector<boost::any>& result = mc->Evaluate(pt, problem);
+  const std::vector<std::shared_ptr<SamplingState> >& samples = boost::any_cast<std::vector<std::shared_ptr<SamplingState> > const&>(result[0]);
+  EXPECT_EQ(samples.size(), N);
 
   // estimate the mean
   const boost::any mean = mc->FirstMoment();

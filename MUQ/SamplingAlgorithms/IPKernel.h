@@ -18,6 +18,9 @@ namespace muq {
       ~IPKernel();
 
     private:
+
+      virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
+      
     };
     
   } // namespace SamplingAlgorithms
