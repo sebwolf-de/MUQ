@@ -29,5 +29,7 @@ CreateCompileGroup(
     IPKernel.cpp
     MHKernel.cpp
 
+    SamplingState.cpp
+
     SamplingProblem.cpp
 )

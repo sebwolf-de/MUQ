@@ -27,14 +27,39 @@ void SamplingAlgorithm::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   // get the number of samples
   const unsigned int T = pt.get<unsigned int>("SamplingAlgorithm.NumSamples");
 
+  // the result will be a vector of states
+  outputs.resize(1);
+  outputs[0] = std::vector<std::shared_ptr<SamplingState> >(T);
+  std::vector<std::shared_ptr<SamplingState> >& samples = boost::any_cast<std::vector<std::shared_ptr<SamplingState> >&>(outputs[0]);
+
   for( unsigned int t=0; t<T; ++t ) { // loop through each sample
-    //SampleOnce(problem);
+    const std::vector<boost::any>& result = kernel->Evaluate(ref_vector<boost::any>(inputs.begin()+2, inputs.end()));
+
+    samples[t] = boost::any_cast<std::shared_ptr<SamplingState> >(result[0]);
   }
 }
 
-/*boost::any SamplingAlgorithm::SampleOnce(std::shared_ptr<SamplingProblem> problem) const {
-  problem->Sample();
+boost::any SamplingAlgorithm::FirstMoment() const {
+  assert(outputs.size()>0);
   
-  return boost::none;
-  }*/
+  const std::vector<std::shared_ptr<SamplingState> >& samples = boost::any_cast<std::vector<std::shared_ptr<SamplingState> > const&>(outputs[0]);
 
+  return FirstMoment(samples);
+}
+
+boost::any SamplingAlgorithm::FirstMoment(std::vector<std::shared_ptr<SamplingState> > const& samples) const {
+  // make sure we have an algebra
+  assert(algebra);
+
+  // we need at least one sample
+  assert(samples.size()>0);
+
+  // compute the weighted sum
+  boost::any mean = algebra->Multiply(samples[0]->weight, samples[0]->state);
+  for( unsigned int i=1; i<samples.size(); ++i ) {
+    mean = algebra->Add(mean, algebra->Multiply(samples[i]->weight, samples[i]->state));
+  }
+
+  // return the mean
+  return mean;
+}

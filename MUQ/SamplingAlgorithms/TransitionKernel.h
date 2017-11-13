@@ -12,10 +12,11 @@
 #include "MUQ/Modeling/WorkPiece.h"
 
 #include "MUQ/SamplingAlgorithms/SamplingProblem.h"
+#include "MUQ/SamplingAlgorithms/SamplingState.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
-    class TransitionKernel : muq::Modeling::WorkPiece {
+    class TransitionKernel : public muq::Modeling::WorkPiece {
     public:
 
       TransitionKernel(boost::property_tree::ptree const& pt, std::shared_ptr<SamplingProblem> problem);
@@ -35,19 +36,20 @@ namespace muq {
       typedef std::map<std::string, TransitionKernelConstructor> TransitionKernelMap;
 
       static std::shared_ptr<TransitionKernelMap> GetTransitionKernelMap();
+
+    protected:
+
+      /// The sampling problem that evaluates/samples the target distribution
+      std::shared_ptr<SamplingProblem> problem;
       
     private:
 
       virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
-
-      /// The sampling problem that evaluates/samples the target distribution
-      std::shared_ptr<SamplingProblem> problem;
     };
   } // namespace SamplingAlgorithms
 } // namespace muq
 
 #define REGISTER_TRANSITION_KERNEL(NAME) static auto reg ##NAME \
   = muq::SamplingAlgorithms::TransitionKernel::GetTransitionKernelMap()->insert(std::make_pair(#NAME, muq::Utilities::shared_factory<NAME>()));
-
 
 #endif

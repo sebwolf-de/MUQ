@@ -17,6 +17,11 @@ namespace muq {
       ~MCKernel();
       
     private:
+
+      virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
+
+      /// The number of Monte Carlo samples
+      const unsigned int N;
     };
   } // namespace SamplingAlgorithms
 } // namespace muq
