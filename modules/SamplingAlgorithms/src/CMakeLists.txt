@@ -21,4 +21,5 @@ CreateCompileGroup(
     ""
     SamplingAlgorithm.cpp
     MonteCarlo.cpp
+    ImportanceSampling.cpp
 )

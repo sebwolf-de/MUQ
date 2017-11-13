@@ -184,11 +184,11 @@ void HDF5File::WriteStringAttribute(std::string const& datasetName,
 }
 
 std::string HDF5File::GetStringAttribute(std::string const& datasetName, std::string const& attributeName) const {
-#if MUQ_MPI==1
-  unique_ptr<mpi::communicator> worldComm(new mpi::communicator);
+  /*#if MUQ_MPI==1
+  std::unique_ptr<mpi::communicator> worldComm(new mpi::communicator);
   
   assert(worldComm->rank()==write);
-#endif
+  #endif*/
 
   // make sure the file is open 
   assert(fileID>0);
