@@ -123,9 +123,7 @@ namespace Utilities
 		H5Pset_chunk(prop, 2, chunk);
 
 		// create a dataset for each process
-		std::cout << "HERE" << std::endl;
 		dataID = H5Dcreate(fileID, name.c_str(), HDF5_Type<scalarType>::GetFlag(), filespace, H5P_DEFAULT, prop, H5P_DEFAULT);
-		std::cout << "OKAY" << std::endl;
 
 		// close the creation properties
 		H5Pclose(prop);

@@ -37,3 +37,4 @@ TEST(MonteCarlo, GaussianTarget) {
 
   EXPECT_NEAR(boost::any_cast<double const>(mean), 0.0, 1.0e-2);
 }
+

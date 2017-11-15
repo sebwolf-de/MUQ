@@ -16,14 +16,14 @@ TEST(ImportanceSampling, Setup) {
   auto ip = std::make_shared<ImportanceSampling>();
 
   // the number of samples
-  const unsigned int N = 1.0e6;
+  const unsigned int N = 1.0e5;
 
   // parameters for the sampler
   pt::ptree pt;
   pt.put<unsigned int>("SamplingAlgorithm.NumSamples", N); // number of Monte Carlo samples
 
   // create a Gaussian distribution---this is the biasing distribution
-  auto bias = std::make_shared<Gaussian>(0.25); // it is standard normal (1D) by default
+  auto bias = std::make_shared<Gaussian>(0.25); 
 
   // create a uniform distribution---the sampling problem is built around characterizing this distribution
   auto dist = std::make_shared<Uniform>(std::pair<double, double>(-0.5, 1.0));

@@ -2,7 +2,9 @@
 
 using namespace muq::SamplingAlgorithms;
 
-MCMC::MCMC() : SamplingAlgorithm() {}
+MCMC::MCMC() :
+  SamplingAlgorithm(true) // the sampling algorithm produces correlated samples
+{}
 
 MCMC::~MCMC() {}
 

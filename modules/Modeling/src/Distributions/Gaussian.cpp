@@ -49,9 +49,60 @@ boost::any Gaussian::SaveCovPrec(boost::any const& in) {
   return in;
 }
 
-double Gaussian::LogDensityImpl(ref_vector<boost::any> const& inputs) const {
+void Gaussian::ResetHyperparameters(ref_vector<boost::any> const& hyperparas) {
+  // reset the hyper parameters
+  for( auto hp : hyperparas ) {
+    // get the hyperparameter
+    const std::pair<boost::any, Gaussian::Mode>& hyperpara = boost::any_cast<std::pair<boost::any, Gaussian::Mode> >(hp);
+    
+    switch( hyperpara.second ) {
+    case Gaussian::Mode::Mean: {
+      // reset the mean
+      mean = hyperpara.first;
+      break;
+    }
+    case Gaussian::Mode::Covariance: {
+      // reset the mode
+      mode = Gaussian::Mode::Covariance;
+      
+      // reset the covaraince and the precision
+      prec = boost::none;
+      precSqrt = boost::none;
+      cov = hyperpara.first;
+      covSqrt = boost::none;
+
+      // recompute the scaling constant
+      ComputeScalingConstant();
+      break;
+    }
+    case Gaussian::Mode::Precision: {
+      // reset the mode
+      mode = Gaussian::Mode::Precision;
+      
+      // reset the covaraince and the precision
+      prec = hyperpara.first;
+      precSqrt = boost::none;
+      cov = boost::none;
+      covSqrt = boost::none;
+
+      // recompute the scaling constant
+      ComputeScalingConstant();
+      break;
+    }
+    default: {
+      // something is wrong
+      assert(false);
+      break;
+    }
+    }
+  }
+}
+
+double Gaussian::LogDensityImpl(ref_vector<boost::any> const& inputs) {
+  ResetHyperparameters(ref_vector<boost::any>(inputs.begin()+1, inputs.end()));
+
   boost::any delta = inputs[0].get();
-  if( mean ) { delta = algebra->Subtract(delta, *mean); }
+  if( mean ) { delta = algebra->Subtract(*mean, delta); }
 
   switch( mode ) {
   case Gaussian::Mode::Covariance: {
@@ -71,41 +122,30 @@ double Gaussian::LogDensityImpl(ref_vector<boost::any> const& inputs) const {
 }
 
 boost::any Gaussian::SampleImpl(ref_vector<boost::any> const& inputs) {
+  ResetHyperparameters(ref_vector<boost::any>(inputs.begin(), inputs.end()));
+    
   // make sure the dimension is nonzero
   assert(dim>0);
 
-  const Eigen::VectorXd stdnrm = RandomGenerator::GetNormal(dim);
+  boost::any stdnrm;
+  if( dim==1 ) {
+    stdnrm = (double)RandomGenerator::GetNormal();
+  } else {
+    stdnrm = (Eigen::VectorXd)RandomGenerator::GetNormal(dim);
+  }
 
   switch( mode ) {
   case Gaussian::Mode::Covariance: {
     if( !covSqrt ) { covSqrt = algebra->SquareRoot(*cov); }
-    
-    // if one dimensional, return a double
-    if( dim==1 ) {
-      assert(covSqrt->type()==typeid(double));
-      return stdnrm(0)*boost::any_cast<double>(*covSqrt);
-    }
 
-    // otherwise return an Eigen::VectorXd
     return mean? algebra->Add(algebra->Apply(*covSqrt, stdnrm), *mean) : algebra->Apply(*covSqrt, stdnrm);
   }
   case Gaussian::Mode::Precision: {
     if( !precSqrt ) { precSqrt = algebra->SquareRoot(*prec); }
 
-    // if one dimensional, return a double
-    if( dim==1 ) {
-      assert(precSqrt->type()==typeid(double));
-      return stdnrm(0)/boost::any_cast<double>(*precSqrt);
-    }
-    
-    // otherwise return an Eigen::VectorXd
     return mean? algebra->Add(algebra->ApplyInverse(*precSqrt, stdnrm), *mean) : algebra->ApplyInverse(*precSqrt, stdnrm);
   }
   case Gaussian::Mode::Mean: {
-    if( dim==1 ) {
-      assert(mean->type()==typeid(double));
-      return stdnrm(0)+boost::any_cast<double>(*mean) ;
-    }
     return algebra->Add(stdnrm, *mean);
   }
   default: {

@@ -35,7 +35,7 @@ namespace muq {
 	 </ol>
 	 \return The log-density (either 1 or negative infinity)
        */
-      virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) const override;
+      virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) override;
 
       /// Sample the distribution
       virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) override;

@@ -38,6 +38,54 @@ TEST(GaussianDistributionTests, SpecifyMean) {
   EXPECT_NEAR((mean-mu).norm(), 0.0, 1.0e-2);
 }
 
+TEST(GaussianDistributionTests, ChangeHyperparameters) {
+  // create a standard normal (one dimension)
+  auto standard = std::make_shared<Gaussian>();
+
+  // we want to change the hyperparameters
+  std::pair<boost::any, Gaussian::Mode> mu(1.0, Gaussian::Mode::Mean);
+  std::pair<boost::any, Gaussian::Mode> cov(0.25, Gaussian::Mode::Covariance);
+  std::pair<boost::any, Gaussian::Mode> prec(2.0, Gaussian::Mode::Precision);
+
+  const unsigned int N = 1.0e5;
+
+  // compute the log density for a standard normal
+  const double x = 2.5;
+  EXPECT_DOUBLE_EQ(standard->LogDensity(x, mu), -0.5*std::log(2.0*M_PI)-(1.0-x)*(1.0-x)/2.0);
+  Eigen::VectorXd samps(N+1);
+  samps(0) = boost::any_cast<double>(standard->Sample(mu));
+  for( unsigned int i=0; i<N; ++i ) {
+    samps(i+1) = boost::any_cast<double>(standard->Sample(mu));
+  }
+  double mean = samps.sum()/(N+1.0);
+  samps = samps.array()-mean;
+  double sigma2 = (samps.array()*samps.array()).sum()/N;
+  EXPECT_NEAR(mean, 1.0, 1.0e-2);
+  EXPECT_NEAR(sigma2, 1.0, 1.0e-2);
+
+  EXPECT_DOUBLE_EQ(standard->LogDensity(x, mu, cov), -0.5*(std::log(2.0*M_PI)+std::log(0.25))-(1.0-x)*(1.0-x)/(2.0*0.25));
+  samps(0) = boost::any_cast<double>(standard->Sample(cov, mu));
+  for( unsigned int i=0; i<N; ++i ) {
+    samps(i+1) = boost::any_cast<double>(standard->Sample(cov, mu));
+  }
+  mean = samps.sum()/(N+1.0);
+  samps = samps.array()-mean;
+  sigma2 = (samps.array()*samps.array()).sum()/N;
+  EXPECT_NEAR(mean, 1.0, 1.0e-2);
+  EXPECT_NEAR(sigma2, 0.25, 1.0e-2);
+
+  EXPECT_DOUBLE_EQ(standard->LogDensity(x, prec), -0.5*(std::log(2.0*M_PI)+std::log(0.5))-(1.0-x)*(1.0-x));
+  samps(0) = boost::any_cast<double>(standard->Sample(prec));
+  for( unsigned int i=0; i<N; ++i ) {
+    samps(i+1) = boost::any_cast<double>(standard->Sample(prec));
+  }
+  mean = samps.sum()/(N+1.0);
+  samps = samps.array()-mean;
+  sigma2 = (samps.array()*samps.array()).sum()/N;
+  EXPECT_NEAR(mean, 1.0, 1.0e-2);
+  EXPECT_NEAR(sigma2, 0.5, 1.0e-2);
+}
+
 TEST(GaussianDistributionTests, SpecifyBoth) {
   // create the distributions
   const Eigen::Vector3d cov = Eigen::Vector3d::Random().cwiseAbs();
@@ -53,7 +101,7 @@ TEST(GaussianDistributionTests, SpecifyBoth) {
   EXPECT_DOUBLE_EQ(covDist->LogDensity(x), -0.5*(3.0*std::log(2.0*M_PI)+cov.array().log().sum())-(x-mu).dot((1.0/cov.array()).matrix().asDiagonal()*(x-mu))/2.0);
   EXPECT_DOUBLE_EQ(precDist->LogDensity(x), -0.5*(3.0*std::log(2.0*M_PI)-prec.array().log().sum())-(x-mu).dot(prec.asDiagonal()*(x-mu))/2.0);
 
-  const unsigned int N = 2.0e5;
+  const unsigned int N = 8.0e5;
 
   Eigen::VectorXd meanCov = boost::any_cast<Eigen::VectorXd>(covDist->Sample());
   Eigen::VectorXd meanPrec = boost::any_cast<Eigen::VectorXd>(precDist->Sample());
@@ -82,7 +130,7 @@ TEST(GaussianDistributionTests, Scalar) {
   EXPECT_DOUBLE_EQ(scalarCov->LogDensity(x), -0.5*(std::log(2.0*M_PI)+std::log(sigma2))-x*x/(2.0*sigma2));
   EXPECT_DOUBLE_EQ(scalarPrec->LogDensity(x), -0.5*(std::log(2.0*M_PI)-std::log(sigma2))-x*x*sigma2/2.0);
 
-  const unsigned int N = 1.0e5;
+  const unsigned int N = 2.0e5;
   Eigen::VectorXd sampsCov(N+1);
   Eigen::VectorXd sampsPrec(N+1);
   
@@ -120,7 +168,7 @@ TEST(GaussianDistributionTests, DiagonalCovPrec) {
   EXPECT_DOUBLE_EQ(diagCov->LogDensity(x), -0.5*(2.0*std::log(2.0*M_PI)+covDiag.array().log().sum())-x.dot((1.0/covDiag.array()).matrix().asDiagonal()*x)/2.0);
   EXPECT_DOUBLE_EQ(diagPrec->LogDensity(x), -0.5*(2.0*std::log(2.0*M_PI)-precDiag.array().log().sum())-x.dot(precDiag.asDiagonal()*x)/2.0);
     
-  const unsigned int N = 5.0e5;
+  const unsigned int N = 1.0e6;
   Eigen::Vector2d meanCov = boost::any_cast<Eigen::VectorXd>(diagCov->Sample());
   Eigen::Vector2d meanPrec = boost::any_cast<Eigen::VectorXd>(diagCov->Sample());
   
@@ -171,4 +219,3 @@ TEST(GaussianDistributionTests, MatrixCovPrec) {
   EXPECT_NEAR(meanCov.norm(), 0.0, 1.0e-2);
   EXPECT_NEAR(meanPrec.norm(), 0.0, 1.0e-2);
 }
-

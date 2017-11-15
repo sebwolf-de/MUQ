@@ -28,14 +28,14 @@ namespace muq {
 	 @param[in] inputs the vector of inputs to the log-density
 	 \return The log density
        */
-      virtual double LogDensity(ref_vector<boost::any> const& inputs) const;
+      virtual double LogDensity(ref_vector<boost::any> const& inputs);
 
       /// Evaluate the log-density with no inputs
       /**
 	 Allows the user to call LogDensity without any inputs
 	 \return The log density
        */
-      double LogDensity() const;
+      double LogDensity();
 
       /// Evaluate the log-density
       /**
@@ -44,7 +44,7 @@ namespace muq {
 	 \return The log density
        */
       template<typename... Args>
-	inline double LogDensity(Args... args) const {
+	inline double LogDensity(Args... args) {
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
 	inputs.reserve(numInputs<0? 0 : numInputs-1); // the first input is always whether we are evaluting the log-density or sampling
@@ -75,7 +75,7 @@ namespace muq {
 	 \return A sample
        */
       template<typename... Args>
-	inline double Sample(Args... args) {
+	inline boost::any Sample(Args... args) {
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
 	inputs.reserve(numInputs<0? 0 : numInputs-1); // the first input is always whether we are evaluting the log-density or sampling
@@ -92,7 +92,7 @@ namespace muq {
 	 @param[in] inputs the vector of inputs to the log-density
 	 \return The log density
        */
-      virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) const;
+      virtual double LogDensityImpl(ref_vector<boost::any> const& inputs);
 
       /// Sample the distribution
       /**
@@ -111,7 +111,7 @@ namespace muq {
 	 \return The log density
        */
       template<typename ith, typename... Args>
-	inline double LogDensity(ref_vector<boost::any>& inputs, ith const& in, Args... args) const {
+	inline double LogDensity(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size()+1; // add one, the first input is always whether we are evaluting the log-density or sampling
 		
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
@@ -137,7 +137,7 @@ namespace muq {
 	 \return A sample
        */
       template<typename ith, typename... Args>
-	inline double Sample(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
+	inline boost::any Sample(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size()+1; // add one, the first input is always whether we are evaluting the log-density or sampling
 		
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number

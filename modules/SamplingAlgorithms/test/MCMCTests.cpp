@@ -14,17 +14,30 @@ TEST(MCMC, Setup) {
   // create an instance of MCMC
   auto mcmc = std::make_shared<MCMC>();
 
+  const unsigned int N = 4.0e5;
+  
   // parameters for the sampler
   pt::ptree pt;
-  pt.put<unsigned int>("SamplingAlgorithm.NumSamples", 100); // number of Monte Carlo samples
+  pt.put<unsigned int>("SamplingAlgorithm.NumSamples", N); // number of Monte Carlo samples
   pt.put<std::string>("SamplingAlgorithm.TransitionKernel", "MHKernel"); // the transition kernel
+  pt.put<std::string>("MCMC.Proposal", "MHProposal"); // the proposal
+  pt.put<unsigned int>("MCMC.StateDimension", 2); // the state dimension
+  pt.put<double>("MCMC.Proposal.MH.ProposalSize", 0.75); // the size of the MH proposal
 
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
-  auto dist = std::make_shared<Gaussian>(); // it is standard normal (1D) by default
+  const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
+  auto dist = std::make_shared<Gaussian>(mu); // standard normal Gaussian
   
   // create a sampling problem
   auto problem = std::make_shared<SamplingProblem>(dist);
 
+  // starting point
+  const Eigen::VectorXd start = Eigen::VectorXd::Random(2);
+
   // evaluate
-  mcmc->Evaluate(pt, problem);
+  mcmc->Evaluate(pt, problem, start);
+
+  // estimate the mean
+  const boost::any mean = mcmc->FirstMoment();
+  EXPECT_NEAR((boost::any_cast<Eigen::VectorXd const>(mean)-mu).norm(), 0.0, 1.0e-2);
 }

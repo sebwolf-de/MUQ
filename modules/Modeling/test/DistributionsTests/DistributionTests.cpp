@@ -9,7 +9,7 @@ public:
 
   inline ExampleDensity() : Distribution() {}
 
-  inline virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) const override {
+  inline virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) override {
     // get the point where we are evaluating the log density
     const double x = boost::any_cast<double const>(inputs[0]);
 

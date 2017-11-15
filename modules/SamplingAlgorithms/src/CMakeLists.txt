@@ -24,12 +24,16 @@ CreateCompileGroup(
     ImportanceSampling.cpp
     MCMC.cpp
 
+    SamplingState.cpp
+
     TransitionKernel.cpp
     MCKernel.cpp
     IPKernel.cpp
     MHKernel.cpp
+    MCMCKernel.cpp
 
-    SamplingState.cpp
+    MCMCProposal.cpp
+    MHProposal.cpp
 
     SamplingProblem.cpp
 )

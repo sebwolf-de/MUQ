@@ -23,7 +23,7 @@ namespace muq {
 
       ~TransitionKernel();
 
-      /// Static contructor for the transition kernel
+      /// Static constructor for the transition kernel
       /**
 	 @param[in] pt Parameters for the kernel
 	 @param[in] problem The sampling problem that evaluates/samples the distribution we are trying to characterize
@@ -43,13 +43,11 @@ namespace muq {
       std::shared_ptr<SamplingProblem> problem;
       
     private:
-
-      virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
     };
   } // namespace SamplingAlgorithms
 } // namespace muq
 
-#define REGISTER_TRANSITION_KERNEL(NAME) static auto reg ##NAME \
+#define REGISTER_TRANSITION_KERNEL(NAME) static auto reg ##NAME		\
   = muq::SamplingAlgorithms::TransitionKernel::GetTransitionKernelMap()->insert(std::make_pair(#NAME, muq::Utilities::shared_factory<NAME>()));
 
 #endif

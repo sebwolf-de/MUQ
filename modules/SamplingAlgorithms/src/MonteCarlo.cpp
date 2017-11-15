@@ -3,7 +3,9 @@
 namespace pt = boost::property_tree;
 using namespace muq::SamplingAlgorithms;
 
-MonteCarlo::MonteCarlo() : SamplingAlgorithm() {}
+MonteCarlo::MonteCarlo() :
+  SamplingAlgorithm(false) // the sampling algorithm produces uncorrelated samples
+{}
 
 MonteCarlo::~MonteCarlo() {}
 

@@ -31,14 +31,14 @@ void Distribution::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   }
 }
 
-double Distribution::LogDensity(ref_vector<boost::any> const& inputs) const {
+double Distribution::LogDensity(ref_vector<boost::any> const& inputs) {
   // the first input is always whether we are evaluting the log-density or sampling; we either have n-1 inputs or they are unknown
   assert(numInputs-1==inputs.size() || numInputs<0);
   
   return LogDensityImpl(inputs);
 }
 
-double Distribution::LogDensity() const { 
+double Distribution::LogDensity() { 
   // the first input is always whether we are evaluting the log-density or sampling; we either have 1 input or they are unknown
   assert(numInputs==1 || numInputs<0);
   
@@ -46,7 +46,7 @@ double Distribution::LogDensity() const {
 }
 
 // default behavior of log-density is to return infinity
-double Distribution::LogDensityImpl(ref_vector<boost::any> const& inputs) const {
+double Distribution::LogDensityImpl(ref_vector<boost::any> const& inputs) {
   return -std::numeric_limits<double>::infinity();
 }
 

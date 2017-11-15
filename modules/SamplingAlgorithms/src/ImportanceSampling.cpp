@@ -2,7 +2,9 @@
 
 using namespace muq::SamplingAlgorithms;
 
-ImportanceSampling::ImportanceSampling() : SamplingAlgorithm() {}
+ImportanceSampling::ImportanceSampling() :
+  SamplingAlgorithm(false) // the sampling algorithm produces uncorrelated samples
+{}
 
 ImportanceSampling::~ImportanceSampling() {}
 

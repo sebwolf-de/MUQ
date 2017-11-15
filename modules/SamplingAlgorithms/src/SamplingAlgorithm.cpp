@@ -6,10 +6,10 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
-SamplingAlgorithm::SamplingAlgorithm() : WorkPiece(std::map<unsigned int, std::string>({
+SamplingAlgorithm::SamplingAlgorithm(bool const correlated) : WorkPiece(std::map<unsigned int, std::string>({
       std::pair<unsigned int, std::string>(0, typeid(pt::ptree).name()), // algorithm parameters
 	std::pair<unsigned int, std::string>(1, typeid(std::shared_ptr<SamplingProblem>).name()) // sampling problem
-	})) {}
+	})), correlated(correlated) {}
 
 SamplingAlgorithm::~SamplingAlgorithm() {}
 
@@ -29,20 +29,39 @@ void SamplingAlgorithm::EvaluateImpl(ref_vector<boost::any> const& inputs) {
 
   // the result will be a vector of states
   outputs.resize(1);
-  outputs[0] = std::vector<std::shared_ptr<SamplingState> >(T);
+  outputs[0] = std::vector<std::shared_ptr<SamplingState> >();
   std::vector<std::shared_ptr<SamplingState> >& samples = boost::any_cast<std::vector<std::shared_ptr<SamplingState> >&>(outputs[0]);
+  samples.reserve(T+1);
+
+  // if the samples are correlated, we need a starting sample
+  boost::any init;
+  if( correlated ) {
+    init = std::make_shared<SamplingState>(inputs[2], 1.0);
+    samples.push_back(boost::any_cast<std::shared_ptr<SamplingState> >(init));
+  }
+
+  // copy the inputs---these are the inputs to the distributions (e.g., target, biasing, and/or propsal)
+  ref_vector<boost::any> distInputs(inputs.begin()+(correlated?3:2), inputs.end());
+  if( correlated ) { distInputs.insert(distInputs.begin(), std::cref(init)); }
+  
+  for( unsigned int t=0; t<T; ++t ) { // loop through each sample
+    const std::vector<boost::any>& result = kernel->Evaluate(distInputs);
+
+    if( result[0].type()==typeid(std::shared_ptr<SamplingState>) ) { samples.push_back(boost::any_cast<std::shared_ptr<SamplingState> >(result[0])); }
+    
+    if( correlated ) {
+      init = samples[samples.size()-1];
+      distInputs[0] = std::cref(init);
+    }
+  }
 
   double totalWeight = 0.0;
-  for( unsigned int t=0; t<T; ++t ) { // loop through each sample
-    const std::vector<boost::any>& result = kernel->Evaluate(ref_vector<boost::any>(inputs.begin()+2, inputs.end()));
-
-    samples[t] = boost::any_cast<std::shared_ptr<SamplingState> >(result[0]);
-
+  for( unsigned int t=0; t<samples.size(); ++t ) { // loop through each sample
     totalWeight += samples[t]->weight;
   }
 
   // normalize the weights
-  for( unsigned int t=0; t<T; ++t ) { // loop through each sample
+  for( unsigned int t=0; t<samples.size(); ++t ) { // loop through each sample
     samples[t]->weight /= totalWeight;
   }
 }

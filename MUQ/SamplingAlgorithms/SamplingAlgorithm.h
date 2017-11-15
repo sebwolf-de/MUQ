@@ -13,7 +13,10 @@ namespace muq {
     class SamplingAlgorithm : public muq::Modeling::WorkPiece {
     public:
 
-      SamplingAlgorithm();
+      /**
+	 @param[in] correlated Are the samples correlated?
+       */
+      SamplingAlgorithm(bool const correlated);
 
       ~SamplingAlgorithm();
 
@@ -53,6 +56,9 @@ namespace muq {
 
       /// A muq::Utilities::AnyAlgebra to do algebra with boost::any's
       std::shared_ptr<muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>();
+
+      /// Are the samples correlated?
+      const bool correlated;
       
     };
   } // namespace SamplingAlgorithms

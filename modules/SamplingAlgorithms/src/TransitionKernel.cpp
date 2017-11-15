@@ -5,7 +5,7 @@ using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
 TransitionKernel::TransitionKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) :
-  WorkPiece(std::vector<std::string>(1,typeid(std::shared_ptr<SamplingState>).name()), WorkPiece::Fix::Outputs), problem(problem) {}
+  WorkPiece(/*std::vector<std::string>(1,typeid(std::shared_ptr<SamplingState>).name()), WorkPiece::Fix::Outputs*/), problem(problem) {}
 
 TransitionKernel::~TransitionKernel() {}
 
@@ -29,7 +29,3 @@ std::shared_ptr<TransitionKernel> TransitionKernel::Construct(pt::ptree const& p
   return GetTransitionKernelMap()->at(kernelName) (pt, problem);
 }
 
-void TransitionKernel::EvaluateImpl(ref_vector<boost::any> const& inputs) {
-  outputs.resize(1);
-  outputs[0] = std::make_shared<SamplingState>(boost::none, 0.0);
-}

@@ -55,6 +55,12 @@ namespace muq {
 
       static boost::any SaveCovPrec(boost::any const& in);
 
+      /// Reset the hyperparameters
+      /**
+	 @param[in] hyperparas A list of hyperparameters mean and/or covariance/precision
+       */
+      void ResetHyperparameters(ref_vector<boost::any> const& hyperparas);
+
       /// Implement the log-density for a Gaussian distribution
       /**
 	 Inputs:
@@ -63,7 +69,7 @@ namespace muq {
 	 </ol>
 	 \return The log-density 
        */
-      virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) const override;
+      virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) override;
 
       /// Sample the distribution
       virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) override;
@@ -72,22 +78,22 @@ namespace muq {
       std::shared_ptr<muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>();
 
       /// Have we specified the covariance or the precision
-      const Gaussian::Mode mode;
+      Gaussian::Mode mode;
 
       /// The dimension 
       const unsigned int dim;
 
       /// The mean of the distribution
-      const boost::optional<boost::any> mean;
+      boost::optional<boost::any> mean;
 
       /// The covariance 
-      const boost::optional<boost::any> cov;
+      boost::optional<boost::any> cov;
 
       /// The square root of the covariance
       boost::optional<boost::any> covSqrt;
 
       /// The precision
-      const boost::optional<boost::any> prec;
+      boost::optional<boost::any> prec;
 
       /// The square root of the precision
       boost::optional<boost::any> precSqrt;

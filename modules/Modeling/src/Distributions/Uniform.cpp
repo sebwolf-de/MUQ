@@ -30,7 +30,7 @@ std::vector<std::pair<double, double> > Uniform::ComputeBounds(std::vector<std::
   return new_bounds;
 }
 
-double Uniform::LogDensityImpl(ref_vector<boost::any> const& inputs) const {
+double Uniform::LogDensityImpl(ref_vector<boost::any> const& inputs) {
   // get the dimension
   const unsigned int dim = algebra->Size(inputs[0].get());
   assert(dim==bounds.size());
