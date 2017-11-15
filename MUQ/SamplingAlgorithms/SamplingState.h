@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <boost/any.hpp>
+#include <boost/optional.hpp>
 
 namespace muq {
   namespace SamplingAlgorithms {
@@ -23,6 +24,9 @@ namespace muq {
 
       /// The weight of this state
       double weight;
+
+      /// The log target density for this state
+      boost::optional<double> logTarget;
 
     private:
       

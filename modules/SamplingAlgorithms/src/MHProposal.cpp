@@ -26,11 +26,10 @@ boost::any MHProposal::SampleImpl(ref_vector<boost::any> const& inputs) {
   assert(current);
 
   // the mean of the proposal is the current point
-  //boost::any prop = proposal->Sample(std::pair<boost::any, Gaussian::Mode>(current->state, Gaussian::Mode::Mean));
-  boost::any prop = proposal->Sample();
+  boost::any prop = proposal->Sample(std::pair<boost::any, Gaussian::Mode>(current->state, Gaussian::Mode::Mean));
 
   // store the new state in the output
-  return std::make_shared<SamplingState>(algebra->Add(prop, current->state), 1.0);
+  return std::make_shared<SamplingState>(prop, 1.0);
 }
 
 double MHProposal::LogDensityImpl(ref_vector<boost::any> const& inputs) {
@@ -42,6 +41,5 @@ double MHProposal::LogDensityImpl(ref_vector<boost::any> const& inputs) {
   std::shared_ptr<SamplingState> conditioned = boost::any_cast<std::shared_ptr<SamplingState> >(inputs[1]);
   assert(conditioned);
 
-  //return proposal->LogDensity(state->state, std::pair<boost::any, Gaussian::Mode>(conditioned->state, Gaussian::Mode::Mean));
-  return proposal->LogDensity(algebra->Subtract(conditioned->state, state->state));
+  return proposal->LogDensity(state->state, std::pair<boost::any, Gaussian::Mode>(conditioned->state, Gaussian::Mode::Mean));
 }

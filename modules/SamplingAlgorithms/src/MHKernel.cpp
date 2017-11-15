@@ -19,12 +19,12 @@ void MHKernel::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   assert(current);
   
   // propose a new point
-  std::shared_ptr<SamplingState> prop =  boost::any_cast<std::shared_ptr<SamplingState> >(proposal->Sample(current));
+  std::shared_ptr<SamplingState> prop = boost::any_cast<std::shared_ptr<SamplingState> >(proposal->Sample(current));
 
   // compute acceptance probability
-  const ref_vector<boost::any> curr(1, std::cref(current->state));
-  const ref_vector<boost::any> prp(1, std::cref(prop->state));
-  const double alpha = std::exp(problem->EvaluateLogTarget(prp)+proposal->LogDensity(current, prop)-problem->EvaluateLogTarget(curr)-proposal->LogDensity(prop, current));
+  if( !current->logTarget ) { current->logTarget = problem->EvaluateLogTarget(ref_vector<boost::any>(1, std::cref(current->state))); }
+  if( !prop->logTarget ) { prop->logTarget = problem->EvaluateLogTarget(ref_vector<boost::any>(1, std::cref(prop->state))); }
+  const double alpha = std::exp(*(prop->logTarget)+proposal->LogDensity(current, prop)-*(current->logTarget)-proposal->LogDensity(prop, current));
 
   // accept/reject
   outputs.resize(1);
