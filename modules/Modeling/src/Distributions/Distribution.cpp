@@ -1,4 +1,5 @@
 #include "MUQ/Modeling/Distributions/Distribution.h"
+#include "MUQ/Utilities/Exceptions.h"
 
 using namespace muq::Modeling;
 
@@ -7,6 +8,7 @@ Distribution::~Distribution() {}
 Distribution::Distribution() : WorkPiece() {}
 
 void Distribution::EvaluateImpl(ref_vector<boost::any> const& inputs) {
+    
   // get the mode
   const Distribution::Mode mode = boost::any_cast<Distribution::Mode const>(inputs[0]);
 
@@ -25,7 +27,7 @@ void Distribution::EvaluateImpl(ref_vector<boost::any> const& inputs) {
     break;
   }
   default: {
-    // something when wrong ...
+    // something went wrong ...
     assert(false);
   }
   }
@@ -38,15 +40,10 @@ double Distribution::LogDensity(ref_vector<boost::any> const& inputs) {
   return LogDensityImpl(inputs);
 }
 
-double Distribution::LogDensity() { 
-  // the first input is always whether we are evaluting the log-density or sampling; we either have 1 input or they are unknown
-  assert(numInputs==1 || numInputs<0);
-  
-  return LogDensity(ref_vector<boost::any>());
-}
-
 // default behavior of log-density is to return infinity
 double Distribution::LogDensityImpl(ref_vector<boost::any> const& inputs) {
+    
+  throw muq::NotImplementedError("LogDensityImpl was not implemented for class " + std::string(typeid(*this).name()) );
   return -std::numeric_limits<double>::infinity();
 }
 
@@ -89,5 +86,7 @@ boost::any Distribution::Sample() {
 }
 
 boost::any Distribution::SampleImpl(ref_vector<boost::any> const& inputs) {
+
+  throw muq::NotImplementedError("SampleImpl was not implemented for class " + std::string(typeid(*this).name()) );
   return boost::none;
 }

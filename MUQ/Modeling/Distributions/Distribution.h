@@ -24,7 +24,7 @@ namespace muq {
 
       /// Evaluate the log-density
       /**
-	 If known, the log-density should be implemented by a child.  Calls LogDensityImpl, the default behavior is to return infinity (std::numeric_limits<double>::infinity()).
+	 If known, the log-density should be implemented by a child in the LogDensityImpl class.  Calls LogDensityImpl, the default behavior is to return infinity (std::numeric_limits<double>::infinity()).
 	 @param[in] inputs the vector of inputs to the log-density
 	 \return The log density
        */
