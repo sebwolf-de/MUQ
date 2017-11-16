@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "MUQ/Modeling/Distributions/Uniform.h"
+#include "MUQ/Modeling/Distributions/UniformBox.h"
 
 using namespace muq::Modeling;
 
@@ -12,13 +12,13 @@ public:
     const std::pair<double, double> second_bounds(-2.0, 3.0);
     
     // create a uniform distribution
-    uniform1D = std::make_shared<Uniform>(first_bounds);
-    uniform = std::make_shared<Uniform>(first_bounds, second_bounds);
+    uniform1D = std::make_shared<UniformBox>(first_bounds);
+    uniform = std::make_shared<UniformBox>(first_bounds, second_bounds);
   }
 
   inline virtual ~UniformDistributionTests() {}
 
-  std::shared_ptr<Uniform> uniform, uniform1D;
+  std::shared_ptr<UniformBox> uniform, uniform1D;
   
 private:
 };

@@ -2,7 +2,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "MUQ/Modeling/Distributions/Uniform.h"
+#include "MUQ/Modeling/Distributions/UniformBox.h"
 #include "MUQ/Modeling/Distributions/Gaussian.h"
 
 #include "MUQ/SamplingAlgorithms/ImportanceSampling.h"
@@ -26,7 +26,7 @@ TEST(ImportanceSampling, Setup) {
   auto bias = std::make_shared<Gaussian>(0.25); 
 
   // create a uniform distribution---the sampling problem is built around characterizing this distribution
-  auto dist = std::make_shared<Uniform>(std::pair<double, double>(-0.5, 1.0));
+  auto dist = std::make_shared<UniformBox>(std::pair<double, double>(-0.5, 1.0));
 
   // create a sampling problem
   auto problem = std::make_shared<SamplingProblem>(dist, bias);

@@ -42,7 +42,7 @@ CreateCompileGroup(
     ""
 
     Distributions/Distribution.cpp
-    Distributions/Uniform.cpp
+    Distributions/UniformBox.cpp
     Distributions/Gaussian.cpp
 )
 

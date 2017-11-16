@@ -1,26 +1,16 @@
-#include "MUQ/Modeling/Distributions/Uniform.h"
+#include "MUQ/Modeling/Distributions/UniformBox.h"
 
 #include "MUQ/Utilities/RandomGenerator.h"
 
 using namespace muq::Utilities;
 using namespace muq::Modeling;
 
-Uniform::~Uniform() {}
-
-Uniform::Uniform(std::vector<std::pair<double, double> > const& bounds) : Distribution(), bounds(ComputeBounds(bounds)) {
+UniformBox::UniformBox(std::vector<std::pair<double, double> > const& bounds) : Distribution(), bounds(ComputeBounds(bounds)) {
   // initialize the any algebra
   algebra = std::make_shared<AnyAlgebra>();
 }
 
-std::vector<std::pair<double, double> > Uniform::CreateBounds(std::vector<std::pair<double, double> >& bounds, std::pair<double, double> last) {
-  // add the last pair
-  bounds.push_back(last);
-
-  // return the upper/lower bound paris
-  return bounds;
-}
-
-std::vector<std::pair<double, double> > Uniform::ComputeBounds(std::vector<std::pair<double, double> > const& bounds) {
+std::vector<std::pair<double, double> > UniformBox::ComputeBounds(std::vector<std::pair<double, double> > const& bounds) {
   std::vector<std::pair<double, double> > new_bounds(bounds);
   
   for( auto it=new_bounds.begin(); it!=new_bounds.end(); ++it ) {
@@ -30,7 +20,7 @@ std::vector<std::pair<double, double> > Uniform::ComputeBounds(std::vector<std::
   return new_bounds;
 }
 
-double Uniform::LogDensityImpl(ref_vector<boost::any> const& inputs) {
+double UniformBox::LogDensityImpl(ref_vector<boost::any> const& inputs) {
   // get the dimension
   const unsigned int dim = algebra->Size(inputs[0].get());
   assert(dim==bounds.size());
@@ -51,7 +41,7 @@ double Uniform::LogDensityImpl(ref_vector<boost::any> const& inputs) {
   return 1.0;
 }
 
-boost::any Uniform::SampleImpl(ref_vector<boost::any> const& inputs) {
+boost::any UniformBox::SampleImpl(ref_vector<boost::any> const& inputs) {
   assert(bounds.size()>0);
   
   if( bounds.size()==1 ) { // one dimensional
