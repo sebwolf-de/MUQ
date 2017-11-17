@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "MUQ/Modeling/Distributions/Distribution.h"
+#include "MUQ/Utilities/Exceptions.h"
 
 using namespace muq::Modeling;
 
@@ -16,6 +17,18 @@ public:
     return -x*x-std::sin(2.0*M_PI*x);
   }
   
+private:
+};
+
+class ExampleRV : public Distribution {
+public:
+    inline ExampleRV() : Distribution() {}
+
+    inline virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) override {
+        double outputVal = 0.1;
+        return boost::any(outputVal);
+    }
+    
 private:
 };
 
@@ -38,4 +51,26 @@ TEST(Distribution, EvaluateDensity) {
 
   // make sure we get the density we implemented
   EXPECT_DOUBLE_EQ(logdens, -x*x-std::sin(2.0*M_PI*x));
+
+  // Make sure we can't sample
+  EXPECT_THROW(dens->Sample(x), muq::NotImplementedError);
+  EXPECT_THROW(dens->Evaluate(Distribution::Mode::SampleDistribution, x), muq::NotImplementedError);
+}
+
+TEST(Distribution, EvaluateSample) {
+
+    auto rv = std::make_shared<ExampleRV>();
+    const double x  = 2.5;
+
+    // draw a sample
+    boost::any samp = rv->Sample(x);
+    EXPECT_DOUBLE_EQ(0.1, boost::any_cast<double>(samp));
+
+    samp = rv->Evaluate(Distribution::Mode::SampleDistribution, x)[0];
+    EXPECT_DOUBLE_EQ(0.1, boost::any_cast<double>(samp));
+
+    // Make sure we can't evaluate the density
+    EXPECT_THROW(rv->LogDensity(x), muq::NotImplementedError);
+    EXPECT_THROW(rv->Evaluate(Distribution::Mode::EvaluateLogDensity, x), muq::NotImplementedError);
+
 }
