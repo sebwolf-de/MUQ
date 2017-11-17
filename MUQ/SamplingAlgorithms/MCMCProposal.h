@@ -6,6 +6,7 @@
 #include <boost/function.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 #include "MUQ/Utilities/RegisterClassName.h"
 
 #include "MUQ/Modeling/Distributions/Distribution.h"
@@ -34,6 +35,19 @@ namespace muq {
       typedef std::map<std::string, MCMCProposalConstructor> MCMCProposalMap;
 
       static std::shared_ptr<MCMCProposalMap> GetMCMCProposalMap();
+
+      /// Adapt the proposal after each step
+      /**
+	 By default this function does nothing but children can override it to adapt the proposal
+	 @param[in] t The current step
+	 @param[in] state The current state
+       */
+      virtual void Adapt(unsigned int const t, std::shared_ptr<SamplingState> state);
+
+    protected:
+
+      /// An any algebra
+      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>();
       
     private:
 

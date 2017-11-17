@@ -28,12 +28,13 @@ CreateCompileGroup(
 
     TransitionKernel.cpp
     MCKernel.cpp
-    IPKernel.cpp
+    ISKernel.cpp
     MHKernel.cpp
     MCMCKernel.cpp
 
     MCMCProposal.cpp
     MHProposal.cpp
+    AMProposal.cpp
 
     SamplingProblem.cpp
 )

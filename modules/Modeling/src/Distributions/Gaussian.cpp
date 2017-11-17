@@ -62,31 +62,11 @@ void Gaussian::ResetHyperparameters(ref_vector<boost::any> const& hyperparas) {
       break;
     }
     case Gaussian::Mode::Covariance: {
-      // reset the mode
-      mode = Gaussian::Mode::Covariance;
-      
-      // reset the covaraince and the precision
-      prec = boost::none;
-      precSqrt = boost::none;
-      cov = hyperpara.first;
-      covSqrt = boost::none;
-
-      // recompute the scaling constant
-      ComputeScalingConstant();
+      SetCovariance(hyperpara.first);
       break;
     }
     case Gaussian::Mode::Precision: {
-      // reset the mode
-      mode = Gaussian::Mode::Precision;
-      
-      // reset the covaraince and the precision
-      prec = hyperpara.first;
-      precSqrt = boost::none;
-      cov = boost::none;
-      covSqrt = boost::none;
-
-      // recompute the scaling constant
-      ComputeScalingConstant();
+      SetPrecision(hyperpara.first);
       break;
     }
     default: {
@@ -137,7 +117,6 @@ boost::any Gaussian::SampleImpl(ref_vector<boost::any> const& inputs) {
   switch( mode ) {
   case Gaussian::Mode::Covariance: {
     if( !covSqrt ) { covSqrt = algebra->SquareRoot(*cov); }
-
     return mean? algebra->Add(algebra->Apply(*covSqrt, stdnrm), *mean) : algebra->Apply(*covSqrt, stdnrm);
   }
   case Gaussian::Mode::Precision: {
@@ -157,4 +136,37 @@ boost::any Gaussian::SampleImpl(ref_vector<boost::any> const& inputs) {
 
 unsigned int Gaussian::Dimension() const {
   return dim;
+}
+
+boost::any Gaussian::GetCovariance() const {
+  assert(cov);
+  return *cov;
+}
+
+void Gaussian::SetCovariance(boost::any const& newcov) {
+  // reset the mode
+  mode = Gaussian::Mode::Covariance;
+  
+  // reset the covaraince and the precision
+  prec = boost::none;
+  precSqrt = boost::none;
+  cov = SaveCovPrec(newcov);
+  covSqrt = boost::none;
+  
+  // recompute the scaling constant
+  ComputeScalingConstant();
+}
+
+void Gaussian::SetPrecision(boost::any const& newprec) {
+  // reset the mode
+  mode = Gaussian::Mode::Precision;
+  
+  // reset the covaraince and the precision
+  prec = SaveCovPrec(newprec);
+  precSqrt = boost::none;
+  cov = boost::none;
+  covSqrt = boost::none;
+  
+  // recompute the scaling constant
+  ComputeScalingConstant();
 }

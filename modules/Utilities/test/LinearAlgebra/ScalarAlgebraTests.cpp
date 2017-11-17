@@ -110,6 +110,29 @@ TEST(ScalarAlgebraTests, InnerProduct) {
   EXPECT_DOUBLE_EQ(alg->InnerProduct(xui, xui), xui*xui);
 }
 
+TEST(ScalarAlgebraTests, OuterProduct) {
+  auto alg = std::shared_ptr<AnyAlgebra>();
+
+  // test the scalar inner product
+  double xd=4.0; float xf=-3.0; int xi=-2; unsigned int xui=8;
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->OuterProduct(xd, xd)), xd*xd);
+  EXPECT_FLOAT_EQ(boost::any_cast<double const>(alg->OuterProduct(xd, xf)), xd*xf);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->OuterProduct(xd, xi)), xd*xi);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->OuterProduct(xd, xui)), xd*xui);
+  EXPECT_FLOAT_EQ(boost::any_cast<double const>(alg->OuterProduct(xf, xd)), xf*xd);
+  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->OuterProduct(xf, xf)), xf*xf);
+  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->OuterProduct(xf, xi)), xf*xi);
+  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->OuterProduct(xf, xui)), xf*xui);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->OuterProduct(xi, xd)), xi*xd);
+  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->OuterProduct(xi, xf)), xi*xf);
+  EXPECT_EQ(boost::any_cast<int const>(alg->OuterProduct(xi, xi)), xi*xi);
+  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->OuterProduct(xi, xui)), xi*xui);
+  EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->OuterProduct(xui, xd)), xui*xd);
+  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->OuterProduct(xui, xf)), xui*xf);
+  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->OuterProduct(xui, xi)), xui*xi);
+  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->OuterProduct(xui, xui)), xui*xui);
+}
+
 TEST(ScalarAlgebraTests, Identity) {
   auto alg = std::shared_ptr<AnyAlgebra>();
   

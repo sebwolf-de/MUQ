@@ -54,6 +54,12 @@ namespace muq {
        */
       virtual std::shared_ptr<TransitionKernel> Kernel(boost::property_tree::ptree& pt, std::shared_ptr<SamplingProblem> problem) const = 0;
 
+      /// Re-weight the samples (self-normalize)
+      /**
+	 @param[in] samples Samples that do not have normalized weights
+       */
+      void ReweightSamples(std::vector<std::shared_ptr<SamplingState> >& samples) const;
+
       /// A muq::Utilities::AnyAlgebra to do algebra with boost::any's
       std::shared_ptr<muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>();
 

@@ -86,6 +86,23 @@ double AnyAlgebra::InnerProductImpl(boost::any const& vec1, boost::any const& ve
   return 0.0;
 }
 
+boost::any AnyAlgebra::OuterProduct(boost::any const& vec1, boost::any const& vec2) const {
+  if( ScalarAlgebra::IsScalar(vec1.type()) && ScalarAlgebra::IsScalar(vec2.type()) ) {
+    return ScalarAlgebra::OuterProduct(vec1, vec2); }
+
+  if( EigenVectorAlgebra::IsEigenVector(vec1.type()) && EigenVectorAlgebra::IsEigenVector(vec2.type()) ) { return EigenVectorAlgebra::OuterProduct(vec1, vec2); }
+
+  return OuterProductImpl(vec1, vec2);
+}
+
+boost::any AnyAlgebra::OuterProductImpl(boost::any const& vec1, boost::any const& vec2) const {
+  std::cerr << std::endl << "ERROR: Cannot compute the outer product between vectors with types " << boost::core::demangle(vec1.type().name()) << " and " << boost::core::demangle(vec2.type().name()) << std::endl;
+  std::cerr << "\tTry overloading boost::any AnyAlgebra::OuterProductImpl()" << std::endl << std::endl;
+  std::cerr << "\tError in AnyAlgebra::OuterProductImpl()" << std::endl << std::endl;
+
+  return boost::none;
+}
+
 bool AnyAlgebra::IsZero(boost::any const& obj) const {
   if( ScalarAlgebra::IsScalar(obj.type()) ) { return ScalarAlgebra::IsZero(obj); }
 
@@ -145,18 +162,18 @@ boost::any AnyAlgebra::IdentityImpl(std::type_info const& type, unsigned int con
 }
 
 boost::any AnyAlgebra::Add(boost::any const& in0, boost::any const& in1) const {
-  if( ScalarAlgebra::IsScalar(in0.type()) && ScalarAlgebra::IsScalar(in1.type()) ) { return ScalarAlgebra::Add(in0, in1); }
-
-  if( EigenVectorAlgebra::IsEigenVector(in0.type()) && EigenVectorAlgebra::IsEigenVector(in1.type()) ) { return EigenVectorAlgebra::Add(in0, in1); }
-
-  if( EigenMatrixAlgebra::IsEigenMatrix(in0.type()) && EigenMatrixAlgebra::IsEigenMatrix(in1.type()) ) { return EigenMatrixAlgebra::Add(in0, in1); }
-  
   // the first type is boost::none --- return the second
   if( in0.type()==typeid(boost::none) ) { return in1; }
 
   // the second type is boost::none --- return the first
   if( in1.type()==typeid(boost::none) ) { return in0; }
+  
+  if( ScalarAlgebra::IsScalar(in0.type()) && ScalarAlgebra::IsScalar(in1.type()) ) { return ScalarAlgebra::Add(in0, in1); }
 
+  if( EigenVectorAlgebra::IsEigenVector(in0.type()) && EigenVectorAlgebra::IsEigenVector(in1.type()) ) { return EigenVectorAlgebra::Add(in0, in1); }
+
+  if( EigenMatrixAlgebra::IsEigenMatrix(in0.type()) || EigenMatrixAlgebra::IsEigenMatrix(in1.type()) ) { return EigenMatrixAlgebra::Add(in0, in1); }
+  
   return AddImpl(in0, in1);
 }
 

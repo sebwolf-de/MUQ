@@ -44,7 +44,25 @@ namespace muq {
 	 \return The dimension
        */
       unsigned int Dimension() const;
-      
+
+      /// Get the covariance
+      /**
+	 \return The covariance
+       */
+      boost::any GetCovariance() const;
+
+      /// Set the covariance matrix
+      /**
+	 @param[in] newcov The new covariance
+       */
+      void SetCovariance(boost::any const& newcov);
+
+      /// Set the precision matrix
+      /**
+	 @param[in] newprec The new precision
+       */
+      void SetPrecision(boost::any const& newprec);
+
     private:
 
       /// Compute the distribution's scaling constant

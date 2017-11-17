@@ -233,61 +233,169 @@ TEST(EigenMatrixAlgebraTests, Add) {
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix2d const&>(alg->Add(mat2d, mat2d)).array()==(mat2d+mat2d).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix2d const&>(alg->Add(mat2d, mat2Xd)).array()==(mat2d+mat2Xd).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXd const&>(alg->Add(mat2Xd, mat2d)).array()==(mat2d+mat2Xd).array()).all());
+  const Eigen::Vector2d vec2d(1.0, 1.0);
+  const Eigen::VectorXd vec2Xd = Eigen::VectorXd::Random(2);
+  Eigen::Matrix2d result2d = mat2d;
+  result2d.diagonal() += vec2d;
+  Eigen::MatrixXd result2Xd = mat2d;
+  result2Xd.diagonal() += vec2Xd;
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2d const&>(alg->Add(mat2d, vec2d)).array()==result2d.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2d const&>(alg->Add(mat2d, vec2Xd)).array()==result2Xd.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2d const&>(alg->Add(vec2d, mat2d)).array()==result2d.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2d const&>(alg->Add(vec2Xd, mat2d)).array()==result2Xd.array()).all());
 
   const Eigen::Matrix2f mat2f = Eigen::Matrix2f::Random();
   const Eigen::MatrixXf mat2Xf = Eigen::MatrixXf::Random(2,2);
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix2f const&>(alg->Add(mat2f, mat2f)).array()==(mat2f+mat2f).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix2f const&>(alg->Add(mat2f, mat2Xf)).array()==(mat2f+mat2Xf).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXf const&>(alg->Add(mat2Xf, mat2f)).array()==(mat2f+mat2Xf).array()).all());
+  const Eigen::Vector2f vec2f(1.0, 1.0);
+  const Eigen::VectorXf vec2Xf = Eigen::VectorXf::Random(2);
+  Eigen::Matrix2f result2f = mat2f;
+  result2f.diagonal() += vec2f;
+  Eigen::MatrixXf result2Xf = mat2f;
+  result2Xf.diagonal() += vec2Xf;
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2f const&>(alg->Add(mat2f, vec2f)).array()==result2f.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2f const&>(alg->Add(mat2f, vec2Xf)).array()==result2Xf.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2f const&>(alg->Add(vec2f, mat2f)).array()==result2f.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2f const&>(alg->Add(vec2Xf, mat2f)).array()==result2Xf.array()).all());
 
   const Eigen::Matrix2i mat2i = Eigen::Matrix2i::Random();
   const Eigen::MatrixXi mat2Xi = Eigen::MatrixXi::Random(2,2);
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix2i const&>(alg->Add(mat2i, mat2i)).array()==(mat2i+mat2i).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix2i const&>(alg->Add(mat2i, mat2Xi)).array()==(mat2i+mat2Xi).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Add(mat2Xi, mat2i)).array()==(mat2i+mat2Xi).array()).all());
-  
+  const Eigen::Vector2i vec2i(1.0, 1.0);
+  const Eigen::VectorXi vec2Xi = Eigen::VectorXi::Random(2);
+  Eigen::Matrix2i result2i = mat2i;
+  result2i.diagonal() += vec2i;
+  Eigen::MatrixXi result2Xi = mat2i;
+  result2Xi.diagonal() += vec2Xi;
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2i const&>(alg->Add(mat2i, vec2i)).array()==result2i.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2i const&>(alg->Add(mat2i, vec2Xi)).array()==result2Xi.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2i const&>(alg->Add(vec2i, mat2i)).array()==result2i.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix2i const&>(alg->Add(vec2Xi, mat2i)).array()==result2Xi.array()).all());
+
   const Eigen::Matrix3d mat3d = Eigen::Matrix3d::Random();
   const Eigen::MatrixXd mat3Xd = Eigen::MatrixXd::Random(3,3);
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix3d const&>(alg->Add(mat3d, mat3d)).array()==(mat3d+mat3d).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix3d const&>(alg->Add(mat3d, mat3Xd)).array()==(mat3d+mat3Xd).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXd const&>(alg->Add(mat3Xd, mat3d)).array()==(mat3d+mat3Xd).array()).all());
+  const Eigen::Vector3d vec3d = Eigen::Vector3d::Random();
+  const Eigen::VectorXd vec3Xd = Eigen::VectorXd::Random(3);
+  Eigen::Matrix3d result3d = mat3d;
+  result3d.diagonal() += vec3d;
+  Eigen::MatrixXd result3Xd = mat3d;
+  result3Xd.diagonal() += vec3Xd;
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3d const&>(alg->Add(mat3d, vec3d)).array()==result3d.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3d const&>(alg->Add(mat3d, vec3Xd)).array()==result3Xd.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3d const&>(alg->Add(vec3d, mat3d)).array()==result3d.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3d const&>(alg->Add(vec3Xd, mat3d)).array()==result3Xd.array()).all());
 
   const Eigen::Matrix3f mat3f = Eigen::Matrix3f::Random();
   const Eigen::MatrixXf mat3Xf = Eigen::MatrixXf::Random(3,3);
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix3f const&>(alg->Add(mat3f, mat3f)).array()==(mat3f+mat3f).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix3f const&>(alg->Add(mat3f, mat3Xf)).array()==(mat3f+mat3Xf).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXf const&>(alg->Add(mat3Xf, mat3f)).array()==(mat3f+mat3Xf).array()).all());
+  const Eigen::Vector3f vec3f = Eigen::Vector3f::Random();
+  const Eigen::VectorXf vec3Xf = Eigen::VectorXf::Random(3);
+  Eigen::Matrix3f result3f = mat3f;
+  result3f.diagonal() += vec3f;
+  Eigen::MatrixXf result3Xf = mat3f;
+  result3Xf.diagonal() += vec3Xf;
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3f const&>(alg->Add(mat3f, vec3f)).array()==result3f.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3f const&>(alg->Add(mat3f, vec3Xf)).array()==result3Xf.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3f const&>(alg->Add(vec3f, mat3f)).array()==result3f.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3f const&>(alg->Add(vec3Xf, mat3f)).array()==result3Xf.array()).all());
 
   const Eigen::Matrix3i mat3i = Eigen::Matrix3i::Random();
   const Eigen::MatrixXi mat3Xi = Eigen::MatrixXi::Random(3,3);
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix3i const&>(alg->Add(mat3i, mat3i)).array()==(mat3i+mat3i).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix3i const&>(alg->Add(mat3i, mat3Xi)).array()==(mat3i+mat3Xi).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Add(mat3Xi, mat3i)).array()==(mat3i+mat3Xi).array()).all());
+  const Eigen::Vector3i vec3i = Eigen::Vector3i::Random();
+  const Eigen::VectorXi vec3Xi = Eigen::VectorXi::Random(3);
+  Eigen::Matrix3i result3i = mat3i;
+  result3i.diagonal() += vec3i;
+  Eigen::MatrixXi result3Xi = mat3i;
+  result3Xi.diagonal() += vec3Xi;
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3i const&>(alg->Add(mat3i, vec3i)).array()==result3i.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3i const&>(alg->Add(mat3i, vec3Xi)).array()==result3Xi.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3i const&>(alg->Add(vec3i, mat3i)).array()==result3i.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix3i const&>(alg->Add(vec3Xi, mat3i)).array()==result3Xi.array()).all());
 
   const Eigen::Matrix4d mat4d = Eigen::Matrix4d::Random();
   const Eigen::MatrixXd mat4Xd = Eigen::MatrixXd::Random(4,4);
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix4d const&>(alg->Add(mat4d, mat4d)).array()==(mat4d+mat4d).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix4d const&>(alg->Add(mat4d, mat4Xd)).array()==(mat4d+mat4Xd).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXd const&>(alg->Add(mat4Xd, mat4d)).array()==(mat4d+mat4Xd).array()).all());
+  const Eigen::Vector4d vec4d = Eigen::Vector4d::Random();
+  const Eigen::VectorXd vec4Xd = Eigen::VectorXd::Random(4);
+  Eigen::Matrix4d result4d = mat4d;
+  result4d.diagonal() += vec4d;
+  Eigen::MatrixXd result4Xd = mat4d;
+  result4Xd.diagonal() += vec4Xd;
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4d const&>(alg->Add(mat4d, vec4d)).array()==result4d.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4d const&>(alg->Add(mat4d, vec4Xd)).array()==result4Xd.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4d const&>(alg->Add(vec4d, mat4d)).array()==result4d.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4d const&>(alg->Add(vec4Xd, mat4d)).array()==result4Xd.array()).all());
 
   const Eigen::Matrix4f mat4f = Eigen::Matrix4f::Random();
   const Eigen::MatrixXf mat4Xf = Eigen::MatrixXf::Random(4,4);
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix4f const&>(alg->Add(mat4f, mat4f)).array()==(mat4f+mat4f).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix4f const&>(alg->Add(mat4f, mat4Xf)).array()==(mat4f+mat4Xf).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXf const&>(alg->Add(mat4Xf, mat4f)).array()==(mat4f+mat4Xf).array()).all());
+  const Eigen::Vector4f vec4f = Eigen::Vector4f::Random();
+  const Eigen::VectorXf vec4Xf = Eigen::VectorXf::Random(4);
+  Eigen::Matrix4f result4f = mat4f;
+  result4f.diagonal() += vec4f;
+  Eigen::MatrixXf result4Xf = mat4f;
+  result4Xf.diagonal() += vec4Xf;
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4f const&>(alg->Add(mat4f, vec4f)).array()==result4f.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4f const&>(alg->Add(mat4f, vec4Xf)).array()==result4Xf.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4f const&>(alg->Add(vec4f, mat4f)).array()==result4f.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4f const&>(alg->Add(vec4Xf, mat4f)).array()==result4Xf.array()).all());
 
   const Eigen::Matrix4i mat4i = Eigen::Matrix4i::Random();
   const Eigen::MatrixXi mat4Xi = Eigen::MatrixXi::Random(4,4);
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix4i const&>(alg->Add(mat4i, mat4i)).array()==(mat4i+mat4i).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix4i const&>(alg->Add(mat4i, mat4Xi)).array()==(mat4i+mat4Xi).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Add(mat4Xi, mat4i)).array()==(mat4i+mat4Xi).array()).all());
+  const Eigen::Vector4i vec4i = Eigen::Vector4i::Random();
+  const Eigen::VectorXi vec4Xi = Eigen::VectorXi::Random(4);
+  Eigen::Matrix4i result4i = mat4i;
+  result4i.diagonal() += vec4i;
+  Eigen::MatrixXi result4Xi = mat4i;
+  result4Xi.diagonal() += vec4Xi;
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4i const&>(alg->Add(mat4i, vec4i)).array()==result4i.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4i const&>(alg->Add(mat4i, vec4Xi)).array()==result4Xi.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4i const&>(alg->Add(vec4i, mat4i)).array()==result4i.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4i const&>(alg->Add(vec4Xi, mat4i)).array()==result4Xi.array()).all());  
 
-  const Eigen::MatrixXd matd = Eigen::MatrixXd::Random(8,62);
-  const Eigen::MatrixXf matf = Eigen::MatrixXf::Random(9,2);
+  const Eigen::MatrixXd matd = Eigen::MatrixXd::Random(8,8);
+  const Eigen::MatrixXf matf = Eigen::MatrixXf::Random(9,9);
   const Eigen::MatrixXi mati = Eigen::MatrixXi::Random(5,5);
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXd const&>(alg->Add(matd, matd)).array()==(matd+matd).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXf const&>(alg->Add(matf, matf)).array()==(matf+matf).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Add(mati, mati)).array()==(mati+mati).array()).all());
+
+  const Eigen::VectorXd vecd = Eigen::VectorXd::Random(8);
+  Eigen::MatrixXd resultd = matd;
+  resultd.diagonal() += vecd;
+  EXPECT_TRUE((boost::any_cast<Eigen::MatrixXd const&>(alg->Add(matd, vecd)).array()==resultd.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::MatrixXd const&>(alg->Add(vecd, matd)).array()==resultd.array()).all());
+
+  const Eigen::VectorXf vecf = Eigen::VectorXf::Random(9);
+  Eigen::MatrixXf resultf = matf;
+  resultf.diagonal() += vecf;
+  EXPECT_TRUE((boost::any_cast<Eigen::MatrixXf const&>(alg->Add(matf, vecf)).array()==resultf.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::MatrixXf const&>(alg->Add(vecf, matf)).array()==resultf.array()).all());
+
+  const Eigen::VectorXi veci = Eigen::VectorXi::Random(5);
+  Eigen::MatrixXi resulti = mati;
+  resulti.diagonal() += veci;
+  EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Add(mati, veci)).array()==resulti.array()).all());
+  EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Add(veci, mati)).array()==resulti.array()).all());
 }
 
 TEST(EigenMatrixAlgebraTests, Subtract) {

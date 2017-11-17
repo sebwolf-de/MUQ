@@ -47,6 +47,14 @@ namespace muq {
        */
       double InnerProduct(boost::any const& vec1, boost::any const& vec2) const;
 
+      /// The outer product between two vectors
+      /**
+	 @param[in] vec1 The first vector
+	 @param[in] vec2 The second vector
+	 \return The outer product
+       */
+      boost::any OuterProduct(boost::any const& vec1, boost::any const& vec2) const;
+
       /// Access an element of a vector/matrix
       /**
 	 The return type is whatever the elements of the vector/matrix are (doubles, ints, ect ...)
@@ -170,7 +178,15 @@ namespace muq {
 	 @param[in] vec2 The second vector
 	 \return The inner product
        */
-      virtual double InnerProductImpl(boost::any const& vec1, boost::any const& vec2) const;      
+      virtual double InnerProductImpl(boost::any const& vec1, boost::any const& vec2) const;
+
+      /// The outer product between two vectors
+      /**
+	 @param[in] vec1 The first vector
+	 @param[in] vec2 The second vector
+	 \return The outer product
+       */
+      virtual boost::any OuterProductImpl(boost::any const& vec1, boost::any const& vec2) const;
 
       /// Access an element of a vector
       /**

@@ -235,6 +235,61 @@ TEST(EigenVectorAlgebraTests, InnerProduct) {
   EXPECT_EQ(alg->InnerProduct(vec3Xi, vec3Xi), vec3Xi.dot(vec3Xi));
 }
 
+TEST(EigenVectorAlgebraTests, OuterProduct) {
+  auto alg = std::shared_ptr<AnyAlgebra>();
+
+  const Eigen::Vector2d vec2d(2.0, 3.0);
+  const Eigen::VectorXd vec2Xd = Eigen::VectorXd::Random(2);
+  const Eigen::Vector3d vec3d(2.0, 3.0, 4.0);
+  const Eigen::VectorXd vec3Xd = Eigen::VectorXd::Random(3);
+  const Eigen::Vector4d vec4d(2.0, 3.0, 4.0, 5.0);
+  const Eigen::VectorXd vec4Xd = Eigen::VectorXd::Random(4);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::Matrix2d>(alg->OuterProduct(vec2d, vec2d))-vec2d*vec2d.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXd>(alg->OuterProduct(vec2d, vec2Xd))-vec2d*vec2Xd.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXd>(alg->OuterProduct(vec2Xd, vec2d))-vec2Xd*vec2d.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::Matrix3d>(alg->OuterProduct(vec3d, vec3d))-vec3d*vec3d.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXd>(alg->OuterProduct(vec3d, vec3Xd))-vec3d*vec3Xd.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXd>(alg->OuterProduct(vec3Xd, vec3d))-vec3Xd*vec3d.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::Matrix4d>(alg->OuterProduct(vec4d, vec4d))-vec4d*vec4d.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXd>(alg->OuterProduct(vec4d, vec4Xd))-vec4d*vec4Xd.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXd>(alg->OuterProduct(vec4Xd, vec4d))-vec4Xd*vec4d.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXd>(alg->OuterProduct(vec3Xd, vec3Xd))-vec3Xd*vec3Xd.transpose()).norm(), 0.0);
+
+  const Eigen::Vector2f vec2f(2.0, 3.0);
+  const Eigen::VectorXf vec2Xf = Eigen::VectorXf::Random(2);
+  const Eigen::Vector3f vec3f(2.0, 3.0, 4.0);
+  const Eigen::VectorXf vec3Xf = Eigen::VectorXf::Random(3);
+  const Eigen::Vector4f vec4f(2.0, 3.0, 4.0, 5.0);
+  const Eigen::VectorXf vec4Xf = Eigen::VectorXf::Random(4);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::Matrix2f>(alg->OuterProduct(vec2f, vec2f))-vec2f*vec2f.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXf>(alg->OuterProduct(vec2f, vec2Xf))-vec2f*vec2Xf.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXf>(alg->OuterProduct(vec2Xf, vec2f))-vec2Xf*vec2f.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::Matrix3f>(alg->OuterProduct(vec3f, vec3f))-vec3f*vec3f.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXf>(alg->OuterProduct(vec3f, vec3Xf))-vec3f*vec3Xf.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXf>(alg->OuterProduct(vec3Xf, vec3f))-vec3Xf*vec3f.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::Matrix4f>(alg->OuterProduct(vec4f, vec4f))-vec4f*vec4f.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXf>(alg->OuterProduct(vec4f, vec4Xf))-vec4f*vec4Xf.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXf>(alg->OuterProduct(vec4Xf, vec4f))-vec4Xf*vec4f.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXf>(alg->OuterProduct(vec3Xf, vec3Xf))-vec3Xf*vec3Xf.transpose()).norm(), 0.0);
+  
+  const Eigen::Vector2i vec2i(2, 3);
+  const Eigen::VectorXi vec2Xi = Eigen::VectorXi::Random(2);
+  const Eigen::Vector3i vec3i(2, 3, 4);
+  const Eigen::VectorXi vec3Xi = Eigen::VectorXi::Random(3);
+  const Eigen::Vector4i vec4i(2, 3, 4, 5);
+  const Eigen::VectorXi vec4Xi = Eigen::VectorXi::Random(4);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::Matrix2i>(alg->OuterProduct(vec2i, vec2i))-vec2i*vec2i.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXi>(alg->OuterProduct(vec2i, vec2Xi))-vec2i*vec2Xi.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXi>(alg->OuterProduct(vec2Xi, vec2i))-vec2Xi*vec2i.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::Matrix3i>(alg->OuterProduct(vec3i, vec3i))-vec3i*vec3i.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXi>(alg->OuterProduct(vec3i, vec3Xi))-vec3i*vec3Xi.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXi>(alg->OuterProduct(vec3Xi, vec3i))-vec3Xi*vec3i.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::Matrix4i>(alg->OuterProduct(vec4i, vec4i))-vec4i*vec4i.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXi>(alg->OuterProduct(vec4i, vec4Xi))-vec4i*vec4Xi.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXi>(alg->OuterProduct(vec4Xi, vec4i))-vec4Xi*vec4i.transpose()).norm(), 0.0);
+  EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXi>(alg->OuterProduct(vec3Xi, vec3Xi))-vec3Xi*vec3Xi.transpose()).norm(), 0.0);
+}
+
 TEST(EigenVectorAlgebraTests, LogDeterminate) {
   auto alg = std::shared_ptr<AnyAlgebra>();
 

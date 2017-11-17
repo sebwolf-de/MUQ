@@ -143,6 +143,54 @@ double EigenVectorAlgebra::InnerProduct(boost::any const& vec1, boost::any const
   return 0.0;
 }
 
+boost::any EigenVectorAlgebra::OuterProduct(boost::any const& vec1, boost::any const& vec2) {
+  if( typeid(Eigen::Vector2d)==vec1.type() && typeid(Eigen::Vector2d)==vec2.type() ) { return OuterProduct<Eigen::Matrix2d, Eigen::Vector2d, Eigen::Vector2d>(vec1, vec2); }
+  if( typeid(Eigen::VectorXd)==vec1.type() && typeid(Eigen::Vector2d)==vec2.type() ) { return OuterProduct<Eigen::MatrixXd, Eigen::VectorXd, Eigen::Vector2d>(vec1, vec2); }
+  if( typeid(Eigen::Vector2d)==vec1.type() && typeid(Eigen::VectorXd)==vec2.type() ) { return OuterProduct<Eigen::MatrixXd, Eigen::Vector2d, Eigen::VectorXd>(vec1, vec2); }
+
+  if( typeid(Eigen::Vector3d)==vec1.type() && typeid(Eigen::Vector3d)==vec2.type() ) { return OuterProduct<Eigen::Matrix3d, Eigen::Vector3d, Eigen::Vector3d>(vec1, vec2); }
+  if( typeid(Eigen::VectorXd)==vec1.type() && typeid(Eigen::Vector3d)==vec2.type() ) { return OuterProduct<Eigen::MatrixXd, Eigen::VectorXd, Eigen::Vector3d>(vec1, vec2); }
+  if( typeid(Eigen::Vector3d)==vec1.type() && typeid(Eigen::VectorXd)==vec2.type() ) { return OuterProduct<Eigen::MatrixXd, Eigen::Vector3d, Eigen::VectorXd>(vec1, vec2); }
+
+  if( typeid(Eigen::Vector4d)==vec1.type() && typeid(Eigen::Vector4d)==vec2.type() ) { return OuterProduct<Eigen::Matrix4d, Eigen::Vector4d, Eigen::Vector4d>(vec1, vec2); }
+  if( typeid(Eigen::VectorXd)==vec1.type() && typeid(Eigen::Vector4d)==vec2.type() ) { return OuterProduct<Eigen::MatrixXd, Eigen::VectorXd, Eigen::Vector4d>(vec1, vec2); }
+  if( typeid(Eigen::Vector4d)==vec1.type() && typeid(Eigen::VectorXd)==vec2.type() ) { return OuterProduct<Eigen::MatrixXd, Eigen::Vector4d, Eigen::VectorXd>(vec1, vec2); }
+
+  if( typeid(Eigen::VectorXd)==vec1.type() && typeid(Eigen::VectorXd)==vec2.type() ) { return OuterProduct<Eigen::MatrixXd, Eigen::VectorXd, Eigen::VectorXd>(vec1, vec2); }
+
+  if( typeid(Eigen::Vector2f)==vec1.type() && typeid(Eigen::Vector2f)==vec2.type() ) { return OuterProduct<Eigen::Matrix2f, Eigen::Vector2f, Eigen::Vector2f>(vec1, vec2); }
+  if( typeid(Eigen::VectorXf)==vec1.type() && typeid(Eigen::Vector2f)==vec2.type() ) { return OuterProduct<Eigen::MatrixXf, Eigen::VectorXf, Eigen::Vector2f>(vec1, vec2); }
+  if( typeid(Eigen::Vector2f)==vec1.type() && typeid(Eigen::VectorXf)==vec2.type() ) { return OuterProduct<Eigen::MatrixXf, Eigen::Vector2f, Eigen::VectorXf>(vec1, vec2); }
+
+  if( typeid(Eigen::Vector3f)==vec1.type() && typeid(Eigen::Vector3f)==vec2.type() ) { return OuterProduct<Eigen::Matrix3f, Eigen::Vector3f, Eigen::Vector3f>(vec1, vec2); }
+  if( typeid(Eigen::VectorXf)==vec1.type() && typeid(Eigen::Vector3f)==vec2.type() ) { return OuterProduct<Eigen::MatrixXf, Eigen::VectorXf, Eigen::Vector3f>(vec1, vec2); }
+  if( typeid(Eigen::Vector3f)==vec1.type() && typeid(Eigen::VectorXf)==vec2.type() ) { return OuterProduct<Eigen::MatrixXf, Eigen::Vector3f, Eigen::VectorXf>(vec1, vec2); }
+
+  if( typeid(Eigen::Vector4f)==vec1.type() && typeid(Eigen::Vector4f)==vec2.type() ) { return OuterProduct<Eigen::Matrix4f, Eigen::Vector4f, Eigen::Vector4f>(vec1, vec2); }
+  if( typeid(Eigen::VectorXf)==vec1.type() && typeid(Eigen::Vector4f)==vec2.type() ) { return OuterProduct<Eigen::MatrixXf, Eigen::VectorXf, Eigen::Vector4f>(vec1, vec2); }
+  if( typeid(Eigen::Vector4f)==vec1.type() && typeid(Eigen::VectorXf)==vec2.type() ) { return OuterProduct<Eigen::MatrixXf, Eigen::Vector4f, Eigen::VectorXf>(vec1, vec2); }
+
+  if( typeid(Eigen::VectorXf)==vec1.type() && typeid(Eigen::VectorXf)==vec2.type() ) { return OuterProduct<Eigen::MatrixXf, Eigen::VectorXf, Eigen::VectorXf>(vec1, vec2); }
+
+  if( typeid(Eigen::Vector2i)==vec1.type() && typeid(Eigen::Vector2i)==vec2.type() ) { return OuterProduct<Eigen::Matrix2i, Eigen::Vector2i, Eigen::Vector2i>(vec1, vec2); }
+  if( typeid(Eigen::VectorXi)==vec1.type() && typeid(Eigen::Vector2i)==vec2.type() ) { return OuterProduct<Eigen::MatrixXi, Eigen::VectorXi, Eigen::Vector2i>(vec1, vec2); }
+  if( typeid(Eigen::Vector2i)==vec1.type() && typeid(Eigen::VectorXi)==vec2.type() ) { return OuterProduct<Eigen::MatrixXi, Eigen::Vector2i, Eigen::VectorXi>(vec1, vec2); }
+
+  if( typeid(Eigen::Vector3i)==vec1.type() && typeid(Eigen::Vector3i)==vec2.type() ) { return OuterProduct<Eigen::Matrix3i, Eigen::Vector3i, Eigen::Vector3i>(vec1, vec2); }
+  if( typeid(Eigen::VectorXi)==vec1.type() && typeid(Eigen::Vector3i)==vec2.type() ) { return OuterProduct<Eigen::MatrixXi, Eigen::VectorXi, Eigen::Vector3i>(vec1, vec2); }
+  if( typeid(Eigen::Vector3i)==vec1.type() && typeid(Eigen::VectorXi)==vec2.type() ) { return OuterProduct<Eigen::MatrixXi, Eigen::Vector3i, Eigen::VectorXi>(vec1, vec2); }
+
+  if( typeid(Eigen::Vector4i)==vec1.type() && typeid(Eigen::Vector4i)==vec2.type() ) { return OuterProduct<Eigen::Matrix4i, Eigen::Vector4i, Eigen::Vector4i>(vec1, vec2); }
+  if( typeid(Eigen::VectorXi)==vec1.type() && typeid(Eigen::Vector4i)==vec2.type() ) { return OuterProduct<Eigen::MatrixXi, Eigen::VectorXi, Eigen::Vector4i>(vec1, vec2); }
+  if( typeid(Eigen::Vector4i)==vec1.type() && typeid(Eigen::VectorXi)==vec2.type() ) { return OuterProduct<Eigen::MatrixXi, Eigen::Vector4i, Eigen::VectorXi>(vec1, vec2); }
+
+  if( typeid(Eigen::VectorXi)==vec1.type() && typeid(Eigen::VectorXi)==vec2.type() ) { return OuterProduct<Eigen::MatrixXi, Eigen::VectorXi, Eigen::VectorXi>(vec1, vec2); }
+
+  // something went wrong
+  assert(false);
+  return boost::none;
+}
+
 boost::any EigenVectorAlgebra::AccessElement(boost::any const& vec, unsigned int const i) {
   if( typeid(Eigen::Vector2d)==vec.type() ) { return AccessElement<Eigen::Vector2d>(vec, i); }
   if( typeid(Eigen::Vector2f)==vec.type() ) { return AccessElement<Eigen::Vector2f>(vec, i); }

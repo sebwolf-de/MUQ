@@ -29,3 +29,4 @@ std::shared_ptr<TransitionKernel> TransitionKernel::Construct(pt::ptree const& p
   return GetTransitionKernelMap()->at(kernelName) (pt, problem);
 }
 
+void TransitionKernel::PostStep(unsigned int const t, std::shared_ptr<SamplingState> state) {}
