@@ -12,13 +12,15 @@ public:
     const std::pair<double, double> second_bounds(-2.0, 3.0);
     
     // create a uniform distribution
-    uniform1D = std::make_shared<UniformBox>(first_bounds);
+    uniform1D = std::make_shared<UniformBox>(0.0, 1.0);//first_bounds);
+    
     uniform = std::make_shared<UniformBox>(first_bounds, second_bounds);
+    uniform2 = std::make_shared<UniformBox>(0.0, 1.0, -2.0, 3.0);
   }
 
   inline virtual ~UniformDistributionTests() {}
 
-  std::shared_ptr<UniformBox> uniform, uniform1D;
+  std::shared_ptr<UniformBox> uniform, uniform2, uniform1D;
   
 private:
 };
@@ -35,7 +37,10 @@ TEST_F(UniformDistributionTests, EvaluateLogDensity) {
 
   // evalute the log-denstion
   double logdens = uniform->LogDensity(x0);
-  EXPECT_DOUBLE_EQ(logdens, 1.0);
+  EXPECT_DOUBLE_EQ(logdens, -log(5.0));
+
+  logdens = uniform2->LogDensity(x0);
+  EXPECT_DOUBLE_EQ(logdens, -log(5.0));
 
   // evalute the log-denstion
   logdens = uniform->LogDensity(x1);
@@ -48,20 +53,14 @@ TEST_F(UniformDistributionTests, EvaluateLogDensity) {
 
 TEST_F(UniformDistributionTests, Sample1D) {
   // make sure the expected value is correct
-  const unsigned int N = 5e6;
+  const unsigned int N = 100;
   
-  double mean = boost::any_cast<double const>(uniform1D->Sample());
   for( unsigned int i=0; i<N; ++i ) {
-    mean += boost::any_cast<double const>(uniform1D->Sample());
+      
+      const double test = boost::any_cast<Eigen::VectorXd const>(uniform1D->Evaluate(Distribution::Mode::SampleDistribution) [0])(0);
+      EXPECT_TRUE(test>=0.0);
+      EXPECT_TRUE(test<=1.0);
   }
-  mean /= (N+1.0);
-
-  EXPECT_NEAR(mean, 0.5, 1.0e-2);
-
-  // test the result using evaluate
-  const double test = boost::any_cast<double const>(uniform1D->Evaluate(Distribution::Mode::SampleDistribution) [0]);
-  EXPECT_TRUE(test>=0.0);
-  EXPECT_TRUE(test<=1.0);
 }
 
 TEST_F(UniformDistributionTests, Sample) {

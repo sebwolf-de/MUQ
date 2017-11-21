@@ -5,25 +5,44 @@
 using namespace muq::Utilities;
 using namespace muq::Modeling;
 
-UniformBox::UniformBox(std::vector<std::pair<double, double> > const& bounds) : Distribution(), bounds(ComputeBounds(bounds)) {
+UniformBox::UniformBox(Eigen::MatrixXd const& boundsIn) : Distribution(), bounds(boundsIn), volume(ComputeVolume(boundsIn)) {
   // initialize the any algebra
   algebra = std::make_shared<AnyAlgebra>();
 }
 
-std::vector<std::pair<double, double> > UniformBox::ComputeBounds(std::vector<std::pair<double, double> > const& bounds) {
-  std::vector<std::pair<double, double> > new_bounds(bounds);
-  
-  for( auto it=new_bounds.begin(); it!=new_bounds.end(); ++it ) {
-    it->second = it->second-it->first;
-  }
+double UniformBox::ComputeVolume(Eigen::MatrixXd const& boundsIn)
+{
+    return (boundsIn.col(1)-boundsIn.col(0)).prod();
+}
 
-  return new_bounds;
+Eigen::MatrixXd UniformBox::CreateBoundsPairs(std::vector<std::pair<double,double>> const& boundsVec)
+{
+    Eigen::MatrixXd bounds(boundsVec.size(),2);
+    for(int i=0; i<boundsVec.size(); ++i){
+        bounds(i,0) = boundsVec.at(i).first;
+        bounds(i,1) = boundsVec.at(i).second;
+    }
+    
+    return bounds;
+}
+
+Eigen::MatrixXd UniformBox::CreateBoundsDouble(std::vector<double> const& boundsVec)
+{
+    assert(boundsVec.size()%2==0);
+    
+    Eigen::MatrixXd bounds(boundsVec.size()/2,2);
+    for(int i=0; i<boundsVec.size()/2; ++i){
+        bounds(i,0) = boundsVec.at(2*i);
+        bounds(i,1) = boundsVec.at(2*i+1);
+    }
+    
+    return bounds;
 }
 
 double UniformBox::LogDensityImpl(ref_vector<boost::any> const& inputs) {
   // get the dimension
   const unsigned int dim = algebra->Size(inputs[0].get());
-  assert(dim==bounds.size());
+  assert(dim==bounds.rows());
 
   // loop though each dimension
   for( unsigned int i=0; i<dim; ++i ) {
@@ -31,30 +50,20 @@ double UniformBox::LogDensityImpl(ref_vector<boost::any> const& inputs) {
     const double x = boost::any_cast<double const>(algebra->AccessElement(inputs[0].get(), i));
 
     // if this dimension is outside the hypercube
-    if( x<bounds[i].first || x>bounds[i].first+bounds[i].second ) {
+    if( x<bounds(i,0) || x>bounds(i,1) ) {
       // return negative infinity
       return -std::numeric_limits<double>::infinity();
     }
   }
 
   // the point is inside the domain...
-  return 1.0;
+  return -log(volume);
 }
 
 boost::any UniformBox::SampleImpl(ref_vector<boost::any> const& inputs) {
-  assert(bounds.size()>0);
-  
-  if( bounds.size()==1 ) { // one dimensional
-    // sample and return a double
-    return bounds[0].first+bounds[0].second*RandomGenerator::GetUniform();
-  }
+  assert(bounds.rows()>0);
 
-  // create a vector
-  Eigen::VectorXd sample(bounds.size());
-  for( unsigned int i=0; i<bounds.size(); ++i ) {
-    // sample each dimension
-    sample(i) = bounds[i].first+bounds[i].second*RandomGenerator::GetUniform();
-  }
-  
+  Eigen::VectorXd sample;
+  sample = bounds.col(0).array() + (bounds.col(1)-bounds.col(0)).array() * RandomGenerator::GetUniform(bounds.rows()).array();
   return sample;
 }

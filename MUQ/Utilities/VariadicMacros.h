@@ -11,12 +11,14 @@ to concatenate a,b,c,d into a vector [a,b,c,d].
 */
 
 
-#define STATIC_VARIADIC_TO_VECTOR(functionName, inputType, outputType) \
+#define STATIC_VARIADIC_TO_VECTOR_PART1(functionName, inputType, outputType) \
     template<typename... Args>                                         \
     inline static argument_type<void(outputType)>::type functionName(Args const&... args) {     \
         std::vector< argument_type<void(inputType)>::type> vec;                                    \
 	return functionName(vec, args...);                             \
-    }                                                                  \
+    }
+
+#define STATIC_VARIADIC_TO_VECTOR_PART2(functionName, inputType, outputType) \
     template<typename... Args>                                                                                               \
     inline static  argument_type<void(outputType)>::type functionName(std::vector<argument_type<void(inputType)>::type>& bounds, argument_type<void(inputType)>::type const& ith, Args const&... args) {     \
         bounds.push_back(ith);                                                                                               \
@@ -27,6 +29,9 @@ to concatenate a,b,c,d into a vector [a,b,c,d].
         return functionName(bounds);                                                                                        \
     }
 
+#define STATIC_VARIADIC_TO_VECTOR(functionName, inputType, outputType) \
+    STATIC_VARIADIC_TO_VECTOR_PART1(functionName, inputType, outputType) \
+    STATIC_VARIADIC_TO_VECTOR_PART2(functionName, inputType, outputType)
 
 #define VARIADIC_TO_VECTOR(functionName, inputType, outputType) \
     template<typename... Args>                                         \
