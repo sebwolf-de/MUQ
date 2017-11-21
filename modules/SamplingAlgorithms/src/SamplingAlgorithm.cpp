@@ -38,28 +38,43 @@ void SamplingAlgorithm::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   if( correlated ) {
     init = std::make_shared<SamplingState>(inputs[2], 1.0);
     samples.push_back(boost::any_cast<std::shared_ptr<SamplingState> >(init));
+
+    // begin the kernel adaptation
+    kernel->PostStep(1, samples[0]);
   }
 
   // copy the inputs---these are the inputs to the distributions (e.g., target, biasing, and/or propsal)
   ref_vector<boost::any> distInputs(inputs.begin()+(correlated?3:2), inputs.end());
   if( correlated ) { distInputs.insert(distInputs.begin(), std::cref(init)); }
-  
-  for( unsigned int t=0; t<T; ++t ) { // loop through each sample
+
+  unsigned int t = samples.size();
+  while( t<T ) { // loop through each sample
+    // get the next sample
     const std::vector<boost::any>& result = kernel->Evaluate(distInputs);
 
+    // save it if the next sample is valid
     if( result[0].type()==typeid(std::shared_ptr<SamplingState>) ) { samples.push_back(boost::any_cast<std::shared_ptr<SamplingState> >(result[0])); }
-    
+
+    // allow the kernel to adapt given the step
+    kernel->PostStep(++t, samples[samples.size()-1]);
+
+    // Update the current sample in the correlated case
     if( correlated ) {
       init = samples[samples.size()-1];
       distInputs[0] = std::cref(init);
     }
   }
 
+  // normalize the sample weights
+  ReweightSamples(samples);
+}
+
+void SamplingAlgorithm::ReweightSamples(std::vector<std::shared_ptr<SamplingState> >& samples) const {
   double totalWeight = 0.0;
   for( unsigned int t=0; t<samples.size(); ++t ) { // loop through each sample
     totalWeight += samples[t]->weight;
   }
-
+  
   // normalize the weights
   for( unsigned int t=0; t<samples.size(); ++t ) { // loop through each sample
     samples[t]->weight /= totalWeight;

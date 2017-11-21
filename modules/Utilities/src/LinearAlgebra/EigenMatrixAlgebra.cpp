@@ -145,43 +145,97 @@ boost::any EigenMatrixAlgebra::Add(boost::any const& in0, boost::any const& in1)
   // 2D matrices
   if( in0.type()==typeid(Eigen::Matrix2d) ) {
     if( in1.type()==typeid(Eigen::Matrix2d) ) { return Add<Eigen::Matrix2d, Eigen::Matrix2d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector2d) ) { return AddVector<Eigen::Matrix2d, Eigen::Vector2d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXd) ) { return AddVector<Eigen::Matrix2d, Eigen::VectorXd>(in0, in1); }
     return Add<Eigen::Matrix2d, Eigen::MatrixXd>(in0, in1); 
   }
   if( in0.type()==typeid(Eigen::Matrix2f) ) {
     if( in1.type()==typeid(Eigen::Matrix2f) ) { return Add<Eigen::Matrix2f, Eigen::Matrix2f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector2f) ) { return AddVector<Eigen::Matrix2f, Eigen::Vector2f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXf) ) { return AddVector<Eigen::Matrix2f, Eigen::VectorXf>(in0, in1); }
     return Add<Eigen::Matrix2f, Eigen::MatrixXf>(in0, in1); 
   }
   if( in0.type()==typeid(Eigen::Matrix2i) ) {
     if( in1.type()==typeid(Eigen::Matrix2i) ) { return Add<Eigen::Matrix2i, Eigen::Matrix2i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector2i) ) { return AddVector<Eigen::Matrix2i, Eigen::Vector2i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXi) ) { return AddVector<Eigen::Matrix2i, Eigen::VectorXi>(in0, in1); }
     return Add<Eigen::Matrix2i, Eigen::MatrixXi>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector2d) ) {
+    if( in1.type()==typeid(Eigen::Matrix2d) ) { return AddVector<Eigen::Matrix2d, Eigen::Vector2d>(in1, in0); }
+    return AddVector<Eigen::MatrixXd, Eigen::Vector2d>(in1, in0);
+  }
+  if( in0.type()==typeid(Eigen::Vector2f) ) {
+    if( in1.type()==typeid(Eigen::Matrix2f) ) { return AddVector<Eigen::Matrix2f, Eigen::Vector2f>(in1, in0); }
+    return AddVector<Eigen::MatrixXf, Eigen::Vector2f>(in1, in0);
+  }
+  if( in0.type()==typeid(Eigen::Vector2i) ) {
+    if( in1.type()==typeid(Eigen::Matrix2i) ) { return AddVector<Eigen::Matrix2i, Eigen::Vector2i>(in1, in0); }
+    return AddVector<Eigen::MatrixXi, Eigen::Vector2i>(in1, in0);
   }
 
   // 3D matrices
   if( in0.type()==typeid(Eigen::Matrix3d) ) {
     if( in1.type()==typeid(Eigen::Matrix3d) ) { return Add<Eigen::Matrix3d, Eigen::Matrix3d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3d) ) { return AddVector<Eigen::Matrix3d, Eigen::Vector3d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXd) ) { return AddVector<Eigen::Matrix3d, Eigen::VectorXd>(in0, in1); }
     return Add<Eigen::Matrix3d, Eigen::MatrixXd>(in0, in1); 
   }
   if( in0.type()==typeid(Eigen::Matrix3f) ) {
     if( in1.type()==typeid(Eigen::Matrix3f) ) { return Add<Eigen::Matrix3f, Eigen::Matrix3f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3f) ) { return AddVector<Eigen::Matrix3f, Eigen::Vector3f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXf) ) { return AddVector<Eigen::Matrix3f, Eigen::VectorXf>(in0, in1); }
     return Add<Eigen::Matrix3f, Eigen::MatrixXf>(in0, in1); 
   }
   if( in0.type()==typeid(Eigen::Matrix3i) ) {
     if( in1.type()==typeid(Eigen::Matrix3i) ) { return Add<Eigen::Matrix3i, Eigen::Matrix3i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector3i) ) { return AddVector<Eigen::Matrix3i, Eigen::Vector3i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXi) ) { return AddVector<Eigen::Matrix3i, Eigen::VectorXi>(in0, in1); }
     return Add<Eigen::Matrix3i, Eigen::MatrixXi>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector3d) ) {
+    if( in1.type()==typeid(Eigen::Matrix3d) ) { return AddVector<Eigen::Matrix3d, Eigen::Vector3d>(in1, in0); }
+    return AddVector<Eigen::MatrixXd, Eigen::Vector3d>(in1, in0);
+  }
+  if( in0.type()==typeid(Eigen::Vector3f) ) {
+    if( in1.type()==typeid(Eigen::Matrix3f) ) { return AddVector<Eigen::Matrix3f, Eigen::Vector3f>(in1, in0); }
+    return AddVector<Eigen::MatrixXf, Eigen::Vector3f>(in1, in0);
+  }
+  if( in0.type()==typeid(Eigen::Vector3i) ) {
+    if( in1.type()==typeid(Eigen::Matrix3i) ) { return AddVector<Eigen::Matrix3i, Eigen::Vector3i>(in1, in0); }
+    return AddVector<Eigen::MatrixXi, Eigen::Vector3i>(in1, in0);
   }
 
   // 4D matrices
   if( in0.type()==typeid(Eigen::Matrix4d) ) {
     if( in1.type()==typeid(Eigen::Matrix4d) ) { return Add<Eigen::Matrix4d, Eigen::Matrix4d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4d) ) { return AddVector<Eigen::Matrix4d, Eigen::Vector4d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXd) ) { return AddVector<Eigen::Matrix4d, Eigen::VectorXd>(in0, in1); }
     return Add<Eigen::Matrix4d, Eigen::MatrixXd>(in0, in1); 
   }
   if( in0.type()==typeid(Eigen::Matrix4f) ) {
     if( in1.type()==typeid(Eigen::Matrix4f) ) { return Add<Eigen::Matrix4f, Eigen::Matrix4f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4f) ) { return AddVector<Eigen::Matrix4f, Eigen::Vector4f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXf) ) { return AddVector<Eigen::Matrix4f, Eigen::VectorXf>(in0, in1); }
     return Add<Eigen::Matrix4f, Eigen::MatrixXf>(in0, in1); 
   }
   if( in0.type()==typeid(Eigen::Matrix4i) ) {
     if( in1.type()==typeid(Eigen::Matrix4i) ) { return Add<Eigen::Matrix4i, Eigen::Matrix4i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::Vector4i) ) { return AddVector<Eigen::Matrix4i, Eigen::Vector4i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXi) ) { return AddVector<Eigen::Matrix4i, Eigen::VectorXi>(in0, in1); }
     return Add<Eigen::Matrix4i, Eigen::MatrixXi>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::Vector4d) ) {
+    if( in1.type()==typeid(Eigen::Matrix4d) ) { return AddVector<Eigen::Matrix4d, Eigen::Vector4d>(in1, in0); }
+    return AddVector<Eigen::MatrixXd, Eigen::Vector4d>(in1, in0);
+  }
+  if( in0.type()==typeid(Eigen::Vector4f) ) {
+    if( in1.type()==typeid(Eigen::Matrix4f) ) { return AddVector<Eigen::Matrix4f, Eigen::Vector4f>(in1, in0); }
+    return AddVector<Eigen::MatrixXf, Eigen::Vector4f>(in1, in0);
+  }
+  if( in0.type()==typeid(Eigen::Vector4i) ) {
+    if( in1.type()==typeid(Eigen::Matrix4i) ) { return AddVector<Eigen::Matrix4i, Eigen::Vector4i>(in1, in0); }
+    return AddVector<Eigen::MatrixXi, Eigen::Vector4i>(in1, in0);
   }
 
   // XD matrices
@@ -189,19 +243,40 @@ boost::any EigenMatrixAlgebra::Add(boost::any const& in0, boost::any const& in1)
     if( in1.type()==typeid(Eigen::Matrix2d) ) { return Add<Eigen::MatrixXd, Eigen::Matrix2d>(in0, in1); }
     if( in1.type()==typeid(Eigen::Matrix3d) ) { return Add<Eigen::MatrixXd, Eigen::Matrix3d>(in0, in1); }
     if( in1.type()==typeid(Eigen::Matrix4d) ) { return Add<Eigen::MatrixXd, Eigen::Matrix4d>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXd) ) { return AddVector<Eigen::MatrixXd, Eigen::VectorXd>(in0, in1); }
     return Add<Eigen::MatrixXd, Eigen::MatrixXd>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::VectorXd) ) {
+    if( in1.type()==typeid(Eigen::Matrix2d) ) { return AddVector<Eigen::Matrix2d, Eigen::VectorXd>(in1, in0); }
+    if( in1.type()==typeid(Eigen::Matrix3d) ) { return AddVector<Eigen::Matrix3d, Eigen::VectorXd>(in1, in0); }
+    if( in1.type()==typeid(Eigen::Matrix4d) ) { return AddVector<Eigen::Matrix4d, Eigen::VectorXd>(in1, in0); }
+    return AddVector<Eigen::MatrixXd, Eigen::VectorXd>(in1, in0);
   }
   if( in0.type()==typeid(Eigen::MatrixXf) ) {
     if( in1.type()==typeid(Eigen::Matrix2f) ) { return Add<Eigen::MatrixXf, Eigen::Matrix2f>(in0, in1); }
     if( in1.type()==typeid(Eigen::Matrix3f) ) { return Add<Eigen::MatrixXf, Eigen::Matrix3f>(in0, in1); }
     if( in1.type()==typeid(Eigen::Matrix4f) ) { return Add<Eigen::MatrixXf, Eigen::Matrix4f>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXf) ) { return AddVector<Eigen::MatrixXf, Eigen::VectorXf>(in0, in1); }
     return Add<Eigen::MatrixXf, Eigen::MatrixXf>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::VectorXf) ) {
+    if( in1.type()==typeid(Eigen::Matrix2f) ) { return AddVector<Eigen::Matrix2f, Eigen::VectorXf>(in1, in0); }
+    if( in1.type()==typeid(Eigen::Matrix3f) ) { return AddVector<Eigen::Matrix3f, Eigen::VectorXf>(in1, in0); }
+    if( in1.type()==typeid(Eigen::Matrix4f) ) { return AddVector<Eigen::Matrix4f, Eigen::VectorXf>(in1, in0); }
+    return AddVector<Eigen::MatrixXf, Eigen::VectorXf>(in1, in0);
   }
   if( in0.type()==typeid(Eigen::MatrixXi) ) {
     if( in1.type()==typeid(Eigen::Matrix2i) ) { return Add<Eigen::MatrixXi, Eigen::Matrix2i>(in0, in1); }
     if( in1.type()==typeid(Eigen::Matrix3i) ) { return Add<Eigen::MatrixXi, Eigen::Matrix3i>(in0, in1); }
     if( in1.type()==typeid(Eigen::Matrix4i) ) { return Add<Eigen::MatrixXi, Eigen::Matrix4i>(in0, in1); }
+    if( in1.type()==typeid(Eigen::VectorXi) ) { return AddVector<Eigen::MatrixXi, Eigen::VectorXi>(in0, in1); }
     return Add<Eigen::MatrixXi, Eigen::MatrixXi>(in0, in1); 
+  }
+  if( in0.type()==typeid(Eigen::VectorXi) ) {
+    if( in1.type()==typeid(Eigen::Matrix2i) ) { return AddVector<Eigen::Matrix2i, Eigen::VectorXi>(in1, in0); }
+    if( in1.type()==typeid(Eigen::Matrix3i) ) { return AddVector<Eigen::Matrix3i, Eigen::VectorXi>(in1, in0); }
+    if( in1.type()==typeid(Eigen::Matrix4i) ) { return AddVector<Eigen::Matrix4i, Eigen::VectorXi>(in1, in0); }
+    return AddVector<Eigen::MatrixXi, Eigen::VectorXi>(in1, in0);
   }
   
   // something went wrong

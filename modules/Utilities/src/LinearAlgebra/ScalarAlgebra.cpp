@@ -56,6 +56,18 @@ double ScalarAlgebra::InnerProduct(boost::any const& in0, boost::any const& in1)
   return std::numeric_limits<double>::quiet_NaN();
 }
 
+boost::any ScalarAlgebra::OuterProduct(boost::any const& in0, boost::any const& in1) {
+  return ScalarAlgebra::Multiply(in0, in1);
+  /*if( in0.type()==typeid(double) ) { return Multiply<double>(in0, in1); }
+  if( in0.type()==typeid(float) ) { return Multiply<float>(in0, in1); }
+  if( in0.type()==typeid(int) ) { return Multiply<int>(in0, in1); }
+  if( in0.type()==typeid(unsigned int) ) { return Multiply<unsigned int>(in0, in1); }
+  
+  // something went wrong
+  assert(false);
+  return boost::none;*/
+}
+
 boost::any ScalarAlgebra::Identity(std::type_info const& type) {
   if( type==typeid(double) ) { return (double)1.0; }
   if( type==typeid(float) ) { return (float)1.0; }

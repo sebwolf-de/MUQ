@@ -52,6 +52,14 @@ namespace muq {
        */
       static double InnerProduct(boost::any const& vec1, boost::any const& vec2);
 
+      /// The outer product between two Eigen::Vector's
+      /**
+	 @param[in] vec1 The first vector
+	 @param[in] vec2 The second vector
+	 \return The outer product
+       */
+      static boost::any OuterProduct(boost::any const& vec1, boost::any const& vec2);
+
       /// Access an element of an Eigen::Vector
       /**
 	 The return type is whatever the elements of the vector are (doubles, ints, ect ...)
@@ -158,6 +166,20 @@ namespace muq {
 	assert(x1.size()==x2.size());
 	
 	return x1.dot(x2);    
+      }
+
+      /// The inner product between two Eigen::Vector's
+      /**
+	 @param[in] vec1 The first vector
+	 @param[in] vec2 The second vector
+	 \return The inner product
+       */
+      template<typename mattype, typename EigenType1, typename EigenType2>
+	static inline boost::any OuterProduct(boost::any const& vec1, boost::any const& vec2) {
+	const EigenType1& x1 = boost::any_cast<EigenType1 const&>(vec1);
+	const EigenType2& x2 = boost::any_cast<EigenType2 const&>(vec2);
+	
+	return (mattype)(x1*x2.transpose());    
       }
 
       /// Access an element of an Eigen::Vector

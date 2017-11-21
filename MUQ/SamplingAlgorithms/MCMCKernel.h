@@ -13,6 +13,14 @@ namespace muq {
       MCMCKernel(boost::property_tree::ptree const& pt, std::shared_ptr<SamplingProblem> problem);
 
       ~MCMCKernel();
+
+      /// Allow the kernel to adapt given a new state
+      /**
+	 By default this function does nothing but children can override it to adapt the kernel
+	 @param[in] t The current step
+	 @param[in] state The current state
+       */
+      virtual void PostStep(unsigned int const t, std::shared_ptr<SamplingState> state) override;
       
     protected:
 

@@ -52,6 +52,14 @@ namespace muq {
        */
       static double InnerProduct(boost::any const& vec1, boost::any const& vec2);
 
+      /// The outer product between two scalars
+      /**
+	 @param[in] vec1 The first scalar
+	 @param[in] vec2 The second scalar
+	 \return The outer product
+       */
+      static boost::any OuterProduct(boost::any const& vec1, boost::any const& vec2);
+
       /// Compute an identity object for a scalar
       /**
 	 @param[in] type The type---return an identity of this type

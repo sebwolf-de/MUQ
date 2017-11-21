@@ -14,6 +14,11 @@ namespace muq {
       MHProposal(boost::property_tree::ptree const& pt);
 
       ~MHProposal();
+
+    protected:
+
+      /// The proposal distribution
+      std::shared_ptr<muq::Modeling::Gaussian> proposal;
       
     private:
 
@@ -22,12 +27,6 @@ namespace muq {
 
       /// Evaluate the proposal distribution
       virtual double LogDensityImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
-
-      /// The proposal distribution
-      std::shared_ptr<muq::Modeling::Gaussian> proposal;
-
-      /// An any algebra
-      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra;
 
     };
     

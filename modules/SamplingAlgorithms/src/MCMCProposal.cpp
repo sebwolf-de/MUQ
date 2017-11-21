@@ -27,3 +27,5 @@ std::shared_ptr<MCMCProposal::MCMCProposalMap> MCMCProposal::GetMCMCProposalMap(
 
   return map;
 }
+
+void MCMCProposal::Adapt(unsigned int const t, std::shared_ptr<SamplingState> state) {}

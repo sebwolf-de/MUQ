@@ -156,6 +156,28 @@ namespace muq {
 	return (type0)(x0+x1);
       }
 
+      /// Add an Eigen::Matrice to an Eigen::Vector---treating the vector as a diagonal---
+      /**
+	 @param[in] in0 The first input
+	 @param[in] in1 The second input
+	 \return The addition of in0 and in1 (in0+in1)
+       */
+      template<typename mattype, typename vectype>
+	static inline boost::any AddVector(boost::any const& in0, boost::any const& in1) {
+	mattype mat = boost::any_cast<mattype>(in0);
+	const vectype& vec = boost::any_cast<vectype const&>(in1);
+	assert(mat.rows()==vec.size());
+	assert(mat.cols()==vec.size());
+	
+	//Eigen::VectorXd& diag = mat.diagonal();
+	mat.diagonal() += vec;
+
+	return mat;
+
+	//Eigen:: result = mat+vec.asDiagonal();
+	//return result;
+      }
+
       /// The size of an Eigen::Matrix
       /**
 	 @param[in] mat We will get the size of this matrix

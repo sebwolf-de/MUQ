@@ -1,16 +1,16 @@
-#include "MUQ/SamplingAlgorithms/IPKernel.h"
+#include "MUQ/SamplingAlgorithms/ISKernel.h"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
-REGISTER_TRANSITION_KERNEL(IPKernel)
+REGISTER_TRANSITION_KERNEL(ISKernel)
 
-IPKernel::IPKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) : TransitionKernel(pt, problem) {}
+ISKernel::ISKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) : TransitionKernel(pt, problem) {}
 
-IPKernel::~IPKernel() {}
+ISKernel::~ISKernel() {}
 
-void IPKernel::EvaluateImpl(ref_vector<boost::any> const& inputs) {
+void ISKernel::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   const boost::any state = problem->SampleBiasingDistribution(inputs);
 
   ref_vector<boost::any> dist_inputs(inputs.begin(), inputs.end());
