@@ -12,6 +12,7 @@ using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
 TEST(ImportanceSampling, Setup) {
+    
   // create an instance of importance sampling
   auto ip = std::make_shared<ImportanceSampling>();
 

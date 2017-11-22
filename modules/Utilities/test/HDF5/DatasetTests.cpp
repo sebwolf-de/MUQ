@@ -65,10 +65,7 @@ TEST_F(DatasetTest, DoubleSetGet)
 
     for(int i=0; i<numThird; ++i)
 	EXPECT_DOUBLE_EQ(double(i)/double(numThird-1), third(i));
-
-    
 }
-
 
 TEST_F(DatasetTest, AttributeSetGet)
 {
@@ -166,6 +163,28 @@ TEST_F(DatasetTest, BlockReadOps)
 	EXPECT_EQ(2, b2(1));
     }
     
+}
+
+TEST_F(DatasetTest, BlockWriteAny)
+{
+
+    muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
+
+    Eigen::MatrixXd A(3,3);
+    A << 2, 1, 0,
+	 1, 2, 1,
+	 0, 2, 3;
+
+    f["/A"] = A;
+
+    double test = f["/A"](0,0);
+    EXPECT_DOUBLE_EQ(A(0,0), test);
+
+    boost::any anyObj = double(3.0);
+    f["/A"].block(0,0,1,1) = anyObj;
+
+    test = f["/A"](0,0);
+    EXPECT_DOUBLE_EQ(3.0, test);
 }
 
 TEST_F(DatasetTest, BlockWriteOps)

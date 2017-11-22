@@ -10,7 +10,7 @@ int main()
     f.CreateGroup("/NewGroup");
         
     // Add an attribute to the group.
-    f["/NewGroup"].attrs["Some Metadata"] = "Created with MH5!";
+    f["/NewGroup"].attrs["Some Metadata"] = "Created with MUQ!";
         
     // Store a vector in the group
     f["/NewGroup/Ones"] = Eigen::VectorXd::Ones(10);

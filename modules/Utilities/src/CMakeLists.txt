@@ -24,6 +24,7 @@ CreateCompileGroup(
     HDF5/HDF5File.cpp
     HDF5/HDF5Types.cpp
     HDF5/PathTools.cpp
+    HDF5/BlockDataset.cpp
 )
 
 CreateCompileGroup(

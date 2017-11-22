@@ -30,7 +30,8 @@ TEST(SamplingProblem, ImportanceSamplingSetup) {
   auto bias = std::make_shared<Gaussian>(); // it is standard normal (1D) by default
 
   // create a uniform distribution---the sampling problem is built around characterizing this distribution
-  auto dist = std::make_shared<UniformBox>(std::pair<double, double>(-0.5, 1.0));
+  auto bounds = std::make_pair(-0.5,1.0);
+  auto dist = std::make_shared<UniformBox>(bounds);
 
   // create a sampling problem
   auto problem = std::make_shared<SamplingProblem>(dist, bias);
@@ -48,7 +49,7 @@ TEST(SamplingProblem, ImportanceSamplingSetup) {
   boost::any x = 0.0;
   double logTarget = problem->EvaluateLogTarget(ref_vector<boost::any>(1, std::cref(x)));
   double logBias = problem->EvaluateLogBiasingDistribution(ref_vector<boost::any>(1, std::cref(x)));
-  EXPECT_DOUBLE_EQ(logTarget, 1.0);
+  EXPECT_DOUBLE_EQ(logTarget, log(1.0/(bounds.second - bounds.first)));
   EXPECT_DOUBLE_EQ(logBias, bias->LogDensity(x));
   //x = 2.0;
   x = 1.27591;
