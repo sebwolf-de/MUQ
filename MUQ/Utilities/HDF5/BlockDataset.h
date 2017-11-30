@@ -108,7 +108,7 @@ namespace Utilities
 
 
  #ifndef REGISTER_HDF5BLOCK_ANYTYPE
-#define REGISTER_HDF5BLOCK_ANYTYPE(NAME) static auto reg ##NAME		\
+#define REGISTER_HDF5BLOCK_ANYTYPE(NAME) static auto regHDF ##NAME		\
         = muq::Utilities::BlockDataset::GetAnyWriterMap()->insert(std::make_pair(std::type_index(typeid(NAME)), muq::Utilities::AnyWriter<NAME>() ));
 
 #endif

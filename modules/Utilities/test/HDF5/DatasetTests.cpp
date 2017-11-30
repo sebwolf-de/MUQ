@@ -170,12 +170,12 @@ TEST_F(DatasetTest, BlockWriteAny)
 
     muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
 
-    Eigen::MatrixXd A(3,3);
-    A << 2, 1, 0,
+    Eigen::MatrixXd aDouble(3,3);
+    aDouble << 2, 1, 0,
 	 1, 2, 1,
 	 0, 2, 3;
 
-    f["/A"] = A;
+    f["/A"] = aDouble;
 
     double test = f["/A"](0,0);
     EXPECT_DOUBLE_EQ(A(0,0), test);
