@@ -38,6 +38,7 @@ CreateCompileGroup(
 	Polynomials/PhysicistHermite.cpp
         Polynomials/ProbabilistHermite.cpp
 	Polynomials/Legendre.cpp
+        Polynomials/Laguerre.cpp
 )
 
 CreateCompileGroup(

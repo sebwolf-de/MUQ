@@ -4,6 +4,7 @@
 #include "MUQ/Approximation/Polynomials/PhysicistHermite.h"
 #include "MUQ/Approximation/Polynomials/ProbabilistHermite.h"
 #include "MUQ/Approximation/Polynomials/Legendre.h"
+#include "MUQ/Approximation/Polynomials/Laguerre.h"
 
 #include "MUQ/Utilities/Exceptions.h"
 
@@ -173,4 +174,47 @@ TEST(Polynomial, Legendre) {
   EXPECT_DOUBLE_EQ(2.0/3.0, legendre->Normalization(1));
   EXPECT_DOUBLE_EQ(2.0/5.0, legendre->Normalization(2));
   EXPECT_DOUBLE_EQ(2.0/7.0, legendre->Normalization(3));
+}
+
+
+
+TEST(Polynomial, Laguerre) {
+    
+  // create a Legendre object
+  auto poly = std::make_shared<Laguerre>();
+
+  const double x = 1.32;
+  EXPECT_DOUBLE_EQ(1.0, poly->PolynomialEvaluate(0, x));
+  EXPECT_DOUBLE_EQ(-x+1.0, poly->PolynomialEvaluate(1, x));
+  EXPECT_DOUBLE_EQ(0.5*(x*x-4.0*x+2.0), poly->PolynomialEvaluate(2, x));
+  EXPECT_DOUBLE_EQ((1.0/6.0)*(-x*x*x + 9.0*x*x - 18.0*x + 6), poly->PolynomialEvaluate(3, x));
+  EXPECT_DOUBLE_EQ((1.0/24.0)*(std::pow(x,4) - 16.0*std::pow(x,3.0) + 72.0*std::pow(x,2.0) - 96.0*x + 24.0), poly->PolynomialEvaluate(4, x));
+  EXPECT_NEAR((1.0/120)*(-1.0*std::pow(x,5) +25.0*std::pow(x,4) - 200.0*std::pow(x,3.0) + 600.0*std::pow(x,2.0) - 600.0*x + 120.0), poly->PolynomialEvaluate(5, x), 1e-10);
+  
+  // First derivatives
+  EXPECT_DOUBLE_EQ(0.0, poly->DerivativeEvaluate(0,1,x));
+  EXPECT_DOUBLE_EQ(-1.0, poly->DerivativeEvaluate(1,1,x));
+  EXPECT_DOUBLE_EQ(x - 2.0, poly->DerivativeEvaluate(2,1,x));
+  EXPECT_NEAR(-0.5*x*x +3.0*x -3.0, poly->DerivativeEvaluate(3,1,x), 1e-10);
+  EXPECT_NEAR((1.0/6.0)*std::pow(x,3.0) - 2.0*x*x + 6.0*x - 4.0, poly->DerivativeEvaluate(4,1,x), 1e-10);
+
+  // Second derivatives
+  EXPECT_DOUBLE_EQ(0.0, poly->DerivativeEvaluate(0,2,x));
+  EXPECT_DOUBLE_EQ(0.0, poly->DerivativeEvaluate(1,2,x));
+  EXPECT_DOUBLE_EQ(1.0, poly->DerivativeEvaluate(2,2,x));
+  EXPECT_DOUBLE_EQ(-x + 3.0, poly->DerivativeEvaluate(3,2,x));
+  EXPECT_DOUBLE_EQ(0.5*x*x -4.0*x + 6.0, poly->DerivativeEvaluate(4,2,x));
+
+  // Third derivatives
+  EXPECT_DOUBLE_EQ(0.0, poly->DerivativeEvaluate(0,3,x));
+  EXPECT_DOUBLE_EQ(0.0, poly->DerivativeEvaluate(1,3,x));
+  EXPECT_DOUBLE_EQ(0.0, poly->DerivativeEvaluate(2,3,x));
+  EXPECT_DOUBLE_EQ(-1.0, poly->DerivativeEvaluate(3,3,x));
+  EXPECT_DOUBLE_EQ(x-4.0, poly->DerivativeEvaluate(4,3,x));
+
+  // Check the normalization constant
+  EXPECT_DOUBLE_EQ(1.0, poly->Normalization(0));
+  EXPECT_DOUBLE_EQ(1.0, poly->Normalization(1));
+  EXPECT_DOUBLE_EQ(1.0, poly->Normalization(2));
+  EXPECT_DOUBLE_EQ(1.0, poly->Normalization(3));
 }
