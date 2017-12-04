@@ -55,6 +55,21 @@ namespace muq {
           @param[in] x The location to evaluate the derivative.
       */
       virtual double DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const = 0;
+
+
+
+      /**
+         @brief Returns the normalization constant for the polynomial of order \f$p\f$.
+         @details Many polynomial families are orthogonal with respect to some measure.  This means that for two polynomials \f$P_n(x)\f$ and \f$P_m(x)\f$ in the same family,
+\f[
+\int P_n(x) P_m(x) w(x) dx = a_n \delta_{nm},
+\f]
+where \f$\delta_{mn}\f$ is the Kronecker delta function, \f$w(x)\f$ is a weighting function tied to the polynomial family (e.g., the Askey scheme), and \f$a_n\in\mathbb{R}\f$ is a scalar normalization constant.  This function computes the normalization constant \f$a_n\f$.  Polynomial families that are not orthogonal do not have a normalizing constant \f$a_n\f$ and will throw an exception if this function is called.
+         @param[in] polyOrder The order of the polynomial
+         @return The normalization constant for a particular polynomial family and its weighting function \f$w(x)\f$.
+       */
+      virtual double Normalization(unsigned int polyOrder) const;
+      
       
     private:
 

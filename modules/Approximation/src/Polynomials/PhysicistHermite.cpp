@@ -1,5 +1,7 @@
 #include "MUQ/Approximation/Polynomials/PhysicistHermite.h"
 
+#include <cmath>
+
 using namespace muq::Approximation;
 
 PhysicistHermite::PhysicistHermite() : Polynomial() {}
@@ -16,6 +18,10 @@ double PhysicistHermite::DerivativeEvaluate(int const polyOrder, int const deriv
         c *= 2.0*k;
     
     return c*PolynomialEvaluate(polyOrder-derivOrder, x);
+}
+
+double PhysicistHermite::Normalization(unsigned int polyOrder) const {
+    return sqrt(M_PI) * pow(2.0, static_cast<double>(polyOrder)) * std::tgamma(polyOrder+1);
 }
 
 double PhysicistHermite::alpha(unsigned int k, double x) const {

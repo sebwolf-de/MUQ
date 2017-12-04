@@ -1,5 +1,7 @@
 #include "MUQ/Approximation/Polynomials/ProbabilistHermite.h"
 
+#include <cmath>
+
 using namespace muq::Approximation;
 
 
@@ -14,6 +16,10 @@ double ProbabilistHermite::DerivativeEvaluate(int const polyOrder, int const der
     
     return c*PolynomialEvaluate(polyOrder-derivOrder, x);
     
+}
+
+double ProbabilistHermite::Normalization(unsigned int polyOrder) const {
+    return sqrt(2.0*M_PI) * std::tgamma(polyOrder+1);
 }
 
 double ProbabilistHermite::alpha(unsigned int k, double x) const {

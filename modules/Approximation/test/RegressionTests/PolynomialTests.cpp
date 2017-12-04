@@ -5,6 +5,8 @@
 #include "MUQ/Approximation/Polynomials/ProbabilistHermite.h"
 #include "MUQ/Approximation/Polynomials/Legendre.h"
 
+#include "MUQ/Utilities/Exceptions.h"
+
 using namespace muq::Approximation;
 
 TEST(Polynomial, Monomial) {
@@ -39,6 +41,10 @@ TEST(Polynomial, Monomial) {
     EXPECT_DOUBLE_EQ(double(p)*double(p-1)*double(p-2)*std::pow(x,p-3.0), deriv);
     
   }
+
+  // Check that the Normalization function returns an exception
+  EXPECT_THROW(mono->Normalization(1), muq::NotImplementedError);
+  
 }
 
 TEST(Polynomial, PhysicistHermite) {
@@ -73,7 +79,14 @@ TEST(Polynomial, PhysicistHermite) {
   EXPECT_DOUBLE_EQ(0.0, hermite->DerivativeEvaluate(1,3,x));
   EXPECT_DOUBLE_EQ(0.0, hermite->DerivativeEvaluate(2,3,x));
   EXPECT_DOUBLE_EQ(48.0, hermite->DerivativeEvaluate(3,3,x));
-  EXPECT_DOUBLE_EQ(384.0*x, hermite->DerivativeEvaluate(4,3,x));  
+  EXPECT_DOUBLE_EQ(384.0*x, hermite->DerivativeEvaluate(4,3,x));
+
+
+  // Check the normalization constant
+  EXPECT_DOUBLE_EQ(sqrt(M_PI), hermite->Normalization(0));
+  EXPECT_DOUBLE_EQ(sqrt(M_PI)*2.0, hermite->Normalization(1));
+  EXPECT_DOUBLE_EQ(sqrt(M_PI)*8.0, hermite->Normalization(2));
+  EXPECT_DOUBLE_EQ(sqrt(M_PI)*48.0, hermite->Normalization(3));
   
 }
 
@@ -108,11 +121,18 @@ TEST(Polynomial, ProbabilistHermite) {
   EXPECT_DOUBLE_EQ(0.0, hermite->DerivativeEvaluate(1,3,x));
   EXPECT_DOUBLE_EQ(0.0, hermite->DerivativeEvaluate(2,3,x));
   EXPECT_DOUBLE_EQ(6.0, hermite->DerivativeEvaluate(3,3,x));
-  EXPECT_DOUBLE_EQ(24.0*x, hermite->DerivativeEvaluate(4,3,x)); 
+  EXPECT_DOUBLE_EQ(24.0*x, hermite->DerivativeEvaluate(4,3,x));
+
+  // Check the normalization constant
+  EXPECT_DOUBLE_EQ(sqrt(2.0*M_PI), hermite->Normalization(0));
+  EXPECT_DOUBLE_EQ(sqrt(2.0*M_PI), hermite->Normalization(1));
+  EXPECT_DOUBLE_EQ(sqrt(2.0*M_PI)*2.0, hermite->Normalization(2));
+  EXPECT_DOUBLE_EQ(sqrt(2.0*M_PI)*6.0, hermite->Normalization(3));
 
 }
 
 TEST(Polynomial, Legendre) {
+    
   // create a Legendre object
   auto legendre = std::make_shared<Legendre>();
 
@@ -147,4 +167,10 @@ TEST(Polynomial, Legendre) {
   EXPECT_DOUBLE_EQ(0.0, legendre->DerivativeEvaluate(2,3,x));
   EXPECT_DOUBLE_EQ(15.0, legendre->DerivativeEvaluate(3,3,x));
   EXPECT_DOUBLE_EQ(105.0*x, legendre->DerivativeEvaluate(4,3,x));
+
+  // Check the normalization constant
+  EXPECT_DOUBLE_EQ(2.0, legendre->Normalization(0));
+  EXPECT_DOUBLE_EQ(2.0/3.0, legendre->Normalization(1));
+  EXPECT_DOUBLE_EQ(2.0/5.0, legendre->Normalization(2));
+  EXPECT_DOUBLE_EQ(2.0/7.0, legendre->Normalization(3));
 }

@@ -36,5 +36,9 @@ double Legendre::phi1(double x) const {
   return x;
 }
 
+double Legendre::Normalization(unsigned int polyOrder) const {
+    return 2.0/(2.0*polyOrder + 1.0);
+}
+
 
 REGISTER_POLYNOMIAL_FAMILY(Legendre)

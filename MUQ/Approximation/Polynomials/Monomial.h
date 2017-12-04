@@ -19,7 +19,7 @@ namespace muq {
       virtual double PolynomialEvaluate(int const order, double const x) const override;
       
       virtual double DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const override;
-      
+
     private:
 
       /// Implement \f$\alpha_k(x)\f$
