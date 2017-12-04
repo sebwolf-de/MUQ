@@ -15,6 +15,8 @@ namespace muq {
       Legendre();
 
       virtual ~Legendre();
+
+      virtual double DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const override;
       
     private:
 

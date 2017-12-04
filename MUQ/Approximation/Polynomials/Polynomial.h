@@ -49,6 +49,12 @@ namespace muq {
        */
       virtual double PolynomialEvaluate(int const order, double const x) const;
 
+      /** Evaluate the \f$n^{th}\f$ derivative of a \f$p^{th}\f$ order polynomial.
+          @param[in] polyOrder The order \f$p\f$ of the polynomial.
+          @param[in] derivOrder The order \f$n\f$ of the derivative.
+          @param[in] x The location to evaluate the derivative.
+      */
+      virtual double DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const = 0;
       
     private:
 

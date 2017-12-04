@@ -17,6 +17,8 @@ namespace muq {
       ProbabilistHermite() = default;
 
       virtual ~ProbabilistHermite() = default;
+
+      virtual double DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const override;
       
     private:
 

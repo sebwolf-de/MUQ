@@ -6,6 +6,18 @@ PhysicistHermite::PhysicistHermite() : Polynomial() {}
 
 PhysicistHermite::~PhysicistHermite() {}
 
+double PhysicistHermite::DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const {
+
+    if((derivOrder > polyOrder) || (polyOrder==0))
+        return 0.0;
+    
+    double c = 1.0;
+    for(int k=polyOrder; k>polyOrder-derivOrder; --k)
+        c *= 2.0*k;
+    
+    return c*PolynomialEvaluate(polyOrder-derivOrder, x);
+}
+
 double PhysicistHermite::alpha(unsigned int k, double x) const {
   return -2.0*x;
 }
