@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "MUQ/Approximation/GaussianProcesses/Utilities.h"
+#include "MUQ/Approximation/TemplatedArrayUtilities.h"
 
 //#include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
 
@@ -44,7 +44,6 @@ class KernelBase : public std::enable_shared_from_this<muq::Approximation::Kerne
 
 public:
 
-
     KernelBase(unsigned inputDimIn,
 	       unsigned coDimIn,
 	       unsigned numParamsIn) : KernelBase(inputDimIn, BuildDimInds(inputDimIn), coDimIn, numParamsIn)
@@ -77,7 +76,7 @@ public:
 
     virtual Eigen::MatrixXd BuildCovariance(Eigen::MatrixXd const& x1,
                                             Eigen::MatrixXd const& x2) const = 0;
-    
+
     virtual void FillCovariance(Eigen::MatrixXd             const& xs,
 				Eigen::MatrixXd             const& ys,
 				Eigen::Ref<Eigen::MatrixXd>        cov) const = 0;
@@ -85,11 +84,26 @@ public:
     virtual void FillCovariance(Eigen::MatrixXd             const& xs,
 				Eigen::Ref<Eigen::MatrixXd>        cov) const = 0;
 
+    /** @brief Fills in a matrix with the first or higher order derivatives of the covariance kernel.
+        @details Let \f$k(x^{(i)}),x^{(j)})\f$ be the covariance kernel taking input vectors \f$x^{(i)}\f$ and \f$x^{(j)}\f$.  This function fills in a matrix \f$\Sigma\f$ so that 
+        \f[
+        \Sigma_{ij} = \frac{\partial^N k(x^{(i)},x^{(j)})}{\partial x_{k_1} \partial x_{k_2} \ldots \partial x_{k_N}}, 
+        \f]
+where $\partial \f$x_{k_m}\f$ is the \f$k_m\f$ component of \f$x\f$.
+@param[in] x1 The first location \f$x^{(i)}\f$
+@param[in] x2 The second location \f$x^{(j)}\f$
+@param[in] wrts  A vector containing \f$\left[k_1,k_2,\ldots, k_N\right]\f$.
+@param[out] derivCov A matrix with the derivatives of the covariance.  Notice that derivCov should be sized correctly before calling this function.
+    */
+    virtual void FillDerivCovariance(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                     Eigen::Ref<const Eigen::VectorXd> const& x2,
+                                     std::vector<unsigned>             const& wrts,
+                                     Eigen::Ref<Eigen::MatrixXd>              derivCov) const = 0;
+    
     virtual void FillDerivativeMatrix(Eigen::MatrixXd             const& xs,
 				      unsigned                           wrt,
 				      Eigen::Ref<Eigen::MatrixXd>        derivs) const = 0;
     
-
     virtual Eigen::MatrixXd GetDerivative(Eigen::VectorXd const& x1, Eigen::VectorXd const& x2, int wrt) const = 0;
     
     virtual Eigen::MatrixXd GetParamBounds() const

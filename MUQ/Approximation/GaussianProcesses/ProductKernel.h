@@ -151,6 +151,12 @@ public:
 	
     }
 
+    template<typename VecType, typename MatrixType>
+    inline void DerivCovarianceImpl(VecType const& x1, VecType const& x2, std::vector<unsigned> wrts, MatrixType & derivCov ) const
+    {
+        assert(false);
+    }
+
     template<typename VecType1, typename VecType2, typename MatType>
     inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatType & derivs) const
     {

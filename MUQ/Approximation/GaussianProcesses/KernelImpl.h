@@ -4,7 +4,6 @@
 #include "MUQ/Approximation/GaussianProcesses/KernelBase.h"
 
 
-
 namespace muq
 {
 namespace Approximation
@@ -58,6 +57,15 @@ public:
 	FillCovarianceImpl(xs,cov);
     };
 
+    virtual void FillDerivCovariance(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                     Eigen::Ref<const Eigen::VectorXd> const& x2,
+                                     std::vector<unsigned>             const& wrts,
+                                     Eigen::Ref<Eigen::MatrixXd>              derivCov) const override
+    {
+        FillDerivCovarianceImpl(x1, x2, wrts, derivCov);
+    };
+    
+     
     virtual void FillDerivativeMatrix(Eigen::MatrixXd             const& xs,
 				      unsigned                           wrt,
 				      Eigen::Ref<Eigen::MatrixXd>        derivs) const override
@@ -142,7 +150,37 @@ public:
     }
 
 
-    
+    template<typename PosMatrixType, typename CovMatrixType>
+    void FillDerivCovarianceImpl(PosMatrixType const& xs, PosMatrixType const& ys, std::vector<unsigned> const& wrts, CovMatrixType & derivCov) const
+    {	
+    	unsigned dim   = GetShape(xs, 0);
+        unsigned N1    = GetShape(xs, 1);
+
+    	assert(GetShape(derivCov, 0) == coDim*N1);
+    	assert(GetShape(derivCov, 1) == coDim*N1);
+
+	for(unsigned col=0; col<N1; ++col)
+	{
+	    for(unsigned row=col; row<N1; ++row)
+	    {
+		auto block = GetBlock(derivCov, row*coDim, col*coDim, coDim, coDim);
+    		static_cast<const ChildType*>(this)->DerivCovarianceImpl( GetColumn(xs,row), GetColumn(xs, col) , wrts, block);
+
+		// if we aren't on the diagonal, copy the block of the covariance matrix we just added to the upper triangular part of the covariance matrix
+		if(col!=row)
+		{
+		    for(int j=0; j<coDim; ++j)
+		    {
+			for(int i=0; i<coDim; ++i)
+			{
+			    derivCov(col*coDim + j, row*coDim + i) = derivCov(row*coDim + i, col*coDim + j);
+			}
+		    }
+		}
+    	    }
+    	}
+    };
+        
     template<typename PosMatrixType, typename CovMatrixType>
     void FillCovarianceImpl(PosMatrixType const& xs, CovMatrixType & cov) const
     {	

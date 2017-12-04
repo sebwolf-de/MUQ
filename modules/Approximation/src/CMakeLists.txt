@@ -23,6 +23,7 @@ CreateCompileGroup(
     GaussianProcesses/MaternKernel.cpp
     GaussianProcesses/PeriodicKernel.cpp
     GaussianProcesses/KarhunenLoeveExpansion.cpp
+    GaussianProcesses/ObservationInformation.cpp
 
 )
 

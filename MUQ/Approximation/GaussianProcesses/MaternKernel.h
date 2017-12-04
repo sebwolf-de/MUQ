@@ -75,6 +75,49 @@ public:
     }
 
     
+    template<typename VecType, typename MatrixType>
+    inline void DerivCovarianceImpl(VecType const& x1, VecType const& x2, std::vector<unsigned> wrts, MatrixType & derivCov ) const
+    {
+        assert(false);
+        
+        //assert(GetShape(x2,0)==GetShape(x1,0));
+        
+        // Check to make sure all of the wrts are in dimInds.  If not, we the derivative will be zero.
+        
+        //double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
+
+        // get the derivative of the distance wrt to the variable
+
+        /* // get the derivative of the kernel wrt to distance */
+        /* const unsigned derivOrder = wrts.size(); */
+
+        /* double x = sqrt(2*nu)*dist/length; */
+
+        /* double bessel0 = boost::math::cyl_bessel_k(nu, x); */
+        /* double bessel1 = boost::math::cyl_bessel_k(nu-1, x); */
+        
+        /* double c = std::pow(x, nu) * bessel1; */
+
+        /* //double dc_dx = - std::pow<double>(x,nu) * bessel1; */
+        /* double d2c_dx2 = (1.0-2.0*nu)*std::pow<double>(x,nu-1)*bessel1 + std::pow<double>(x,nu)*bessel0; */
+        /* double d3c_dx3 = (2.0*nu-1.0) * std::pow<double>(x, nu-1)*bessel0 - std::pow<double>(x,nu-2.0)*(4.0*nu*nu-6.0*nu+x*x+2.0)*bessel1; */
+        /* double d4c_dx4 = std::pow<double>(x,nu-2.0)*(4.0*nu*nu-8.0*nu+x*x+3)*bessel0 - 2.0*(2.0*nu-1.0)*std::pow<double>(x,nu-3.0)*(2.0*nu*nu-5.0*nu+x*x+3)*bessel1; */
+
+        /* double dx_dd = sqrt(2.0*nu)/length; */
+        // note that higher order derivatives of x wrt d are zero
+
+        /* double dc_dd = dc_dx * dx_dd; */
+        /* double d2c_dd2 = d2c_dx2 * std::pow<double>(dx_dd,2.0); */
+        /* double d3c_dd3 = d3c_dx3 * std::pow<double>(dx_dd,3.0); */
+        /* double d3c_dd4 = d4c_dx4 * std::pow<double>(dx_dd,4.0); */
+
+        // Now that we have the derivatives wrt the distance, compute the derivatives wrt the inputs
+        
+        
+    }
+
+
+    
     template<typename VecType1, typename VecType2, typename MatrixType>
     inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType & derivs) const
     {

@@ -63,6 +63,13 @@ public:
 	cov = sigma2;
     }
 
+    template<typename VecType, typename MatrixType>
+    inline void DerivCovarianceImpl(VecType const& x1, VecType const& x2, std::vector<unsigned> wrts, MatrixType & derivCov ) const
+    {
+	derivCov = Eigen::MatrixXd::Zero(sigma2.rows(), sigma2.cols());
+    }
+
+
     template<typename VecType1, typename VecType2, typename MatrixType>
     inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType & derivs) const
     {

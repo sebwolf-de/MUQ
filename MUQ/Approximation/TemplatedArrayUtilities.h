@@ -1,6 +1,6 @@
 
-#ifndef UTILITIES_H_
-#define UTILITIES_H_
+#ifndef TEMPLATEDARRAYUTILITIES_H_
+#define TEMPLATEDARRAYUTILITIES_H_
 
 #include <Eigen/Dense>
 #include <vector>
