@@ -16,18 +16,28 @@ CreateCompileGroup(
 	APPROXIMATION_REGRESSION
 	"Polynomial regression (global and local)"
 	muqApproximation
-	"MODELING_FLANN;MODELING_CORE"
+	"MODELING_FLANN;MODELING_CORE;APPROXIMATION_POLYNOMIALS"
 	""
 	""
-	Regression/Polynomial.cpp
-	Regression/Monomial.cpp
-	Regression/Hermite.cpp
-	Regression/Legendre.cpp
-
 	Regression/MultiIndex.cpp
 	
 	Regression/Regression.cpp
 	Regression/LocalRegression.cpp
+)
+
+
+CreateCompileGroup(
+	APPROXIMATION_POLYNOMIALS
+	"Polynomials and multiindices"
+	muqApproximation
+	"MODELING_CORE"
+	""
+	""
+	Polynomials/Polynomial.cpp
+	Polynomials/Monomial.cpp
+	Polynomials/PhysicistHermite.cpp
+        Polynomials/ProbabilistHermite.cpp
+	Polynomials/Legendre.cpp
 )
 
 CreateCompileGroup(

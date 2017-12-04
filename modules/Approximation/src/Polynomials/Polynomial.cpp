@@ -1,4 +1,6 @@
-#include "MUQ/Approximation/Regression/Polynomial.h"
+#include "MUQ/Approximation/Polynomials/Polynomial.h"
+
+#include "MUQ/Utilities/Exceptions.h"
 
 using namespace muq::Modeling;
 using namespace muq::Approximation;
@@ -36,3 +38,28 @@ double Polynomial::PolynomialEvaluate(int const order, double const x) const {
 
   return bk*phi0(x) + bkp1*(phi1(x)+alpha(0, x)*phi0(x));
 }
+
+std::shared_ptr<Polynomial> Polynomial::Construct(std::string const& polyName){
+
+  auto map = GetPolynomialMap();
+  auto it = map->find(polyName);
+  if(it == map->end()){
+      throw muq::NotRegisteredError("The polynomial family, \"" + polyName + "\" has not been registered with the polynomial factory.  Does the class exist?");
+      return nullptr;
+  }else{    
+      return it->second();
+  }
+}
+
+std::shared_ptr<Polynomial::PolynomialMapType> Polynomial::GetPolynomialMap() {
+  // define a static map from type to constructor
+  static std::shared_ptr<PolynomialMapType> map;
+
+  if( !map ) { // if the map has not yet been created ...
+    // ... create the map
+    map = std::make_shared<PolynomialMapType>();
+  }
+
+  return map;
+}
+

@@ -1,32 +1,17 @@
 #include "MUQ/Approximation/Regression/Regression.h"
 
-#include "MUQ/Approximation/Regression/Monomial.h"
-#include "MUQ/Approximation/Regression/Hermite.h"
-#include "MUQ/Approximation/Regression/Legendre.h"
+#include "MUQ/Approximation/Polynomials/Polynomial.h"
 
 using namespace muq::Utilities;
 using namespace muq::Modeling;
 using namespace muq::Approximation;
 
-Regression::Regression(unsigned int const order, Regression::PolynomialBasis const& basis) : WorkPiece(), order(order) {
+Regression::Regression(unsigned int const order, std::string const& polyName) : WorkPiece(), order(order) {
   // initalize the algebra
   algebra = std::make_shared<AnyAlgebra>();
 
-  // initalize the polynomial basis
-  switch( basis ) {
-  case PolynomialBasis::MonomialBasis: {
-    poly = std::make_shared<Monomial>();
-    break;
-  }
-  case PolynomialBasis::HermiteBasis: {
-    poly = std::make_shared<Hermite>();
-    break;
-  }
-  default: {
-    poly = std::make_shared<Legendre>();
-    break;
-  }
-  }
+  poly = Polynomial::Construct(polyName);
+  
 }
 
 void Regression::EvaluateImpl(ref_vector<boost::any> const& inputs) {

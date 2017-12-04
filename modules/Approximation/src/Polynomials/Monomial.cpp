@@ -1,4 +1,4 @@
-#include "MUQ/Approximation/Regression/Monomial.h"
+#include "MUQ/Approximation/Polynomials/Monomial.h"
 
 using namespace muq::Approximation;
 
@@ -21,3 +21,5 @@ double Monomial::phi0(double x) const {
 double Monomial::phi1(double x) const {
   return x;
 }
+
+REGISTER_POLYNOMIAL_FAMILY(Monomial)

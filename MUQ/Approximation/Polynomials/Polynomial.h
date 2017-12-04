@@ -1,7 +1,11 @@
 #ifndef POLYNOMIAL_H_
 #define POLYNOMIAL_H_
 
+#include <functional>
+#include <string>
+
 #include "MUQ/Modeling/WorkPiece.h"
+#include "MUQ/Utilities/RegisterClassName.h"
 
 namespace muq {
   namespace Approximation {
@@ -20,10 +24,31 @@ namespace muq {
     class Polynomial : public muq::Modeling::WorkPiece {
     public:
 
+      
+      typedef std::function<std::shared_ptr<Polynomial>()> PolynomialConstructorType;
+      typedef std::map<std::string, PolynomialConstructorType> PolynomialMapType;
+      static std::shared_ptr<PolynomialMapType> GetPolynomialMap();
+
+      // Factory method for consttructing polynomial from family
+      static std::shared_ptr<Polynomial> Construct(std::string const& polyName);
+
+      
       /// Create a polynomial
       Polynomial();
 
       virtual ~Polynomial();
+
+      /// Evaluate the specific polynomial type (must be implemented by the child)
+      /**
+	 Inputs:
+	 <ol>
+	 <li> The order of the polynomial (unsigned int)
+	 <li> The point where we are evaluating the polynomial
+	 </ol>
+	 \return The polynomial value
+       */
+      virtual double PolynomialEvaluate(int const order, double const x) const;
+
       
     private:
 
@@ -37,16 +62,6 @@ namespace muq {
        */
       virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs);
 
-      /// Evaluate the specific polynomial type (must be implemented by the child)
-      /**
-	 Inputs:
-	 <ol>
-	 <li> The order of the polynomial (unsigned int)
-	 <li> The point where we are evaluating the polynomial
-	 </ol>
-	 \return The polynomial value
-       */
-      virtual double PolynomialEvaluate(int const order, double const x) const;
 
       /// Implement \f$\alpha_k(x)\f$
       /**
@@ -76,5 +91,11 @@ namespace muq {
     };
   } // namespace Approximation
 } // namespace muq
+
+
+#define REGISTER_POLYNOMIAL_FAMILY(NAME) static auto regPolynomial ##NAME		\
+    = muq::Approximation::Polynomial::GetPolynomialMap()->insert(std::make_pair(#NAME, muq::Utilities::shared_factory<NAME>()));
+    
+
 
 #endif

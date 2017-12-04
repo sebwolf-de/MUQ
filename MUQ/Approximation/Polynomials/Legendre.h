@@ -1,7 +1,7 @@
 #ifndef LEGENDRE_H_
 #define LEGENDRE_H_
 
-#include "MUQ/Approximation/Regression/Polynomial.h"
+#include "MUQ/Approximation/Polynomials/Polynomial.h"
 
 namespace muq {
   namespace Approximation {

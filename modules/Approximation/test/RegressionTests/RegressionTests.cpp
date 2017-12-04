@@ -63,7 +63,7 @@ public:
 
 TEST_F(RegressionTest, HermiteBasis) {
   // create the regression 
-  reg = std::make_shared<Regression>(order, Regression::PolynomialBasis::HermiteBasis);
+    reg = std::make_shared<Regression>(order, "PhysicistHermite");
 }
 
 TEST_F(RegressionTest, LegendreBasis) {

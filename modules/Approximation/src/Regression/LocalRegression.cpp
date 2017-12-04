@@ -9,7 +9,7 @@ LocalRegression::LocalRegression(std::shared_ptr<WorkPiece> function, pt::ptree 
   cache = std::make_shared<FlannCache>(function);
 
   // create a regression object
-  reg = std::make_shared<Regression>(pt.get<unsigned int>("LocalRegression.Order", 2), Regression::PolynomialBasis::LegendreBasis);
+  reg = std::make_shared<Regression>(pt.get<unsigned int>("LocalRegression.Order", 2), "Legendre");
 }
 
 LocalRegression::~LocalRegression() {}

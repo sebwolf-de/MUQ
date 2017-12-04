@@ -1,8 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "MUQ/Approximation/Regression/Monomial.h"
-#include "MUQ/Approximation/Regression/Hermite.h"
-#include "MUQ/Approximation/Regression/Legendre.h"
+#include "MUQ/Approximation/Polynomials/Monomial.h"
+#include "MUQ/Approximation/Polynomials/PhysicistHermite.h"
+#include "MUQ/Approximation/Polynomials/ProbabilistHermite.h"
+#include "MUQ/Approximation/Polynomials/Legendre.h"
 
 using namespace muq::Approximation;
 
@@ -26,9 +27,9 @@ TEST(Polynomial, Monomial) {
   }
 }
 
-TEST(Polynomial, Hermite) {
+TEST(Polynomial, PhysicistHermite) {
   // create a Hermite object
-  auto hermite = std::make_shared<Hermite>();
+  auto hermite = std::make_shared<PhysicistHermite>();
   
   EXPECT_DOUBLE_EQ(1.0, boost::any_cast<double const>(hermite->Evaluate((unsigned int)0, 0.4) [0]));
   EXPECT_DOUBLE_EQ(0.6, boost::any_cast<double const>(hermite->Evaluate((unsigned int)1, 0.3) [0]));
@@ -36,6 +37,20 @@ TEST(Polynomial, Hermite) {
   EXPECT_DOUBLE_EQ(33.6235290625, boost::any_cast<double const>(hermite->Evaluate((unsigned int)5, 0.325) [0]));
   EXPECT_NEAR(6219.5581337600015, boost::any_cast<double const>(hermite->Evaluate((unsigned int)8, 1.6) [0]), 2.0e-12);
   EXPECT_NEAR(6.075804453410837e11, boost::any_cast<double const>(hermite->Evaluate((unsigned int)20, -0.845) [0]), 3.0e-4);
+}
+
+TEST(Polynomial, ProbabilistHermite) {
+  // create a Hermite object
+  auto hermite = std::make_shared<ProbabilistHermite>();
+
+  const double x = 1.32;
+  EXPECT_DOUBLE_EQ(1.0, hermite->PolynomialEvaluate(0, x));
+  EXPECT_DOUBLE_EQ(x, hermite->PolynomialEvaluate(1, x));
+  EXPECT_DOUBLE_EQ(x*x-1.0, hermite->PolynomialEvaluate(2, x));
+  EXPECT_DOUBLE_EQ(x*x*x - 3.0*x, hermite->PolynomialEvaluate(3, x));
+  EXPECT_DOUBLE_EQ(x*x*x*x - 6.0*x*x + 3.0, hermite->PolynomialEvaluate(4, x));
+  EXPECT_NEAR(std::pow(x,5) - 10*std::pow(x,3) + 15.0*x, hermite->PolynomialEvaluate(5, x), 1e-10);
+
 }
 
 TEST(Polynomial, Legendre) {

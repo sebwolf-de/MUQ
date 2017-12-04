@@ -24,6 +24,20 @@ namespace muq
 
     };
 
+    /** @ingroup Exceptions
+        @class NotRegisteredError
+        @brief Used when a child class has not been registered with the factory method.
+        @details Throughout MUQ, we have many abstract parent classes that define general mathematical objects (like MCMC kernels or orthogonal polynomials).
+                 We also use a class registration system to map strings to constructors for children of these abstract classes.  This error is thrown
+                 when a string does not match any classes registered with a factory class.  For example, this exception will be thrown if "ClownShoes" is passed
+                 to the Polynomial constructor.
+    */
+    class NotRegisteredError : public std::logic_error
+    {
+    public:
+        NotRegisteredError(std::string const& message) : std::logic_error(message){};
+    };
+    
     /** @class WrongSizeError
         @ingroup Exceptions
         @brief Exception to throw when matrices, vectors, or arrays are the wrong size.

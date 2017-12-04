@@ -1,20 +1,22 @@
-#ifndef MONOMIAL_H_
-#define MONOMIAL_H_
+#ifndef PHYSICISTHERMITE_H_
+#define PHYSICISTHERMITE_H_
 
-#include "MUQ/Approximation/Regression/Polynomial.h"
+#include "MUQ/Approximation/Polynomials/Polynomial.h"
 
 namespace muq {
   namespace Approximation {
-    /// A monomial polynomial (\f$1\f$, \f$x\f$, \f$x^2\f$, ect. ...)
-    /**
-       This is a simple polynomial basis but could cause conditioning problems in some cases ...
-     */
-    class Monomial : public Polynomial {
+    class PhysicistHermite : public Polynomial{
     public:
 
-      Monomial();
+      /// A Hermite polynomial (\f$1\f$, \f$2x\f$, \f$4x^2-2.0\f$, ect. ...)
+      /**
+	 Hermite polynomials are orthogonal, which helps with some conditioning problems.   Here we implement the physicists' Hermite polynomials.
 
-      virtual ~Monomial();
+	 note: Hermite may be unstable for high orders.
+       */
+      PhysicistHermite();
+
+      virtual ~PhysicistHermite();
       
     private:
 

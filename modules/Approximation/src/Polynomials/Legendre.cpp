@@ -1,4 +1,4 @@
-#include "MUQ/Approximation/Regression/Legendre.h"
+#include "MUQ/Approximation/Polynomials/Legendre.h"
 
 using namespace muq::Approximation;
 
@@ -21,3 +21,6 @@ double Legendre::phi0(double x) const {
 double Legendre::phi1(double x) const {
   return x;
 }
+
+
+REGISTER_POLYNOMIAL_FAMILY(Legendre)

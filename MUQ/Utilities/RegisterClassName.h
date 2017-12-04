@@ -18,11 +18,13 @@
 
 namespace muq {
   namespace Utilities {
-    template<typename T>
+
+      template<typename T>
       struct shared_factory{
 	template<typename... Args>
         std::shared_ptr<T> operator()(Args... args){return std::make_shared<T>(args...);}
       };
+    
   } // namespace Utilities
 } // namespace muq
 

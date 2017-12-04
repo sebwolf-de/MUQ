@@ -178,7 +178,7 @@ TEST_F(DatasetTest, BlockWriteAny)
     f["/A"] = aDouble;
 
     double test = f["/A"](0,0);
-    EXPECT_DOUBLE_EQ(A(0,0), test);
+    EXPECT_DOUBLE_EQ(aDouble(0,0), test);
 
     boost::any anyObj = double(3.0);
     f["/A"].block(0,0,1,1) = anyObj;

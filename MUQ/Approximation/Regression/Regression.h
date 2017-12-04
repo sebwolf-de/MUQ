@@ -8,39 +8,18 @@
 #include "MUQ/Modeling/WorkPiece.h"
 
 #include "MUQ/Approximation/Regression/MultiIndex.h"
-#include "MUQ/Approximation/Regression/Polynomial.h"
+#include "MUQ/Approximation/Polynomials/Polynomial.h"
 
 namespace muq {
   namespace Approximation {
     class Regression : public muq::Modeling::WorkPiece {
     public:
 
-      /// Which polynomial basis should we use?
-      enum PolynomialBasis {
-	/// A monomial basis
-	/**
-	   May be poorly conditioned
-	 */
-	MonomialBasis,
-
-	/// A Hermite polynomial
-	/**
-	   Orthogonal polynomial that may be unstable at high orders
-	 */
-	HermiteBasis,
-
-	/// A Legendre polynomial
-	/**
-	   Orthogoal polynomial
-	 */
-	LegendreBasis
-      };
-
       /**
 	 @param[in] order The order of the polynomial regression
 	 @param[in] basis The type of polynomial basis to use (defaults to Legendre)
        */
-      Regression(unsigned int const order, Regression::PolynomialBasis const& basis = Regression::PolynomialBasis::LegendreBasis);
+        Regression(unsigned int const order, std::string const& basis = "Legendre");
 
       /// Compute the coeffiecents of the polynomial given data
       /**

@@ -1,22 +1,22 @@
-#ifndef HERMITE_H_
-#define HERMITE_H_
+#ifndef PROBABILISTHERMITE_H_
+#define PROBABILISTHERMITE_H_
 
-#include "MUQ/Approximation/Regression/Polynomial.h"
+#include "MUQ/Approximation/Polynomials/Polynomial.h"
 
 namespace muq {
   namespace Approximation {
-    class Hermite : public Polynomial{
+    class ProbabilistHermite : public Polynomial{
     public:
 
       /// A Hermite polynomial (\f$1\f$, \f$2x\f$, \f$4x^2-2.0\f$, ect. ...)
       /**
-	 Hermite polynomials are orthogonal, which helps with some conditioning problems.   We implement the physicists' Hermite polynomials.
+	 Hermite polynomials are orthogonal, which helps with some conditioning problems.   Here we implement the probabilists' Hermite polynomials.
 
 	 note: Hermite may be unstable for high orders.
        */
-      Hermite();
+      ProbabilistHermite() = default;
 
-      virtual ~Hermite();
+      virtual ~ProbabilistHermite() = default;
       
     private:
 
