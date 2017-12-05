@@ -39,6 +39,7 @@ CreateCompileGroup(
         Polynomials/ProbabilistHermite.cpp
 	Polynomials/Legendre.cpp
         Polynomials/Laguerre.cpp
+        Polynomials/Jacobi.cpp
 )
 
 CreateCompileGroup(

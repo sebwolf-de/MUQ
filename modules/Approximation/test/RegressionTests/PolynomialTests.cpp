@@ -5,6 +5,7 @@
 #include "MUQ/Approximation/Polynomials/ProbabilistHermite.h"
 #include "MUQ/Approximation/Polynomials/Legendre.h"
 #include "MUQ/Approximation/Polynomials/Laguerre.h"
+#include "MUQ/Approximation/Polynomials/Jacobi.h"
 
 #include "MUQ/Utilities/Exceptions.h"
 
@@ -181,7 +182,7 @@ TEST(Polynomial, Legendre) {
 TEST(Polynomial, Laguerre) {
     
   // create a Legendre object
-  auto poly = std::make_shared<Laguerre>();
+  auto poly = std::make_shared<Laguerre>(0.0);
 
   const double x = 1.32;
   EXPECT_DOUBLE_EQ(1.0, poly->PolynomialEvaluate(0, x));
@@ -217,4 +218,49 @@ TEST(Polynomial, Laguerre) {
   EXPECT_DOUBLE_EQ(1.0, poly->Normalization(1));
   EXPECT_DOUBLE_EQ(1.0, poly->Normalization(2));
   EXPECT_DOUBLE_EQ(1.0, poly->Normalization(3));
+}
+
+
+TEST(Polynomial, Jacobi) {
+    
+  // Compare the jacobi with a=b=0 to a Legendre (which should be the same thing)
+  const double a = 0.0;
+  const double b = 0.0;
+  auto poly = std::make_shared<Jacobi>(a,b);
+  auto legendre = std::make_shared<Legendre>();
+
+  const double x = 0.32;
+  for(unsigned i=0; i<5; ++i){
+      EXPECT_DOUBLE_EQ(legendre->PolynomialEvaluate(i,x), poly->PolynomialEvaluate(i,x));
+      EXPECT_DOUBLE_EQ(legendre->DerivativeEvaluate(i,1,x), poly->DerivativeEvaluate(i,1,x));
+      EXPECT_DOUBLE_EQ(legendre->DerivativeEvaluate(i,2,x), poly->DerivativeEvaluate(i,2,x));
+      EXPECT_DOUBLE_EQ(legendre->DerivativeEvaluate(i,3,x), poly->DerivativeEvaluate(i,3,x));
+      EXPECT_DOUBLE_EQ(legendre->DerivativeEvaluate(i,4,x), poly->DerivativeEvaluate(i,4,x));
+  }
+
+}
+
+TEST(Polynomial, Factory)
+{
+
+    std::shared_ptr<Polynomial> monomial = Polynomial::Construct("Monomial");
+    EXPECT_TRUE(std::dynamic_pointer_cast<Monomial>(monomial));
+
+    std::shared_ptr<Polynomial> hermite1 = Polynomial::Construct("PhysicistHermite");
+    EXPECT_TRUE(std::dynamic_pointer_cast<PhysicistHermite>(hermite1));
+    
+    std::shared_ptr<Polynomial> hermite2 = Polynomial::Construct("ProbabilistHermite");
+    EXPECT_TRUE(std::dynamic_pointer_cast<ProbabilistHermite>(hermite2));
+    
+    std::shared_ptr<Polynomial> legendre = Polynomial::Construct("Legendre");
+    EXPECT_TRUE(std::dynamic_pointer_cast<Legendre>(legendre));
+
+    std::shared_ptr<Polynomial> laguerre = Polynomial::Construct("Laguerre");
+    EXPECT_TRUE(std::dynamic_pointer_cast<Laguerre>(laguerre));
+        
+    std::shared_ptr<Polynomial> jacobi = Polynomial::Construct("Jacobi");
+    EXPECT_TRUE(std::dynamic_pointer_cast<Jacobi>(jacobi));
+
+    EXPECT_THROW(Polynomial::Construct("CowPoly"), muq::NotRegisteredError);
+
 }

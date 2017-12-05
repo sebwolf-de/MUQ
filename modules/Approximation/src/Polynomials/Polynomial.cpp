@@ -48,20 +48,28 @@ double Polynomial::Normalization(unsigned int polyOrder) const {
 };
 
 double Polynomial::PolynomialEvaluate(int const order, double const x) const {
-  double bkp2 = 0.0;
-  double bkp1 = 0.0;
-  double bk = 1.0;
 
-  for( int k=order-1; k>=0; k-- ) {
-    // increment
-    bkp2 = bkp1;
-    bkp1 = bk;
+    if(order==0){
+        return phi0(x);
+    }else if(order==1){
+        return phi1(x);
+    }else{
 
-    // compute new bk
-    bk = -alpha(k, x)*bkp1 - beta(k+1, x)*bkp2;
-  }
-
-  return bk*phi0(x) + bkp1*(phi1(x)+alpha(0, x)*phi0(x));
+        double bkp2 = 0.0;
+        double bkp1 = 0.0;
+        double bk = 1.0;
+        
+        for( int k=order-1; k>=0; k-- ) {
+            // increment
+            bkp2 = bkp1;
+            bkp1 = bk;
+            
+            // compute new bk
+            bk = -alpha(k, x)*bkp1 - beta(k+1, x)*bkp2;
+        }
+        
+        return bk*phi0(x) + bkp1*(phi1(x)+alpha(0, x)*phi0(x));
+    }
 }
 
 std::shared_ptr<Polynomial> Polynomial::Construct(std::string const& polyName){
@@ -69,7 +77,12 @@ std::shared_ptr<Polynomial> Polynomial::Construct(std::string const& polyName){
   auto map = GetPolynomialMap();
   auto it = map->find(polyName);
   if(it == map->end()){
-      throw muq::NotRegisteredError("The polynomial family, \"" + polyName + "\" has not been registered with the polynomial factory.  Does the class exist?");
+      std::string message = "The polynomial family, \"" + polyName + "\" has not been registered with the polynomial factory.  Does the class exist?\n  Registered families include:\n";
+      for(auto iter = map->begin(); iter!=map->end(); ++iter)
+          message += "    " + iter->first + "\n";
+      message += "\n";
+      
+      throw muq::NotRegisteredError(message);
       return nullptr;
   }else{    
       return it->second();
