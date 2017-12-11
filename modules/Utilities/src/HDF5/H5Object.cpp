@@ -225,7 +225,7 @@ double H5Object::operator()(int i, int j) const
 {
     if(isDataset)
     {
-	return file->ReadPartialMatrix(path, i,j,1,1)(i,j);
+	return file->ReadPartialMatrix(path, i,j,1,1)(0,0);
     }
     else
     {
