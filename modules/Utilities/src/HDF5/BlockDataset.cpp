@@ -23,10 +23,10 @@ BlockDataset& BlockDataset::operator=(boost::any const& val) {
 
 std::shared_ptr<BlockDataset::AnyWriterMapType> BlockDataset::GetAnyWriterMap() {
     
-  static std::shared_ptr<AnyWriterMapType> map;
+    static std::shared_ptr<BlockDataset::AnyWriterMapType> map;
 
   if( !map )
-    map = std::make_shared<AnyWriterMapType>();
+      map = std::make_shared<BlockDataset::AnyWriterMapType>();
 
   return map;
 }

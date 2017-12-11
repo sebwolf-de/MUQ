@@ -165,6 +165,42 @@ TEST_F(DatasetTest, BlockReadOps)
     
 }
 
+TEST_F(DatasetTest, ObjectWriteAny_Double)
+{
+
+    muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
+
+    Eigen::MatrixXd aDouble(2,2);
+    aDouble << 2, 1,
+               1, 2;
+
+    f["/A"] = aDouble;
+
+    double test = f["/A"](0,0);
+    EXPECT_DOUBLE_EQ(2.0, test);
+
+    test = f["/A"](0,1);
+    EXPECT_DOUBLE_EQ(1.0, test);
+
+    
+    boost::any anyObj = Eigen::MatrixXd::Identity(2,2).eval();
+    f["/A"] = anyObj;
+
+    test = f["/A"](0,0);
+    EXPECT_DOUBLE_EQ(1.0, test);
+
+    test = f["/A"](0,1);
+    EXPECT_DOUBLE_EQ(0.0, test);
+
+    test = f["/A"](1,0);
+    EXPECT_DOUBLE_EQ(0.0, test);
+
+    test = f["/A"](1,1);
+    EXPECT_DOUBLE_EQ(1.0, test);
+    
+}
+
+
 TEST_F(DatasetTest, BlockWriteAny_Double)
 {
 

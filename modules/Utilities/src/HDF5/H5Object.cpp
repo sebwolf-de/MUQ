@@ -285,3 +285,45 @@ H5Object muq::Utilities::OpenFile(std::string const& filename)
     std::shared_ptr<HDF5File> file = std::make_shared<HDF5File>(filename);
     return AddChildren(file, "/");
 }
+
+
+
+H5Object& H5Object::operator=(boost::any const& val) {
+
+    AnyWriterMapType& map = *GetAnyWriterMap();
+    auto iter = map.find(val.type());
+    if(iter == map.end()){
+        std::cerr << "ERROR: MUQ does not know how to write a boost::any with underlying type \"" << val.type().name() << "\".  Currently implemented types are:\n";
+        for(auto mapIter = map.begin(); mapIter!=map.end(); ++mapIter)
+            std::cerr << "    " << mapIter->first.name() << std::endl;
+        std::cerr << std::endl;
+
+        assert(iter != map.end());
+    }
+    
+    map[val.type()](val, *this);
+    
+    return *this;
+}
+
+std::shared_ptr<H5Object::AnyWriterMapType> H5Object::GetAnyWriterMap() {
+    
+  static std::shared_ptr<H5Object::AnyWriterMapType> map;
+
+  if( !map )
+    map = std::make_shared<H5Object::AnyWriterMapType>();
+
+  return map;
+}
+
+
+REGISTER_HDF5OBJECT_ANYTYPE(double, double)
+REGISTER_HDF5OBJECT_ANYTYPE(float, float)
+REGISTER_HDF5OBJECT_ANYTYPE(int, int)
+REGISTER_HDF5OBJECT_ANYTYPE(unsigned, unsigned)
+REGISTER_HDF5OBJECT_ANYTYPE(MatrixXd, Eigen::MatrixXd)
+REGISTER_HDF5OBJECT_ANYTYPE(MatrixXi, Eigen::MatrixXi)
+REGISTER_HDF5OBJECT_ANYTYPE(MatrixXf, Eigen::MatrixXf)
+REGISTER_HDF5OBJECT_ANYTYPE(VectorXf, Eigen::VectorXf)
+REGISTER_HDF5OBJECT_ANYTYPE(VectorXd, Eigen::VectorXd)
+REGISTER_HDF5OBJECT_ANYTYPE(VectorXi, Eigen::VectorXi)

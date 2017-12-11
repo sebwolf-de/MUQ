@@ -2,6 +2,7 @@
 #define BLOCKDATASET_H
 
 #include "MUQ/Utilities/HDF5/HDF5File.h"
+#include "MUQ/Utilities/HDF5/AnyWriter.h"
 
 #include <boost/any.hpp>
 
@@ -99,12 +100,6 @@ namespace Utilities
 	const int numCols;
 	
     }; // class BlockDataset
-    
-    template<typename T>
-    struct AnyWriter
-    {
-        void operator()(boost::any const& obj, BlockDataset& dest){ dest = boost::any_cast<T>(obj); };
-    };
 
 
  #ifndef REGISTER_HDF5BLOCK_ANYTYPE
