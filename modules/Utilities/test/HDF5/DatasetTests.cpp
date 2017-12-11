@@ -165,7 +165,7 @@ TEST_F(DatasetTest, BlockReadOps)
     
 }
 
-TEST_F(DatasetTest, BlockWriteAny)
+TEST_F(DatasetTest, BlockWriteAny_Double)
 {
 
     muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
@@ -185,7 +185,92 @@ TEST_F(DatasetTest, BlockWriteAny)
 
     test = f["/A"](0,0);
     EXPECT_DOUBLE_EQ(3.0, test);
+
+    // Make sure we can use a boost::any wrapped around a matrix
+    anyObj = Eigen::MatrixXd::Zero(2,2).eval();
+    f["/A"].block(0,0,2,2) = anyObj;
+
+    EXPECT_EQ(3, f["/A"].rows());
+    EXPECT_EQ(3, f["/A"].cols());
+    
+    test = f["/A"](0,0);
+    EXPECT_DOUBLE_EQ(0.0, test);
+    test = f["/A"](0,1);
+    EXPECT_DOUBLE_EQ(0.0, test);
+    test = f["/A"](1,0);
+    EXPECT_DOUBLE_EQ(0.0, test);
+    test = f["/A"](1,1);
+    EXPECT_DOUBLE_EQ(0.0, test);
+
+    anyObj = Eigen::VectorXd::Ones(3,1).eval();
+    f["/A"].col(0) = anyObj;
+
+    test = f["/A"](0,0);
+    EXPECT_DOUBLE_EQ(1.0,test);
+    
+    test = f["/A"](1,0);
+    EXPECT_DOUBLE_EQ(1.0,test);
+    
+    test = f["/A"](2,0);
+    EXPECT_DOUBLE_EQ(1.0,test);
+
+    test = f["/A"](0,1);
+    EXPECT_DOUBLE_EQ(0.0, test);
 }
+
+TEST_F(DatasetTest, BlockWriteAny_Float)
+{
+
+    muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
+
+    Eigen::MatrixXf aFloat(3,3);
+    aFloat << 2, 1, 0,
+	      1, 2, 1,
+	      0, 2, 3;
+
+    f["/A"] = aFloat;
+
+    float test = f["/A"](0,0);
+    EXPECT_FLOAT_EQ(aFloat(0,0), test);
+
+    boost::any anyObj = float(3.0);
+    f["/A"].block(0,0,1,1) = anyObj;
+
+    test = f["/A"](0,0);
+    EXPECT_FLOAT_EQ(3.0, test);
+
+    // Make sure we can use a boost::any wrapped around a matrix
+    anyObj = Eigen::MatrixXf::Zero(2,2).eval();
+    f["/A"].block(0,0,2,2) = anyObj;
+
+    EXPECT_EQ(3, f["/A"].rows());
+    EXPECT_EQ(3, f["/A"].cols());
+    
+    test = f["/A"](0,0);
+    EXPECT_FLOAT_EQ(0.0, test);
+    test = f["/A"](0,1);
+    EXPECT_FLOAT_EQ(0.0, test);
+    test = f["/A"](1,0);
+    EXPECT_FLOAT_EQ(0.0, test);
+    test = f["/A"](1,1);
+    EXPECT_FLOAT_EQ(0.0, test);
+
+    anyObj = Eigen::VectorXf::Ones(3,1).eval();
+    f["/A"].col(0) = anyObj;
+
+    test = f["/A"](0,0);
+    EXPECT_FLOAT_EQ(1.0,test);
+    
+    test = f["/A"](1,0);
+    EXPECT_FLOAT_EQ(1.0,test);
+    
+    test = f["/A"](2,0);
+    EXPECT_FLOAT_EQ(1.0,test);
+
+    test = f["/A"](0,1);
+    EXPECT_FLOAT_EQ(0.0, test);
+}
+
 
 TEST_F(DatasetTest, BlockWriteOps)
 {
