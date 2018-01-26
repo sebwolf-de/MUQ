@@ -14,7 +14,7 @@
 
 CreateCompileGroup(
     UTILITIES_HDF5
-    "MUQ's wrapper fo interacting with HDF5 binary files."
+    "MUQ's wrapper for interacting with HDF5 binary files."
     muqUtilities
     ""
     "EIGEN3;HDF5"
@@ -50,4 +50,15 @@ CreateCompileGroup(
     LinearAlgebra/EigenVectorAlgebra.cpp
     LinearAlgebra/EigenMatrixAlgebra.cpp
     LinearAlgebra/SundialsAlgebra.cpp
+)
+
+CreateCompileGroup(
+    UTILITIES_MULTIINDEX
+    "Classes for definining and generating multiindices and multiindex sets."
+    muqUtilities
+    ""
+    "EIGEN3"
+    ""
+    MultiIndices/MultiIndex.cpp
+    #MultiIndices/MultiIndexLimiter.cpp
 )
