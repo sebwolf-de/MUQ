@@ -1,10 +1,10 @@
 
 #include "MUQ/Utilities/MultiIndices/MultiIndexLimiter.h"
-#include "MUQ/Utilities/MultiIndices/MultiIndexSet.h"
+//#include "MUQ/Utilities/MultiIndices/MultiIndexSet.h"
 
-bool muq::Utilities::GeneralLimiter::IsFeasible(std::shared_ptr<MultiIndex> multi) const{
-  return limitingSet->IsActive(multi);
-};
+// bool muq::Utilities::GeneralLimiter::IsFeasible(std::shared_ptr<MultiIndex> multi) const{
+//   return limitingSet->IsActive(multi);
+// };
 
 bool muq::Utilities::DimensionLimiter::IsFeasible(std::shared_ptr<MultiIndex> multi) const{
 
@@ -18,11 +18,11 @@ bool muq::Utilities::DimensionLimiter::IsFeasible(std::shared_ptr<MultiIndex> mu
 bool muq::Utilities::MaxOrderLimiter::IsFeasible(std::shared_ptr<MultiIndex> multi) const{
 
   if(maxOrders.size()==0){
-    return (multi->GetMax() <= maxOrder);
+    return (multi->Max() <= maxOrder);
   }else{
-    assert(multi->GetDimension()<=maxOrders.size());
+    assert(multi->GetLength()<=maxOrders.size());
 
-    if(multi->GetMax() <= vectorMin)
+    if(multi->Max() <= vectorMin)
       return true;
 
     for(auto nzIter = multi->GetNzBegin(); nzIter!=multi->GetNzEnd(); ++nzIter){
