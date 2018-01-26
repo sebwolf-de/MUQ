@@ -11,6 +11,60 @@ using namespace std;
 using namespace muq::Utilities;
 
 /*
+  MultiIndex Diagrams
+  -------------------
+
+    x=member of the MultiIndexSet,
+    o=neighbor being tested -> changed to x if neighbor is admissible.
+*/
+
+/*
+  ------------------------------------------------------------------------------
+                            AdmissableNeighbor Tests:
+  ------------------------------------------------------------------------------
+
+  Tests whether admissable neighbors are identified correctly for different
+  scenarios.
+*/
+
+/*
+  MultiIndexLimiter.ValidMultiIndexLimiter
+  ----------------------------------------
+
+  Purpose:
+  Make sure the MultiIndexLimiter class returns true value for index within the
+  limiter.
+
+  Test:
+  Create MultiIndex at (0,0) and max ordrer limiter of 2. Check to make sure the
+  MultiIndex is feasible within the limiter.
+
+  3 |                         3 |
+    |                           |
+  2 |                         2 |
+    |                 --->      |
+  1 | x   x                   1 | x   x
+    |                           |
+  0 | x   x   o               0 | x   x   x
+    ----------------            ----------------
+      0   1   2   3               0   1   2   3
+*/
+TEST(AdmissableNeighbor, ValidNeighbor)
+{
+  // MultiIndexSet - the "square".
+  shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 1);
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,2);
+
+  // Check the result of IsAdmissable().
+  bool admiss = indexFamily->IsAdmissible(multi);
+  EXPECT_TRUE(admiss);
+
+}
+
+/*
   AdmissableNeighbor.ValidNeighbor
   --------------------------------
 
@@ -21,10 +75,6 @@ using namespace muq::Utilities;
   Create MultiIndexSet with dimension of 2 and max order of 1. Add an admissable
   neighbor to index (2,0), and check to make sure that index is an admissable
   neighbor to the MultiIndexSet.
-
-  MultiIndex Diagram: (x=member of the MultiIndexSet, o=neighbor being tested:
-                       changed to x if neighbor is admissible)
-
 
   3 |                         3 |
     |                           |
@@ -65,10 +115,6 @@ TEST(AdmissableNeighbor, ValidNeighbor)
   an admissable neighbor to the MultiIndexSet - missing a required neighboring
   index (2,0).
 
-  MultiIndex Diagram: (x=member of the MultiIndexSet, o=neighbor being tested:
-                       changed to x if neighbor is admissible)
-
-
   3 |                          3 |
     |                            |
   2 |                          2 |
@@ -108,9 +154,6 @@ TEST(AdmissableNeighbor, UndefinedNeighbor)
   index limiter of 3. Add an admissable neighbor to index (4,0), and check to
   make sure that index is not returned as an admissable neighbor to the
   MultiIndexSet.
-
-  MultiIndex Diagram: (x=member of the MultiIndexSet, o=neighbor being tested:
-                       changed to x if neighbor is admissible)
 
   4 |                           4 |
     -----------------             -----------------
@@ -155,9 +198,6 @@ TEST(AdmissableNeighbor, OutsideMaxOrder)
   total index limiter of 3. Add two admissable neighbors to indices (2,2) and
   (4,0), and check to make sure that both indices are not returned as
   admissable neighbors to the MultiIndexSet.
-
-  MultiIndex Diagram: (x=member of the MultiIndexSet, o=neighbor being tested:
-                       changed to x if neighbor is admissible)
 
   4 |                           4 |
     |\                            |\
@@ -209,10 +249,6 @@ TEST(AdmissableNeighbor, OutsideTotalOrder)
   to make sure that new index is returned as an admissable neighbor to the
   MultiIndexSet.
 
-  MultiIndex Diagram: (x=member of the MultiIndexSet, o=neighbor being tested:
-                       changed to x if neighbor is admissible)
-
-
   3 |                          3 |
     |                            |
   2 |                          2 |
@@ -256,10 +292,6 @@ TEST(AdmissableNeighbor, AddAdmissibleNeighbor)
   neighbor to index (3,0), and check to make sure that index is returned as an
   admissable neighbor to the MultiIndexSet.
 
-  MultiIndex Diagram: (x=member of the MultiIndexSet, o=neighbor being tested:
-                       changed to x if neighbor is admissible)
-
-
   3 |                         3 |
     |                           |
   2 | x   x   x               2 | x   x   x
@@ -287,3 +319,335 @@ TEST(AdmissableNeighbor, ForciblyExpandAdmissibleNeighbors)
   bool admiss = indexFamily->IsAdmissible(multi);
   EXPECT_TRUE(admiss);
 }
+
+
+/*
+  ------------------------------------------------------------------------------
+                           MultiIndexLimiter Tests:
+  ------------------------------------------------------------------------------
+
+  Tests whether different MultiIndex limiter classes function correctly.
+*/
+
+/*
+  MultiIndexLimiter.ValidMaxLimiter
+  ---------------------------------
+
+  Purpose:
+  Make sure the MultiIndexLimiter class returns true value for index within the
+  limiter.
+
+  Test:
+  Create MultiIndex at (0,0) and max order limiter of 2. Check to make sure the
+  MultiIndex is feasible within the limiter.
+
+    -----------                -----------
+  2 |         |              2 |         |
+    |         |                |         |
+  1 |         |     --->     1 |         |
+    |         |                |         |
+  0 | x       |              0 | x       |
+    -----------                -----------
+      0   1   2                  0   1   2
+*/
+TEST(MultiIndexLimiter, ValidMaxLimiter)
+{
+  // MultiIndexLimiter.
+  shared_ptr<MultiIndexLimiter> limiter = MaxOrderLimiter(2);
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+
+  // Check the result of IsFeasible().
+  bool feasible = limiter->IsFeasible(multi);
+  EXPECT_TRUE(feasible);
+
+}
+
+/*
+  MultiIndexLimiter.InvalidMaxLimiter
+  -----------------------------------
+
+  Purpose:
+  Make sure the MultiIndexLimiter class returns false value for index outside of
+  the max order limiter.
+
+  Test:
+  Create MultiIndex at (3,3) and max order limiter of 2. Check to make sure the
+  MultiIndex is not feasible within the limiter.
+
+  3 |           x              3 |           o
+    -----------                  -----------
+  2 |         |                2 |         |
+    |         |                  |         |
+  1 |         |       --->     1 |         |
+    |         |                  |         |
+  0 |         |                0 |         |
+    -------------                -------------
+    0   1   2   3                0   1   2   3
+*/
+TEST(MultiIndexLimiter, InvalidMaxLimiter)
+{
+  // MultiIndexLimiter.
+  shared_ptr<MultiIndexLimiter> limiter = MaxOrderLimiter(2);
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,3);
+  multi.SetValue(1,3);
+
+  // Check the result of IsFeasible().
+  bool feasible = limiter->IsFeasible(multi);
+  EXPECT_FALSE(feasible);
+/*
+
+/*
+  MultiIndexLimiter.ValidTotalLimiter
+  -----------------------------------
+
+  Purpose:
+  Make sure the MultiIndexLimiter class returns true value for index within the
+  total order limiter.
+
+  Test:
+  Create MultiIndex at (0,0) and total order limiter of 2. Check to make sure the
+  MultiIndex is feasible within the limiter.
+
+
+  2 |\                       2 |\
+    |  \                       |  \
+  1 |    \          --->     1 |    \
+    |      \                   |      \
+  0 | x      \               0 | x      \
+    -----------                -----------
+      0   1   2                  0   1   2
+*/
+TEST(MultiIndexLimiter, ValidTotalLimiter)
+{
+  // MultiIndexLimiter.
+  shared_ptr<MultiIndexLimiter> limiter = TotalOrderLimiter(2);
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+
+  // Check the result of IsFeasible().
+  bool feasible = limiter->IsFeasible(multi);
+  EXPECT_TRUE(feasible);
+
+}
+
+/*
+  MultiIndexLimiter.InvalidTotalLimiter
+  -------------------------------------
+
+  Purpose:
+  Make sure the MultiIndexLimiter class returns false value for index outside of
+  the total order limiter.
+
+  Test:
+  Create MultiIndex at (2,2) and total order limiter of 2. Check to make sure the
+  MultiIndex is not feasible within the limiter.
+
+
+2 |\        x              2 |\        o
+  |  \                       |  \
+1 |    \          --->     1 |    \
+  |      \                   |      \
+0 |        \               0 |        \
+  -----------                -----------
+    0   1   2                  0   1   2
+*/
+TEST(MultiIndexLimiter, InvalidTotalLimiter)
+{
+  // MultiIndexLimiter.
+  shared_ptr<MultiIndexLimiter> limiter = TotalOrderLimiter(2);
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,2);
+  multi.SetValue(1,2);
+
+  // Check the result of IsFeasible().
+  bool feasible = limiter->IsFeasible(multi);
+  EXPECT_FALSE(feasible);
+/*
+
+/*
+  MultiIndexLimiter.ValidAndLimiter
+  ---------------------------------
+
+  Purpose:
+  Make sure the MultiIndexLimiter class returns true value for index within the
+  and limiter.
+
+  Test:
+  Create MultiIndex at (0,0) with total order limiter of 2 and max order limiter
+  of 2. Check to make sure the MultiIndex is feasible within both limiters.
+
+    ------------                -----------
+  2 |\         |              2 |\         |
+    |  \       |                |  \       |
+  1 |    \     |     --->     1 |    \     |
+    |      \   |                |      \   |
+  0 | x      \ |              0 | x      \ |
+    -----------                 ------------
+      0   1   2                  0   1   2
+*/
+TEST(MultiIndexLimiter, ValidAndLimiter)
+{
+  // MultiIndexLimiter.
+  shared_ptr<MultiIndexLimiter> totalLimiter = TotalOrderLimiter(2);
+  shared_ptr<MultiIndexLimiter> MaxLimiter = MaxOrderLimiter(2);
+
+  // Combine into AndLimiter.
+  shared_ptr<MultiIndexLimiter> andLimiter = AndLimiter(totalLimiter, maxLimiter)
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+
+  // Check the result of IsFeasible().
+  bool feasible = andLimiter->IsFeasible(multi);
+  EXPECT_TRUE(feasible);
+
+}
+
+/*
+  MultiIndexLimiter.InvalidAndLimiter
+  ------------------------------------------
+
+  Purpose:
+  Make sure the MultiIndexLimiter class returns false value for index outside of
+  the total order limiter.
+
+  Test:
+  Create MultiIndex at (2,2) with total order limiter of 2 and max order limiter
+  of 2. Check to make sure the MultiIndex is not feasible within both limiters.
+
+  ------------                -----------
+2 |\        x|              2 |\        o|
+  |  \       |                |  \       |
+1 |    \     |     --->     1 |    \     |
+  |      \   |                |      \   |
+0 |        \ |              0 |        \ |
+  -----------                 ------------
+    0   1   2                  0   1   2
+*/
+TEST(MultiIndexLimiter, InvalidAndLimiter)
+{
+  // MultiIndexLimiter.
+  shared_ptr<MultiIndexLimiter> totalLimiter = TotalOrderLimiter(2);
+  shared_ptr<MultiIndexLimiter> MaxLimiter = MaxOrderLimiter(2);
+
+  // Combine into AndLimiter.
+  shared_ptr<MultiIndexLimiter> andLimiter = AndLimiter(totalLimiter, maxLimiter)
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,2);
+  multi.SetValue(1,2);
+
+  // Check the result of IsFeasible().
+  bool feasible = andLimiter->IsFeasible(multi);
+  EXPECT_FALSE(feasible);
+/*
+
+
+
+
+
+
+
+
+
+/*
+  MultiIndexLimiter.ValidOrLimiter1
+  ---------------------------------
+
+  Purpose:
+  Make sure the OrLimiter class returns correct values for different scenarios.
+
+  Test:
+  Create a TotalOrderLimiter of 2 and MaxOrderLimiter of 2, then create an
+  OrLimiter with both. Create a MultiIndex at (1,1) and make sure it is
+  feasible - should be True for both constituent limiters.
+*/
+TEST(MultiIndexLimiter, ValidOrLimiter)
+{
+  // Max and otal limiters.
+  shared_ptr<MultiIndexLimiter> totalLimiter = TotalOrderLimiter(2);
+  shared_ptr<MultiIndexLimiter> maxLimiter = MaxOrderLimiter(2);
+
+  // Combine into OrLimiter.
+  shared_ptr<MultiIndexLimiter> orLimiter = OrLimiter(totalLimiter, maxLimiter)
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,1);
+  multi.SetValue(1,1);
+
+  // Check the result of IsFeasible().
+  bool feasible = orLimiter->IsFeasible(multi);
+  EXPECT_TRUE(feasible);
+/*
+
+/*
+  MultiIndexLimiter.ValidOrLimiter2
+  ---------------------------------
+
+  Purpose:
+  Make sure the OrLimiter class returns correct values for different scenarios.
+
+  Test:
+  Create a TotalOrderLimiter of 2 and MaxOrderLimiter of 2, then create an
+  OrLimiter with both. Create a MultiIndex at (2,1) and make sure it is
+  feasible - should be True for MaxOrderLimiter, but False for TotalOrderLimiter.
+*/
+TEST(MultiIndexLimiter, ValidOrLimiter2)
+{
+  // Max and otal limiters.
+  shared_ptr<MultiIndexLimiter> totalLimiter = TotalOrderLimiter(2);
+  shared_ptr<MultiIndexLimiter> maxLimiter = MaxOrderLimiter(2);
+
+  // Combine into OrLimiter.
+  shared_ptr<MultiIndexLimiter> orLimiter = OrLimiter(totalLimiter, maxLimiter)
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,2);
+  multi.SetValue(1,1);
+
+  // Check the result of IsFeasible().
+  bool feasible = orLimiter->IsFeasible(multi);
+  EXPECT_TRUE(feasible);
+/*
+
+/*
+  MultiIndexLimiter.InvalidOrLimiter
+  ----------------------------------
+
+  Purpose:
+  Make sure the OrLimiter class returns correct values for different scenarios.
+
+  Test:
+  Create a TotalOrderLimiter of 2 and MaxOrderLimiter of 2, then create an
+  OrLimiter with both. Create a MultiIndex at (2,3) and make sure it is NOT
+  feasible - should be False for both constituent limiters.
+*/
+TEST(MultiIndexLimiter, InvalidOrLimiter)
+{
+  // Max and otal limiters.
+  shared_ptr<MultiIndexLimiter> totalLimiter = TotalOrderLimiter(2);
+  shared_ptr<MultiIndexLimiter> maxLimiter = MaxOrderLimiter(2);
+
+  // Combine into OrLimiter.
+  shared_ptr<MultiIndexLimiter> orLimiter = OrLimiter(totalLimiter, maxLimiter)
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,2);
+  multi.SetValue(1,3);
+
+  // Check the result of IsFeasible().
+  bool feasible = orLimiter->IsFeasible(multi);
+  EXPECT_FALSE(feasible);
+/*
