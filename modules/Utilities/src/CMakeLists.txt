@@ -13,12 +13,27 @@
 # )
 
 CreateCompileGroup(
+    UTILITIES_HDF5
+    "MUQ's wrapper for interacting with HDF5 binary files."
+    muqUtilities
+    ""
+    "EIGEN3;HDF5"
+    ""
+    HDF5/Attributes.cpp
+    HDF5/H5Object.cpp
+    HDF5/HDF5File.cpp
+    HDF5/HDF5Types.cpp
+    HDF5/PathTools.cpp
+    HDF5/BlockDataset.cpp
+)
+
+CreateCompileGroup(
     UTILITIES_LINEARALGEBRA
     "Extensions and generalizations of Eigen for linear algebra."
     muqUtilities
     ""
     "EIGEN3"
-    ""
+    "SUNDIALS"
     RandomGenerator.cpp
     LinearAlgebra/LinearOperator.cpp
     LinearAlgebra/CompanionMatrix.cpp
@@ -29,18 +44,21 @@ CreateCompileGroup(
     LinearAlgebra/ConcatenateOperator.cpp
     LinearAlgebra/DiagonalOperator.cpp
     LinearAlgebra/ProductOperator.cpp
+
+    LinearAlgebra/AnyAlgebra.cpp
+    LinearAlgebra/ScalarAlgebra.cpp
+    LinearAlgebra/EigenVectorAlgebra.cpp
+    LinearAlgebra/EigenMatrixAlgebra.cpp
+    LinearAlgebra/SundialsAlgebra.cpp
 )
 
 CreateCompileGroup(
-    UTILITIES_HDF5
-    "MUQ's wrapper fo interacting with HDF5 binary files."
+    UTILITIES_MULTIINDEX
+    "Classes for definining and generating multiindices and multiindex sets."
     muqUtilities
     ""
-    "EIGEN3;HDF5"
+    "EIGEN3"
     ""
-    HDF5/Attributes.cpp
-    HDF5/H5Object.cpp
-    HDF5/HDF5File.cpp
-    HDF5/HDF5Types.cpp
-    HDF5/PathTools.cpp
+    MultiIndices/MultiIndex.cpp
+    #MultiIndices/MultiIndexLimiter.cpp
 )

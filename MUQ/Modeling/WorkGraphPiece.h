@@ -4,9 +4,10 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/filtered_graph.hpp>
 
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+
 #include "MUQ/Modeling/WorkPiece.h"
 #include "MUQ/Modeling/ConstantPiece.h"
-#include "MUQ/Modeling/AnyAlgebra.h"
 #include "MUQ/Modeling/NodeNameFinder.h"
 
 namespace muq {
@@ -83,7 +84,7 @@ namespace muq {
 	 @param[in] outputNode The muq::Modeling::WorkPiece that we ultimately want to evaluate
 	 @param[in] algebra Algebra to preform basic operations between different types (defaults to base class, which has common types)
        */
-      WorkGraphPiece(std::shared_ptr<const Graph> graph, std::vector<std::shared_ptr<ConstantPiece> > const& constantPieces, std::vector<std::string> const& inputNames, std::map<unsigned int, std::string> const& inTypes, std::shared_ptr<WorkPiece> outputNode, std::shared_ptr<const AnyAlgebra> algebra);
+      WorkGraphPiece(std::shared_ptr<const Graph> graph, std::vector<std::shared_ptr<ConstantPiece> > const& constantPieces, std::vector<std::string> const& inputNames, std::map<unsigned int, std::string> const& inTypes, std::shared_ptr<WorkPiece> outputNode, std::shared_ptr<const muq::Utilities::AnyAlgebra> algebra);
 
       /// Default destructor
       virtual ~WorkGraphPiece();
@@ -186,7 +187,7 @@ namespace muq {
       std::vector<std::shared_ptr<ConstantPiece> > constantPieces;
 
       /// An algebra to do arthmatic on boost::any types
-      std::shared_ptr<const AnyAlgebra> algebra;
+      std::shared_ptr<const muq::Utilities::AnyAlgebra> algebra;
       
     };
   } // namespace Modeling

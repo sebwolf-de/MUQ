@@ -2,10 +2,20 @@
 
 include(CheckCXXCompilerFlag)
 
-if(NOT BUILD_SHARED_LIBS)
-       set(BUILD_SHARED_LIBS ON)
-endif()
+set(MUQ_MPI 0)
 
+#use the openmpi wrapper as necessary 
+if(MUQ_USE_OPENMPI)
+  set(CMAKE_CXX_COMPILER mpic++)
+  set(CMAKE_C_COMPILER mpicc)
+  
+  add_definitions(-DMUQ_MPI)
+  set(MUQ_MPI 1)
+  
+  set(MPI_INCLUDE_DIR /usr/lib/openmpi/include/)
+  include_directories(${MPI_INCLUDE_DIR})
+  message("MPI_INCLUDE_DIR ${MPI_INCLUDE_DIR}")
+endif(MUQ_USE_OPENMPI)
 
 set(CMAKE_CXX_FLAGS_DEBUG  "-O0") #-O0 works better for memcheck
 set(CMAKE_CXX_FLAGS_RELEASE  "-O3") #full optimization with debug symbols for profiling

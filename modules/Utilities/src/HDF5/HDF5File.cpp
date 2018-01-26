@@ -3,11 +3,9 @@
 #include<iostream>
 #include<fstream>
 
-using namespace std;
-
 using namespace muq::Utilities;
 
-HDF5File::HDF5File(string const& filename_){
+HDF5File::HDF5File(std::string const& filename_){
   
   // make sure the file is not open
   assert(fileID<0);
@@ -25,11 +23,11 @@ HDF5File::~HDF5File() {
 }
 
 bool HDF5File::DoesFileExist(const std::string& name) const {
-  ifstream f(name.c_str());
+  std::ifstream f(name.c_str());
   return f.good();
 }
 
-void HDF5File::Open(string const& filename_) {
+void HDF5File::Open(std::string const& filename_) {
 
     if( fileID>=0 ) { // if a file is already open ...
       // ... close it.
@@ -75,7 +73,7 @@ void HDF5File::Close() {
     filename = "";
 }
   
-bool HDF5File::DoesGroupExist(string const& name) const {
+bool HDF5File::DoesGroupExist(std::string const& name) const {
 
   // if the group is the root, return true
   if( (name.compare("/")==0) || (name.compare("")==0) || (name.compare("/.")==0) ) {
@@ -92,7 +90,7 @@ bool HDF5File::DoesGroupExist(string const& name) const {
   return DoesGroupExist(parentPath) && (H5Lexists(fileID, name.c_str(), H5P_DEFAULT)>0);
 }
 
-bool HDF5File::DoesDataSetExist(string const& name) const {
+bool HDF5File::DoesDataSetExist(std::string const& name) const {
 
   // make sure the file is open 
   assert(fileID>0);
@@ -104,7 +102,7 @@ bool HDF5File::DoesDataSetExist(string const& name) const {
   return DoesGroupExist(parentPath) && (H5Lexists(fileID, name.c_str(), H5P_DEFAULT) > 0);
 }
 
-Eigen::VectorXi HDF5File::GetDataSetSize(string const name) const {
+Eigen::VectorXi HDF5File::GetDataSetSize(std::string const name) const {
 
   // make sure the file is open 
   assert(fileID>0);
@@ -149,7 +147,7 @@ Eigen::VectorXi HDF5File::GetDataSetSize(string const name) const {
   return output;
 }
 
-void HDF5File::CreateGroup(string const& name) {
+void HDF5File::CreateGroup(std::string const& name) {
 
     // make sure the file is open 
     assert(fileID>0);
@@ -170,9 +168,9 @@ void HDF5File::CreateGroup(string const& name) {
     H5Gclose(newgroup);
 }
 
-void HDF5File::WriteStringAttribute(string const& datasetName,
-				    string const& attributeName,
-				    string const& attribute)
+void HDF5File::WriteStringAttribute(std::string const& datasetName,
+				    std::string const& attributeName,
+				    std::string const& attribute)
 {
     // make sure the file is open 
     assert(fileID>0);
@@ -185,12 +183,12 @@ void HDF5File::WriteStringAttribute(string const& datasetName,
     H5LTset_attribute_string(fileID, datasetName.c_str(), attributeName.c_str(), attribute.c_str());
 }
 
-string HDF5File::GetStringAttribute(string const& datasetName, string const& attributeName) const {
-#if MUQ_MPI==1
-  unique_ptr<mpi::communicator> worldComm(new mpi::communicator);
+std::string HDF5File::GetStringAttribute(std::string const& datasetName, std::string const& attributeName) const {
+  /*#if MUQ_MPI==1
+  std::unique_ptr<mpi::communicator> worldComm(new mpi::communicator);
   
   assert(worldComm->rank()==write);
-#endif
+  #endif*/
 
   // make sure the file is open 
   assert(fileID>0);
@@ -203,7 +201,7 @@ string HDF5File::GetStringAttribute(string const& datasetName, string const& att
   H5LTget_attribute_string(fileID, datasetName.c_str(), attributeName.c_str(), tempStr);
   
   // return it as a strng
-  return string(tempStr);
+  return std::string(tempStr);
 }
 
 void HDF5File::FlushFile() {
@@ -214,14 +212,14 @@ void HDF5File::FlushFile() {
 }
 
 struct DataFileInfo {
-    DataFileInfo(shared_ptr<HDF5File> const& hdf5file) : hdf5file(hdf5file) {}
+    DataFileInfo(std::shared_ptr<HDF5File> const& hdf5file) : hdf5file(hdf5file) {}
     
-    const shared_ptr<HDF5File> hdf5file;
+    const std::shared_ptr<HDF5File> hdf5file;
 };
 
 herr_t CopyObjectToGlobalFile(hid_t o_id, const char *name, const H5O_info_t *info, void *op_data) {
-    string nameBuffer(name);
-    string fullGroupName = "/" + nameBuffer;
+    std::string nameBuffer(name);
+    std::string fullGroupName = "/" + nameBuffer;
     
     // get the file we are copying into
     DataFileInfo* fileInfo = static_cast<DataFileInfo*>(op_data);
@@ -241,7 +239,7 @@ herr_t CopyObjectToGlobalFile(hid_t o_id, const char *name, const H5O_info_t *in
     return 0;
 }
 
-void HDF5File::MergeFile(shared_ptr<HDF5File> const& otherFile) {
+void HDF5File::MergeFile(std::shared_ptr<HDF5File> const& otherFile) {
 
     // make sure the other file is open
     assert(otherFile->fileID>0);
@@ -250,10 +248,10 @@ void HDF5File::MergeFile(shared_ptr<HDF5File> const& otherFile) {
     assert(fileID>0);
     
     // open the root group in the other file
-    const string rootGroupName = "/";
+    const std::string rootGroupName = "/";
     const hid_t otherRootGroup = H5Gopen2(otherFile->fileID, rootGroupName.c_str(), H5P_DEFAULT);
     
-    auto dataInfo = make_shared<DataFileInfo>(shared_from_this());
+    auto dataInfo = std::make_shared<DataFileInfo>(shared_from_this());
     
     // copy the file 
     const herr_t status = H5Ovisit(otherRootGroup, H5_INDEX_NAME, H5_ITER_NATIVE, &CopyObjectToGlobalFile, static_cast<void*>(dataInfo.get()));

@@ -4,11 +4,6 @@
 
 #include "MUQ/Modeling/WorkGraph.h"
 
-#include "MUQ/Modeling/WorkPiece.h"
-#include "MUQ/Modeling/WorkGraphPiece.h"
-#include "MUQ/Modeling/ConstantPiece.h"
-#include "MUQ/Modeling/AnyAlgebra.h"
-
 using namespace muq::Modeling;
 
 /// A linear function to test the finite difference derivatives
@@ -193,7 +188,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
     for( unsigned int i=0; i<N; ++i ) {
       for( unsigned int j=0; j<N; ++j ) {
 	// its linear so FD should be exact, but the error is very small ...
-	EXPECT_NEAR(jacref(i,j), scalar*Q(i,j), 1.0e-9);
+	EXPECT_NEAR(jacref(i,j), scalar*Q(i,j), 1.0e-8);
       }
     }
   }
@@ -212,7 +207,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
     EXPECT_EQ(jacActionref.size(), N);
     for( unsigned int i=0; i<N; ++i ) {
       // its linear so FD should be exact, but the error is very small ...
-      EXPECT_NEAR(jacActionref(i), expectedJacAction(i), 5.0e-9);
+      EXPECT_NEAR(jacActionref(i), expectedJacAction(i), 1.0e-8);
     }
   }
 
@@ -227,7 +222,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
     EXPECT_EQ(jacTransActionref.size(), N);
     for( unsigned int i=0; i<N; ++i ) {
       // its linear so FD should be exact, but the error is very small ...
-      EXPECT_NEAR(jacTransActionref(i), expectedJacTransAction(i), 5.0e-9);
+      EXPECT_NEAR(jacTransActionref(i), expectedJacTransAction(i), 1.0e-8);
     }
   }
 }
@@ -622,7 +617,7 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
     const Eigen::VectorXd model_jacAction1 = model_jac1*vec;
 
     EXPECT_EQ(model_jacAction1.size(), 1);
-    EXPECT_NEAR(jacAction1, model_jacAction1(0), 1.0e-12);
+    EXPECT_NEAR(jacAction1, model_jacAction1(0), 1.0e-10);
   }
 
     { // test JacobianAction
@@ -638,7 +633,7 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
     EXPECT_EQ(jacTransAction0.size(), N);
     EXPECT_EQ(model_jacTransAction0.size(), N);
     for( unsigned int i=0; i<N; ++i ) {
-      EXPECT_DOUBLE_EQ(jacTransAction0(i), model_jacTransAction0(i));
+      EXPECT_NEAR(jacTransAction0(i), model_jacTransAction0(i), 1.0e-12);
     }
 
     // apply the Jacobian tranpose to this vector
@@ -653,7 +648,7 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
     EXPECT_EQ(jacTransAction1.size(), N);
     EXPECT_EQ(model_jacTransAction1.size(), N);
     for( unsigned int i=0; i<N; ++i ) {
-      EXPECT_DOUBLE_EQ(jacTransAction1(i), model_jacTransAction1(i));
+      EXPECT_NEAR(jacTransAction1(i), model_jacTransAction1(i), 1.0e-12);
     }
   }
 }

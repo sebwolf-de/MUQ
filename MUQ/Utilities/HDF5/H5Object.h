@@ -66,6 +66,14 @@ public:
 	                                                    isDataset(isDataset_){};
 	
 
+    typedef std::function<void(boost::any const&, H5Object& )> AnyWriterType;
+    typedef std::unordered_map<std::type_index, AnyWriterType> AnyWriterMapType;
+    
+    static std::shared_ptr<AnyWriterMapType> GetAnyWriterMap();
+    
+    H5Object& operator=(boost::any const& val);
+        
+    
     // Use this templated function for arithmetic types
     template<typename ScalarType, typename = typename std::enable_if<std::is_arithmetic<ScalarType>::value, ScalarType>::type>
     H5Object& operator=(ScalarType val)
@@ -93,7 +101,7 @@ public:
     };
 
     template<typename ScalarType, int fixedRows, int fixedCols>
-	H5Object& operator=(Eigen::Matrix<ScalarType, fixedRows, fixedCols> const& val)
+    H5Object& operator=(Eigen::Matrix<ScalarType, fixedRows, fixedCols> const& val)
     {
 	assert(path.length()>0);
 	if(isDataset)
@@ -193,6 +201,12 @@ private:
   
 };
 
+
+#ifndef REGISTER_HDF5OBJECT_ANYTYPE
+#define REGISTER_HDF5OBJECT_ANYTYPE(REGNAME, NAME) static auto regHDF ##REGNAME \
+        = muq::Utilities::H5Object::GetAnyWriterMap()->insert(std::make_pair(std::type_index(typeid(NAME)), muq::Utilities::AnyWriter<NAME>() ));
+
+#endif
 
 
 

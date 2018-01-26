@@ -1,7 +1,5 @@
 #include "MUQ/Modeling/WorkPiece.h"
 
-#include <Eigen/Core>
-
 // define the muq namespace
 using namespace muq::Modeling;
 
@@ -588,19 +586,76 @@ ref_vector<const boost::any> WorkPiece::ToRefVector(std::vector<boost::any> cons
   return refs;
 }
 
-void WorkPiece::Clear() {
+void WorkPiece::DestroyAnyImpl(boost::any& obj) const {}
+
+void WorkPiece::DestroyAny(boost::any& obj) const {
+  // the output time
+  const std::string outtype = obj.type().name();
+  
+#if MUQ_HAS_SUNDIALS==1
+  // destroy N_Vector type
+  if( outtype.compare(types.at("N_Vector"))==0 ) {
+    N_VDestroy(boost::any_cast<N_Vector&>(obj));
+    return;
+  }
+
+  // destroy std::vector<N_Vector> type
+  if( outtype.compare(types.at("N_Vector vector"))==0 ) { // if it is a vector of N_Vectors
+    std::vector<N_Vector>& vec = boost::any_cast<std::vector<N_Vector>&>(obj);
+    for( auto it : vec ) {
+      N_VDestroy(it);
+    }
+    vec.clear();
+    return;
+  }
+  
+  // destroy DlsMat type
+  if( outtype.compare(types.at("DlsMat"))==0 ) {
+    DestroyMat(boost::any_cast<DlsMat&>(obj));
+    return;
+  }
+
+  // destroy std::vector<DlsMat> type
+  if( outtype.compare(types.at("DlsMat vector"))==0 ) {
+    std::vector<DlsMat>& vec = boost::any_cast<std::vector<DlsMat>&>(obj);
+    for( auto it : vec ) {
+      DestroyMat(it);
+    }
+    vec.clear();
+    return;
+  }
+#endif
+
+  DestroyAnyImpl(obj);
+}
+
+void WorkPiece::Clear() {  
   // we have new outputs --- some WorkPiece's have the outputs stored in a child class so we don't always want to clear them
-  if( clearOutputs ) { outputs.clear(); }
+  if( clearOutputs ) {
+    // destroy the output
+    for( unsigned int i=0; i<outputs.size(); ++i ) {
+      DestroyAny(outputs[i]);
+    }
+
+    // clear the output
+    outputs.clear();
+  }
 }
 
 void WorkPiece::ClearDerivatives() {
+  // make sure we actually want to clear the derivatives
+  if( !clearDerivatives ) { return; }
+  
   // clear the jacobian
+  if( jacobian ) { DestroyAny(*jacobian); }
   jacobian = boost::none;
 
   // clear the jacobian action
+  if( jacobianAction ) { DestroyAny(*jacobianAction); } 
   jacobianAction = boost::none;
 
   // clear the jacobian transpose action
+  if( jacobianTransposeAction ) { DestroyAny(*jacobianTransposeAction); }
   jacobianTransposeAction = boost::none;
 }
 
@@ -623,7 +678,7 @@ bool WorkPiece::CheckOutputType(unsigned int const outputNum, std::string const&
   
   // check to see that the types match (or that we don't know the type)
   if( it!=outputTypes.end() && it->second.compare(type)!=0 ) {
-    std::cerr << std::endl << "ERROR: Output types do not match." << std::endl << "\tGiven input: " << boost::core::demangle(type.c_str()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
+    std::cerr << std::endl << "ERROR: Output types do not match." << std::endl << "\tGiven output: " << boost::core::demangle(type.c_str()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
     return false;
   }
   

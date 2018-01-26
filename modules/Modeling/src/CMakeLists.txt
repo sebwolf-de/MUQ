@@ -22,7 +22,6 @@ CreateCompileGroup(
     WorkPiece.cpp
 
     NodeNameFinder.cpp
-    AnyAlgebra.cpp
 
     WorkGraph.cpp
     WorkGraphNode.cpp
@@ -32,21 +31,41 @@ CreateCompileGroup(
 
     ConstantPiece.cpp
     IdentityPiece.cpp
-    
-    LinearSDE.cpp
-
 )
 
-if(MUQ_USE_DOLFIN)
+CreateCompileGroup(
+    MODELING_DISTRIBUTIONS
+    "Implement probability distributions, which allow us to evaluate log-densities and/or sample the distirubtion."
+    muqModeling
+    ""
+    "MODELING_CORE"
+    ""
 
-  CreateCompileGroup(     
-      MODELING_DOLFIN
-      "Wrappers allowing the construction of WorkPieces Fenics wrappers for the basic building blocks of the Modeling library."
-      muqModeling
-      "MODELING_CORE"
-      "PYTHON;DOLFIN"
-      ""
-      Dolfin/FenicsPiece.cpp
-  )
+    Distributions/Distribution.cpp
+    Distributions/UniformBox.cpp
+    Distributions/Gaussian.cpp
+)
 
-endif()
+CreateCompileGroup(
+    MODELING_SUNDIALS_MODELS
+    "ODE integrators using Sundials"
+    muqModeling
+    "MODELING_CORE"
+    "EIGEN3;BOOST;SUNDIALS"
+    ""
+    ODEData.cpp
+    ODEBase.cpp
+    ODE.cpp
+    RootfindingIVP.cpp
+)
+
+CreateCompileGroup(
+    MODELING_FLANN
+    "Use the fast library for approximate nearest neighbors (flann) to build model evaluation caches"
+    muqModeling
+    ""
+    "MODELING_CORE;FLANN"
+    ""
+
+    Flann/FlannCache.cpp
+)

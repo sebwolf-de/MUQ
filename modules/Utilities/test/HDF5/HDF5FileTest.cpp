@@ -5,9 +5,7 @@
 #include "MUQ/Utilities/HDF5/HDF5File.h"
 #include "EigenTestUtils.h"
 
-using namespace std;
 using namespace muq::Utilities;
-
 
 class HDF5FileTest : public::testing::Test {
 protected:
@@ -16,7 +14,7 @@ protected:
     filename = "test.h5";
 
     // create a new file
-    hdf5file = make_shared<HDF5File>(filename);
+    hdf5file = std::make_shared<HDF5File>(filename);
   }
   
   virtual void TearDown() override {
@@ -28,10 +26,10 @@ protected:
   }
 
   /// The hdf5 file (muq wrapper)
-  shared_ptr<HDF5File> hdf5file;
+  std::shared_ptr<HDF5File> hdf5file;
 
   /// the temporary filename
-  string filename;
+  std::string filename;
 };
 
 TEST_F(HDF5FileTest, ReadWrite) {
@@ -185,8 +183,8 @@ TEST_F(HDF5FileTest, MultiLevelGroup) {
 
 TEST_F(HDF5FileTest, Attributes) {
   // a group name
-  string groupName0 = "/a/crazy//path";
-  string groupName1 = "/another/crazy//path";
+  std::string groupName0 = "/a/crazy//path";
+  std::string groupName1 = "/another/crazy//path";
 
   // create the group
   hdf5file->CreateGroup(groupName0);
@@ -309,7 +307,7 @@ TEST_F(HDF5FileTest, MergeFiles) {
     std::string tempName = "otherFile.h5";
 
     // create a new file
-    auto otherFile = make_shared<HDF5File>(tempName);
+    auto otherFile = std::make_shared<HDF5File>(tempName);
 
     // test long vector and large matrix to read and write to file 
     const Eigen::VectorXd testVec = Eigen::VectorXd::Random(10);

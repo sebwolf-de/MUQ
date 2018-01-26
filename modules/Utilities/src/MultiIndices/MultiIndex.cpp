@@ -1,0 +1,143 @@
+#include "MUQ/Utilities/MultiIndices/MultiIndex.h"
+
+#include <stdexcept>
+
+using namespace muq::Utilities;
+
+
+MultiIndex::MultiIndex(unsigned lengthIn) : length(lengthIn),
+                                            maxValue(0),
+                                            totalOrder(0)
+{}
+
+
+MultiIndex::MultiIndex(Eigen::RowVectorXi const& indIn) : MultiIndex(indIn.size())
+{
+  maxValue = 0;
+  totalOrder = 0;
+
+  for(int i=0; i<indIn.size(); ++i){
+    if( indIn[i]>0 ){
+      nzInds[i] = indIn[i];
+      maxValue = std::max<int>(maxValue, indIn[i]);
+      totalOrder += indIn[i];
+    }
+  }
+}
+
+
+Eigen::RowVectorXi MultiIndex::GetMulti() const
+{
+  Eigen::RowVectorXi output(length);
+
+  for(auto it = nzInds.begin(); it!=nzInds.end(); ++it)
+    output(it->first) = it->second;
+
+  return output;
+}
+
+bool MultiIndex::SetValue(unsigned ind, unsigned val)
+{
+  if(ind>length){
+    throw std::out_of_range("Tried to set the value of index " + std::to_string(ind) + " on an multiindex with only " + std::to_string(length) + " components.");
+  }else{
+    auto it = nzInds.find(ind);
+    nzInds[ind] = val;
+
+    return it!=nzInds.end();
+  }
+}
+
+unsigned MultiIndex::MultiIndex::GetValue(unsigned ind) const
+{
+  if(ind>length){
+    throw std::out_of_range("Tried to access index " + std::to_string(ind) + " of a multiindex with only " + std::to_string(length) + " components.");
+  }else{
+    auto searchIter = nzInds.find(ind);
+    if(searchIter != nzInds.end()){
+      return searchIter->second;
+    }else{
+      return 0;
+    }
+  }
+}
+
+
+void MultiIndex::SetDimension(unsigned newLength)
+{
+  if(newLength > length){
+    length = newLength;
+  }else{
+
+    auto it = nzInds.begin();
+    while(it!= nzInds.end()){
+		  if (it->first >= newLength) {
+			  it = nzInds.erase(it);
+		  } else {
+			  it++;
+	    }
+    }
+
+    // Update the stored summaries
+    length = newLength;
+    maxValue = 0;
+    totalOrder = 0;
+    for(auto it = nzInds.begin(); it!=nzInds.end(); ++it){
+      maxValue = std::max(maxValue, it->second);
+      totalOrder += it->second;
+    }
+
+  }
+}
+
+bool MultiIndex::operator!=(const MultiIndex &b){
+
+  if( (b.length != length) || (b.maxValue != maxValue) || (b.totalOrder != totalOrder))
+    return true;
+
+  if(b.nzInds.size() != nzInds.size())
+    return true;
+
+  for(int i=0; i<length; ++length){
+    if(GetValue(i) != b.GetValue(i))
+      return true;
+  }
+
+  return false;
+}
+
+bool MultiIndex::operator==(const MultiIndex &b){
+  return !( *this != b);
+}
+
+bool MultiIndex::operator<(const MultiIndex &b){
+
+  if((nzInds.size()==0)&&(b.nzInds.size()>0)){
+    return true;
+  }else if((b.nzInds.size()==0)&&(nzInds.size()>0)){
+    return false;
+  }else if((nzInds.size()==0)&&(b.nzInds.size()==0)){
+    return false;
+  }else if(totalOrder<b.totalOrder){
+    return true;
+  }else if(totalOrder>b.totalOrder){
+      return false;
+  }else if(maxValue<b.maxValue){
+    return true;
+  }else if(maxValue>b.maxValue){
+    return false;
+  }else{
+
+    for(int i=0; i<std::min<unsigned>(length, b.length); ++i){
+      if(GetValue(i)<b.GetValue(i)){
+        return true;
+      }else if(GetValue(i)>b.GetValue(i)){
+        return false;
+      }
+    }
+
+    // it should never get to this point unless the multiindices are equal
+    return false;
+  }
+
+}

@@ -2,6 +2,15 @@
 #define BLOCKDATASET_H
 
 #include "MUQ/Utilities/HDF5/HDF5File.h"
+#include "MUQ/Utilities/HDF5/AnyWriter.h"
+
+#include <boost/any.hpp>
+
+#include <functional>
+
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
 
 namespace muq
 {
@@ -24,7 +33,15 @@ namespace Utilities
 	                                                          startCol(startCol_),
 	                                                          numRows(numRows_),
 	                                                          numCols(numCols_){};
-	
+
+        
+        typedef std::function<void(boost::any const&, BlockDataset& )> AnyWriterType;
+        typedef std::unordered_map<std::type_index, AnyWriterType> AnyWriterMapType;
+       
+        static std::shared_ptr<AnyWriterMapType> GetAnyWriterMap();
+
+        BlockDataset& operator=(boost::any const& val);
+        
 	template<typename ScalarType, typename = typename std::enable_if<std::is_arithmetic<ScalarType>::value, ScalarType>::type>
 	BlockDataset& operator=(ScalarType val)
 	{
@@ -84,9 +101,17 @@ namespace Utilities
 	
     }; // class BlockDataset
 
-    
+
+ #ifndef REGISTER_HDF5BLOCK_ANYTYPE
+#define REGISTER_HDF5BLOCK_ANYTYPE(REGNAME, NAME) static auto regHDF ##REGNAME \
+        = muq::Utilities::BlockDataset::GetAnyWriterMap()->insert(std::make_pair(std::type_index(typeid(NAME)), muq::Utilities::AnyWriter<NAME>() ));
+
+#endif
+ 
 } // namespace Utilities
 } // namespace muq
+
+
 
 
 #endif

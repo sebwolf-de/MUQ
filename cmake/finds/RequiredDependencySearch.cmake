@@ -45,7 +45,8 @@ macro (GetDependency name)
 	    LIST(APPEND MUQ_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
 
         else()
-            set(MUQ_NEEDS_${name} OFF)   
+            set(MUQ_NEEDS_${name} OFF)
+	    set(MUQ_HAS_${name} 1)
         endif()
 	
 endmacro(GetDependency)
@@ -129,7 +130,7 @@ if (${dindex} GREATER -1)
     endif()
 
     include_directories(${Boost_INCLUDE_DIRS})
-    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${Boost_INCLUDE_DIRS})
+    LIST(APPEND ${CMAKE_PROJECT_NAME}_EXTERNAL_INCLUDES ${Boost_INCLUDE_DIRS})
 
     if(NOT DEFINED Boost_LIBRARIES)
         set(Boost_LIBRARIES ${BOOST_LIBRARIES})
@@ -137,8 +138,8 @@ if (${dindex} GREATER -1)
     endif()
 
     # store library information
-    LIST(APPEND MUQ_LINK_LIBS ${Boost_LIBRARIES})
-    LIST(APPEND MUQ_LINK_LIBS_STATIC ${Boost_LIBRARIES_STATIC})
+    LIST(APPEND ${CMAKE_PROJECT_NAME}_LINK_LIBS ${Boost_LIBRARIES})
+    LIST(APPEND ${CMAKE_PROJECT_NAME}_LINK_LIBS_STATIC ${Boost_LIBRARIES_STATIC})
 
 else()
     set(MUQ_NEEDS_BOOST OFF)

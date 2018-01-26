@@ -23,7 +23,8 @@ else()
 	             HINTS ${MUQ_GTEST_DIR}/lib ${MUQ_GTEST_DIR}/build NO_DEFAULT_PATH)
 
 	find_library(GTEST_LIBRARY_STATIC NAMES ${library_prefix}gtest.${static_library_suffix}
-	             HINTS ${MUQ_GTEST_DIR}/lib ${MUQ_GTEST_DIR}/build NO_DEFAULT_PATH)		 
+	             HINTS ${MUQ_GTEST_DIR}/lib ${MUQ_GTEST_DIR}/build NO_DEFAULT_PATH)
+
 endif()
 
 set(GTEST_LIBRARIES_STATIC ${GTEST_LIBRARY_STATIC} )
@@ -37,3 +38,9 @@ find_package_handle_standard_args(GTEST  DEFAULT_MSG
                                   GTEST_LIBRARY GTEST_INCLUDE_DIR)
 
 mark_as_advanced(GTEST_INCLUDE_DIR GTEST_LIBRARY )
+
+if( GTEST_LIBRARY OR GTEST_LIBRARY_STATIC )
+    set(MUQ_HAS_GTEST 1)
+else()
+    set(MUQ_HAS_GTEST 0)
+endif() 

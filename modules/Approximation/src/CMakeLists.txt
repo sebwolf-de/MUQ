@@ -12,6 +12,34 @@
 #     <source file N>
 # )
 
+#CreateCompileGroup(
+#	APPROXIMATION_REGRESSION
+#	"Polynomial regression (global and local)"
+#	muqApproximation
+#	"MODELING_FLANN;MODELING_CORE;APPROXIMATION_POLYNOMIALS"
+#	""
+#	""
+#	Regression/Regression.cpp
+#	Regression/LocalRegression.cpp
+#)
+
+
+CreateCompileGroup(
+	APPROXIMATION_POLYNOMIALS
+	"Polynomials and multiindices"
+	muqApproximation
+	"MODELING_CORE"
+	""
+	""
+	Polynomials/Polynomial.cpp
+	Polynomials/Monomial.cpp
+	Polynomials/PhysicistHermite.cpp
+        Polynomials/ProbabilistHermite.cpp
+	Polynomials/Legendre.cpp
+        Polynomials/Laguerre.cpp
+        Polynomials/Jacobi.cpp
+)
+
 CreateCompileGroup(
     APPROXIMATION_GP_Kernels
     "Gaussian process covariance kernels."
@@ -37,4 +65,3 @@ CreateCompileGroup(
     GaussianProcesses/StateSpaceGP.cpp
     GaussianProcesses/GaussianProcess.cpp
 )
-

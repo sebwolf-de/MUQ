@@ -12,6 +12,16 @@
 #include "boost/any.hpp"
 #include "boost/optional.hpp"
 
+#include <Eigen/Core>
+
+#include "MUQ/config.h"
+
+#if MUQ_HAS_SUNDIALS==1
+// Sundials includes
+#include <nvector/nvector_serial.h>
+#include <sundials/sundials_dense.h> // definitions DlsMat DENSE_ELEM
+#endif
+
 namespace muq {
   namespace Modeling {
 
@@ -459,6 +469,22 @@ namespace muq {
       
     protected:
 
+      /// Check the input type
+      /**
+	 @param[in] inputNum The input number --- we are check that the type has the same type as this input
+	 @param[in] type The type of the input
+	 \return true: The input matches the specified type or no input type is specified, false: the input type does not match the specified type
+       */
+      bool CheckInputType(unsigned int const inputNum, std::string const& type) const;
+
+      /// Check the output type
+      /**
+	 @param[in] outputNum The output number --- we are check that the computed type has the same type as this output
+	 @param[in] type The type of the output
+	 \return true: The output matches the specified type or no output type is specified, false: the output type does not match the specified type
+       */
+      bool CheckOutputType(unsigned int const outputNum, std::string const& type) const;
+
       /// Create vector of references from a vector of boost::any's
       ref_vector<const boost::any> ToRefVector(std::vector<boost::any> const& anyVec) const;
 
@@ -474,7 +500,10 @@ namespace muq {
 	 If true, muq::Modeling::WorkPiece::outputs is cleared everytime muq::Modeling::WorkPiece::Evaluate is called.  If false, the outputs are not cleared.  Defaults to true.
        */
       bool clearOutputs = true;
-      
+
+      /// Clear derivatives every time Jacobian, JacobianAction, or JacobianActionTranspose is called
+      bool clearDerivatives = true;
+
       /// The outputs
       /**
 	 The outputs of this muq::Modeling::WorkPiece are filled by WorkPiece::EvaluateImpl().  If the number of outputs is specified (i.e., WorkPiece::numOutputs is not -1) then WorkPiece::Evaluate() checks to make sure the size of this vector is equal to WorkPiece::numOutputs after calling WorkPiece::EvaluateImpl().  If the output types are specified (i.e., WorkPiece::outputTypes is not an empty vector) then WorkPiece::Evaluate() checks that the output types match WorkPiece::outputTypes after calling WorkPiece::EvaluateImpl().
@@ -538,7 +567,6 @@ namespace muq {
       */
       template<typename ith, typename... Args>		       
 	std::vector<boost::any> EvaluateRecursive(ref_vector<boost::any> &inputs, ith const& in, Args... args) {
-	
 	const int inputNum = inputs.size();
 	
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
@@ -772,27 +800,44 @@ namespace muq {
       /// Clear muq::Modeling::WorkPiece::outputs and muq::Modeling::WorkPiece::jacobian, muq::Modeling::WorkPiece::jacobianAction, and muq::Modeling::WorkPiece::jacobianTransposeAction when muq::Modeling::Jacobian, muq::Modeling::JacobianAction, or muq::Modeling::JacobianTransposeAction() is called
       void ClearDerivatives();
 
-      /// Check the input type
+      /// Destroy a boost any
       /**
-	 @param[in] inputNum The input number --- we are check that the type has the same type as this input
-	 @param[in] type The type of the input
-	 \return true: The input matches the specified type or no input type is specified, false: the input type does not match the specified type
-       */
-      bool CheckInputType(unsigned int const inputNum, std::string const& type) const;
+	 Destroys the object associated with a boost::any.  If the boost::any is not a smart pointer, for example, the function must destory it.
 
-      /// Check the output type
-      /**
-	 @param[in] outputNum The output number --- we are check that the computed type has the same type as this output
-	 @param[in] type The type of the output
-	 \return true: The output matches the specified type or no output type is specified, false: the output type does not match the specified type
+	 This function knows how to destory commonly used objects (those in muq::Modeling::WorkPiece::types).  Overloading muq::Modeling::WorkPiece::DestroyAnyImpl() destroys other types of objects
        */
-      bool CheckOutputType(unsigned int const outputNum, std::string const& type) const;
+      void DestroyAny(boost::any& obj) const;
+
+      /// Destroy a boost any
+      /**
+	 By default, this function does nothing.  It can be overloaded by the user to destroy objects contained within boost::any's
+       */
+      virtual void DestroyAnyImpl(boost::any& obj) const;
 
       /// Set the ID number, must be called by the constructor
       unsigned int SetID();
 
       /// A unique ID number assigned by the constructor
       const unsigned int id;
+
+      /// A map of common types
+      /**
+	 A list of common types and their corresponding names:
+	 <ol>
+	 <li> "N_Vector" for <TT>N_Vector</TT> type (requires Sundials)
+	 <li> "N_Vector vector" for <TT>std::vector<N_Vector></TT> type (requires Sundials)
+	 <li> "DlsMat" for <TT>DlsMat</TT> type (requires Sundials)
+	 <li> "DlsMat vector" for <TT>std::vector<DlsMat></TT> type (requires Sundials)
+	 </ol>
+       */
+      const std::map<std::string, std::string> types = std::map<std::string, std::string>({
+#if MUQ_HAS_SUNDIALS==1
+	  std::pair<std::string, std::string>({std::string("N_Vector"), typeid(N_Vector).name()}),
+	    std::pair<std::string, std::string>({std::string("N_Vector vector"), typeid(std::vector<N_Vector>).name()}),
+	    std::pair<std::string, std::string>({std::string("DlsMat"), typeid(DlsMat).name()}),
+	    std::pair<std::string, std::string>({std::string("DlsMat vector"), typeid(std::vector<DlsMat>).name()}),
+#endif
+	    });
     }; // class WorkPiece
   } // namespace Modeling
 } // namespace muq
