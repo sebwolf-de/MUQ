@@ -61,7 +61,6 @@ TEST(AdmissableNeighbor, ValidNeighbor)
   // Check the result of IsAdmissable().
   bool admiss = indexFamily->IsAdmissible(multi);
   EXPECT_TRUE(admiss);
-
 }
 
 /*
@@ -98,7 +97,6 @@ TEST(AdmissableNeighbor, ValidNeighbor)
   // Check the result of IsAdmissable().
   bool admiss = indexFamily->IsAdmissible(multi);
   EXPECT_TRUE(admiss);
-
 }
 
 /*
@@ -138,7 +136,6 @@ TEST(AdmissableNeighbor, UndefinedNeighbor)
   // Check the result of IsAdmissable().
   bool admiss = indexFamily->IsAdmissible(multi);
   EXPECT_FALSE( admiss);
-
 }
 
 /*
@@ -329,6 +326,44 @@ TEST(AdmissableNeighbor, ForciblyExpandAdmissibleNeighbors)
   Tests whether different MultiIndex limiter classes function correctly.
 */
 
+
+
+IS THIS ACTUALLY GOING TO SAVE ANY SPACE?
+
+
+class LimiterTest : public testing::TestWithParam<tuple<
+                                    shared_ptr<MultiIndexLimiter>, // Limiter
+                                    int,                           // MultIndex something
+                                    int,
+                                    string>>
+{
+
+public:
+  virtual void SetUp()
+  {
+
+  }
+
+  virtual void TearDown()
+  {
+
+  }
+
+};
+
+INSTANTIATE_TEST_CASE_P( )
+
+
+TEST_P(MultiIndexLimiter, ValidMaxLimiter)
+{
+  shared_ptr<MultiIndexLimiter> limiter = MaxOrderLimiter(2);
+
+  EXPECT_TRUE(LimiterTest(limiter, ));
+
+}
+
+
+
 /*
   MultiIndexLimiter.ValidMaxLimiter
   ---------------------------------
@@ -361,7 +396,6 @@ TEST(MultiIndexLimiter, ValidMaxLimiter)
   // Check the result of IsFeasible().
   bool feasible = limiter->IsFeasible(multi);
   EXPECT_TRUE(feasible);
-
 }
 
 /*
@@ -399,6 +433,7 @@ TEST(MultiIndexLimiter, InvalidMaxLimiter)
   // Check the result of IsFeasible().
   bool feasible = limiter->IsFeasible(multi);
   EXPECT_FALSE(feasible);
+}
 /*
 
 /*
@@ -433,7 +468,6 @@ TEST(MultiIndexLimiter, ValidTotalLimiter)
   // Check the result of IsFeasible().
   bool feasible = limiter->IsFeasible(multi);
   EXPECT_TRUE(feasible);
-
 }
 
 /*
@@ -470,6 +504,7 @@ TEST(MultiIndexLimiter, InvalidTotalLimiter)
   // Check the result of IsFeasible().
   bool feasible = limiter->IsFeasible(multi);
   EXPECT_FALSE(feasible);
+}
 /*
 
 /*
@@ -508,11 +543,10 @@ TEST(MultiIndexLimiter, ValidAndLimiter)
   // Check the result of IsFeasible().
   bool feasible = andLimiter->IsFeasible(multi);
   EXPECT_TRUE(feasible);
-
 }
 
 /*
-  MultiIndexLimiter.InvalidAndLimiter
+  MultiIndexLimiter.InvalidAndLimiter1
   ------------------------------------------
 
   Purpose:
@@ -532,7 +566,7 @@ TEST(MultiIndexLimiter, ValidAndLimiter)
   -----------                 ------------
     0   1   2                  0   1   2
 */
-TEST(MultiIndexLimiter, InvalidAndLimiter)
+TEST(MultiIndexLimiter, InvalidAndLimiter1)
 {
   // MultiIndexLimiter.
   shared_ptr<MultiIndexLimiter> totalLimiter = TotalOrderLimiter(2);
@@ -549,22 +583,57 @@ TEST(MultiIndexLimiter, InvalidAndLimiter)
   // Check the result of IsFeasible().
   bool feasible = andLimiter->IsFeasible(multi);
   EXPECT_FALSE(feasible);
+}
 /*
 
+/*
+  MultiIndexLimiter.InvalidAndLimiter2
+  ------------------------------------------
 
+  Purpose:
+  Make sure the MultiIndexLimiter class returns false value for index outside of
+  the total order limiter.
 
+  Test:
+  Create MultiIndex at (3,2) with total order limiter of 2 and max order limiter
+  of 2. Check to make sure the MultiIndex is not feasible within both limiters.
 
+  ------------                -----------
+2 |\         | x            2 |\         |o
+  |  \       |                |  \       |
+1 |    \     |     --->     1 |    \     |
+  |      \   |                |      \   |
+0 |        \ |              0 |        \ |
+  -----------                 ------------
+    0   1   2                  0   1   2
+*/
+TEST(MultiIndexLimiter, InvalidAndLimiter2)
+{
+  // MultiIndexLimiter.
+  shared_ptr<MultiIndexLimiter> totalLimiter = TotalOrderLimiter(2);
+  shared_ptr<MultiIndexLimiter> MaxLimiter = MaxOrderLimiter(2);
 
+  // Combine into AndLimiter.
+  shared_ptr<MultiIndexLimiter> andLimiter = AndLimiter(totalLimiter, maxLimiter)
 
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,3);
+  multi.SetValue(1,2);
 
-
+  // Check the result of IsFeasible().
+  bool feasible = andLimiter->IsFeasible(multi);
+  EXPECT_FALSE(feasible);
+}
+/*
 
 /*
   MultiIndexLimiter.ValidOrLimiter1
   ---------------------------------
 
   Purpose:
-  Make sure the OrLimiter class returns correct values for different scenarios.
+  Make sure the OrLimiter class returns True for case where both constituent
+  limiters are True.
 
   Test:
   Create a TotalOrderLimiter of 2 and MaxOrderLimiter of 2, then create an
@@ -588,6 +657,7 @@ TEST(MultiIndexLimiter, ValidOrLimiter)
   // Check the result of IsFeasible().
   bool feasible = orLimiter->IsFeasible(multi);
   EXPECT_TRUE(feasible);
+}
 /*
 
 /*
@@ -595,7 +665,8 @@ TEST(MultiIndexLimiter, ValidOrLimiter)
   ---------------------------------
 
   Purpose:
-  Make sure the OrLimiter class returns correct values for different scenarios.
+  Make sure the OrLimiter class returns True for case where one constituent
+  limiter is True, and the other is False.
 
   Test:
   Create a TotalOrderLimiter of 2 and MaxOrderLimiter of 2, then create an
@@ -619,6 +690,7 @@ TEST(MultiIndexLimiter, ValidOrLimiter2)
   // Check the result of IsFeasible().
   bool feasible = orLimiter->IsFeasible(multi);
   EXPECT_TRUE(feasible);
+}
 /*
 
 /*
@@ -626,7 +698,8 @@ TEST(MultiIndexLimiter, ValidOrLimiter2)
   ----------------------------------
 
   Purpose:
-  Make sure the OrLimiter class returns correct values for different scenarios.
+  Make sure the OrLimiter class returns False for case where both constituent
+  limiters are False.
 
   Test:
   Create a TotalOrderLimiter of 2 and MaxOrderLimiter of 2, then create an
@@ -650,4 +723,239 @@ TEST(MultiIndexLimiter, InvalidOrLimiter)
   // Check the result of IsFeasible().
   bool feasible = orLimiter->IsFeasible(multi);
   EXPECT_FALSE(feasible);
+}
 /*
+
+/*
+  MultiIndexLimiter.ValidXorLimiter
+  ---------------------------------
+
+  Purpose:
+  Make sure the XorLimiter class returns False for case where one constituent
+  limiter is True, and the other is False.
+
+  Test:
+  Create a TotalOrderLimiter of 2 and MaxOrderLimiter of 2, then create an
+  XorLimiter with both. Create a MultiIndex at (2,1) and make sure it is
+  feasible - should be True for MaxOrderLimiter, False for TotalOrderLimiter ->
+  XOR = True.
+*/
+TEST(MultiIndexLimiter, ValidXorLimiter)
+{
+  // Max and otal limiters.
+  shared_ptr<MultiIndexLimiter> totalLimiter = TotalOrderLimiter(2);
+  shared_ptr<MultiIndexLimiter> maxLimiter = MaxOrderLimiter(2);
+
+  // Combine into XorLimiter.
+  shared_ptr<MultiIndexLimiter> XorLimiter = XorLimiter(totalLimiter, maxLimiter)
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,2);
+  multi.SetValue(1,1);
+
+  // Check the result of IsFeasible().
+  bool feasible = XorLimiter->IsFeasible(multi);
+  EXPECT_TRUE(feasible);
+}
+/*
+
+/*
+  MultiIndexLimiter.InvalidXorLimiter1
+  ------------------------------------
+
+  Purpose:
+  Make sure the XorLimiter class returns False for case where both constituent
+  limiters are True.
+
+  Test:
+  Create a TotalOrderLimiter of 2 and MaxOrderLimiter of 2, then create an
+  XorLimiter with both. Create a MultiIndex at (1,1) and make sure it is NOT
+  feasible - should be True for both constituent limiters -> XOR = False.
+*/
+TEST(MultiIndexLimiter, InvalidXorLimiter1)
+{
+  // Max and otal limiters.
+  shared_ptr<MultiIndexLimiter> totalLimiter = TotalOrderLimiter(2);
+  shared_ptr<MultiIndexLimiter> maxLimiter = MaxOrderLimiter(2);
+
+  // Combine into XorLimiter.
+  shared_ptr<MultiIndexLimiter> XorLimiter = XorLimiter(totalLimiter, maxLimiter)
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,1);
+  multi.SetValue(1,1);
+
+  // Check the result of IsFeasible().
+  bool feasible = XorLimiter->IsFeasible(multi);
+  EXPECT_FALSE(feasible);
+}
+/*
+
+/*
+  MultiIndexLimiter.InvalidXorLimiter2
+  ------------------------------------
+
+  Purpose:
+  Make sure the XorLimiter class returns False for case where both constituent
+  limiters are False.
+
+  Test:
+  Create a TotalOrderLimiter of 2 and MaxOrderLimiter of 2, then create an
+  XorLimiter with both. Create a MultiIndex at (2,3) and make sure it is NOT
+  feasible - should be False for both constituent limiters -> XOR = False.
+*/
+TEST(MultiIndexLimiter, InvalidXorLimiter2)
+{
+  // Max and otal limiters.
+  shared_ptr<MultiIndexLimiter> totalLimiter = TotalOrderLimiter(2);
+  shared_ptr<MultiIndexLimiter> maxLimiter = MaxOrderLimiter(2);
+
+  // Combine into XorLimiter.
+  shared_ptr<MultiIndexLimiter> XorLimiter = XorLimiter(totalLimiter, maxLimiter)
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,2);
+  multi.SetValue(1,3);
+
+  // Check the result of IsFeasible().
+  bool feasible = XorLimiter->IsFeasible(multi);
+  EXPECT_FALSE(feasible);
+}
+/*
+  MultiIndexLimiter.ValidGeneralLimiter
+  -------------------------------------
+
+  Purpose:
+  Make sure the GeneralLimiter class returns True value for index within the
+  GeneralLimiter.
+
+  Test:
+  Create MultiIndexSet with max order 1 and dimension 2, and input it to a
+  GeneralLimiter. Create MultiIndex at (0,0) and max order of 2. Check to make
+  sure the MultiIndex is feasible within the GeneralLimiter.
+
+  2 |                       2 |
+    |                         |
+  1 | x   x         --->    1 |
+    |                         |
+  0 | x   x                 0 | x
+    -----------               -----------
+      0   1   2                 0   1   2
+*/
+TEST(MultiIndexLimiter, ValidGeneralLimiter)
+{
+  // MultiIndexSet - the "square".
+  shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 1);
+
+  // GeneralLimiter.
+  shared_ptr<MultiIndexLimiter> limiter = GeneralLimiter(indexFamily);
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+
+  // Check the result of IsFeasible().
+  bool feasible = limiter->IsFeasible(multi);
+  EXPECT_TRUE(feasible);
+}
+
+/*
+  MultiIndexLimiter.InvalidGeneralLimiter
+  ---------------------------------------
+
+  Purpose:
+  Make sure the GeneralLimiter class returns False value for index outside the
+  GeneralLimiter.
+
+  Test:
+  Create MultiIndexSet with max order 1 and dimension 2, and input it to a
+  GeneralLimiter. Create MultiIndex at (2,1) and max order of 2. Check to make
+  sure the MultiIndex is NOT feasible within the GeneralLimiter.
+
+  2 |                       2 |
+    |                         |
+  1 | x   x         --->    1 |         o
+    |                         |
+  0 | x   x                 0 |
+    -----------               -----------
+      0   1   2                 0   1   2
+*/
+TEST(MultiIndexLimiter, InvalidGeneralLimiter)
+{
+  // MultiIndexSet - the "square".
+  shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 1);
+
+  // GeneralLimiter.
+  shared_ptr<MultiIndexLimiter> limiter = GeneralLimiter(indexFamily);
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
+  multi.SetValue(0,2);
+  multi.SetValue(1,1);
+
+  // Check the result of IsFeasible().
+  bool feasible = limiter->IsFeasible(multi);
+  EXPECT_FALSE(feasible);
+}
+
+/*
+  MultiIndexLimiter.ValidDimensionLimiter
+  ---------------------------------------
+
+  Purpose:
+  Make sure the MultiIndexLimiter class returns True value for index within the
+  DimensionLimiter.
+
+  Test:
+  Create DimensionLimiter with lower dimension of 1 and length of 1, and create
+  a MultiIndex of [1 0 0 1]. Check to make sure the MultiIndex is feasible
+  within the DimensionLimiter.
+
+  DimensionLimiter(1,1) of [a0  a1  a2  a3] =
+
+*/
+TEST(MultiIndexLimiter, ValidDimensionLimiter)
+{
+  // DimensionLimiter.
+  shared_ptr<MultiIndexLimiter> limiter = DimensionLimiter(1,1);
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(4);
+  multi.SetValue(0,1);
+  multi.SetValue(3,1);
+
+  // Check the result of IsFeasible().
+  bool feasible = limiter->IsFeasible(multi);
+  EXPECT_TRUE(feasible);
+}
+
+/*
+  MultiIndexLimiter.InvalidDimensionLimiter
+  -----------------------------------------
+
+  Purpose:
+  Make sure the MultiIndexLimiter class returns False value for index within the
+  DimensionLimiter.
+
+  Test:
+  Create DimensionLimiter with lower dimension of 1 and length of 1, and create
+  a MultiIndex of [0 1 0 1]. Check to make sure the MultiIndex is NOT feasible
+  within the DimensionLimiter.
+
+*/
+TEST(MultiIndexLimiter, InvalidDimensionLimiter)
+{
+  // DimensionLimiter.
+  shared_ptr<MultiIndexLimiter> limiter = DimensionLimiter(1,1);
+
+  // MultiIndex for testing.
+  shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(4);
+  multi.SetValue(1,1);
+  multi.SetValue(3,1);
+
+  // Check the result of IsFeasible().
+  bool feasible = limiter->IsFeasible(multi);
+  EXPECT_FALSE(feasible);
+}
