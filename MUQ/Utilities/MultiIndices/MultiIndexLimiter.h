@@ -80,27 +80,27 @@ namespace Utilities{
   }; // class DimensionLimiter
 
 
-/** @class GeneralLimiter
-   @ingroup MultiIndices
-   @brief Checks if a multiindex is in another set
-   @details This limter only allows terms that are present in another
-      MultiIndexSet.  The limiting set is passed as an argument to the
-      constructor.
- */
-  class GeneralLimiter : public MultiIndexLimiter{
-
-  public:
-    GeneralLimiter(std::shared_ptr<MultiIndexSet> limitingSetIn) : limitingSet(limitingSetIn){};
-    virtual ~GeneralLimiter() {};
-
-    virtual bool IsFeasible(std::shared_ptr<MultiIndex> multi) const override;
-
-  private:
-    GeneralLimiter(){};
-
-    std::shared_ptr<MultiIndexSet> limitingSet;
-
-  }; // class GeneralLimiter
+// /** @class GeneralLimiter
+//    @ingroup MultiIndices
+//    @brief Checks if a multiindex is in another set
+//    @details This limter only allows terms that are present in another
+//       MultiIndexSet.  The limiting set is passed as an argument to the
+//       constructor.
+//  */
+//   class GeneralLimiter : public MultiIndexLimiter{
+//
+//   public:
+//     GeneralLimiter(std::shared_ptr<MultiIndexSet> limitingSetIn) : limitingSet(limitingSetIn){};
+//     virtual ~GeneralLimiter() {};
+//
+//     virtual bool IsFeasible(std::shared_ptr<MultiIndex> multi) const override;
+//
+//   private:
+//     GeneralLimiter(){};
+//
+//     std::shared_ptr<MultiIndexSet> limitingSet;
+//
+//   }; // class GeneralLimiter
 
 /** @class MaxOrderLimiter
    @ingroup MultiIndices

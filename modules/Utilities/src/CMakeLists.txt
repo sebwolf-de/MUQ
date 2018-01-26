@@ -60,5 +60,5 @@ CreateCompileGroup(
     "EIGEN3"
     ""
     MultiIndices/MultiIndex.cpp
-    #MultiIndices/MultiIndexLimiter.cpp
+    MultiIndices/MultiIndexLimiter.cpp
 )
