@@ -60,6 +60,12 @@ bool MultiIndex::SetValue(unsigned ind, unsigned val)
     throw std::out_of_range("Tried to set the value of index " + std::to_string(ind) + " on an multiindex with only " + std::to_string(length) + " components.");
   }else{
     auto it = nzInds.find(ind);
+    if(it != nzInds.end()){
+
+    }else{
+      nzInds[ind] = val;
+      totalOrder += val;
+    }
     nzInds[ind] = val;
 
     return it!=nzInds.end();

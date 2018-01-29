@@ -21,12 +21,12 @@ TEST(Approximation_GP, MaternStateSpace)
     const double length = 0.15;
 
     const double nu = 3.0/2.0;
-    
+
     MaternKernel kernel(1, sigma2, length, nu);
 
     ZeroMean mu(1,1);
     StateSpaceGP gp(mu, kernel);
-    
+
     EXPECT_EQ(nu+0.5, gp.stateDim);
 
     // draw a random sample from the SDE model
@@ -42,7 +42,7 @@ TEST(Approximation_GP, StateSpace_DistributionIntegration)
     const double length = 0.15;
 
     const double nu = 3.0/2.0;
-    
+
     MaternKernel kernel(1, sigma2, length, nu);
 
     std::shared_ptr<muq::Modeling::LinearSDE> sde; // The underying SDE
@@ -60,7 +60,7 @@ TEST(Approximation_GP, StateSpace_DistributionIntegration)
 
     EXPECT_NEAR(0.0, muT(0), 1e-14);
     EXPECT_NEAR(0.0, muT(1), 1e-14);
-    
+
     EXPECT_NEAR(pinf(0,0), pT(0,0), 1e-11);
     EXPECT_NEAR(pinf(0,1), pT(0,1), 1e-11);
     EXPECT_NEAR(pinf(1,0), pT(1,0), 1e-11);
@@ -74,7 +74,7 @@ TEST(Approximation_GP, StateSpace_DistributionIntegration2)
     const double length = 0.15;
 
     const double nu = 3.0/2.0;
-    
+
     MaternKernel kernel(1, sigma2, length, nu);
 
     std::shared_ptr<muq::Modeling::LinearSDE> sde; // The underying SDE
@@ -86,14 +86,14 @@ TEST(Approximation_GP, StateSpace_DistributionIntegration2)
     Eigen::MatrixXd p0 = Eigen::MatrixXd::Identity(sde->stateDim, sde->stateDim);
     Eigen::VectorXd mu0 = Eigen::VectorXd::Ones(sde->stateDim);
     std::pair<Eigen::VectorXd, Eigen::MatrixXd> dist0 = std::make_pair(mu0,p0);
-    
+
     // Integrate the SDE for a while
     Eigen::MatrixXd muT, pT;
     std::tie(muT, pT) = sde->EvolveDistribution(dist0,30);
 
     EXPECT_NEAR(0.0, muT(0), 1e-14);
     EXPECT_NEAR(0.0, muT(1), 1e-14);
-    
+
     EXPECT_NEAR(pinf(0,0), pT(0,0), 1e-11);
     EXPECT_NEAR(pinf(0,1), pT(0,1), 1e-11);
     EXPECT_NEAR(pinf(1,0), pT(1,0), 1e-11);
@@ -107,7 +107,7 @@ TEST(Approximation_GP, PeriodicStateSpace)
     const double length = 0.6;
     const double period = 0.25;
     const double periodN = 50; // how many steps per period
-    
+
     PeriodicKernel kernel(1, sigma2, length, period);
 
     boost::property_tree::ptree options;
@@ -116,16 +116,16 @@ TEST(Approximation_GP, PeriodicStateSpace)
 
     ZeroMean mu(1,1);
     StateSpaceGP gp(mu, kernel, options);
-    
+
     // draw a random sample from the SDE model
     Eigen::VectorXd obsTimes = Eigen::VectorXd::LinSpaced(5*periodN+1, 0, 5*period);
-        
+
     Eigen::MatrixXd realization = gp.Sample(obsTimes);
 
     // Make sure the sample is periodic
     for(int i=0; i<obsTimes.size()-periodN-1; ++i)
-        EXPECT_NEAR(realization(i), realization(i+periodN), 1e-1);
-    
+        EXPECT_NEAR(realization(0,i), realization(0,i+periodN), 1e-1);
+
 }
 
 TEST(Approximation_GP, SumStateSpace)
@@ -135,17 +135,17 @@ TEST(Approximation_GP, SumStateSpace)
     MaternKernel kernel2(1, 0.15, 0.25, 1.0/2.0);
 
     auto kernel = kernel1 + kernel2;
-    
+
     boost::property_tree::ptree options;
     options.put("PeriodicKernel.StateSpace.NumTerms",8);
     options.put("SDE.dt", 5e-5);
 
     ZeroMean mu(1,1);
     StateSpaceGP gp(mu, kernel, options);
-    
+
     // draw a random sample from the SDE model
     Eigen::VectorXd obsTimes = Eigen::VectorXd::LinSpaced(100, 0, 4);
-        
+
     Eigen::MatrixXd realization = gp.Sample(obsTimes);
 }
 
@@ -157,7 +157,7 @@ TEST(Approximation_GP, ProductStateSpace)
     const double nu = 3.0/2.0;
     const double period = 0.25;
     const double periodN = 50; // how many steps per period
-    
+
     PeriodicKernel kernel1(1, sigma2, 0.8, period);
     MaternKernel kernel2(1, sigma2, 2.0, nu);
 
@@ -176,18 +176,18 @@ TEST(Approximation_GP, ProductStateSpace)
 
     StateSpaceGP gp12(mu, kernel12, options);
     StateSpaceGP gp22(mu, kernel21, options);
-    
+
     EXPECT_THROW(kernel22.GetStateSpace(options), muq::NotImplementedError);
     EXPECT_EQ(gp1.stateDim *gp2.stateDim, gp12.stateDim);
-    
-    
+
+
     // draw a random sample from the SDE model
     Eigen::VectorXd obsTimes = Eigen::VectorXd::LinSpaced(5*periodN+1, 0, 5*period);
 
     Eigen::MatrixXd realization1  = gp1.Sample(obsTimes);
     Eigen::MatrixXd realization2  = gp2.Sample(obsTimes);
     Eigen::MatrixXd realization12 = gp12.Sample(obsTimes);
-    
+
 }
 
 TEST(Approximation_GP, StateSpacePredict_Interpolation)
@@ -205,7 +205,7 @@ TEST(Approximation_GP, StateSpacePredict_Interpolation)
     ZeroMean mu(1,1);
     StateSpaceGP gp1(mu, kernel, options);
     GaussianProcess gp2(mu, kernel);
-    
+
     const int numEvals = 100;
     Eigen::MatrixXd evalPts(1,numEvals);
     evalPts.row(0) = Eigen::VectorXd::LinSpaced(numEvals, 0, 2);
@@ -226,7 +226,7 @@ TEST(Approximation_GP, StateSpacePredict_Interpolation)
     gp2.Condition(obsLoc, obsData, obsVar);
 
     // add another observation
-    obsLoc(0) = 1.5;    
+    obsLoc(0) = 1.5;
     gp1.Condition(obsLoc, obsData, obsVar);
     gp2.Condition(obsLoc, obsData, obsVar);
 
@@ -257,7 +257,7 @@ TEST(Approximation_GP, StateSpacePredict_ExtrapolateRight)
     ZeroMean mu(1,1);
     StateSpaceGP gp1(mu, kernel, options);
     GaussianProcess gp2(mu, kernel);
-    
+
     const int numEvals = 100;
     Eigen::MatrixXd evalPts(1,numEvals);
     evalPts.row(0) = Eigen::VectorXd::LinSpaced(numEvals, 1.6, 3);
@@ -278,7 +278,7 @@ TEST(Approximation_GP, StateSpacePredict_ExtrapolateRight)
     gp2.Condition(obsLoc, obsData, obsVar);
 
     // add another observation
-    obsLoc(0) = 1.5;    
+    obsLoc(0) = 1.5;
     gp1.Condition(obsLoc, obsData, obsVar);
     gp2.Condition(obsLoc, obsData, obsVar);
 
@@ -310,7 +310,7 @@ TEST(Approximation_GP, StateSpacePredict_ExtrapolateLeft)
     ZeroMean mu(1,1);
     StateSpaceGP gp1(mu, kernel, options);
     GaussianProcess gp2(mu, kernel);
-    
+
     const int numEvals = 100;
     Eigen::MatrixXd evalPts(1,numEvals);
     evalPts.row(0) = Eigen::VectorXd::LinSpaced(numEvals, -1, 0.2);
@@ -331,7 +331,7 @@ TEST(Approximation_GP, StateSpacePredict_ExtrapolateLeft)
     gp2.Condition(obsLoc, obsData, obsVar);
 
     // add another observation
-    obsLoc(0) = 1.5;    
+    obsLoc(0) = 1.5;
     gp1.Condition(obsLoc, obsData, obsVar);
     gp2.Condition(obsLoc, obsData, obsVar);
 

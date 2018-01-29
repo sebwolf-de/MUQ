@@ -3,7 +3,7 @@
 
 //#include "MUQ/Modeling/WorkGraphPiece.h"
 #include "MUQ/Modeling/NodeNameFinder.h"
-#include "MUQ/Modeling/AnyAlgebra.h"
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/filtered_graph.hpp>
@@ -16,34 +16,34 @@ namespace muq {
     class WorkGraphPiece;
     class WorkPiece;
     class ConstantPiece;
-    
-    /// A graph of connected muq::Modeling::WorkPiece's 
+
+    /// A graph of connected muq::Modeling::WorkPiece's
     class WorkGraph {
     public:
-      
+
       WorkGraph();
-      
+
       virtual ~WorkGraph();
-      
+
       /// Get the number of nodes in the graph
       /**
 	 \return The number of nodes
       */
       unsigned int NumNodes() const;
-      
+
       /// Get the number of edgess in the graph
       /**
 	 \return The number of edges
       */
       unsigned int NumEdges() const;
-      
+
       /// Add a new node to the graph
       /**
 	 @param[in] input A pointer to a muq::Modelling::Core::WorkPiece that will be called when this node is evaluated.
 	 @param[in] name A string representing a <b>unique</b> name for this node.
       */
       void AddNode(std::shared_ptr<WorkPiece> input, std::string const& name);
-      
+
       /// Add a new edge to the graph
       /**
 	 @param[in] nameFrom The name of the upstream node.
@@ -52,10 +52,10 @@ namespace muq {
 	 @param[in] inputDim The input dimension of "nameTo" that will be given the output of "nameFrom"
 	 */
       void AddEdge(std::string const& nameFrom, unsigned int const outputDim, std::string const& nameTo, unsigned int const inputDim);
-      
+
       /// Is the given node in the graph?
       /**
-	 @param[in] name The name of the node 
+	 @param[in] name The name of the node
 	 \return true if the graph has a node named 'name', false otherwise
       */
       bool HasNode(std::string const& name) const;
@@ -95,7 +95,7 @@ namespace muq {
 	 @param[in] node The name of the node
        */
       std::vector<boost::any> const& GetConstantOutputs(std::string const& node) const;
-      
+
     private:
 
       /// Get the output values for a constant node
@@ -113,10 +113,10 @@ namespace muq {
        */
       bool Constant(boost::graph_traits<Graph>::vertex_descriptor const& node) const;
 
-      /// Recursively go upstream from a node, copying nodes 
+      /// Recursively go upstream from a node, copying nodes
       /**
 	 Copies the upstream nodes into a new graph.  If a node is constant it evaluates it and lumps all of the upstream nodes from that node into a muq::Modeling::ConstantParameters
-	 @param[in] vOld The old vertex, where we beging copying from 
+	 @param[in] vOld The old vertex, where we beging copying from
 	 @param[in] vNew The new vertex, a copy of the old one on the new graph
 	 @param[in,out] newGraph All of the (nonconstant) upstreams nodes from vOld will be copied are copied to this new graph
        */
@@ -125,7 +125,7 @@ namespace muq {
       /// Is the given node in the graph?
       /**
 	 @param[out] iter If the node exists, this is an iterator to it.  If the node does not exist, this is the end iterator
-	 @param[in] name The name of the node 
+	 @param[in] name The name of the node
 	 \return true if the graph has a node named 'name', false otherwise
       */
       bool HasNode(boost::graph_traits<Graph>::vertex_iterator& iter, std::string const& name) const;

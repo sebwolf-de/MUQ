@@ -6,10 +6,11 @@
 
 #include "MUQ/Modeling/WorkPiece.h"
 #include "MUQ/Modeling/WorkGraphPiece.h"
-#include "MUQ/Modeling/AnyAlgebra.h"
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
 #include "WorkPieceTestClasses.h"
 
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 TEST(WorkGraphPiece, FixedInOutNum) {
@@ -29,10 +30,10 @@ TEST(WorkGraphPiece, FixedInOutNum) {
   // make a constant parameter
   auto test2 = std::make_shared<ConstantPiece>(obj, 1);
   auto test3 = std::make_shared<IdentityPiece>(outTypes);
-  
+
   // create and empty graph
   auto graph = std::make_shared<WorkGraph>();
-  
+
   // add WorkPieces to the graph
   graph->AddNode(test0, "test 0");
   graph->AddNode(test1, "test 1");
@@ -55,7 +56,7 @@ TEST(WorkGraphPiece, FixedInOutNum) {
 
   // output of the WorkGraphPiece
   auto outs = work->Evaluate(obj, (std::string)"string", 2.0);
- 
+
   // check the outputs
   EXPECT_EQ(outs.size(), 2);
   EXPECT_TRUE(boost::any_cast<std::string>(outs[0]).compare("string")==0);
@@ -70,7 +71,7 @@ TEST(WorkGraphPiece, FixedInOutNum) {
     double a = 1.0;
     double b = 2.0;
     auto input = std::vector<boost::any>({boost::any(a), boost::any(b)});
-    
+
     auto cp = std::make_shared<ConstantPiece>(input);
 
     graph->AddNode(cp,"x");
