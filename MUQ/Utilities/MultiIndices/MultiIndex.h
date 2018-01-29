@@ -9,6 +9,8 @@
 namespace muq {
   namespace Utilities {
 
+    class MultiIndexSet;
+    
     ///
     /**
     @class MultiIndex
@@ -35,6 +37,8 @@ namespace muq {
 
      */
     class MultiIndex {
+      friend class MultiIndexSet;
+
     public:
 
       /** Constructor that creates a multiindex of all zeros.
@@ -62,7 +66,7 @@ namespace muq {
       /** Get the dense representation of this multiindex.
           @return A row vector of unsigned integers containing the multiindex.
        */
-      Eigen::RowVectorXi GetMulti() const;
+      Eigen::RowVectorXi GetVector() const;
 
       /** Get the total order of this multiindex: the \f$\ell_1\f$ norm.
        @return The sum of the nonzero components: the total order of this multiindex.

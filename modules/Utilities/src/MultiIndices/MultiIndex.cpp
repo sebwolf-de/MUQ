@@ -26,7 +26,7 @@ MultiIndex::MultiIndex(Eigen::RowVectorXi const& indIn) : MultiIndex(indIn.size(
 }
 
 
-Eigen::RowVectorXi MultiIndex::GetMulti() const
+Eigen::RowVectorXi MultiIndex::GetVector() const
 {
   Eigen::RowVectorXi output(length);
 
