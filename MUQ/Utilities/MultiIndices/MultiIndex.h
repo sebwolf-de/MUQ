@@ -2,6 +2,8 @@
 #define MULTIINDEX_H_
 
 #include <unordered_map>
+#include <memory>
+
 #include <Eigen/Core>
 
 namespace muq {

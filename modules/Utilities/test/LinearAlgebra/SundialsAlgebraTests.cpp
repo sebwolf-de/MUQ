@@ -1,12 +1,14 @@
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
 using namespace muq::Utilities;
 
 TEST(SundialslgebraTests, Size) {
   auto alg = std::shared_ptr<AnyAlgebra>();
-    
+
   // if muq was compiled with Sundials, check for Sundials types
 #if MUQ_HAS_SUNDIALS==1
   N_Vector vec = N_VNew_Serial(8);
@@ -33,4 +35,3 @@ TEST(SundialsAlgebraTests, AccessElement) {
   N_VDestroy(vec);
 #endif
 }
-

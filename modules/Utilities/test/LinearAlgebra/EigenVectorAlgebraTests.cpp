@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 
+
+#include <memory>
+
 #include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
 using namespace muq::Utilities;
@@ -271,7 +274,7 @@ TEST(EigenVectorAlgebraTests, OuterProduct) {
   EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXf>(alg->OuterProduct(vec4f, vec4Xf))-vec4f*vec4Xf.transpose()).norm(), 0.0);
   EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXf>(alg->OuterProduct(vec4Xf, vec4f))-vec4Xf*vec4f.transpose()).norm(), 0.0);
   EXPECT_DOUBLE_EQ((boost::any_cast<Eigen::MatrixXf>(alg->OuterProduct(vec3Xf, vec3Xf))-vec3Xf*vec3Xf.transpose()).norm(), 0.0);
-  
+
   const Eigen::Vector2i vec2i(2, 3);
   const Eigen::VectorXi vec2Xi = Eigen::VectorXi::Random(2);
   const Eigen::Vector3i vec3i(2, 3, 4);
@@ -366,7 +369,7 @@ TEST(EigenVectorAlgebraTests, Add) {
   EXPECT_TRUE((boost::any_cast<Eigen::Vector2i const&>(alg->Add(vec2i, vec2i)).array()==(vec2i+vec2i).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Vector2i const&>(alg->Add(vec2i, vec2Xi)).array()==(vec2i+vec2Xi).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::VectorXi const&>(alg->Add(vec2Xi, vec2i)).array()==(vec2i+vec2Xi).array()).all());
-  
+
   const Eigen::Vector3d vec3d = Eigen::Vector3d::Random();
   const Eigen::VectorXd vec3Xd = Eigen::VectorXd::Random(3);
   EXPECT_TRUE((boost::any_cast<Eigen::Vector3d const&>(alg->Add(vec3d, vec3d)).array()==(vec3d+vec3d).array()).all());
@@ -432,7 +435,7 @@ TEST(EigenVectorAlgebraTests, Subtract) {
   EXPECT_TRUE((boost::any_cast<Eigen::Vector2i const&>(alg->Subtract(vec2i, vec2i)).array()==(vec2i-vec2i).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Vector2i const&>(alg->Subtract(vec2i, vec2Xi)).array()==(vec2i-vec2Xi).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::VectorXi const&>(alg->Subtract(vec2Xi, vec2i)).array()==(vec2Xi-vec2i).array()).all());
-  
+
   const Eigen::Vector3d vec3d = Eigen::Vector3d::Random();
   const Eigen::VectorXd vec3Xd = Eigen::VectorXd::Random(3);
   EXPECT_TRUE((boost::any_cast<Eigen::Vector3d const&>(alg->Subtract(vec3d, vec3d)).array()==(vec3d-vec3d).array()).all());
@@ -497,7 +500,7 @@ TEST(EigenVectorAlgebraTests, Multiply) {
   EXPECT_TRUE((boost::any_cast<Eigen::Vector2i const&>(alg->Multiply(vec2i, xi)).array()==(xi*vec2i).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Vector2i const&>(alg->Multiply(xui, vec2i)).array()==(xui*vec2i).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Vector2i const&>(alg->Multiply(vec2i, xui)).array()==(xui*vec2i).array()).all());
-  
+
   const Eigen::Vector3d vec3d = Eigen::Vector3d::Random();
   EXPECT_TRUE((boost::any_cast<Eigen::Vector3d const&>(alg->Multiply(xd, vec3d)).array()==(xd*vec3d).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Vector3d const&>(alg->Multiply(vec3d, xd)).array()==(xd*vec3d).array()).all());

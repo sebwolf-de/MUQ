@@ -6,6 +6,7 @@
 #include <vector>
 #include <array>
 
+
 using namespace muq::Utilities;
 using namespace std;
 
@@ -13,7 +14,7 @@ array<seed_seq::result_type, RandomGenerator::GeneratorType::state_size> Urandom
 {
   // use a random device instead of /dev/urandom (may result in same behavior if not on windows)
   random_device rd;
-  
+
   //how much data the generator needs
   array<seed_seq::result_type, RandomGenerator::GeneratorType::state_size> seed_data;
 
@@ -72,7 +73,7 @@ Eigen::MatrixXd RandomGenerator::GetGamma(double const alpha, double const beta,
             output(i,j) = GetGamma(alpha,beta);
         }
     }
-    
+
     return output;
 }
 
@@ -92,7 +93,7 @@ int RandomGenerator::GetUniformInt(int lb, int ub)
 Eigen::MatrixXi RandomGenerator::GetUniformInt(int lb, int ub, int rows, int cols, bool unique)
 {
     const int N = rows*cols;
-    
+
     assert(ub >= lb);
 
     const int maxN = ub - lb + 1;
@@ -108,7 +109,7 @@ Eigen::MatrixXi RandomGenerator::GetUniformInt(int lb, int ub, int rows, int col
         for (int i = lb; i <= ub; ++i) {
             allInts.push_back(i);
         }
-        
+
         // create the output vector and fill it
         Eigen::VectorXi output(N);
         for (int i = 0; i < N; ++i) {
@@ -116,7 +117,7 @@ Eigen::MatrixXi RandomGenerator::GetUniformInt(int lb, int ub, int rows, int col
             int ind = GetUniformInt(i, maxN - 1);
             std::swap(allInts[i], allInts[ind]);
         }
-        
+
         return Eigen::Map<Eigen::MatrixXi>(&allInts[0], rows, cols);
     }
     else
@@ -126,7 +127,7 @@ Eigen::MatrixXi RandomGenerator::GetUniformInt(int lb, int ub, int rows, int col
             for(int i=0; i<rows; ++i)
                 output(i,j) = GetUniformInt(lb,ub);
         }
-        
+
         return output;
     }
 }
@@ -205,4 +206,3 @@ RandomGeneratorTemporarySetSeed::~RandomGeneratorTemporarySetSeed()
 {
   RandomGenerator::GetGenerator() = oldGenerator;
 }
-

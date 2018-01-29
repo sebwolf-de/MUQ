@@ -4,30 +4,30 @@
 using namespace muq::Modeling;
 
 // Create a muq::Modeling::WorkPiece with no fixed number of inputs and outputs and variable input/output types.
-WorkPiece::WorkPiece() : 
+WorkPiece::WorkPiece() :
   numInputs(-1), // the number of inputs is unfixed
   numOutputs(-1), // the number of ouputs is unfixed
   id(SetID()) // the unique id of this WorkPiece
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
-WorkPiece::WorkPiece(int const num, WorkPiece::Fix const fix) : 
-  numInputs(fix==WorkPiece::Fix::Inputs? num : -1), // possibly fix the number of inputs 
+WorkPiece::WorkPiece(int const num, WorkPiece::Fix const fix) :
+  numInputs(fix==WorkPiece::Fix::Inputs? num : -1), // possibly fix the number of inputs
   numOutputs(fix==WorkPiece::Fix::Outputs? num : -1), // possibly fix the number of outputs
   id(SetID()) // the unique id of this WorkPiece
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
-WorkPiece::WorkPiece(int const numIns, int const numOuts) : 
+WorkPiece::WorkPiece(int const numIns, int const numOuts) :
   numInputs(numIns), // fix the number of inputs
   numOutputs(numOuts), // fix the number of outputs
   id(SetID()) // the unique id of this WorkPiece
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types
-WorkPiece::WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const fix) : 
-  numInputs(fix==WorkPiece::Fix::Inputs? types.size() : -1), // possibly fix the number of inputs 
-  numOutputs(fix==WorkPiece::Fix::Outputs? types.size() : -1), // possibly fix the number of outputs 
+WorkPiece::WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const fix) :
+  numInputs(fix==WorkPiece::Fix::Inputs? types.size() : -1), // possibly fix the number of inputs
+  numOutputs(fix==WorkPiece::Fix::Outputs? types.size() : -1), // possibly fix the number of outputs
   inputTypes(fix==WorkPiece::Fix::Inputs? Types(types) : std::map<unsigned int, std::string>()), // possibly fix the input types
   outputTypes(fix==WorkPiece::Fix::Outputs? Types(types) : std::map<unsigned int, std::string>()), // possibly fix the output types
   id(SetID()) // the unique id of this WorkPiece
@@ -44,25 +44,25 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& types, WorkPiece
 
 // Create a muq::Modeling::WorkPiece where either some of the inputs have specified types or some of the outputs have specified types and either the number of inputs or the number of outputs is fixed
 WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& types, int const num, WorkPiece::Fix const fixTypes, WorkPiece::Fix const fixNum) :
-  numInputs(fixNum==WorkPiece::Fix::Inputs? num : -1), // possibly fix the number of inputs 
-  numOutputs(fixNum==WorkPiece::Fix::Outputs? num : -1), // possibly fix the number of outputs 
+  numInputs(fixNum==WorkPiece::Fix::Inputs? num : -1), // possibly fix the number of inputs
+  numOutputs(fixNum==WorkPiece::Fix::Outputs? num : -1), // possibly fix the number of outputs
   inputTypes(fixTypes==WorkPiece::Fix::Inputs? types : std::map<unsigned int, std::string>()), // possibly fix the input types
   outputTypes(fixTypes==WorkPiece::Fix::Outputs? types : std::map<unsigned int, std::string>()), // possibly fix the output types
   id(SetID()) // the unique id of this WorkPiece
-{}  
+{}
 
 // Create a muq::Modeling::WorkPiece with a fixed number of inputs with specified types and a fixed number of outputs (of uknown type)
-WorkPiece::WorkPiece(std::vector<std::string> const& types, int const num) : 
-  numInputs(types.size()), // fix the number of inputs 
-  numOutputs(num), // fix the number of outputs 
+WorkPiece::WorkPiece(std::vector<std::string> const& types, int const num) :
+  numInputs(types.size()), // fix the number of inputs
+  numOutputs(num), // fix the number of outputs
   inputTypes(Types(types)), // fix the input types
   id(SetID()) // the unique id of this WorkPiece
 {}
 
 // Create a muq::Modeling::WorkPiece with a fixed number of outputs with specified types and a fixed number of inputs (of uknown type)
-WorkPiece::WorkPiece(int const num, std::vector<std::string> const& types) : 
-  numInputs(num), // fix the number of inputs 
-  numOutputs(types.size()), // fix the number of outputs 
+WorkPiece::WorkPiece(int const num, std::vector<std::string> const& types) :
+  numInputs(num), // fix the number of inputs
+  numOutputs(types.size()), // fix the number of outputs
   outputTypes(Types(types)), // fix the input types
   id(SetID()) // the unique id of this WorkPiece
 {}
@@ -84,9 +84,9 @@ WorkPiece::WorkPiece(int const numIns, std::map<unsigned int, std::string> const
 {}
 
 // Create a muq::Modeling::WorkPiece with a fixed number of inputs and outputs with specified types
-WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::vector<std::string> const& outTypes) : 
-  numInputs(inTypes.size()), // fix the number of inputs 
-  numOutputs(outTypes.size()), // fix the number of outputs 
+WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::vector<std::string> const& outTypes) :
+  numInputs(inTypes.size()), // fix the number of inputs
+  numOutputs(outTypes.size()), // fix the number of outputs
   inputTypes(Types(inTypes)), // fix the input types
   outputTypes(Types(outTypes)), // fix the output types
   id(SetID()) // the unique id of this WorkPiece
@@ -237,7 +237,7 @@ std::vector<boost::any> WorkPiece::Evaluate(ref_vector<boost::any> const& ins) {
   for( unsigned int i=0; i<outputs.size(); ++i ) {
     assert(CheckOutputType(i, outputs[i].type().name()));
   }
-  
+
   return outputs;
 }
 
@@ -250,7 +250,7 @@ std::vector<boost::any> WorkPiece::Evaluate(std::vector<boost::any> const& ins) 
   for(unsigned int i=0; i<inputTypes.size(); ++i ) {
     assert(CheckInputType(i, ins[i].type().name()));
   }
-  
+
   return Evaluate(ToRefVector(ins));
 }
 
@@ -261,17 +261,17 @@ boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtO
   // make sure the input and output number are valid
   assert(numInputs<0 || wrtIn<numInputs);
   assert(numOutputs<0 || wrtOut<numOutputs);
-  
+
   // make sure the input types are correct
   assert(inputTypes.size()==0 || inputTypes.size()==ins.size());
   for(unsigned int i=0; i<inputTypes.size(); ++i ) {
     assert(CheckInputType(i, ins[i].type().name()));
   }
-  
+
   return Jacobian(wrtIn, wrtOut, ToRefVector(ins));
 }
 
-boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& ins) {  
+boost::any WorkPiece::Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& ins) {
   // make sure we have the correct number of inputs
   assert(numInputs<0 || ins.size()==numInputs);
 
@@ -319,7 +319,7 @@ void WorkPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut
   assert(false);
 }
 
-void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs, double const relTol, double const minTol) {      
+void WorkPiece::JacobianByFD(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs, double const relTol, double const minTol) {
   // the input we are computing the derivative wrt (the value will change so we need a hard copy)
   boost::any in = inputs[wrtIn];
 
@@ -378,7 +378,7 @@ boost::any WorkPiece::JacobianAction(unsigned int const wrtIn, unsigned int cons
   for(unsigned int i=0; i<inputTypes.size(); ++i ) {
     assert(CheckInputType(i, ins[i].type().name()));
   }
-  
+
   return JacobianAction(wrtIn, wrtOut, vec, ToRefVector(ins));
 }
 
@@ -389,10 +389,10 @@ boost::any WorkPiece::JacobianAction(unsigned int const wrtIn, unsigned int cons
   // make sure the input and output number are valid
   assert(numInputs<0 || wrtIn<numInputs);
   assert(numOutputs<0 || wrtOut<numOutputs);
-  
+
   // the inputs are set, so call evaluate with no inputs
   JacobianActionImpl(wrtIn, wrtOut, vec, ins);
-  
+
   // make sure the jacobian was computed (the optional jacobian member has a value)
   if( !jacobianAction ) {
   std::cerr << std::endl << "ERROR: The Jacobian was not computed properly, make sure JacobianActionImpl gives muq::Modeling::WorkPiece::jacobianAction a value" << std::endl << std::endl;
@@ -411,7 +411,7 @@ void WorkPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int const 
   if( eigenType.compare(vec.type().name())==0 && InputType(wrtIn, false).compare(eigenType)==0 && OutputType(wrtOut, false).compare(eigenType)==0 ) {
     // compute the action of the jacobian using finite differences
     JacobianActionByFD(wrtIn, wrtOut, vec, inputs);
-    
+
     return;
   }
 
@@ -424,14 +424,14 @@ void WorkPiece::JacobianActionByFD(unsigned int const wrtIn, unsigned int const 
   // compute the jacobian matrix with finite differences (if the jacobian is implemented then this is actually exact)
   Jacobian(wrtIn, wrtOut, inputs);
   assert(jacobian);
-  
+
   // get a reference to the jacobian and the input vector
   const Eigen::MatrixXd& jac = boost::any_cast<const Eigen::MatrixXd&>(*jacobian); // * operator because it is a boost::optional
   const Eigen::VectorXd& vecref = boost::any_cast<const Eigen::VectorXd&>(vec);
-  
+
   // check input sizes
   assert(jac.cols()==vecref.size());
-  
+
   // apply the jacobian to the input vector
   jacobianAction = (Eigen::VectorXd)(jac*vecref);
 }
@@ -452,7 +452,7 @@ boost::any WorkPiece::JacobianTransposeAction(unsigned int const wrtIn, unsigned
   for(unsigned int i=0; i<inputTypes.size(); ++i ) {
     assert(CheckInputType(i, ins[i].type().name()));
   }
-  
+
   return JacobianTransposeAction(wrtIn, wrtOut, vec, ToRefVector(ins));
 }
 
@@ -463,10 +463,10 @@ boost::any WorkPiece::JacobianTransposeAction(unsigned int const wrtIn, unsigned
   // make sure the input and output number are valid
   assert(numInputs<0 || wrtIn<numInputs);
   assert(numOutputs<0 || wrtOut<numOutputs);
-  
+
   // the inputs are set, so call evaluate with no inputs
   JacobianTransposeActionImpl(wrtIn, wrtOut, vec, ins);
-  
+
   // make sure the jacobian was computed (the optional jacobian member has a value)
   if( !jacobianTransposeAction ) {
     std::cerr << std::endl << "ERROR: The Jacobian was not computed properly, make sure JacobianTransposeActionImpl gives muq::Modeling::WorkPiece::jacobianTransposeAction a value" << std::endl << std::endl;
@@ -498,14 +498,14 @@ void WorkPiece::JacobianTransposeActionByFD(unsigned int const wrtIn, unsigned i
   // compute the jacobian matrix with finite differences (if the jacobian is implemented this is exact)
   Jacobian(wrtIn, wrtOut, inputs);
   assert(jacobian);
-  
+
   // get a reference to the jacobian and the input vector
   const Eigen::MatrixXd& jac = boost::any_cast<const Eigen::MatrixXd&>(*jacobian); // * operator because it is a boost::optional
   const Eigen::VectorXd& vecref = boost::any_cast<const Eigen::VectorXd&>(vec);
-  
+
   // check input sizes
   assert(jac.rows()==vecref.size());
-  
+
   // apply the jacobian to the input vector
   jacobianTransposeAction = (Eigen::VectorXd)(jac.transpose()*vecref);
 }
@@ -575,7 +575,7 @@ std::map<unsigned int, std::string> WorkPiece::InputTypes() const {
 }
 
 ref_vector<const boost::any> WorkPiece::ToRefVector(std::vector<boost::any> const& anyVec) const {
-           
+
   ref_vector<const boost::any> refs;
   refs.reserve(anyVec.size());
 
@@ -591,16 +591,16 @@ void WorkPiece::DestroyAnyImpl(boost::any& obj) const {}
 void WorkPiece::DestroyAny(boost::any& obj) const {
   // the output time
   const std::string outtype = obj.type().name();
-  
+
 #if MUQ_HAS_SUNDIALS==1
   // destroy N_Vector type
-  if( outtype.compare(types.at("N_Vector"))==0 ) {
+  if(outtype.compare(typeid(N_Vector).name())==0){
     N_VDestroy(boost::any_cast<N_Vector&>(obj));
     return;
   }
 
   // destroy std::vector<N_Vector> type
-  if( outtype.compare(types.at("N_Vector vector"))==0 ) { // if it is a vector of N_Vectors
+  if( outtype.compare(typeid(std::vector<N_Vector>).name())==0 ) { // if it is a vector of N_Vectors
     std::vector<N_Vector>& vec = boost::any_cast<std::vector<N_Vector>&>(obj);
     for( auto it : vec ) {
       N_VDestroy(it);
@@ -608,15 +608,15 @@ void WorkPiece::DestroyAny(boost::any& obj) const {
     vec.clear();
     return;
   }
-  
+
   // destroy DlsMat type
-  if( outtype.compare(types.at("DlsMat"))==0 ) {
+  if( outtype.compare(typeid(DlsMat).name())==0 ) {
     DestroyMat(boost::any_cast<DlsMat&>(obj));
     return;
   }
 
   // destroy std::vector<DlsMat> type
-  if( outtype.compare(types.at("DlsMat vector"))==0 ) {
+  if( outtype.compare(typeid(std::vector<DlsMat>).name())==0 ) {
     std::vector<DlsMat>& vec = boost::any_cast<std::vector<DlsMat>&>(obj);
     for( auto it : vec ) {
       DestroyMat(it);
@@ -629,7 +629,7 @@ void WorkPiece::DestroyAny(boost::any& obj) const {
   DestroyAnyImpl(obj);
 }
 
-void WorkPiece::Clear() {  
+void WorkPiece::Clear() {
   // we have new outputs --- some WorkPiece's have the outputs stored in a child class so we don't always want to clear them
   if( clearOutputs ) {
     // destroy the output
@@ -645,13 +645,13 @@ void WorkPiece::Clear() {
 void WorkPiece::ClearDerivatives() {
   // make sure we actually want to clear the derivatives
   if( !clearDerivatives ) { return; }
-  
+
   // clear the jacobian
   if( jacobian ) { DestroyAny(*jacobian); }
   jacobian = boost::none;
 
   // clear the jacobian action
-  if( jacobianAction ) { DestroyAny(*jacobianAction); } 
+  if( jacobianAction ) { DestroyAny(*jacobianAction); }
   jacobianAction = boost::none;
 
   // clear the jacobian transpose action
@@ -662,25 +662,25 @@ void WorkPiece::ClearDerivatives() {
 bool WorkPiece::CheckInputType(unsigned int const inputNum, std::string const& type) const {
   // find the input type
   auto it = inputTypes.find(inputNum);
-  
+
   // check to see that the types match (or that we don't know the type)
   if( it!=inputTypes.end() && it->second.compare(type)!=0 ) {
     std::cerr << std::endl << "ERROR: Input types do not match." << std::endl << "\tGiven input: " << boost::core::demangle(type.c_str()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
     return false;
   }
-  
+
   return true;
 }
 
 bool WorkPiece::CheckOutputType(unsigned int const outputNum, std::string const& type) const {
   // find the output type
   auto it = outputTypes.find(outputNum);
-  
+
   // check to see that the types match (or that we don't know the type)
   if( it!=outputTypes.end() && it->second.compare(type)!=0 ) {
     std::cerr << std::endl << "ERROR: Output types do not match." << std::endl << "\tGiven output: " << boost::core::demangle(type.c_str()) << ", expected " << boost::core::demangle(it->second.c_str()) << std::endl << std::endl;
     return false;
   }
-  
+
   return true;
 }

@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
 using namespace muq::Utilities;
@@ -22,7 +24,7 @@ TEST(ScalarAlgebraTests, SquareRoot) {
   double xd=4.0; float xf=3.0; int xi=2; unsigned int xui=8;
 
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->SquareRoot(xd)), std::sqrt(xd));
-  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->SquareRoot(xf)), std::sqrtf(xf));
+  EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->SquareRoot(xf)), std::sqrt(xf));
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->SquareRoot(xi)), std::sqrt(xi));
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->SquareRoot(xui)), std::sqrt(xui));
 }
@@ -135,7 +137,7 @@ TEST(ScalarAlgebraTests, OuterProduct) {
 
 TEST(ScalarAlgebraTests, Identity) {
   auto alg = std::shared_ptr<AnyAlgebra>();
-  
+
   // scalars
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Identity(typeid(double))), (double)1.0);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Identity(typeid(float))), (float)1.0);
@@ -145,7 +147,7 @@ TEST(ScalarAlgebraTests, Identity) {
 
 TEST(ScalarAlgebraTests, Inverse) {
   auto alg = std::shared_ptr<AnyAlgebra>();
-  
+
   double xd=4.0; float xf=-3.0; int xi=-2; unsigned int xui=8;
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Inverse(xd)), 1.0/xd);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Inverse(xf)), 1.0/xf);
@@ -169,7 +171,7 @@ TEST(ScalarAlgebraTests, Add) {
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Add(xi, xd)), xi+xd);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Add(xi, xf)), xi+xf);
   EXPECT_EQ(boost::any_cast<int const>(alg->Add(xi, xi)), xi+xi);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Add(xi, xui)), xi+xui); 
+  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Add(xi, xui)), xi+xui);
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Add(xui, xd)), xui+xd);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Add(xui, xf)), xui+xf);
   EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Add(xui, xi)), xui+xi);
@@ -192,7 +194,7 @@ TEST(ScalarAlgebraTests, Subtract) {
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Subtract(xi, xd)), xi-xd);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Subtract(xi, xf)), xi-xf);
   EXPECT_EQ(boost::any_cast<int const>(alg->Subtract(xi, xi)), xi-xi);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Subtract(xi, xui)), xi-xui); 
+  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Subtract(xi, xui)), xi-xui);
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Subtract(xui, xd)), xui-xd);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Subtract(xui, xf)), xui-xf);
   EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Subtract(xui, xi)), xui-xi);
@@ -215,7 +217,7 @@ TEST(ScalarAlgebraTests, Multiply) {
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Multiply(xi, xd)), xi*xd);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Multiply(xi, xf)), xi*xf);
   EXPECT_EQ(boost::any_cast<int const>(alg->Multiply(xi, xi)), xi*xi);
-  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Multiply(xi, xui)), xi*xui); 
+  EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Multiply(xi, xui)), xi*xui);
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Multiply(xui, xd)), xui*xd);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Multiply(xui, xf)), xui*xf);
   EXPECT_EQ(boost::any_cast<unsigned int const>(alg->Multiply(xui, xi)), xui*xi);
@@ -237,7 +239,7 @@ TEST(ScalarAlgebraTests, Apply) {
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Apply(xf, xf)), xf*xf);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Apply(xf, xi)), xi*xf);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Apply(xf, xui)), xui*xf);
-  
+
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->Apply(xi, xd)), xd*xi);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->Apply(xi, xf)), xf*xi);
   EXPECT_EQ(boost::any_cast<int const>(alg->Apply(xi, xi)), xi*xi);
@@ -264,7 +266,7 @@ TEST(ScalarAlgebraTests, ApplyInverse) {
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->ApplyInverse(xf, xf)), 1.0);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->ApplyInverse(xf, xi)), xi/xf);
   EXPECT_FLOAT_EQ(boost::any_cast<float const>(alg->ApplyInverse(xf, xui)), xui/xf);
-  
+
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xi, xd)), xd/xi);
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xi, xf)), xf/xi);
   EXPECT_DOUBLE_EQ(boost::any_cast<double const>(alg->ApplyInverse(xi, xi)), 1.0);

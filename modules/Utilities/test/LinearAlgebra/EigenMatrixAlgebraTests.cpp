@@ -1,12 +1,14 @@
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
 using namespace muq::Utilities;
 
 TEST(EigenMatrixAlgebraTests, Size) {
   auto alg = std::shared_ptr<AnyAlgebra>();
-    
+
   // check for Eigen::Matrix's
   const Eigen::Matrix2d mat2d = Eigen::Matrix2d::Constant(2.0);
   EXPECT_EQ(alg->Size(mat2d), 4); // total number of entries
@@ -370,7 +372,7 @@ TEST(EigenMatrixAlgebraTests, Add) {
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix4i const&>(alg->Add(mat4i, vec4i)).array()==result4i.array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix4i const&>(alg->Add(mat4i, vec4Xi)).array()==result4Xi.array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix4i const&>(alg->Add(vec4i, mat4i)).array()==result4i.array()).all());
-  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4i const&>(alg->Add(vec4Xi, mat4i)).array()==result4Xi.array()).all());  
+  EXPECT_TRUE((boost::any_cast<Eigen::Matrix4i const&>(alg->Add(vec4Xi, mat4i)).array()==result4Xi.array()).all());
 
   const Eigen::MatrixXd matd = Eigen::MatrixXd::Random(8,8);
   const Eigen::MatrixXf matf = Eigen::MatrixXf::Random(9,9);
@@ -419,7 +421,7 @@ TEST(EigenMatrixAlgebraTests, Subtract) {
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix2i const&>(alg->Subtract(mat2i, mat2i)).array()==(mat2i-mat2i).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix2i const&>(alg->Subtract(mat2i, mat2Xi)).array()==(mat2i-mat2Xi).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Subtract(mat2Xi, mat2i)).array()==(mat2Xi-mat2i).array()).all());
-  
+
   const Eigen::Matrix3d mat3d = Eigen::Matrix3d::Random();
   const Eigen::MatrixXd mat3Xd = Eigen::MatrixXd::Random(3,3);
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix3d const&>(alg->Subtract(mat3d, mat3d)).array()==(mat3d-mat3d).array()).all());
@@ -496,7 +498,7 @@ TEST(EigenMatrixAlgebraTests, Multiply) {
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix2i const&>(alg->Multiply(mat2i, mat2i)).array()==(mat2i*mat2i).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix2i const&>(alg->Multiply(mat2i, mat2Xi)).array()==(mat2i*mat2Xi).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Multiply(mat2Xi, mat2i)).array()==(mat2Xi*mat2i).array()).all());
-  
+
   const Eigen::Matrix3d mat3d = Eigen::Matrix3d::Random();
   const Eigen::MatrixXd mat3Xd = Eigen::MatrixXd::Random(3,3);
   EXPECT_TRUE((boost::any_cast<Eigen::Matrix3d const&>(alg->Multiply(xd, mat3d)).array()==(xd*mat3d).array()).all());
@@ -559,7 +561,7 @@ TEST(EigenMatrixAlgebraTests, Multiply) {
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXf const&>(alg->Multiply(xf, matf)).array()==(xf*matf).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXf const&>(alg->Multiply(matf, xf)).array()==(xf*matf).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXf const&>(alg->Multiply(matf, matf)).array()==(matf*matf).array()).all());
-  
+
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Multiply(xi, mati)).array()==(xi*mati).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Multiply(mati, xi)).array()==(xi*mati).array()).all());
   EXPECT_TRUE((boost::any_cast<Eigen::MatrixXi const&>(alg->Multiply(xui, mati)).array()==(xui*mati).array()).all());
@@ -927,7 +929,7 @@ TEST(EigenMatrixAlgebraTests, SquareRoot) {
 
 TEST(EigenMatrixAlgebraTests, Determinate) {
   auto alg = std::shared_ptr<AnyAlgebra>();
-    
+
   Eigen::Matrix2d mat2d = Eigen::Matrix2d::Random();
   mat2d = Eigen::Matrix2d::Identity() + 1.0e-4*mat2d*mat2d.transpose();
   Eigen::LLT<Eigen::Matrix2d> chol2d;
