@@ -14,10 +14,13 @@ MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem
 MHKernel::~MHKernel() {}
 
 void MHKernel::EvaluateImpl(ref_vector<boost::any> const& inputs) {
+
+  boost::any temp = inputs.at(0);
+
   // current state
-  std::shared_ptr<SamplingState> current = boost::any_cast<std::shared_ptr<SamplingState> >(inputs[0]);
+  std::shared_ptr<SamplingState> current = boost::any_cast<std::shared_ptr<SamplingState> >(inputs.at(0).get());
   assert(current);
-  
+
   // propose a new point
   std::shared_ptr<SamplingState> prop = boost::any_cast<std::shared_ptr<SamplingState> >(proposal->Sample(current));
 

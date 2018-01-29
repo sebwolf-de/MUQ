@@ -9,7 +9,7 @@
 
 namespace muq {
   namespace SamplingAlgorithms {
-    
+
     class SamplingAlgorithm : public muq::Modeling::WorkPiece {
     public:
 
@@ -52,7 +52,7 @@ namespace muq {
 	 @param[in] problem The sampling problem that evaluates/samples the distribution we are trying to characterize
 	 \return The transition kernel
        */
-      virtual std::shared_ptr<TransitionKernel> Kernel(boost::property_tree::ptree& pt, std::shared_ptr<SamplingProblem> problem) const = 0;
+      virtual std::shared_ptr<TransitionKernel> ConstructKernel(boost::property_tree::ptree& pt, std::shared_ptr<SamplingProblem> problem) const = 0;
 
       /// Re-weight the samples (self-normalize)
       /**
@@ -65,7 +65,7 @@ namespace muq {
 
       /// Are the samples correlated?
       const bool correlated;
-      
+
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

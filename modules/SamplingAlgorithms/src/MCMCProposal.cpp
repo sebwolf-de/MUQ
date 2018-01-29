@@ -9,11 +9,25 @@ MCMCProposal::MCMCProposal() : Distribution() {}
 MCMCProposal::~MCMCProposal() {}
 
 std::shared_ptr<MCMCProposal> MCMCProposal::Construct(pt::ptree const& pt) {
-    // get the name of the proposal
-  const std::string& proposalName = pt.get<std::string>("MCMC.Proposal");
 
-  // construct it from the map
-  return GetMCMCProposalMap()->at(proposalName) (pt);  
+  // get the name of the proposal
+  std::string proposalName = pt.get("MCMC.Proposal", "MHProposal");
+
+  auto proposalMap = GetMCMCProposalMap();
+  auto iter = proposalMap->find(proposalName);
+
+  if(iter == proposalMap->end()){
+    std::cerr << "ERROR: Could not find MCMC proposal \"" << proposalName << "\".  Available options are:\n";
+
+    for(auto it=proposalMap->begin(); it!=proposalMap->end(); ++it)
+      std::cerr << "  " << it->first << std::endl;
+    std::cerr << std::endl;
+
+    assert(iter!=proposalMap->end());
+  }
+
+  return iter->second(pt);
+
 }
 
 std::shared_ptr<MCMCProposal::MCMCProposalMap> MCMCProposal::GetMCMCProposalMap() {

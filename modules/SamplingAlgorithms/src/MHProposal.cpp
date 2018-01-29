@@ -7,9 +7,10 @@ using namespace muq::SamplingAlgorithms;
 REGISTER_MCMC_PROPOSAL(MHProposal)
 
 MHProposal::MHProposal(pt::ptree const& pt) : MCMCProposal() {
+
   // compute the (diagonal) covariance for the proposal
   const Eigen::VectorXd cov = pt.get<double>("MCMC.Proposal.MH.ProposalSize", 1.0)*Eigen::VectorXd::Ones(pt.get<unsigned int>("MCMC.StateDimension"));
-  
+
   // created a Gaussian with scaled identity covariance
   if( cov.size()==1 ) {
     proposal = std::make_shared<muq::Modeling::Gaussian>(cov(0), Gaussian::Mode::Covariance);
