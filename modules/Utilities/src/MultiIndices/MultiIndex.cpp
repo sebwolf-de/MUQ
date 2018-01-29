@@ -63,7 +63,7 @@ unsigned MultiIndex::MultiIndex::GetValue(unsigned ind) const
 }
 
 
-void MultiIndex::SetDimension(unsigned newLength)
+void MultiIndex::SetLength(unsigned newLength)
 {
   if(newLength > length){
     length = newLength;

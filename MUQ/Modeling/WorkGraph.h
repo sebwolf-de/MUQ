@@ -1,9 +1,9 @@
 #ifndef WORKGRAPH_H_
 #define WORKGRAPH_H_
 
-//#include "MUQ/Modeling/WorkGraphPiece.h"
+#include "MUQ/Modeling/WorkGraphPiece.h"
 #include "MUQ/Modeling/NodeNameFinder.h"
-#include "MUQ/Modeling/AnyAlgebra.h"
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/filtered_graph.hpp>

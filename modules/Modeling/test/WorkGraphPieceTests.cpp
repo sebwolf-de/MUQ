@@ -6,7 +6,7 @@
 
 #include "MUQ/Modeling/WorkPiece.h"
 #include "MUQ/Modeling/WorkGraphPiece.h"
-#include "MUQ/Modeling/AnyAlgebra.h"
+#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
 #include "WorkPieceTestClasses.h"
 

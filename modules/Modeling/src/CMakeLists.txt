@@ -31,6 +31,8 @@ CreateCompileGroup(
 
     ConstantPiece.cpp
     IdentityPiece.cpp
+
+    LinearSDE.cpp
 )
 
 CreateCompileGroup(

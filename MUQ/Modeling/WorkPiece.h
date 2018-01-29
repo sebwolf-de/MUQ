@@ -16,6 +16,8 @@
 
 #include "MUQ/config.h"
 
+#include "MUQ/Modeling/WorkPiece.h"
+
 #if MUQ_HAS_SUNDIALS==1
 // Sundials includes
 #include <nvector/nvector_serial.h>
