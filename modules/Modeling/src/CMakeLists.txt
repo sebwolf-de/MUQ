@@ -28,7 +28,7 @@ CreateCompileGroup(
     WorkGraphEdge.cpp
 
     WorkGraphPiece.cpp
-
+    LinearSDE.cpp
     ConstantPiece.cpp
     IdentityPiece.cpp
 

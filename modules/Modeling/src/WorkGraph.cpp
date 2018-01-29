@@ -20,14 +20,14 @@
 using namespace muq::Utilities;
 using namespace muq::Modeling;
 
-/// A helper struct that determines if an edge has the same input number 
+/// A helper struct that determines if an edge has the same input number
 struct SameInputDim {
   /**
      @param[in] dim The input number of the edge
      @param[in] graph A pointer to the graph that stores the edges
    */
   SameInputDim(unsigned int const dim, std::shared_ptr<Graph> graph) : dim(dim), graph(graph) {}
-  
+
   /**
      @param[in] edge The edge we want to compate the input number to
      \return true if the input number is the same, false otherwise
@@ -76,7 +76,7 @@ bool WorkGraph::HasNode(std::string const& name) const {
 
 bool WorkGraph::HasNode(boost::graph_traits<Graph>::vertex_iterator& iter, std::string const& name) const {
   assert(graph);
-    
+
   // try to find the node with this name
   iter = GetNodeIterator(name);
 
@@ -110,7 +110,7 @@ void WorkGraph::AddEdge(std::string const& nameFrom, unsigned int const outputDi
     std::cerr << std::endl << "ERROR: The number of outputs for node '" << nameFrom << "' is " << graph->operator[](*itFrom)->piece->numOutputs << " but the output required by 'WorkGraph::AddEdge' is " << outputDim << std::endl << std::endl;
     assert(numOutputs<0 || outputDim<numOutputs);
   }
-  
+
   // either we don't know the number of inputs to "nameTo" or the input dimension is less than the number of inputs
   if( numInputs>=0 && inputDim>=numInputs ) {
     std::cerr << std::endl << "ERROR: The number of inputs for node '" << nameTo << "' is " << graph->operator[](*itTo)->piece->numInputs << " but the input required by 'WorkGraph::AddEdge' is " << inputDim << std::endl << std::endl;
@@ -120,7 +120,7 @@ void WorkGraph::AddEdge(std::string const& nameFrom, unsigned int const outputDi
   // the input/output type
   const std::string inType = graph->operator[](*itTo)->piece->InputType(inputDim);
   const std::string outType = graph->operator[](*itFrom)->piece->OutputType(outputDim);
-  
+
   // either we don't know the input and/or output type or they match
   if(inType.compare("")!=0 && // we don't know the input type
      outType.compare("")!=0 && // we don't know the output type
@@ -128,7 +128,7 @@ void WorkGraph::AddEdge(std::string const& nameFrom, unsigned int const outputDi
     std::cerr << std::endl << "ERROR: Types do not match in 'WorkGraph::AddEdge'.  The input type node '" << nameTo << "' is " << graph->operator[](*itTo)->piece->InputType(inputDim) << " but the output type for node '" << nameFrom << "' is " << graph->operator[](*itFrom)->piece->OutputType(outputDim) << std::endl << std::endl;
     assert(inType.compare(outType)==0); // the types must match
   }
-    
+
   // remove any other edge going into dimension inputDim of the nameTo node
   boost::remove_in_edge_if(*itTo, SameInputDim(inputDim, graph), *graph);
 
@@ -148,7 +148,7 @@ boost::graph_traits<Graph>::vertex_iterator WorkGraph::GetNodeIterator(std::stri
 
   // return the iterator with this name (it is end if that node does not exist)
   auto res = std::find_if(v, v_end, NodeNameFinder(name, graph));
-      
+
   return res;
 }
 
@@ -220,14 +220,14 @@ std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > Work
 
     // if possible, reserve memory for the inputs that are set (the size reserved is the total number of inputs, however, if it is negative we don't know how many inputs there are so we reserve whatever the compiler did by default...)
     isSet.reserve(std::max((int)isSet.capacity(), numInputs));
-    
+
     // for each vertex, loop over the input nodes and figure out if the inputs are set
     boost::graph_traits<Graph>::in_edge_iterator e, e_end;
     for( tie(e, e_end)=in_edges(*v, *graph); e!=e_end; ++e ) {
       // we have an input, so store it in the vector
       isSet.push_back(graph->operator[](*e)->inputDim);
     }
-    
+
     // if an input to this ModPiece is not set, it will be stored as an input to the graph
     for( int i=0; i<numInputs; ++i ) {
       if( std::find(std::begin(isSet), std::end(isSet), i)==isSet.end() ) { // if the input is not set ..
@@ -243,7 +243,7 @@ std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > Work
       if( isSet.size()>0 ) { // if some inputs have been set ...
 	// the maximum input number that is set
 	const unsigned int maxIn = *std::max_element(isSet.begin(), isSet.end());
-	
+
 	// loop through all the inputs less than the max input
 	for( unsigned int i=0; i<maxIn; ++i ) {
 	  if( std::find(isSet.begin(), isSet.end(), i)==isSet.end() ) { // if an input is not set ...
@@ -275,10 +275,10 @@ bool WorkGraph::HasEdge(boost::graph_traits<Graph>::vertex_descriptor const& vOu
 void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph>& newGraph) const {
   // a map from the source ID to a pair: <source vertex, vector of edges from that vertex to this one>
   std::map<unsigned int, std::pair<boost::graph_traits<Graph>::vertex_descriptor, std::vector<boost::graph_traits<Graph>::in_edge_iterator> > > sources;
-  
+
   // the input edges into vOld
   boost::graph_traits<Graph>::in_edge_iterator e, e_end;
-  
+
   for( tie(e, e_end)=in_edges(vOld, *graph); e!=e_end; ++e ) { // loop through the input edges
     auto v = source(*e, *graph);
     const unsigned int id = graph->operator[](v)->piece->ID();
@@ -295,15 +295,15 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
   for( auto it : sources ) {
     // the upstream node iterator
     auto v = it.second.first;
-    
+
     if( Constant(v) && std::dynamic_pointer_cast<ConstantPiece>(graph->operator[](v)->piece)==nullptr ) { // if this node is constant but is not already a muq::Modeling::ConstantPiece
       // get the output values for this node
       const std::vector<boost::any>& outputs = GetConstantOutputs(v);
-      
+
       // create a ConstantPiece node for this input
       auto nextV = boost::add_vertex(*(newGraph->graph));
       newGraph->graph->operator[](nextV) = std::make_shared<WorkGraphNode>(std::make_shared<ConstantPiece>(outputs), graph->operator[](v)->name+"_fixed");
-      
+
       // loop through the edges from the source to this node
       for( auto e : it.second.second ) {
 	if( !newGraph->HasEdge(nextV, vNew, graph->operator[](*e)->inputDim) ) { // if edge does not exist ...
@@ -314,14 +314,14 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
       }
 
       // move to the next source
-      continue;      
+      continue;
     }
 
     // loop through the edges from the (nonconstant) source to this node
     for( auto e : it.second.second ) {
       boost::graph_traits<Graph>::vertex_descriptor nextV;
       boost::graph_traits<Graph>::vertex_iterator ind;
-      
+
       if( newGraph->HasNode(ind, graph->operator[](v)->name) ) { // if the node already exists in the new graph ...
 	// ... the next node is that node
 	nextV = *ind;
@@ -330,13 +330,13 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
 	nextV = boost::add_vertex(*(newGraph->graph));
 	newGraph->graph->operator[](nextV) = graph->operator[](v);
       }
-      
+
       if( !newGraph->HasEdge(nextV, vNew, graph->operator[](*e)->inputDim ) ) { // if the edge does not already exist ...
-	// add the edge from this node to the existing node, 
+	// add the edge from this node to the existing node,
 	auto nextE = boost::add_edge(nextV, vNew, (*newGraph->graph));
 	newGraph->graph->operator[](nextE.first) = std::make_shared<WorkGraphEdge>(graph->operator[](*e)->outputDim, graph->operator[](*e)->inputDim);
       }
-      
+
       // recurse down a step further
       RecursiveCut(v, nextV, newGraph);
     }
@@ -344,7 +344,7 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
 }
 
 std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) const {
-  // create a new graph 
+  // create a new graph
   auto newGraph = std::make_shared<WorkGraph>();
 
   // the an iterator to the output node
@@ -396,15 +396,15 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
     // make sure the input number is known
     if( newGraph->graph->operator[](it->first)->piece->numInputs<0 ) {
         std::cerr << std::endl << "ERROR: Cannot create WorkGraphPiece if one of the nodes has an unknown number of inputs.  Node \"" << newGraph->graph->operator[](it->first)->name<< "\" does not specify the number of inputs. " << std::endl << std::endl;
-      
+
       assert(newGraph->graph->operator[](it->first)->piece->numInputs>=0);
     }
-    
+
     std::stringstream temp;
     temp << newGraph->graph->operator[](it->first)->name << "_";
     temp << it->second;
 
-    inputNames.push_back(temp.str()); 
+    inputNames.push_back(temp.str());
   }
 
   // the constant pieces that will hold the inputs
@@ -436,15 +436,15 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
       outNode = newGraph->GetNodeIterator(node_fixed);
       assert(outNode != vertices(*newGraph->graph).second);
   }
-  
+
   //return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inputName, inTypes, newGraph->graph->operator[](*outNode)->piece);
   return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inputNames, inTypes, newGraph->graph->operator[](*outNode)->piece, algebra);
-  
+
 }
 
 class MyVertexWriter {
 public:
-  
+
   MyVertexWriter(std::shared_ptr<const Graph> graph) : graph(graph) {}
 
   void operator()(std::ostream& out, const boost::graph_traits<Graph>::vertex_descriptor& v) const {
@@ -456,7 +456,7 @@ public:
     // the name of this work piece
     const std::string nodeName = workPtr->Name();
 
-    // style for the node visualization 
+    // style for the node visualization
     const std::string style = "colorscheme=pastel16,color=2, style=filled";
 
     // label the node
@@ -475,7 +475,7 @@ public:
 
   void operator()(std::ostream& out, const boost::graph_traits<Graph>::edge_descriptor& e) const {
     const unsigned int inputDim = graph->operator[](e)->inputDim;
-    
+
     const unsigned int outputDim = graph->operator[](e)->outputDim;
 
     // first, write the name as the label
@@ -513,9 +513,9 @@ void WorkGraph::Visualize(std::string const& filename) const {
 
   const std::string tempname = *strs.begin() + "_temp.dot";
   if( knownExtension ) { // if we know the file extension ...
-    // ... open a temporary file 
+    // ... open a temporary file
     fout.open(tempname);
-  } else { // otherwise ... 
+  } else { // otherwise ...
     // ... just open the file as the user asked
     fout.open(filename.c_str());
   }
@@ -539,7 +539,7 @@ void WorkGraph::Visualize(std::string const& filename) const {
   int in = 0;
   for( auto aPair : graphInputs ) { // loop through the graph inputs
     vertexNum++;
-    if( aPair.second<0 ) { // if we do not know the input number 
+    if( aPair.second<0 ) { // if we do not know the input number
       fout << vertexNum << "[label=\"Unfixed input\", shape=invhouse,colorscheme=pastel13,color=1, style=filled];" << std::endl;
       fout << vertexNum << "->" << propmapIndex[aPair.first] << std::endl;
     } else { // if we know the input number
@@ -555,7 +555,7 @@ void WorkGraph::Visualize(std::string const& filename) const {
   int out = 0;
   for( auto aPair : graphOutputs ) { // loop through the graph outputs
     vertexNum++;
-    if( aPair.second<0 ) { // if we do not know the output number 
+    if( aPair.second<0 ) { // if we do not know the output number
       fout << vertexNum << "[label=\"Unfixed output\", shape=box,colorscheme=pastel16,color=1, style=filled];" << std::endl;
       fout << propmapIndex[aPair.first]  << "->" << vertexNum << std::endl;
     } else { // if we know the input number
@@ -569,11 +569,11 @@ void WorkGraph::Visualize(std::string const& filename) const {
 
   // close the file stream
   fout.close();
-  
+
   if( knownExtension ) {
     // move the *.dot file into the *.[whatever extension file]
     std::system(("dot -T" + *(strs.end() - 1) + " " + tempname + " -o " + filename).c_str());
-    
+
     // remove the temporary *.dot file
     std::system(("rm "+tempname).c_str());
   }
@@ -589,7 +589,7 @@ std::vector<boost::any> const& WorkGraph::GetConstantOutputs(std::string const& 
 std::vector<boost::any>& WorkGraph::GetConstantOutputs(boost::graph_traits<Graph>::vertex_descriptor const& node) const {
   // make sure the node indeed cosntant
   assert(Constant(node));
-  
+
   // the WorkPiece associated with this node
   auto work = graph->operator[](node)->piece;
 
@@ -597,7 +597,7 @@ std::vector<boost::any>& WorkGraph::GetConstantOutputs(boost::graph_traits<Graph
   assert(work->numInputs>=0);
 
   // if the node has no inputs
-  if( work->numInputs==0 ) { 
+  if( work->numInputs==0 ) {
     work->Evaluate();
     return work->outputs;
   }
@@ -611,7 +611,7 @@ std::vector<boost::any>& WorkGraph::GetConstantOutputs(boost::graph_traits<Graph
   // loop through the input edges
   for( tie(e, e_end)=in_edges(node, *graph); e!=e_end; ++e ) {
     // get the WorkPiece id number, the output that it supplies, and the input that receives it
-    const unsigned int id = graph->operator[](source(*e, *graph))->piece->ID(); 
+    const unsigned int id = graph->operator[](source(*e, *graph))->piece->ID();
     const unsigned int inNum = graph->operator[](*e)->inputDim;
     const unsigned int outNum = graph->operator[](*e)->outputDim;
 
@@ -652,7 +652,7 @@ bool WorkGraph::Constant(std::string const& node) const {
 bool WorkGraph::Constant(boost::graph_traits<Graph>::vertex_descriptor const& node) const {
   // the WorkPiece associated with this node
   auto work = graph->operator[](node)->piece;
-  
+
   // if the node has no inputs, it is constant
   if( work->numInputs==0 ) { return true; }
 

@@ -2,10 +2,15 @@
 #define MULTIINDEX_H_
 
 #include <unordered_map>
+#include <memory>
+#include <initializer_list>
+
 #include <Eigen/Core>
 
 namespace muq {
   namespace Utilities {
+
+    class MultiIndexSet;
 
     ///
     /**
@@ -27,12 +32,14 @@ namespace muq {
         polynomial chaos expansions.
       </p>
 
-      <p> This class is mostly used behind the scenes.  However, the GetMulti()
+      <p> This class is mostly used behind the scenes.  However, the GetVector()
           function may come in useful for users that need to extract the
           multiindex vector. </p>
 
      */
     class MultiIndex {
+      friend class MultiIndexSet;
+
     public:
 
       /** Constructor that creates a multiindex of all zeros.
@@ -48,6 +55,12 @@ namespace muq {
        */
       MultiIndex(Eigen::RowVectorXi const& indIn);
 
+      /** Allows users to intiailize the multiindex with curly braces.  For
+          example, @code MultiIndex temp{1,0,2,3} #endcode would create a
+          multiindex with length four and values 1, 0, 2, and 3.
+      */
+      MultiIndex(std::initializer_list<unsigned> const& indIn);
+
       /** Create a deep copy of MultiIndex pointed to by the input.
           @param[in] indIn A shared_ptr to a MultiIndex instance
           @return A shared_ptr to a new MultiIndex instance containing the same information as the input.
@@ -60,7 +73,7 @@ namespace muq {
       /** Get the dense representation of this multiindex.
           @return A row vector of unsigned integers containing the multiindex.
        */
-      Eigen::RowVectorXi GetMulti() const;
+      Eigen::RowVectorXi GetVector() const;
 
       /** Get the total order of this multiindex: the \f$\ell_1\f$ norm.
        @return The sum of the nonzero components: the total order of this multiindex.

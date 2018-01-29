@@ -15,7 +15,7 @@ TEST(MCMC, MHKernel_MHProposal) {
   auto mcmc = std::make_shared<MCMC>();
 
   const unsigned int N = 7.0e5;
-  
+
   // parameters for the sampler
   pt::ptree pt;
   pt.put<unsigned int>("SamplingAlgorithm.NumSamples", N); // number of Monte Carlo samples
@@ -27,7 +27,7 @@ TEST(MCMC, MHKernel_MHProposal) {
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
   const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
   auto dist = std::make_shared<Gaussian>(mu); // standard normal Gaussian
-  
+
   // create a sampling problem
   auto problem = std::make_shared<SamplingProblem>(dist);
 
@@ -47,7 +47,7 @@ TEST(MCMC, MHKernel_AMProposal) {
   auto mcmc = std::make_shared<MCMC>();
 
   const unsigned int N = 2.0e5;
-  
+
   // parameters for the sampler
   pt::ptree pt;
   pt.put<unsigned int>("SamplingAlgorithm.NumSamples", N); // number of Monte Carlo samples
@@ -61,7 +61,7 @@ TEST(MCMC, MHKernel_AMProposal) {
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
   const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
   auto dist = std::make_shared<Gaussian>(mu); // standard normal Gaussian
-  
+
   // create a sampling problem
   auto problem = std::make_shared<SamplingProblem>(dist);
 
@@ -71,7 +71,7 @@ TEST(MCMC, MHKernel_AMProposal) {
   // evaluate
   mcmc->Evaluate(pt, problem, start);
 
-  // estimate the mean
   const boost::any mean = mcmc->FirstMoment();
+  // estimate the mean
   EXPECT_NEAR((boost::any_cast<Eigen::VectorXd const>(mean)-mu).norm(), 0.0, 1.0e-2);
 }

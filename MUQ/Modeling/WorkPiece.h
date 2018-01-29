@@ -8,6 +8,7 @@
 #include<sstream>
 #include<cassert>
 #include<memory>
+#include<string>
 
 #include "boost/any.hpp"
 #include "boost/optional.hpp"
@@ -31,10 +32,10 @@ namespace muq {
     class WorkGraphPiece;
     class WorkGraph;
 
-    /// A vector of references to something ... 
+    /// A vector of references to something ...
     template <typename T>
       using ref_vector = std::vector<std::reference_wrapper<const T>>;
-    
+
     /// Base class for MUQ's modelling envronment
     class WorkPiece {
 
@@ -43,33 +44,33 @@ namespace muq {
       friend class WorkGraph;
 
     protected:
-      
+
       /// Does the constructor fix the inputs or the outputs?
-      enum Fix { 
+      enum Fix {
 	/// The constructor fixes the input number and possibly the types
-	Inputs, 
+	Inputs,
 	/// The constructor fixes the output number and possibly the types
 	Outputs };
-      
+
     public:
-      
+
       /// Create a muq::Modeling::WorkPiece with no fixed number of inputs and outputs and variable input/output types.
       WorkPiece();
-      
+
       /// Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
       /**
 	 @param[in] num The number of inputs or outputs (which one depends on the second parameter)
 	 @param[in] fix WorkPiece::Fix::Inputs (default): the first parameter is the number of inputs; WorkPiece::Fix::Outputs: the first parameter is the number of outputs
       */
       WorkPiece(int const num, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
-      
+
       /// Create a muq::Modeling::WorkPiece with a fixed number of inputs and outputs but variable input/output types
       /**
 	 @param[in] numIns The number of inputs
 	 @param[in] numOuts The number of outputs
       */
       WorkPiece(int const numIns, int const numOuts);
-      
+
       /// Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types
       /**
 	 If the number and type of the inputs is specified then the number and type of the outputs is variable.  The opposite is true if the number and type of the outputs is specified.
@@ -77,7 +78,7 @@ namespace muq {
 	 @param[in] fix WorkPiece::Fix::Inputs (default): the elements of the first parameter are the types of the inputs; WorkPiece::Fix::Outputs: the elements of the first parameter are the types of the outputs
       */
       WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const fix = WorkPiece::Fix::Inputs);
-  
+
       /// Create a muq::Modeling::WorkPiece where either some of the inputs have specified types or some of the outputs have specified types
       /**
 	 If the inputs are specified, then the outputs are not (and vice versa).  The number of in/outputs is variable but some of them have specified type.  For example, if the first input is a string and the third input is a double then
@@ -87,9 +88,9 @@ namespace muq {
 	 <li> Evaluate();
 	 <li> Evaluate("string", "another string", 5.0, std::shared_ptr<AnObject>);
 	 </ul>
-	 are valid muq::Modeling::WorkPiece::Evaluate calls but 
+	 are valid muq::Modeling::WorkPiece::Evaluate calls but
 	 <ul>
-	 <li> Evaluate(1.0, 2.0, "string"); 
+	 <li> Evaluate(1.0, 2.0, "string");
 	 </ul>
 	 is not valid.
 	 @param[in] types A map from the input/output number to the input/output type
@@ -157,7 +158,7 @@ namespace muq {
 	 @param[in] outTypes A vector of strings, each element is the type of an output (the number of outputs is the size of this vector)
       */
       WorkPiece(std::map<unsigned int, std::string> const& inTypes, int const num, std::vector<std::string> const& outTypes);
-      
+
       /// Create a muq::Modeling::WorkPiece where some of the outputs and all of the inputs have specified types
       /**
 	 @param[in] inTypes A vector of strings, each element is the type of an input (the number of inputs is the size of this vector)
@@ -207,48 +208,48 @@ namespace muq {
 
       /// Default destructor
       virtual ~WorkPiece() {}
-      
+
       /// Evaluate this muq::Modeling::WorkPiece
       /**
 	 This function takes the inputs to the muq::Modeling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if they are specified.  It then calls WorkPiece::EvaluateImpl(), which populates WorkPiece::outputs using the input arguments (passed to WorkPiece::EvaluateImpl()).  This function then checks WorkPiece::outputs, which much match WorkPiece::numOutputs and WorkPiece::outputTypes if they are specified.
-	 
+
 	 This function builds a reference vector to the inputs and calls WorkPiece::Evaluate(ref_vector<boost::any> const& ins)
-	 @param[in] ins A vector of inputs 
+	 @param[in] ins A vector of inputs
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
       std::vector<boost::any> Evaluate(std::vector<boost::any> const& ins);
-      
+
       /// Evaluate this muq::Modeling::WorkPiece using references to the inputs
       /**
 	 This function takes the references to the inputs to the muq::Modeling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if they are specified.  It then calls WorkPiece::EvaluateImpl(), which populates WorkPiece::outputs using the input arguments (passed to WorkPiece::EvaluateImpl()).  This function then checks WorkPiece::outputs, which much match WorkPiece::numOutputs and WorkPiece::outputTypes if they are specified.
-	 
+
 	 References are used for efficiency in the muq::Modeling::WorkGraph.
-	 @param[in] ins A vector of references to the inputs 
+	 @param[in] ins A vector of references to the inputs
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
       std::vector<boost::any> Evaluate(ref_vector<boost::any> const& ins);
-      
+
       /// Evaluate this muq::Modeling::WorkPiece in the case that there are no inputs
       /**
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
       std::vector<boost::any> Evaluate();
-      
+
       /// Evalaute this muq::Modeling::WorkPiece using multiple arguments
       /**
 	 This function allows the user to call WorkPiece::Evaluate without first creating a vector of inputs.  Instead, the user calls WorkPiece::Evaluate with multiple arguments (if specified, the number of arguments must match the number of inputs) and this function creates the input vector.
 	 @param[in] args The inputs (may be more than one)
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
-      template<typename... Args>			
+      template<typename... Args>
 	std::vector<boost::any> Evaluate(Args... args) {
 	// clear the outputs
 	Clear();
-	
+
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
 	inputs.reserve(numInputs<0? 0 : numInputs);
-	
+
 	// begin calling the EvaluateRecursive with the first input
 	return EvaluateRecursive(inputs, args...);
       }
@@ -258,20 +259,20 @@ namespace muq {
 	 This function takes a vector of inputs to the muq::Modeling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if they are specified.  It then calls WorkPiece::JacobianImpl(), which computes the Jacobian.  The Jacobian must be implemented by a child class, unless both the input and the output are Eigen::VectorXd's.  In this case, we default to finite difference.
 	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
 	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
-	 @param[in] ins A vector of inputs 
-	 \return The Jacobian of this muq::Modeling::WorkPiece 
+	 @param[in] ins A vector of inputs
+	 \return The Jacobian of this muq::Modeling::WorkPiece
       */
       boost::any Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, std::vector<boost::any> const& ins);
 
       /// Evaluate the Jacobian of this muq::Modeling::WorkPiece using references to the inputs
       /**
 	 This function takes the references to the inputs to the muq::Modeling::WorkPiece, which must match WorkPiece::numInputs and WorkPiece::inputTypes if they are specified.  It then calls WorkPiece::JacobianImpl(), which computes the Jacobian.  The Jacobian must be implemented by a child class, unless both the input and the output are Eigen::VectorXd's.  In this case, we default to finite difference.
-	 
+
 	 References are used for efficiency in the muq::Modeling::WorkGraph.
 	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
 	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
-	 @param[in] ins A vector of references to the inputs 
-	 \return The Jacobian of this muq::Modeling::WorkPiece 
+	 @param[in] ins A vector of references to the inputs
+	 \return The Jacobian of this muq::Modeling::WorkPiece
       */
       boost::any Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& ins);
 
@@ -281,7 +282,7 @@ namespace muq {
 	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
 	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
 	 @param[in] args The inputs (may be more than one)
-	 \return The Jacobian of this muq::Modeling::WorkPiece 
+	 \return The Jacobian of this muq::Modeling::WorkPiece
        */
       template<typename... Args>
 	boost::any Jacobian(unsigned int const wrtIn, unsigned int const wrtOut, Args... args) {
@@ -291,7 +292,7 @@ namespace muq {
 
 	// clear the outputs and derivative information
 	ClearDerivatives();
-	
+
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
 	inputs.reserve(numInputs<0? 0 : numInputs);
@@ -317,8 +318,8 @@ namespace muq {
 	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
 	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
 	 @param[in] vec We want to apply the Jacobian to this vector
-	 @param[in] ins A vector of inputs 
-	 \return The Jacobian of this muq::Modeling::WorkPiece 
+	 @param[in] ins A vector of inputs
+	 \return The Jacobian of this muq::Modeling::WorkPiece
       */
       boost::any JacobianAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, std::vector<boost::any> const& ins);
 
@@ -328,8 +329,8 @@ namespace muq {
 	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
 	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
 	 @param[in] vec We want to apply the Jacobian to this vector
-	 @param[in] ins A vector of references to the inputs 
-	 \return The Jacobian of this muq::Modeling::WorkPiece 
+	 @param[in] ins A vector of references to the inputs
+	 \return The Jacobian of this muq::Modeling::WorkPiece
       */
       boost::any JacobianAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& ins);
 
@@ -347,14 +348,14 @@ namespace muq {
 	// make sure the input and output number are valid
 	assert(numInputs<0 || wrtIn<numInputs);
 	assert(numOutputs<0 || wrtOut<numOutputs);
-	
+
 	// clear the outputs and derivative information
 	ClearDerivatives();
-	
+
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
 	inputs.reserve(numInputs<0? 0 : numInputs);
-	
+
 	// begin calling the JacobianActionRecursive with the first input
 	return JacobianActionRecursive(wrtIn, wrtOut, vec, inputs, args...);
       }
@@ -375,8 +376,8 @@ namespace muq {
 	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
 	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
 	 @param[in] vec We want to apply the Jacobian to this vector
-	 @param[in] ins A vector of inputs 
-	 \return The Jacobian of this muq::Modeling::WorkPiece 
+	 @param[in] ins A vector of inputs
+	 \return The Jacobian of this muq::Modeling::WorkPiece
       */
       boost::any JacobianTransposeAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, std::vector<boost::any> const& ins);
 
@@ -386,8 +387,8 @@ namespace muq {
 	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
 	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
 	 @param[in] vec We want to apply the Jacobian to this vector
-	 @param[in] ins A vector of references to the inputs 
-	 \return The Jacobian of this muq::Modeling::WorkPiece 
+	 @param[in] ins A vector of references to the inputs
+	 \return The Jacobian of this muq::Modeling::WorkPiece
       */
       boost::any JacobianTransposeAction(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& ins);
 
@@ -405,14 +406,14 @@ namespace muq {
 	// make sure the input and output number are valid
 	assert(numInputs<0 || wrtIn<numInputs);
 	assert(numOutputs<0 || wrtOut<numOutputs);
-	
+
 	// clear the outputs and derivative information
 	ClearDerivatives();
-	
+
 	// create the reference input vector
 	ref_vector<boost::any> inputs;
 	inputs.reserve(numInputs<0? 0 : numInputs);
-	
+
 	// begin calling the JacobianTransposeActionRecursive with the first input
 	return JacobianTransposeActionRecursive(wrtIn, wrtOut, vec, inputs, args...);
       }
@@ -436,7 +437,7 @@ namespace muq {
       /// Get the input type (if we know it) for a specific input
       /**
 	 The return input type name is "demangled" so it is more human readable.
-	 @param[in] inputNum The input we want the name of 
+	 @param[in] inputNum The input we want the name of
 	 @param[in] demangle true (default): demangle the input so it is human-readable, false: do not demangle the input
 	 \return If we know the input types, the input type name is returned.  If we do not know the input types, return ""
        */
@@ -445,7 +446,7 @@ namespace muq {
       /// Get the output type (if we know it) for a specific output
       /**
 	 The return output type name is "demangled" so it is more human readable.
-	 @param[in] outputNum The output we want the name of 
+	 @param[in] outputNum The output we want the name of
 	 @param[in] demangle true (default): demangle the input so it is human-readable, false: do not demangle the input
 	 \return If we know the output types, the output type name is returned.  If we do not know the output types, return ""
        */
@@ -455,8 +456,8 @@ namespace muq {
       std::map<unsigned int, std::string> OutputTypes() const;
 
       /// Get the input types
-      std::map<unsigned int, std::string> InputTypes() const;      
-      
+      std::map<unsigned int, std::string> InputTypes() const;
+
       /// Get the unique ID number
       /**
 	 \return The ID number
@@ -465,10 +466,10 @@ namespace muq {
 
       /// The number of inputs
       int numInputs;
-	
+
       /// The number of outputs
       int numOutputs;
-      
+
     protected:
 
       /// Check the input type
@@ -490,7 +491,7 @@ namespace muq {
       /// Create vector of references from a vector of boost::any's
       ref_vector<const boost::any> ToRefVector(std::vector<boost::any> const& anyVec) const;
 
-      /// Get the types from a vector of boost::any's 
+      /// Get the types from a vector of boost::any's
       /**
 	 @param[in] vec A vector of boost::any's
 	 \return A vector of the types of the boost::any's
@@ -535,7 +536,7 @@ namespace muq {
 	 Each element specifies the type of the corresponding input.  This vector must have the same number of elements as WorkPiece::numInputs or it is empty (default), which indicates that the input types are variable.
       */
       std::map<unsigned int, std::string> inputTypes;
-      
+
       /// The output types
       /**
 	 Each element specifies the type of the corresponding output.  This vector must have the same number of elements as WorkPiece::numOutputs or it is empty (default), which indicates that the output types are variable.
@@ -551,15 +552,15 @@ namespace muq {
       std::map<unsigned int, std::string> Types(std::vector<std::string> const& typesVec) const;
 
     private:
-            
+
       /// User-implemented function that determines the behavior of this muq::Modeling::WorkPiece
       /**
 	 This function determines how the WorkPiece::inputs determine WorkPiece::outputs.  Must be implemented by a child.
-	 
+
 	 WorkPiece::Evaluate() calls this function after checking the inputs and storing them in WorkPiece::inputs.  This function populates WorkPiece::outputs, the outputs of this muq::Modeling::WorkPiece.  WorkPiece::Evaluate() checks the outputs after calling this function.
       */
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) = 0;
-      
+
       /// Creates WorkPiece::inputs when the WorkPiece::Evaluate is called with multiple arguments
       /**
 	 @param[in] inputs The growing vector of inputs
@@ -567,23 +568,23 @@ namespace muq {
 	 @param[in] args The remaining (greater than \f$i\f$) inputs
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
-      template<typename ith, typename... Args>		       
+      template<typename ith, typename... Args>
 	std::vector<boost::any> EvaluateRecursive(ref_vector<boost::any> &inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size();
-	
+
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
 	assert(numInputs<0 || inputNum+1<numInputs);
 
 	// check the input type
 	assert(CheckInputType(inputNum, typeid(in).name()));
-	
+
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	// call with EvaluateRecursive with the remaining inputs
 	return EvaluateRecursive(inputs, args...);
-      }								
+      }
 
       /// Creates WorkPiece::inputs when the WorkPiece::Evaluate is called with multiple arguments
       /**
@@ -591,21 +592,21 @@ namespace muq {
 	 @param[in] in The input corresponding to the last input
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
-      template<typename last>			
+      template<typename last>
 	std::vector<boost::any> EvaluateRecursive(ref_vector<boost::any> &inputs, last const& in) {
-	
+
 	const int inputNum = inputs.size();
-	
+
 	// this is the last input, the last one should equal the total number of inputs
 	assert(numInputs<0 || inputNum+1==numInputs);
 
 	// check the input type
 	assert(CheckInputType(inputNum, typeid(in).name()));
-	
+
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	return Evaluate(inputs);
       }
 
@@ -625,22 +626,22 @@ namespace muq {
 	 @param[in] inputs The growing vector of inputs
 	 @param[in] in The input corresponding to the \f$i^{th}\f$ input
 	 @param[in] args The remaining (greater than \f$i\f$) inputs
-	 \return The Jacobian of this muq::Modeling::WorkPiece 
+	 \return The Jacobian of this muq::Modeling::WorkPiece
       */
-      template<typename ith, typename... Args>		       
+      template<typename ith, typename... Args>
 	boost::any JacobianRecursive(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> &inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size();
-	
+
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
 	assert(numInputs<0 || inputNum+1<numInputs);
 
 	// check the input type
 	assert(CheckInputType(inputNum, typeid(in).name()));
-	
+
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	// call with JacobianRecursive with the remaining inputs
 	return JacobianRecursive(wrtIn, wrtOut, inputs, args...);
       }
@@ -651,12 +652,12 @@ namespace muq {
 	 @param[in] wrtOut The output number we are taking the Jacobian with respect to
 	 @param[in] inputs The growing vector of inputs
 	 @param[in] in The input corresponding to the last input
-	 \return The Jacobian of this muq::Modeling::WorkPiece 
+	 \return The Jacobian of this muq::Modeling::WorkPiece
       */
-      template<typename last>			
+      template<typename last>
 	boost::any JacobianRecursive(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> &inputs, last const& in) {
 	const int inputNum = inputs.size();
-	
+
 	// this is the last input, the last one should equal the total number of inputs
 	assert(numInputs<0 || inputNum+1==numInputs);
 
@@ -666,7 +667,7 @@ namespace muq {
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	return Jacobian(wrtIn, wrtOut, inputs);
       }
 
@@ -689,20 +690,20 @@ namespace muq {
 	 @param[in] args The remaining (greater than \f$i\f$) inputs
 	 \return The action of the Jacobian of this muq::Modeling::WorkPiece on vec
       */
-      template<typename ith, typename... Args>		       
+      template<typename ith, typename... Args>
 	boost::any JacobianActionRecursive(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any>& inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size();
-	
+
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
 	assert(numInputs<0 || inputNum+1<numInputs);
 
 	// check the input type
 	assert(CheckInputType(inputNum, typeid(in).name()));
-	
+
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	// call with JacobianActionRecursive with the remaining inputs
 	return JacobianActionRecursive(wrtIn, wrtOut, vec, inputs, args...);
       }
@@ -716,10 +717,10 @@ namespace muq {
 	 @param[in] in The input corresponding to the last input
 	 \return The action of the Jacobian of this muq::Modeling::WorkPiece on vec
       */
-      template<typename last>			
+      template<typename last>
 	boost::any JacobianActionRecursive(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any>& inputs, last const& in) {
 	const int inputNum = inputs.size();
-	
+
 	// this is the last input, the last one should equal the total number of inputs
 	assert(numInputs<0 || inputNum+1==numInputs);
 
@@ -729,10 +730,10 @@ namespace muq {
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	return JacobianAction(wrtIn, wrtOut, vec, inputs);
       }
-      
+
       /// User-implemented function that to compute the action of the Jacobian transpose
       /**
 	 @param[in] wrtIn The input number we are taking the Jacobian with respect to
@@ -752,20 +753,20 @@ namespace muq {
 	 @param[in] args The remaining (greater than \f$i\f$) inputs
 	 \return The action of the Jacobian of this muq::Modeling::WorkPiece on vec
       */
-      template<typename ith, typename... Args>		       
+      template<typename ith, typename... Args>
 	boost::any JacobianTransposeActionRecursive(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any>& inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size();
-	
+
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
 	assert(numInputs<0 || inputNum+1<numInputs);
 
 	// check the input type
 	assert(CheckInputType(inputNum, typeid(in).name()));
-	
+
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	// call with JacobianTransposeActionRecursive with the remaining inputs
 	return JacobianTransposeActionRecursive(wrtIn, wrtOut, vec, inputs, args...);
       }
@@ -779,10 +780,10 @@ namespace muq {
 	 @param[in] in The input corresponding to the last input
 	 \return The action of the Jacobian of this muq::Modeling::WorkPiece on vec
       */
-      template<typename last>			
+      template<typename last>
 	boost::any JacobianTransposeActionRecursive(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any>& inputs, last const& in) {
 	const int inputNum = inputs.size();
-	
+
 	// this is the last input, the last one should equal the total number of inputs
 	assert(numInputs<0 || inputNum+1==numInputs);
 
@@ -792,7 +793,7 @@ namespace muq {
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	return JacobianTransposeAction(wrtIn, wrtOut, vec, inputs);
       }
 
@@ -832,14 +833,8 @@ namespace muq {
 	 <li> "DlsMat vector" for <TT>std::vector<DlsMat></TT> type (requires Sundials)
 	 </ol>
        */
-      const std::map<std::string, std::string> types = std::map<std::string, std::string>({
-#if MUQ_HAS_SUNDIALS==1
-	  std::pair<std::string, std::string>({std::string("N_Vector"), typeid(N_Vector).name()}),
-	    std::pair<std::string, std::string>({std::string("N_Vector vector"), typeid(std::vector<N_Vector>).name()}),
-	    std::pair<std::string, std::string>({std::string("DlsMat"), typeid(DlsMat).name()}),
-	    std::pair<std::string, std::string>({std::string("DlsMat vector"), typeid(std::vector<DlsMat>).name()}),
-#endif
-	    });
+
+   //const std::map<std::string, std::string> types;
     }; // class WorkPiece
   } // namespace Modeling
 } // namespace muq

@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <memory>
+#include <set>
+#include <map>
 
 #include "MUQ/Utilities/MultiIndices/MultiIndex.h"
 
@@ -62,13 +64,11 @@ namespace muq{
     class MultiIndexSet{
 
       friend class MultiIndexFactory;
-      friend class boost::serialization::access;
 
     public:
 
       MultiIndexSet(const unsigned dimIn,
-                    std::shared_ptr<MultiIndexLimiter> limiterIn = std::make_shared<NoLimiter>(),
-                    std::shared_ptr<MultiIndexPool> poolIn = std::make_shared<MultiIndexPool>());
+                    std::shared_ptr<MultiIndexLimiter> limiterIn = std::make_shared<NoLimiter>());
 
       /// NOTE: does not perform a deep copy of the multiindices themselves, only pointers to the multiindices
       static std::shared_ptr<MultiIndexSet> CloneExisting(std::shared_ptr<MultiIndexSet> original);
@@ -98,8 +98,6 @@ namespace muq{
       */
       //virtual std::vector<std::MultiIndices GetAllMultiIndices() const;
 
-      /** Return \f$K\f$, the number of multiindices in this set. */
-      virtual unsigned GetNumberOfIndices() const{return active2global.size();};
 
       /** Given an index into the set, return the corresponding multiindex as a row vector of unsigned integers. If all the multiindices were stored in a vector called multiVec, the functionality of this method would be equivalent to multiVec[activeIndex].
        @param[in] activeIndex Linear index of interest.
@@ -133,7 +131,7 @@ namespace muq{
       //virtual int MultiToIndex(Eigen::RowVectorXu const& multiIn) const;
 
       /** Get the dimension of the multiindex, i.e. how many components does it have? */
-      virtual unsigned int GetMultiIndexLength() const{return dim;};
+      virtual unsigned int GetMultiLength() const{return dim;};
 
      /** Assume the \f$\mathbf{j}^{\mbox{th}}\f$ multiindex in this set is given by
          \f$\mathbf{j}=[j_1,j_2,\dots,j_D]\f$.  This function returns a vector
@@ -142,14 +140,14 @@ namespace muq{
          j_d\f$.
          @return The vector \f$\mathbf{m}\f$.
      */
-      virtual Eigen::VectorXu GetMaxOrders() const{return maxOrders;};
+      virtual Eigen::VectorXi GetMaxOrders() const{return maxOrders;};
 
       /**
        * This function provides access to each of the MultiIndices.
        @param[in] activeIndex The index of the active MultiIndex to return.
        @return A pointer to the MultiIndex at index outputIndex.
        */
-      virtual std::shared_ptr<MultiIndex> at(int outputIndex){return Index2Multi(activeIndex);}
+      virtual std::shared_ptr<MultiIndex> at(int activeIndex){return IndexToMulti(activeIndex);}
 
       /**
        * This function provides constant access to each of the MultiIndices.
@@ -164,7 +162,7 @@ namespace muq{
        @param[in] outputIndex The index of the active MultiIndex we want to return.
        @return A pointer to the MultiIndex at index outputIndex.
        */
-      virtual std::shared_ptr<MultiIndex> operator[](int outputIndex){return return allMultis[active2global[activeIndex]]; };
+      virtual std::shared_ptr<MultiIndex> operator[](int activeIndex){return allMultis[active2global[activeIndex]]; };
 
       /**
        * This function provides constant access to each of the basis functions without any bounds checking on the vector.
@@ -177,7 +175,7 @@ namespace muq{
        * Get the number of active MultiIndices in this set.
        @return An unsigned integer with the number of active MultiIndices in the set.
        */
-      virtual unsigned int size() const{return active2global.size();};
+      virtual unsigned int Size() const{return active2global.size();};
 
       // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
       // * * * ADAPTIVE COMPONENTS
@@ -249,7 +247,7 @@ namespace muq{
        @param[in] newNode A multiindex we want to add as an active member of the set.
        @return An integer specifying the linear index of the now active multiindex.
        */
-      virtual unsigned AddActive(std::shared_ptr<MultiIndex> newNode);
+      virtual int AddActive(std::shared_ptr<MultiIndex> newNode);
 
       /** This function simply creates an instance of MultiIndex and calls the
           AddActive(std::shared_ptr<MultiIndex> newNode) function.
@@ -333,12 +331,15 @@ namespace muq{
       void AddForwardNeighbors(unsigned int globalIndex, bool addInactive);
       void AddBackwardNeighbors(unsigned int globalIndex, bool addInactive);
 
-      void Activate(int localIndex);
+      void Activate(int globalIndex);
       void ForciblyActivate(int localIndex, std::vector<unsigned int> &newInds);
 
 
       // Maps the active index to an entry in allMultis
       std::vector<unsigned> active2global;
+
+      // Maps a global index to an active index.  Non-active values are -1
+      std::vector<int> global2active;
 
       // a vector of sets for the input and output edges.
       std::vector<std::set<int>> outEdges; // edges going out of each multi
@@ -356,6 +357,8 @@ namespace muq{
       std::shared_ptr<MultiIndexLimiter> limiter;
 
     private:
+
+      int AddMulti(std::shared_ptr<MultiIndex> newMulti);
 
       std::map<std::shared_ptr<MultiIndex>, unsigned int, MultiPtrComp> multi2global; // map from a multiindex to an integer
 

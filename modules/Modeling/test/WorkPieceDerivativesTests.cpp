@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 
 #include "MUQ/Modeling/WorkGraph.h"
+#include "MUQ/Modeling/WorkGraphPiece.h"
 
 using namespace muq::Modeling;
 
@@ -52,7 +53,7 @@ public:
   {}
 
   virtual ~Quadratic() {}
-  
+
 private:
 
   virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override {
@@ -76,7 +77,7 @@ private:
     // constant reference to the input vector
     const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd>(inputs[0]);
 
-    // constant reference to the vector we are applying the Jacobian to 
+    // constant reference to the vector we are applying the Jacobian to
     const Eigen::VectorXd& appvec = boost::any_cast<const Eigen::VectorXd&>(vec);
 
     // compute the Jacobian
@@ -87,7 +88,7 @@ private:
     // constant reference to the input vector
     const Eigen::VectorXd& in = boost::any_cast<const Eigen::VectorXd>(inputs[0]);
 
-    // constant reference to the vector we are applying the Jacobian to 
+    // constant reference to the vector we are applying the Jacobian to
     const double appvec = boost::any_cast<const double>(vec);
 
     // compute the Jacobian
@@ -109,7 +110,7 @@ class WorkPieceDerivativesTests : public::testing::Test {
 public:
 
   /// Default constructor
-  WorkPieceDerivativesTests() {    
+  WorkPieceDerivativesTests() {
     // a random matrix (for the quadratic term)
     Q = Eigen::MatrixXd::Random(N, N);
 
@@ -139,7 +140,7 @@ public:
   Eigen::VectorXd a;
 
   /// Vector for the constant part
-  Eigen::VectorXd b;  
+  Eigen::VectorXd b;
 
   /// A quadratic function
   std::shared_ptr<Quadratic> quad;
@@ -160,17 +161,17 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
   const double scalar = 3.5;
 
   { // test evaluate
-    // evaluate 
+    // evaluate
     auto result = lin->Evaluate(scalar, in);
-    
+
     // make sure we get the expected result
     EXPECT_EQ(result.size(), 2);
     EXPECT_EQ(boost::any_cast<std::string>(result[0]).compare("string"), 0);
     const Eigen::VectorXd& vec = boost::any_cast<Eigen::VectorXd>(result[1]);
-    
+
     // the expected vector
     const Eigen::VectorXd expectedVec = scalar*Q*in+a;
-    
+
     EXPECT_EQ(vec.size(), N);
     EXPECT_EQ(expectedVec.size(), N);
     for( unsigned int i=0; i<N; ++i ) {
@@ -178,7 +179,7 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
     }
   }
 
-  { // test the jacobian 
+  { // test the jacobian
     // compute the Jacobian and get a reference to it
     auto jac = lin->Jacobian(1, 1, scalar, in);
     const Eigen::MatrixXd& jacref = boost::any_cast<const Eigen::MatrixXd&>(jac);
@@ -200,10 +201,10 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
     // compute the action of the jacobian and get a references to it
     auto jacAction = lin->JacobianAction(1, 1, apply, scalar, in);
     const Eigen::VectorXd& jacActionref = boost::any_cast<const Eigen::VectorXd&>(jacAction);
-    
+
     // compute the exected action of the jacobian
     const Eigen::VectorXd expectedJacAction = scalar*Q*apply;
-    
+
     EXPECT_EQ(jacActionref.size(), N);
     for( unsigned int i=0; i<N; ++i ) {
       // its linear so FD should be exact, but the error is very small ...
@@ -215,10 +216,10 @@ TEST_F(WorkPieceDerivativesTests, LinearFunction) {
     // compute the action of the jacobian transpose and get a references to it
     auto jacTransAction = lin->JacobianTransposeAction(1, 1, apply, scalar, in);
     const Eigen::VectorXd& jacTransActionref = boost::any_cast<const Eigen::VectorXd&>(jacTransAction);
-    
+
     // compute the exected action of the jacobian transpose
     const Eigen::VectorXd expectedJacTransAction = scalar*Q.transpose()*apply;
-    
+
     EXPECT_EQ(jacTransActionref.size(), N);
     for( unsigned int i=0; i<N; ++i ) {
       // its linear so FD should be exact, but the error is very small ...
@@ -235,20 +236,20 @@ TEST_F(WorkPieceDerivativesTests, QuadraticFunction) {
   // choose random inputs
   const Eigen::VectorXd in = Eigen::VectorXd::Random(N);
 
-  { // test evaluate 
+  { // test evaluate
     // evaluate and make sure we get the expected result
     auto result = quad->Evaluate(in);
     EXPECT_DOUBLE_EQ(boost::any_cast<double>(result[0]), (in.transpose()*Q*in + a.transpose()*in + b) (0));
   }
 
   { // test jacobian
-    // evaluate the jacobian 
+    // evaluate the jacobian
     auto jacBoost = quad->Jacobian(0, 0, in);
     const Eigen::MatrixXd& jac = boost::any_cast<Eigen::MatrixXd>(jacBoost);
-    
+
     // compute the expected jacobian
     const Eigen::MatrixXd jacExpected = 2.0*in.transpose()*Q + a.transpose();
-    
+
     // make sure the jacobians match
     EXPECT_EQ(jac.rows(), 1);
     EXPECT_EQ(jacExpected.rows(), 1);
@@ -259,21 +260,21 @@ TEST_F(WorkPieceDerivativesTests, QuadraticFunction) {
     }
   }
 
-  { // test jacobian action 
+  { // test jacobian action
     // a random vector to apply the Jacobian to
     const Eigen::VectorXd vec = Eigen::VectorXd::Random(N);
-    
+
     // evaluate the jacobian action
     auto jacAction = quad->JacobianAction(0, 0, vec, in);
 
     // compute the expected jacobian action
     const double jacActionExpected = (2.0*in.transpose()*Q*vec + a.transpose()*vec) (0);
-    
+
     // make sure the jacobian action matches
     EXPECT_DOUBLE_EQ(boost::any_cast<double>(jacActionExpected), jacActionExpected);
   }
 
-  { // test jacobian action transpose 
+  { // test jacobian action transpose
     // a random vector to apply the Jacobian transpose to
     const Eigen::VectorXd vec = Eigen::VectorXd::Random(1);
 
@@ -297,7 +298,7 @@ TEST_F(WorkPieceDerivativesTests, QuadraticFunction) {
 
 
 
-/// A 1D polynomial 
+/// A 1D polynomial
 class Polynomial : public WorkPiece {
 public:
 
@@ -310,7 +311,7 @@ public:
   }
 
   virtual ~Polynomial() {}
-  
+
 private:
 
   virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override {
@@ -380,14 +381,14 @@ private:
   std::vector<double> coefficients;
 };
 
-/// A model 
+/// A model
 class Model : public WorkPiece {
 public:
 
   Model() : WorkPiece(std::vector<std::string>(2, typeid(double).name()), std::vector<std::string>({typeid(Eigen::VectorXd).name(), typeid(double).name()})) {}
 
   virtual ~Model() {}
-  
+
 private:
 
   virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override {
@@ -431,7 +432,7 @@ private:
     const double v = boost::any_cast<double>(vec);
 
     if( wrtIn==0 ) {
-      if( wrtOut==0 ) {	
+      if( wrtOut==0 ) {
 	jacobianAction = (Eigen::VectorXd)(Eigen::VectorXd::LinSpaced(4, 0.0, 1.0)*v);
       } else if( wrtOut==1 ) {
 	jacobianAction = a1*v;
@@ -482,10 +483,10 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
 
   // a random matrix (for the quadratic term)
   const Eigen::MatrixXd Q = Eigen::MatrixXd::Random(N, N);
-  
+
   // a random vector (for the linear term)
   const Eigen::VectorXd a = Eigen::VectorXd::Random(N);
-  
+
   // a random vector (for the constant term)
   const Eigen::VectorXd b = Eigen::VectorXd::Random(1);
 
@@ -523,13 +524,13 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
   const double scalar = 2.5;
   const Eigen::VectorXd invec = Eigen::VectorXd::Random(N);
 
-  // linear 
+  // linear
   const Eigen::VectorXd l = scalar*Q*invec+a;
-  
+
   // quadradic
   const double q = (l.transpose()*Q*l + a.transpose()*l + b) (0);
   const Eigen::MatrixXd q_jac = 2.0*l.transpose()*Q + a.transpose(); // jacobian
-  
+
     // polynomials
   double d0 = coeff0[0];
   double d0_jac = 0.0; // jacobian
@@ -537,7 +538,7 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
     d0 += coeff0[i]*std::pow(q, (double)i);
     d0_jac += (double)i*coeff0[i]*std::pow(q, (double)i-1);
   }
-  
+
   double d1 = coeff1[0];
   double d1_jac = 0.0; // jacobian
   for( unsigned int i=1; i<coeff1.size(); ++i ) {
@@ -597,7 +598,7 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
   { // test JacobianAction
     // apply the Jacobians to this vector
     const Eigen::VectorXd vec = Eigen::VectorXd::Random(N);
-    
+
     // check first JacobianAction
     const auto jacActionBoost0 = graphmod->JacobianAction(0, 0, vec, l);
     const Eigen::VectorXd& jacAction0 = boost::any_cast<const Eigen::VectorXd&>(jacActionBoost0);
@@ -638,7 +639,7 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
 
     // apply the Jacobian tranpose to this vector
     const Eigen::VectorXd vec1 = Eigen::VectorXd::Random(1);
-    
+
     // check second JacobianTransposeAction
     const auto jacTransActionBoost1 = graphmod->JacobianTransposeAction(0, 1, vec1(0), l);
     const Eigen::VectorXd& jacTransAction1 = boost::any_cast<const Eigen::VectorXd&>(jacTransActionBoost1);
@@ -652,4 +653,3 @@ TEST(WorkGraphPieceDerivativesTests, GraphDerivatives) {
     }
   }
 }
-

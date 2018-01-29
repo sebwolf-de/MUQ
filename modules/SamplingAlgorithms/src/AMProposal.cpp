@@ -4,8 +4,10 @@ namespace pt = boost::property_tree;
 using namespace muq::SamplingAlgorithms;
 
 REGISTER_MCMC_PROPOSAL(AMProposal)
+AMProposal::AMProposal(pt::ptree const& pt) : MHProposal(pt),
+                                              adaptSteps(pt.get<unsigned int>("MCMC.Proposal.AM.Steps", 1)),
+                                              adaptStart(pt.get<unsigned int>("MCMC.Proposal.AM.Start", 1)) {}
 
-AMProposal::AMProposal(pt::ptree const& pt) : MHProposal(pt), adaptSteps(pt.get<unsigned int>("MCMC.Proposal.AM.Steps", 1)), adaptStart(pt.get<unsigned int>("MCMC.Proposal.AM.Start", 1)) {}
 
 AMProposal::~AMProposal() {}
 

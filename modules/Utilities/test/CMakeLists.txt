@@ -8,11 +8,11 @@ CreateTestGroup(
 
 CreateTestGroup(
     UTILITIES_LINEARALGEBRA
-    
+
     LinearAlgebra/LinearOperatorTests.cpp
     LinearAlgebra/LyapunovSolverTests.cpp
     RandomGeneratorTest.cpp
-    
+
     LinearAlgebra/ScalarAlgebraTests.cpp
     LinearAlgebra/EigenVectorAlgebraTests.cpp
     LinearAlgebra/EigenMatrixAlgebraTests.cpp
@@ -20,4 +20,10 @@ CreateTestGroup(
 
     MultiIndices/MultiIndexTests.cpp
     MultiIndices/MultiIndexLimiterTests.cpp
+)
+
+CreateTestGroup(
+    UTILITIES_MULTIINDEX
+
+    MultiIndices/MultiIndexTests.cpp
 )

@@ -25,8 +25,26 @@ MultiIndex::MultiIndex(Eigen::RowVectorXi const& indIn) : MultiIndex(indIn.size(
   }
 }
 
+MultiIndex::MultiIndex(std::initializer_list<unsigned> const& indIn) : MultiIndex(indIn.size())
+{
+  maxValue = 0;
+  totalOrder = 0;
 
-Eigen::RowVectorXi MultiIndex::GetMulti() const
+  unsigned i = 0;
+  for(auto it = indIn.begin(); it != indIn.end(); ++it){
+    if( *it > 0 ){
+      nzInds[i] = *it;
+
+      maxValue = std::max<int>(maxValue, *it);
+      totalOrder += *it;
+
+      i++;
+    }
+  }
+}
+
+
+Eigen::RowVectorXi MultiIndex::GetVector() const
 {
   Eigen::RowVectorXi output(length);
 
@@ -42,6 +60,13 @@ bool MultiIndex::SetValue(unsigned ind, unsigned val)
     throw std::out_of_range("Tried to set the value of index " + std::to_string(ind) + " on an multiindex with only " + std::to_string(length) + " components.");
   }else{
     auto it = nzInds.find(ind);
+    if(it != nzInds.end()){
+
+    }else{
+      nzInds[ind] = val;
+      totalOrder += val;
+    }
+    nzInds[ind] = val;
 
     if (it != nzInds.end()){
       nzInds[ind] += val-nzInds[ind];

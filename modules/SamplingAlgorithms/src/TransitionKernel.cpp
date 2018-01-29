@@ -26,7 +26,21 @@ std::shared_ptr<TransitionKernel> TransitionKernel::Construct(pt::ptree const& p
   const std::string& kernelName = pt.get<std::string>("SamplingAlgorithm.TransitionKernel");
 
   // construct it from the map
-  return GetTransitionKernelMap()->at(kernelName) (pt, problem);
+  auto kernelMap = GetTransitionKernelMap();
+  auto iter = kernelMap->find(kernelName);
+  if(iter == kernelMap->end()){
+    std::cerr << "ERROR: Could not find Transition Kernel \"" << kernelName << "\", available types are:\n";
+    
+    for(auto it=kernelMap->begin(); it!=kernelMap->end(); ++it)
+      std::cerr << "  " << it->first << std::endl;
+    std::cerr << std::endl;
+
+    assert(iter != kernelMap->end());
+
+  }
+
+  return iter->second(pt, problem);
+
 }
 
 void TransitionKernel::PostStep(unsigned int const t, std::shared_ptr<SamplingState> state) {}
