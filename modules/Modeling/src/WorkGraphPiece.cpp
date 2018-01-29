@@ -48,6 +48,7 @@ bool DependentEdgePredicate::operator()(const boost::graph_traits<Graph>::edge_d
 }
 
 WorkGraphPiece::WorkGraphPiece(std::shared_ptr<const Graph> graph, std::vector<std::shared_ptr<ConstantPiece> > const& constantPieces,  std::vector<std::string> const& inputNames, std::map<unsigned int, std::string> const& inTypes, std::shared_ptr<WorkPiece> outputPiece, std::shared_ptr<const AnyAlgebra> algebra) : WorkPiece(inTypes, constantPieces.size(), outputPiece->OutputTypes(), outputPiece->numOutputs), graph(graph), outputID(outputPiece->ID()), constantPieces(constantPieces), algebra(algebra) {
+
   // build the run order
   assert(graph);
   boost::topological_sort(*graph, std::front_inserter(runOrder));

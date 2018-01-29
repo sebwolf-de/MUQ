@@ -65,8 +65,13 @@ public:
 
 	double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
 
-        double temp = sqrt(2.0*nu)*dist/length;
-	cov(0,0) = sigma2 * scale * std::pow(temp, nu) * boost::math::cyl_bessel_k(nu, temp);
+        if(dist < 4.0*std::numeric_limits<double>::epsilon()){
+            cov(0,0) = sigma2;
+        }else{
+        
+            double temp = sqrt(2.0*nu)*dist/length;
+            cov(0,0) = sigma2 * scale * std::pow(temp, nu) * boost::math::cyl_bessel_k(nu, temp);
+        }
     }
 
     
@@ -100,7 +105,7 @@ public:
     
     virtual void SetParams(Eigen::VectorXd const& params) override;
 
-    virtual std::shared_ptr<StateSpaceGP> GetStateSpace(boost::property_tree::ptree sdeOptions = boost::property_tree::ptree()) const override;
+    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions = boost::property_tree::ptree()) const override;
 
 private:
     

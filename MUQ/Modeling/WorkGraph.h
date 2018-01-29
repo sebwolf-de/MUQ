@@ -1,10 +1,22 @@
 #ifndef WORKGRAPH_H_
 #define WORKGRAPH_H_
 
-#include "MUQ/Modeling/WorkGraphPiece.h"
+//#include "MUQ/Modeling/WorkGraphPiece.h"
+#include "MUQ/Modeling/NodeNameFinder.h"
+#include "MUQ/Modeling/AnyAlgebra.h"
+
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/filtered_graph.hpp>
+
+#include <memory>
 
 namespace muq {
-  namespace Modeling { 
+  namespace Modeling {
+
+    class WorkGraphPiece;
+    class WorkPiece;
+    class ConstantPiece;
+    
     /// A graph of connected muq::Modeling::WorkPiece's 
     class WorkGraph {
     public:

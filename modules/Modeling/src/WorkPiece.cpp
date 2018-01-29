@@ -182,7 +182,7 @@ std::vector<std::string> WorkPiece::Types(std::vector<boost::any> const& vec) co
   types.reserve(vec.size());
 
   // populate types with the type of each element of vec
-  for(auto& it : vec ) {
+  for( auto it : vec ) {
     types.push_back(it.type().name());
   }
 

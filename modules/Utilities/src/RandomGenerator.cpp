@@ -39,15 +39,12 @@ double RandomGenerator::GetNormal()
   static std::normal_distribution<> Gauss_RNG(0, 1);
 
   Gauss_RNG.reset();
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
   return Gauss_RNG(GetGenerator());
 }
 
 double RandomGenerator::GetUniform()
 {
   static  std::uniform_real_distribution<> Uniform_RNG(0, 1);
-
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
 
   return Uniform_RNG(GetGenerator());
 }
@@ -57,7 +54,6 @@ double RandomGenerator::GetGamma(double const alpha, double const beta)
   static std::gamma_distribution<> Gamma_RNG(alpha, beta);
 
   Gamma_RNG.reset();
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
   return Gamma_RNG(GetGenerator());
 }
 
@@ -84,8 +80,6 @@ int RandomGenerator::GetUniformInt(int lb, int ub)
   assert(ub >= lb);
 
   static  std::uniform_real_distribution<> Uniform_RNG(0, 1);
-
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
   return round(Uniform_RNG(GetGenerator()) * (ub - lb) + lb);
 }
 
@@ -160,39 +154,35 @@ Eigen::MatrixXd RandomGenerator::GetNormal(int const m, int const n)
 
 void RandomGenerator::SetSeed(int seedval)
 {
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
-
   GetGenerator().seed(seedval);
 }
 
 RandomGenerator::GeneratorType RandomGenerator::CopyGenerator()
 {
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
-
   return GetGenerator();
 }
 
 void RandomGenerator::SetGenerator(GeneratorType state)
 {
-  std::lock_guard<std::mutex> mut(GetGeneratorMutex());
-
   GetGenerator() = state;
 }
 
-std::mutex& RandomGenerator::GetGeneratorMutex()
-{
-  static std::mutex m;
-
-  return m;
-}
 
 RandomGenerator::GeneratorType& RandomGenerator::GetGenerator()
 {
+
+#if defined(__has_feature) && __has_feature(cxx_thread_local)
+#  define MUQ_NATIVE_TLS thread_local
+#endif
+
+#if defined(MUQ_NATIVE_TLS)
+  static MUQ_NATIVE_TLS SeedGenerator seedGen;
+  static MUQ_NATIVE_TLS RandomGenerator::GeneratorType BaseGenerator(seedGen.seed_seq);
+#else
   static SeedGenerator seedGen;
-
-  /** Use a Mersenne twister generator. */
   static RandomGenerator::GeneratorType BaseGenerator(seedGen.seed_seq);
-
+#endif
+  
   return BaseGenerator;
 }
 

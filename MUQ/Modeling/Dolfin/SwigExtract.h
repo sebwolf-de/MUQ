@@ -34,50 +34,50 @@ Instead of using the implicit conversion, it is also possible to explicitly cast
 */
     class SwigExtract
     {
-
+        
     public:
         SwigExtract(pybind11::object const& objIn) : obj(objIn){};
-
+        
         template<typename T>
         operator T()
         {
             return Cast<T>();
         }
-
+        
         template<typename T>
         T Cast()
         {
             // This functions performs some magic performed by the boost.python folks and described here:
             // https://wiki.python.org/moin/boost.python/HowTo#SWIG_exposed_C.2B-.2B-_object_from_Python
-
+            
             PyObject* objPtr = pybind11::handle(obj).ptr();
+            
             char thisStr[] = "this";
-
+            
             //first we need to get the this attribute from the Python Object
             if (!PyObject_HasAttrString(objPtr, thisStr))
                 ConversionError<T>();
-
+            
             PyObject* thisAttr = PyObject_GetAttrString(objPtr, thisStr);
             if (thisAttr == NULL)
                 ConversionError<T>();   
-
+            
             T* pointer = (T*) ((PySwigObject*)thisAttr)->ptr;
             Py_DECREF(thisAttr);
-
+            
             return *pointer;
         }
-
+        
     private:
-
+        
         pybind11::object const& obj;
-
+        
         template<typename T>
         void ConversionError()
         {   
             throw std::invalid_argument("Unable to convert Python type of " + std::string(pybind11::str(obj.attr("__repr__"))) + " to c++ type of " + std::string(typeid(T).name()));
         }
-
-}; // class SwigExtract
+    };
 
 
 } // namepsace Modeling

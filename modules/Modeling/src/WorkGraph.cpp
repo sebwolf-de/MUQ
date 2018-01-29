@@ -1,5 +1,10 @@
 #include "MUQ/Modeling/WorkGraph.h"
 
+#include "MUQ/Modeling/WorkPiece.h"
+#include "MUQ/Modeling/WorkGraphPiece.h"
+#include "MUQ/Modeling/ConstantPiece.h"
+#include "MUQ/Modeling/AnyAlgebra.h"
+
 #include <fstream>
 #include <algorithm>
 
@@ -144,8 +149,10 @@ boost::graph_traits<Graph>::vertex_iterator WorkGraph::GetNodeIterator(std::stri
   boost::tie(v, v_end) = vertices(*graph);
 
   // return the iterator with this name (it is end if that node does not exist)
-  return std::find_if(v, v_end, NodeNameFinder(name, graph));
-  }
+  auto res = std::find_if(v, v_end, NodeNameFinder(name, graph));
+      
+  return res;
+}
 
 std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > WorkGraph::GraphOutputs() const {
   // create an empty vector to hold outputs
@@ -268,7 +275,6 @@ bool WorkGraph::HasEdge(boost::graph_traits<Graph>::vertex_descriptor const& vOu
 }
 
 void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor& vOld, const boost::graph_traits<Graph>::vertex_descriptor& vNew, std::shared_ptr<WorkGraph>& newGraph) const {
-    
   // a map from the source ID to a pair: <source vertex, vector of edges from that vertex to this one>
   std::map<unsigned int, std::pair<boost::graph_traits<Graph>::vertex_descriptor, std::vector<boost::graph_traits<Graph>::in_edge_iterator> > > sources;
   
@@ -303,13 +309,6 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
       // loop through the edges from the source to this node
       for( auto e : it.second.second ) {
 	if( !newGraph->HasEdge(nextV, vNew, graph->operator[](*e)->inputDim) ) { // if edge does not exist ...
-
-          // Check the dimensions before adding the edge
-          if((graph->operator[](*e)->outputDim != -1) && (graph->operator[](*e)->inputDim !=-1) && (graph->operator[](*e)->outputDim != graph->operator[](*e)->inputDim)){
-            std::cerr << "\nERROR: Number of argument mismatch" << std::endl << std::endl;
-            assert(graph->operator[](*e)->outputDim == graph->operator[](*e)->inputDim);
-          }
-          
 	  // ... add the edge from this node to the existing node
 	  auto nextE = boost::add_edge(nextV, vNew, *(newGraph->graph));
 	  newGraph->graph->operator[](nextE.first) = std::make_shared<WorkGraphEdge>(graph->operator[](*e)->outputDim, graph->operator[](*e)->inputDim);
@@ -379,7 +378,8 @@ std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) c
 }
 
 std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& node, std::shared_ptr<const AnyAlgebra> algebra) const {
-  // make sure we have the node
+
+      // make sure we have the node
   assert(HasNode(node));
 
   // trime the extraneous branches from the graph
@@ -428,11 +428,20 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
     newGraph->AddNode(constantPieces[i], inputNames[i]);
     newGraph->AddEdge(inputNames[i], 0, newGraph->graph->operator[](inputs[i].first)->name, inputs[i].second);
   }
-  
-  // the output node
+
+  // Look for the original node name
   auto outNode = newGraph->GetNodeIterator(node);
 
+  // If we didn't find the original node, look for the fixed one
+  if(outNode == vertices(*newGraph->graph).second){
+      std::string node_fixed = node + "_fixed";
+      outNode = newGraph->GetNodeIterator(node_fixed);
+      assert(outNode != vertices(*newGraph->graph).second);
+  }
+  
+  //return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inputName, inTypes, newGraph->graph->operator[](*outNode)->piece);
   return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inputNames, inTypes, newGraph->graph->operator[](*outNode)->piece, algebra);
+  
 }
 
 class MyVertexWriter {

@@ -112,7 +112,11 @@ BlockDataset H5Object::block(unsigned startRow, unsigned startCol, unsigned numR
 
     Eigen::VectorXi shape = file->GetDataSetSize(path);
     assert(startRow+numRows <= shape(0));
-    assert(startCol+numCols <= shape(1));
+    if(shape.size()>1){
+      assert(startCol+numCols <= shape(1));
+    }else{
+      assert(numCols==1);
+    }
 
     return BlockDataset(path, file, startRow, startCol, numRows, numCols);
 }

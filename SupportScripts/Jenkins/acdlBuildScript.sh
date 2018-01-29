@@ -50,11 +50,11 @@ fi
 ##### EXTRACT COMPILER FROM WORKSPACE
 #######################################
 
-if echo $bin_dir| grep -q "CLANG35"; then
+if echo $bin_dir| grep -q "CLANG38"; then
 
   if [[ `hostname` == "reynolds" ]]; then
-    my_cc_compiler="clang-3.5"
-    my_cxx_compiler="clang++-3.5"
+    my_cc_compiler="clang-3.8"
+    my_cxx_compiler="clang++-3.8"
   else
     my_cc_compiler="clang"
     my_cxx_compiler="clang++"
@@ -66,8 +66,8 @@ elif echo $bin_dir | grep -q "CLANG"; then
     my_cc_compiler="clang"
     my_cxx_compiler="clang++"
   else
-    my_cc_compiler="clang-3.5"
-    my_cxx_compiler="clang++-3.5"
+    my_cc_compiler="clang-3.8"
+    my_cxx_compiler="clang++-3.8"
   fi
 
 elif echo $bin_dir | grep -q "INTEL"; then
@@ -85,6 +85,12 @@ elif echo $bin_dir | grep -q "GNU47"; then
 elif echo $bin_dir | grep -q "GNU5"; then
   my_cc_compiler="gcc-5"
   my_cxx_compiler="g++-5"
+elif echo $bin_dir | grep -q "GNU6"; then
+  my_cc_compiler="gcc-6"
+  my_cxx_compiler="g++-6"
+elif echo $bin_dir | grep -q "GNU7"; then
+  my_cc_compiler="gcc-7"
+  my_cxx_compiler="g++-7"
 elif echo $bin_dir | grep -q "GNU"; then
   my_cc_compiler="gcc"
   my_cxx_compiler="g++"

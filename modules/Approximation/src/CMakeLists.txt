@@ -47,13 +47,21 @@ CreateCompileGroup(
     "MODELING_CORE"
     "EIGEN3;BOOST"
     ""
+    
+    GaussianProcesses/MaternKernel.cpp
+    GaussianProcesses/PeriodicKernel.cpp
+    GaussianProcesses/KarhunenLoeveExpansion.cpp
+
 )
 
 CreateCompileGroup(
     APPROXIMATION_GP
     "Tools for constructing Gaussian processes."
     muqApproximation
-    "MODELING_CORE;APPROXIMATION_GP_Kernels"
+    "MODELING_CORE;APPROXIMATION_GP_Kernels;INFERENCE_FILTERING"
     "EIGEN3;BOOST"
     "NLOPT"
+
+    GaussianProcesses/StateSpaceGP.cpp
+    GaussianProcesses/GaussianProcess.cpp
 )
