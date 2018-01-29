@@ -32,7 +32,7 @@ namespace muq {
         polynomial chaos expansions.
       </p>
 
-      <p> This class is mostly used behind the scenes.  However, the GetMulti()
+      <p> This class is mostly used behind the scenes.  However, the GetVector()
           function may come in useful for users that need to extract the
           multiindex vector. </p>
 
