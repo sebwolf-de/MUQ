@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <memory>
+#include <initializer_list>
 
 #include <Eigen/Core>
 
@@ -10,7 +11,7 @@ namespace muq {
   namespace Utilities {
 
     class MultiIndexSet;
-    
+
     ///
     /**
     @class MultiIndex
@@ -53,6 +54,12 @@ namespace muq {
                            multiindex.
        */
       MultiIndex(Eigen::RowVectorXi const& indIn);
+
+      /** Allows users to intiailize the multiindex with curly braces.  For
+          example, @code MultiIndex temp{1,0,2,3} #endcode would create a
+          multiindex with length four and values 1, 0, 2, and 3.
+      */
+      MultiIndex(std::initializer_list<unsigned> const& indIn);
 
       /** Create a deep copy of MultiIndex pointed to by the input.
           @param[in] indIn A shared_ptr to a MultiIndex instance
