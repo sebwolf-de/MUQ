@@ -3,12 +3,6 @@
 
 #include <memory>
 
-#include <boost/serialization/serialization.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/export.hpp>
-
 #include "MUQ/Utilities/MultiIndices/MultiIndex.h"
 
 namespace muq{
@@ -21,7 +15,6 @@ namespace Utilities{
    @see muq::Utilities::MultiIndexSet muq::Utilities::MultiIndex
    */
   class MultiIndexLimiter{
-    friend class boost::serialization::access;
   
   public:
     virtual ~MultiIndexLimiter() = default;
@@ -29,10 +22,6 @@ namespace Utilities{
     /** This function is overloaded by children to define what terms are included. */
     virtual bool IsFeasible(std::shared_ptr<MultiIndex> multi) const = 0;
     
-  private:
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version){};
-      
   }; // class MultiIndexLimiter
   
   /** @class TotalOrderLimiter
@@ -41,8 +30,7 @@ namespace Utilities{
       @details This limter only allows terms that satisfy \f$\|\mathbf{j}\|_1\leq p_U\f$, where \f$\mathbf{j}\f$ is the multiindex, and \f$p_U\f$ is a nonnegative integer passed to the constructor of this class.
    */
   class TotalOrderLimiter : public MultiIndexLimiter{
-    friend class boost::serialization::access;
-    
+
   public:
     
     TotalOrderLimiter(unsigned int totalOrderIn) : totalOrder(totalOrderIn){};
@@ -55,12 +43,6 @@ namespace Utilities{
     
     unsigned int totalOrder;
     
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version){
-      ar & boost::serialization::base_object<MultiIndexLimiter>(*this);
-      ar & totalOrder;
-    };
-    
   }; // class TotalOrderLimiter
 
 
@@ -70,8 +52,7 @@ namespace Utilities{
    @details This limiter only allows terms that satisfy \f$\mathbf{j}_d = 0 \f$ for \f$d<D_L\f$ or \f$d>=D_L+M\f$ for a lower bound \f$D_L\f$ and length \f$M\f$.
    */
   class DimensionLimiter : public MultiIndexLimiter{
-    friend class boost::serialization::access;
-    
+      
   public:
     
     DimensionLimiter(unsigned int lowerDimIn, unsigned int lengthIn) : lowerDim(lowerDimIn), length(lengthIn){};
@@ -85,12 +66,6 @@ namespace Utilities{
     unsigned int lowerDim;
     unsigned int length;
     
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version){
-      ar & boost::serialization::base_object<MultiIndexLimiter>(*this);
-      ar & lowerDim;
-      ar & length;
-    };
   }; // class DimensionLimiter
   
   
@@ -128,7 +103,6 @@ namespace Utilities{
    @details This limter only allows terms that satisfy \f$\mathbf{j}_i\leq p_i\f$ for \f$i\in \{1,2,\ldots,D\}\f$, where \f$p\f$ is a vector of upper bounds.
    */
   class MaxOrderLimiter : public MultiIndexLimiter{
-    friend class boost::serialization::access;
     
   public:
     MaxOrderLimiter(unsigned int maxOrderIn) : maxOrder(maxOrderIn){};
@@ -145,14 +119,6 @@ namespace Utilities{
     Eigen::VectorXi maxOrders;
     int vectorMin;
     
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version){
-      ar & boost::serialization::base_object<MultiIndexLimiter>(*this);
-      ar & maxOrder;
-      ar & maxOrders;
-      ar & vectorMin;
-    };
-    
   }; // class MaxOrderLimiter
  
   /** @class NoLimiter
@@ -161,17 +127,10 @@ namespace Utilities{
    @details This class is used as a default in many places where a limiter is not always needed.  IsFeasible will return true for any multiindex.
    */
  class NoLimiter : public MultiIndexLimiter{
-   friend class boost::serialization::access;
    
   public:
     virtual ~NoLimiter() = default;
     virtual bool IsFeasible(std::shared_ptr<MultiIndex> multi) const override {return true;};
-    
-  private:
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version){
-      ar & boost::serialization::base_object<MultiIndexLimiter>(*this);
-    };
     
   }; // class NoLimiter
   
@@ -181,7 +140,6 @@ namespace Utilities{
    @details This class will return true if both limiters given to the constructor return true.
    */
  class AndLimiter : public MultiIndexLimiter{
-   friend class boost::serialization::access;
    
   public:
     AndLimiter(std::shared_ptr<MultiIndexLimiter> limitA, std::shared_ptr<MultiIndexLimiter> limitB) : a(limitA), b(limitB){};
@@ -192,13 +150,6 @@ namespace Utilities{
     AndLimiter(){};
     std::shared_ptr<MultiIndexLimiter> a, b;
     
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version){
-      ar & boost::serialization::base_object<MultiIndexLimiter>(*this);
-      ar & a;
-      ar & b;
-    };
-    
   }; // class AndLimiter
   
   /** @class OrLimiter
@@ -207,7 +158,6 @@ namespace Utilities{
    @details This class will return true if either of the limiters given to the constructor return true.
    */
   class OrLimiter : public MultiIndexLimiter{
-    friend class boost::serialization::access;
     
   public:
     OrLimiter(std::shared_ptr<MultiIndexLimiter> limitA, std::shared_ptr<MultiIndexLimiter> limitB) : a(limitA), b(limitB){};
@@ -218,13 +168,6 @@ namespace Utilities{
     OrLimiter(){};
     std::shared_ptr<MultiIndexLimiter> a, b;
     
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version){
-      ar & boost::serialization::base_object<MultiIndexLimiter>(*this);
-      ar & a;
-      ar & b;
-    };
-    
   }; // class OrLimiter
   
   
@@ -234,7 +177,6 @@ namespace Utilities{
    @details This class will return true if exactly one of the limiters given to the constructor returns true.
    */
   class XorLimiter : public MultiIndexLimiter{
-    friend class boost::serialization::access;
     
   public:
     XorLimiter(std::shared_ptr<MultiIndexLimiter> limitA, std::shared_ptr<MultiIndexLimiter> limitB) : a(limitA), b(limitB){};
@@ -245,12 +187,6 @@ namespace Utilities{
     XorLimiter(){};
     std::shared_ptr<MultiIndexLimiter> a, b;
     
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version){
-      ar & boost::serialization::base_object<MultiIndexLimiter>(*this);
-      ar & a;
-      ar & b;
-    };
   }; // class XorLimiter
   
 } // namespace muq

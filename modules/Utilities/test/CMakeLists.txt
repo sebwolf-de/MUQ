@@ -19,4 +19,5 @@ CreateTestGroup(
     LinearAlgebra/SundialsAlgebraTests.cpp
 
     MultiIndices/MultiIndexTests.cpp
+    MultiIndices/MultiIndexLimiterTests.cpp
 )
