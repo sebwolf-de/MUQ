@@ -20,6 +20,18 @@ TEST(Utilities_MultiIndices, DefaultConstructor)
   EXPECT_EQ(0,multi.Sum());
 }
 
+TEST(Utilities_MultiIndices, CreateVector)
+{
+  Eigen::RowVectorXi truth(6);
+  truth << 1,0,3, 0, 0, 1;
+
+  MultiIndex multi(truth);
+
+  Eigen::RowVectorXi test = multi.GetVector();
+  for(int i=0; i<truth.size(); ++i)
+    EXPECT_EQ(truth(i), test(i));
+}
+
 TEST(Utilities_MultiIndices, RowConstructor)
 {
   Eigen::RowVectorXi temp(3);

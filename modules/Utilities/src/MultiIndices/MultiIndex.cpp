@@ -46,7 +46,7 @@ MultiIndex::MultiIndex(std::initializer_list<unsigned> const& indIn) : MultiInde
 
 Eigen::RowVectorXi MultiIndex::GetVector() const
 {
-  Eigen::RowVectorXi output(length);
+  Eigen::RowVectorXi output = Eigen::RowVectorXi::Zero(length);
 
   for(auto it = nzInds.begin(); it!=nzInds.end(); ++it)
     output(it->first) = it->second;
