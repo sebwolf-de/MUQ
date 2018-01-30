@@ -1,6 +1,4 @@
 
-#include <iostream>
-
 #include "gtest/gtest.h"
 
 #include "MUQ/Utilities/MultiIndices/MultiIndex.h"

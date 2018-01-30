@@ -327,7 +327,7 @@ std::vector<unsigned> MultiIndexSet::Expand(unsigned int activeIndex)
   unsigned globalIndex = active2global.at(activeIndex);
 
   // loop through the forward neighbors of this index
-  std::set<int>& tempSet = outEdges.at(globalIndex);
+  std::set<int> tempSet = outEdges.at(globalIndex);
   for(int neighbor : tempSet)
   {
     if(IsAdmissible(neighbor)&&(!IsActive(neighbor))){

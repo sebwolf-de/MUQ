@@ -56,6 +56,7 @@ TEST(Utilities_MultiIndices, ValidNeighbor)
   // MultiIndexSet - the "square".
   shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 1);
 
+
   // MultiIndex for testing.
   shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
   multi->SetValue(0,2);
@@ -260,13 +261,13 @@ TEST(Utilities_MultiIndices, AddAdmissibleNeighbor)
     |                           |
   2 | o   o   o               2 | o   o   o
     |                  --->     |
-  1 | x   x   o               1 | x   x   x   o
+  1 | x   x   o               1 | x   x   o   o
     |                           |
-  0 | x   x   o               0 | x   x   x   x   0
+  0 | x   x   o               0 | x   x   x   o
     -----------------           -------------------
       0   1   2   3               0   1   2   3   4
 */
-TEST(Utilities_MultiIndices, ForciblyExpandAdmissibleNeighbors)
+TEST(Utilities_MultiIndices, Expand)
 {
   // MultiIndexSet - the "square".
   shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 1);
@@ -275,7 +276,14 @@ TEST(Utilities_MultiIndices, ForciblyExpandAdmissibleNeighbors)
   shared_ptr<MultiIndex> newIndex = std::make_shared<MultiIndex>(2);
   newIndex->SetValue(0,1);
 
-  indexFamily->Expand(indexFamily->MultiToIndex(newIndex));
+  int oldSize = indexFamily->Size();
+  EXPECT_EQ(4, oldSize);
+
+  int activeIndex = indexFamily->MultiToIndex(newIndex);
+  ASSERT_TRUE(activeIndex>=0);
+
+  indexFamily->Expand(activeIndex);
+  EXPECT_EQ(oldSize+1, indexFamily->Size());
 
   // Create MultiIndex for testing against the square.
   shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
