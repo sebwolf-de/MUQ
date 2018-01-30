@@ -59,13 +59,14 @@ bool MultiIndex::SetValue(unsigned ind, unsigned val)
   if(ind>length){
     throw std::out_of_range("Tried to set the value of index " + std::to_string(ind) + " on an multiindex with only " + std::to_string(length) + " components.");
   }else{
-    auto it = nzInds.find(ind);
 
-    if (it != nzInds.end()){
-      nzInds[ind] += val-nzInds[ind];
+    auto it = nzInds.find(ind);
+    if(it != nzInds.end()){
+      it->second = val;
     }else{
       nzInds[ind] = val;
     }
+
 
     // Update the total and maximum order values after updating multi index
     totalOrder = 0;
@@ -75,7 +76,7 @@ bool MultiIndex::SetValue(unsigned ind, unsigned val)
       totalOrder += value.second;
       maxValue = std::max(maxValue, value.second);
     }
-    
+
     return it!=nzInds.end();
   }
 }
@@ -104,9 +105,9 @@ void MultiIndex::SetLength(unsigned newLength)
     auto it = nzInds.begin();
     while(it!= nzInds.end()){
       if (it->first >= newLength) {
-	it = nzInds.erase(it);
+	      it = nzInds.erase(it);
       } else {
-	it++;
+	      it++;
       }
     }
 
