@@ -25,7 +25,7 @@ namespace muq{
 
     /** @class MultiIndexSet
      @ingroup MultiIndices
-     @brief A class for holding, sorting, and adapting sets of muliindices.
+     @brief A class for holding, sorting, and adapting sets of multiindices.
      @details <p>In the context of polynomial expansions, a multiindex defines a
         single multivariate polynomial.  A finite expansion of multivariate
         polynomials is then defined by a collection of multiindices, one for
@@ -34,12 +34,12 @@ namespace muq{
         neighbors), and expanding the set. </p>
 
      <p>Let \f$\mbox{j}=[j_1,j_2,\dots,j_D]\f$ be a \f$D\f$-dimensional
-        multiindex.  The backwards neighbors of $\mbox{j}$ are the multiindices
+        multiindex.  The backwards neighbors of \f$\mbox{j}\f$ are the multiindices
         given by multiindices who are only different from \f$\mbox{j}\f$ in one
         component, and in that component, the difference is -1.  For example,
         \f$[j_1-1, j_2,\dots,j_D]\f$ and \f$[j_1, j_2-1,\dots,j_D]\f$ are
         backwards neighbors of \f$\mbox{j}\f$, but \f$[j_1-1,
-        j_2-1,\dots,j_D]\f$ and \f$[j_1, j_2-2,\dots,j_D]\f$ are not.  Forwar
+        j_2-1,\dots,j_D]\f$ and \f$[j_1, j_2-2,\dots,j_D]\f$ are not.  Forward
         neighbors are similarly defined, but with +1. Examples of forward
         neighbors include \f$[j_1+1, j_2,\dots,j_D]\f$ and \f$[j_1,
         j_2+1,\dots,j_D]\f$.   As far as this class is concerned, multiindices
