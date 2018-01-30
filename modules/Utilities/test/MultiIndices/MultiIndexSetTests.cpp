@@ -4,8 +4,8 @@
 
 #include "MUQ/Utilities/MultiIndices/MultiIndex.h"
 #include "MUQ/Utilities/MultiIndices/MultiIndexSet.h"
-#include "MUQ/Utilities/MultiIndices/MultiIndexLimiter.h"
 #include "MUQ/Utilities/MultiIndices/MultiIndexFactory.h"
+#include "MUQ/Utilities/MultiIndices/MultiIndexLimiter.h"
 
 using namespace std;
 
@@ -27,6 +27,7 @@ using namespace muq::Utilities;
   Tests whether admissable neighbors are identified correctly for different
   scenarios.
 */
+
 
 /*
   AdmissableNeighbor.ValidNeighbor
@@ -50,7 +51,7 @@ using namespace muq::Utilities;
     ----------------            ----------------
       0   1   2   3               0   1   2   3
 */
-TEST(AdmissableNeighbor, ValidNeighbor)
+TEST(Utilities_MultiIndices, ValidNeighbor)
 {
   // MultiIndexSet - the "square".
   shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 1);
@@ -88,7 +89,7 @@ TEST(AdmissableNeighbor, ValidNeighbor)
     -----------------            -----------------
       0   1   2   3                0   1   2   3
 */
-TEST(AdmissableNeighbor, UndefinedNeighbor)
+TEST(Utilities_MultiIndices, UndefinedNeighbor)
 {
   // MultiIndexSet - the "square".
   shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 1);
@@ -130,10 +131,10 @@ TEST(AdmissableNeighbor, UndefinedNeighbor)
       0   1   2   3   4             0   1   2   3   4
 
 */
-TEST(AdmissableNeighbor, OutsideMaxOrder)
+TEST(Utilities_MultiIndices, OutsideMaxOrder)
 {
   // Max order limit of 3.
-  shared_ptr<MultiIndexLimiter> limiter = make_shared<MaxOrderLimiter>(3);
+  shared_ptr<MultiIndexLimiter> limiter = std::make_shared<MaxOrderLimiter>(3);
 
   // MultiIndexSet - the "square".
   shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 3, limiter);
@@ -173,10 +174,10 @@ TEST(AdmissableNeighbor, OutsideMaxOrder)
     --------------------          --------------------
       0   1   2   3   4             0   1   2   3   4
 */
-TEST(AdmissableNeighbor, OutsideTotalOrder)
+TEST(Utilities_MultiIndices, OutsideTotalOrder)
 {
   // Total order limit of 3.
-  shared_ptr<MultiIndexLimiter> limiter = make_shared<TotalOrderLimiter>(3);
+  shared_ptr<MultiIndexLimiter> limiter = std::make_shared<TotalOrderLimiter>(3);
 
   // MultiIndexSet - the "square".
   shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 3, limiter);
@@ -221,14 +222,15 @@ TEST(AdmissableNeighbor, OutsideTotalOrder)
     ----------------             ----------------
       0   1   2   3                0   1   2   3
 */
-TEST(AdmissableNeighbor, AddAdmissibleNeighbor)
+TEST(Utilities_MultiIndices, AddAdmissibleNeighbor)
 {
   // MultiIndexSet - the "square".
-  shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 1, limiter);
+  shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 1);
 
   // Add forward admissible neighbor to index (1,0).
-  shared_ptr<MultiIndexSet> localIndex = (2,0)
-  indexFamily->AddForwardNeighbors(localIndex)
+  shared_ptr<MultiIndex> newIndex = std::make_shared<MultiIndex>(2);
+  newIndex->SetValue(0,2);
+  indexFamily->AddActive(newIndex);
 
   // Create MultiIndex for testing against the square.
   shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
@@ -256,22 +258,24 @@ TEST(AdmissableNeighbor, AddAdmissibleNeighbor)
 
   3 |                         3 |
     |                           |
-  2 | x   x   x               2 | x   x   x
+  2 | o   o   o               2 | o   o   o
     |                  --->     |
-  1 | x   x   x               1 | x   x   x
+  1 | x   x   o               1 | x   x   x   o
     |                           |
-  0 | x   x   x   o           0 | x   x   x   x
-    -----------------           -----------------
-      0   1   2   3               0   1   2   3
+  0 | x   x   o               0 | x   x   x   x   0
+    -----------------           -------------------
+      0   1   2   3               0   1   2   3   4
 */
-TEST(AdmissableNeighbor, ForciblyExpandAdmissibleNeighbors)
+TEST(Utilities_MultiIndices, ForciblyExpandAdmissibleNeighbors)
 {
   // MultiIndexSet - the "square".
   shared_ptr<MultiIndexSet> indexFamily = MultiIndexFactory::CreateFullTensor(2, 1);
 
   // Add forward admissible neighbor to index (1,1) using ForciblyExpand.
-  shared_ptr<MultiIndexSet> localIndex = (1,1)
-  indexFamily->ForciblyExpand(localIndex)
+  shared_ptr<MultiIndex> newIndex = std::make_shared<MultiIndex>(2);
+  newIndex->SetValue(0,1);
+
+  indexFamily->Expand(indexFamily->MultiToIndex(newIndex));
 
   // Create MultiIndex for testing against the square.
   shared_ptr<MultiIndex> multi = make_shared<MultiIndex>(2);
@@ -281,7 +285,3 @@ TEST(AdmissableNeighbor, ForciblyExpandAdmissibleNeighbors)
   bool admiss = indexFamily->IsAdmissible(multi);
   EXPECT_TRUE(admiss);
 }
-
-
-
-
