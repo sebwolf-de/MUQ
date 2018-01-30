@@ -60,27 +60,20 @@ bool MultiIndex::SetValue(unsigned ind, unsigned val)
     throw std::out_of_range("Tried to set the value of index " + std::to_string(ind) + " on an multiindex with only " + std::to_string(length) + " components.");
   }else{
     auto it = nzInds.find(ind);
-    if(it != nzInds.end()){
-
-    }else{
-      nzInds[ind] = val;
-      totalOrder += val;
-    }
-    nzInds[ind] = val;
 
     if (it != nzInds.end()){
       nzInds[ind] += val-nzInds[ind];
     }else{
       nzInds[ind] = val;
+    }
 
-      maxValue = 0;
-      totalOrder = 0;
-      
-      for (const auto& value : nzInds){
-	totalOrder += value.second;
-	maxValue = std::max(maxValue, value.second);
-      }
+    // Update the total and maximum order values after updating multi index
+    totalOrder = 0;
+    maxValue = 0;
 
+    for (const auto& value : nzInds){
+      totalOrder += value.second;
+      maxValue = std::max(maxValue, value.second);
     }
     
     return it!=nzInds.end();
