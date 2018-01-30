@@ -1,7 +1,6 @@
 #include "MUQ/Modeling/WorkGraph.h"
 
 #include "MUQ/Modeling/WorkPiece.h"
-#include "MUQ/Modeling/WorkGraphPiece.h"
 #include "MUQ/Modeling/ConstantPiece.h"
 
 #include <fstream>

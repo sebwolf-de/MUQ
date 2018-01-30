@@ -103,7 +103,7 @@ namespace muq {
           be removed.
           @param[in] newLength The new length of the multiindex
       */
-      void SetDimension(unsigned newLength);
+      void SetLength(unsigned newLength);
 
 
       /** Get the number of components in the index.  When used to define a

@@ -9,7 +9,7 @@ using namespace std;
 using namespace muq::Utilities;
 
 
-TEST(UtilitiesMultiIndex, DefaultConstructor)
+TEST(Utilities_MultiIndices, DefaultConstructor)
 {
   MultiIndex multi(2);
 
@@ -20,7 +20,7 @@ TEST(UtilitiesMultiIndex, DefaultConstructor)
   EXPECT_EQ(0,multi.Sum());
 }
 
-TEST(UtilitiesMultiIndex, RowConstructor)
+TEST(Utilities_MultiIndices, RowConstructor)
 {
   Eigen::RowVectorXi temp(3);
   temp(0) = 1;
@@ -36,7 +36,7 @@ TEST(UtilitiesMultiIndex, RowConstructor)
   EXPECT_EQ(6,multi.Sum());
 }
 
-TEST(UtilitiesMultiIndex, InitializerListConstructor)
+TEST(Utilities_MultiIndices, InitializerListConstructor)
 {
   MultiIndex multi{1,5,3,0};
 
@@ -50,7 +50,7 @@ TEST(UtilitiesMultiIndex, InitializerListConstructor)
   EXPECT_EQ(9,multi.Sum());
 }
 
-TEST(UtilitiesMultiIndex, SetValue)
+TEST(Utilities_MultiIndices, SetValue)
 {
 
   // Start off with [0, 7]
