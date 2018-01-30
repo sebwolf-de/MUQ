@@ -20,6 +20,7 @@ CreateTestGroup(
 
     MultiIndices/MultiIndexTests.cpp
     MultiIndices/MultiIndexLimiterTests.cpp
+    MultiIndices/MultiIndexSetTests.cpp
 )
 
 CreateTestGroup(

@@ -259,7 +259,7 @@ namespace muq{
 
       /**
          If possible, make the neighbors of this index active, and return any
-         that become active.  Do not activate a neighbor that is alxready part
+         that become active.  Do not activate a neighbor that is already part
          of the family.
          @param activeIndex The linear index of the active multiindex to expand.
          @return A vector containing the linear index of any multiindices
