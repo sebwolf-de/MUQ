@@ -62,4 +62,5 @@ CreateCompileGroup(
     MultiIndices/MultiIndex.cpp
     MultiIndices/MultiIndexLimiter.cpp
     MultiIndices/MultiIndexSet.cpp
+    MultiIndices/MultiIndexFactory.cpp
 )
