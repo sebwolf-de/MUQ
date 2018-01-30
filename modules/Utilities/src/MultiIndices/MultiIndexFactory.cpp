@@ -129,7 +129,7 @@ shared_ptr<MultiIndexSet> muq::Utilities::MultiIndexFactory::CreateTotalOrder(un
   assert(length>0);
 
   // create an empy multiindex set
-  shared_ptr<MultiIndexSet> output = make_shared<MultiIndexSet>(length,make_shared<NoLimiter>());
+  shared_ptr<MultiIndexSet> output = make_shared<MultiIndexSet>(length,limiter);
 
   // start with a vector of zeros
   Eigen::RowVectorXi base = Eigen::RowVectorXi::Zero(length);
@@ -162,7 +162,7 @@ shared_ptr<MultiIndexSet> muq::Utilities::MultiIndexFactory::CreateHyperbolic(un
   assert(length>0);
 
   // create an empy multiindex set
-  shared_ptr<MultiIndexSet> output = make_shared<MultiIndexSet>(length,make_shared<NoLimiter>());
+  shared_ptr<MultiIndexSet> output = make_shared<MultiIndexSet>(length,limiter);
 
   // start with a vector of zeros
   Eigen::RowVectorXi base = Eigen::RowVectorXi::Zero(length);
@@ -206,7 +206,7 @@ std::shared_ptr<MultiIndexSet> muq::Utilities::MultiIndexFactory::CreateFullTens
   unsigned int numActiveIndices = (orders.array()+1).prod(); // the exact number of active indices
 
   // create an empy multiindex set
-  shared_ptr<MultiIndexSet> output = make_shared<MultiIndexSet>(length,make_shared<NoLimiter>());
+  shared_ptr<MultiIndexSet> output = make_shared<MultiIndexSet>(length,limiter);
 
   // start with a vector of zeros
   Eigen::RowVectorXi base = Eigen::RowVectorXi::Zero(length);

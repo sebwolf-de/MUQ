@@ -33,7 +33,12 @@ void MultiIndexSet::SetLimiter(std::shared_ptr<MultiIndexLimiter> limiterIn){
   for(int globalInd=0; globalInd<allMultis.size(); ++globalInd)
   {
     if(IsActive(globalInd)){
-      assert(limiterIn->IsFeasible(allMultis.at(globalInd)));
+      if(!limiterIn->IsFeasible(allMultis.at(globalInd))){
+        std::stringstream msg;
+        msg << "Invalid limiter passed to MultiIndexSet::SetLimiter.  The active multi-index, ";
+        msg << allMultis.at(globalInd)->GetVector() << ", is not valid with the new limiter.\n";
+        throw std::invalid_argument(msg.str());
+      }
     }else{
 
       if(!limiterIn->IsFeasible(allMultis.at(globalInd))){
@@ -312,7 +317,11 @@ void MultiIndexSet::AddBackwardNeighbors(unsigned int globalIndex, bool addInact
 
 std::vector<unsigned> MultiIndexSet::Expand(unsigned int activeIndex)
 {
-  assert(activeIndex<active2global.size());
+  if(activeIndex >= active2global.size()){
+    std::stringstream msg;
+    msg << "Invalid index passed to MultiIndexSet::Expand.  A value of " << activeIndex << " was passed to the function, but only " << active2global.size() << " active components exist in the set.\n";
+    throw std::out_of_range(msg.str());
+  }
 
   vector<unsigned> newIndices;
   unsigned globalIndex = active2global.at(activeIndex);
