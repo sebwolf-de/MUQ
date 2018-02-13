@@ -12,7 +12,7 @@ double Legendre::DerivativeEvaluate(int const polyOrder, int const derivOrder, d
         return 0.0;
 
     if(derivOrder==1){
-        return polyOrder / (x * x - 1.0) * (x * PolynomialEvaluate(polyOrder, x) - PolynomialEvaluate(polyOrder - 1, x));
+        return polyOrder / (x * x - 1.0) * (x * BasisEvaluate(polyOrder, x) - BasisEvaluate(polyOrder - 1, x));
     }else{
         // Use the fact that dp_{n+1}/dx = (2n+1) p_n + dp_{n-1} /dx
         return (2*(polyOrder-1) + 1) * DerivativeEvaluate(polyOrder-1, derivOrder-1, x) + DerivativeEvaluate(polyOrder-2, derivOrder, x);
@@ -41,4 +41,4 @@ double Legendre::Normalization(unsigned int polyOrder) const {
 }
 
 
-REGISTER_POLYNOMIAL_FAMILY(Legendre)
+REGISTER_SCALARBASIS_FAMILY(Legendre)

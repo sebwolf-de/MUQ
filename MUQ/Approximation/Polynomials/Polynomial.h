@@ -4,11 +4,11 @@
 #include <functional>
 #include <string>
 
-#include "MUQ/Modeling/WorkPiece.h"
-#include "MUQ/Utilities/RegisterClassName.h"
+#include "MUQ/Approximation/Polynomials/IndexedScalarBasis.h"
 
 namespace muq {
   namespace Approximation {
+
     /// A 1D polynomial (monomial, Hermite, or Legendre)
     /**
        In general, we use an recursive formula to evaluate a \f$d^{th}\f$ degree polynomial using a three term recurrence:
@@ -21,22 +21,13 @@ namespace muq {
 
        Uses the Clenshaw algorithm from: http://en.wikipedia.org/wiki/Clenshaw_algorithm.
      */
-    class Polynomial : public muq::Modeling::WorkPiece {
+    class Polynomial : public IndexedScalarBasis {
     public:
 
-      
-      typedef std::function<std::shared_ptr<Polynomial>()> PolynomialConstructorType;
-      typedef std::map<std::string, PolynomialConstructorType> PolynomialMapType;
-      static std::shared_ptr<PolynomialMapType> GetPolynomialMap();
-
-      // Factory method for consttructing polynomial from family
-      static std::shared_ptr<Polynomial> Construct(std::string const& polyName);
-
-      
       /// Create a polynomial
-      Polynomial();
+      Polynomial() : IndexedScalarBasis(){};
 
-      virtual ~Polynomial();
+      virtual ~Polynomial() = default;
 
       /// Evaluate the specific polynomial type (must be implemented by the child)
       /**
@@ -47,14 +38,14 @@ namespace muq {
 	 </ol>
 	 \return The polynomial value
        */
-      virtual double PolynomialEvaluate(int const order, double const x) const;
+      virtual double BasisEvaluate(int const order, double const x) const override;
 
       /** Evaluate the \f$n^{th}\f$ derivative of a \f$p^{th}\f$ order polynomial.
           @param[in] polyOrder The order \f$p\f$ of the polynomial.
           @param[in] derivOrder The order \f$n\f$ of the derivative.
           @param[in] x The location to evaluate the derivative.
       */
-      virtual double DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const = 0;
+      //virtual double DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const = 0;
 
 
 
@@ -69,20 +60,9 @@ where \f$\delta_{mn}\f$ is the Kronecker delta function, \f$w(x)\f$ is a weighti
          @return The normalization constant for a particular polynomial family and its weighting function \f$w(x)\f$.
        */
       virtual double Normalization(unsigned int polyOrder) const;
-      
-      
+
+
     private:
-
-      /// Evaluate the polynomial at a given point and order
-      /**
-	 Inputs:
-	 <ol>
-	 <li> The order of the polynomial (unsigned int)
-	 <li> The point where we are evaluating the polynomial (double)
-	 </ol>
-       */
-      virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs);
-
 
       /// Implement \f$\alpha_k(x)\f$
       /**
@@ -112,11 +92,6 @@ where \f$\delta_{mn}\f$ is the Kronecker delta function, \f$w(x)\f$ is a weighti
     };
   } // namespace Approximation
 } // namespace muq
-
-
-#define REGISTER_POLYNOMIAL_FAMILY(NAME) static auto regPolynomial ##NAME		\
-    = muq::Approximation::Polynomial::GetPolynomialMap()->insert(std::make_pair(#NAME, muq::Utilities::shared_factory<NAME>()));
-    
 
 
 #endif

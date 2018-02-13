@@ -31,13 +31,15 @@ CreateCompileGroup(
 	"MODELING_CORE"
 	""
 	""
+	Polynomials/IndexedScalarBasis.cpp
 	Polynomials/Polynomial.cpp
 	Polynomials/Monomial.cpp
 	Polynomials/PhysicistHermite.cpp
-        Polynomials/ProbabilistHermite.cpp
+	Polynomials/ProbabilistHermite.cpp
 	Polynomials/Legendre.cpp
-        Polynomials/Laguerre.cpp
-        Polynomials/Jacobi.cpp
+	Polynomials/Laguerre.cpp
+	Polynomials/Jacobi.cpp
+	Polynomials/HermiteFunction.cpp
 )
 
 CreateCompileGroup(
@@ -47,7 +49,7 @@ CreateCompileGroup(
     "MODELING_CORE"
     "EIGEN3;BOOST"
     ""
-    
+
     GaussianProcesses/MaternKernel.cpp
     GaussianProcesses/PeriodicKernel.cpp
     GaussianProcesses/KarhunenLoeveExpansion.cpp

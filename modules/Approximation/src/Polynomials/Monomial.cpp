@@ -10,16 +10,16 @@ double Monomial::DerivativeEvaluate(int const polyOrder, int const derivOrder, d
 
     if((derivOrder > polyOrder) || (polyOrder==0))
         return 0.0;
-    
+
     double c = 1.0;
     for(int k=polyOrder; k>polyOrder-derivOrder; --k)
         c *= k;
-    
+
     return c*std::pow(x, polyOrder-derivOrder);
-    
+
 }
 
-double Monomial::PolynomialEvaluate(int const order, double const x) const {
+double Monomial::BasisEvaluate(int const order, double const x) const {
     return std::pow(x, order);
 }
 
@@ -39,4 +39,4 @@ double Monomial::phi1(double x) const {
   return x;
 }
 
-REGISTER_POLYNOMIAL_FAMILY(Monomial)
+REGISTER_SCALARBASIS_FAMILY(Monomial)

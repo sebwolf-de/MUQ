@@ -16,8 +16,8 @@ namespace muq {
 
       virtual ~Monomial();
 
-      virtual double PolynomialEvaluate(int const order, double const x) const override;
-      
+      virtual double BasisEvaluate(int const order, double const x) const override;
+
       virtual double DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const override;
 
     private:

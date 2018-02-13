@@ -12,12 +12,12 @@ double PhysicistHermite::DerivativeEvaluate(int const polyOrder, int const deriv
 
     if((derivOrder > polyOrder) || (polyOrder==0))
         return 0.0;
-    
+
     double c = 1.0;
     for(int k=polyOrder; k>polyOrder-derivOrder; --k)
         c *= 2.0*k;
-    
-    return c*PolynomialEvaluate(polyOrder-derivOrder, x);
+
+    return c*BasisEvaluate(polyOrder-derivOrder, x);
 }
 
 double PhysicistHermite::Normalization(unsigned int polyOrder) const {
@@ -40,4 +40,4 @@ double PhysicistHermite::phi1(double x) const {
   return 2.0*x;
 }
 
-REGISTER_POLYNOMIAL_FAMILY(PhysicistHermite)
+REGISTER_SCALARBASIS_FAMILY(PhysicistHermite)

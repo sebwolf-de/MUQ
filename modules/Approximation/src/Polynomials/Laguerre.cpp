@@ -4,13 +4,13 @@ using namespace muq::Approximation;
 
 
 double Laguerre::DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const {
-   
+
     if((derivOrder > polyOrder) || (polyOrder==0))
         return 0.0;
 
     double c = (derivOrder%2==0) ? 1.0 : -1.0;
-    
-    return c * Laguerre(a + derivOrder).PolynomialEvaluate(polyOrder-derivOrder,x);
+
+    return c * Laguerre(a + derivOrder).BasisEvaluate(polyOrder-derivOrder,x);
 }
 
 
@@ -35,4 +35,4 @@ double Laguerre::Normalization(unsigned int polyOrder) const {
 }
 
 
-REGISTER_POLYNOMIAL_FAMILY(Laguerre)
+REGISTER_SCALARBASIS_FAMILY(Laguerre)
