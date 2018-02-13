@@ -10,6 +10,8 @@
 namespace muq{
   namespace Approximation{
 
+    class MonotoneExpansion;
+    
     /** @class BasisExpansion
         @ingroup Polynomials
         @brief Class for defining expansions of basis functions defined by a
@@ -54,6 +56,8 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
         @seealso muq::Utilities::MultiIndexSet, muq::Utilities::IndexScalarBasis, muq::Modeling::WorkPiece
     */
     class BasisExpansion : public muq::Modeling::WorkPiece{
+
+      friend class MonotoneExpansion;
 
     public:
 
