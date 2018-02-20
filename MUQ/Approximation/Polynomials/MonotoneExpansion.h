@@ -2,6 +2,7 @@
 #define MONOTONEEXPANSION_H
 
 #include "MUQ/Approximation/Polynomials/BasisExpansion.h"
+#include <boost/property_tree/ptree.hpp>
 
 namespace muq{
   namespace Approximation{
@@ -23,6 +24,11 @@ namespace muq{
     class MonotoneExpansion : public muq::Modeling::WorkPiece{
 
     public:
+      MonotoneExpansion(boost::property_tree::ptree & params);
+
+      MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>> generalPartsIn,
+                        std::vector<std::shared_ptr<BasisExpansion>> monotonePartsIn);
+      
 
     protected:
       virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
@@ -31,8 +37,8 @@ namespace muq{
                                 unsigned int const                           wrtOut,
                                 muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
-      std::vector<BasisExpansion> generalParts;
-      std::vector<BasisExpansion> monotoneParts;
+      std::vector<std::shared_ptr<BasisExpansion>> generalParts;
+      std::vector<std::shared_ptr<BasisExpansion>> monotoneParts;
 
     }; // class MonotoneExpansion
 
