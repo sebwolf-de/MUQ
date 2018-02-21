@@ -98,12 +98,17 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
 
       virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
-      //virtual void JacobianImpl(unsigned int const                           wrtIn,
-      //                          unsigned int const                           wrtOut,
-      //                          muq::Modeling::ref_vector<boost::any> const& inputs) override;
+      virtual void JacobianImpl(unsigned int const                           wrtIn,
+                                unsigned int const                           wrtOut,
+                                muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
-      // Evaluates all the terms in the expansion, but does not multiply by coefficients
+      /** Evaluates all the terms in the expansion, but does not multiply by coefficients. */
       Eigen::VectorXd GetAllTerms(Eigen::VectorXd const& x) const;
+
+      /** Evaluates the first derivatives of all the terms in the expansion
+          @return A matrix of size (numTerms, numDims) containing the derivative of each term wrt each input
+      */
+      Eigen::MatrixXd GetAllDerivs(Eigen::VectorXd const& x) const;
 
       //Eigen::VectorXd GetAllDerivs(Eigen::VectorXd const& x,
       //                             unsigned               derivOrder) const;

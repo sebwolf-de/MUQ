@@ -98,6 +98,11 @@ TEST_F(Approximation_BasisExpansion, Linear){
 
   EXPECT_EQ(1, output.size());
   EXPECT_DOUBLE_EQ(coeffs(0,0) + coeffs(0,1)*evalPt(0), output(0));
+
+  Eigen::MatrixXd jac = boost::any_cast<Eigen::MatrixXd>(expansion.Jacobian(0,0,evalPt));
+  EXPECT_EQ(1,jac.rows());
+  EXPECT_EQ(1, jac.cols());
+  EXPECT_EQ(coeffs(1), jac(0,0));
 }
 
 TEST_F(Approximation_BasisExpansion, Quadratic){
@@ -119,4 +124,9 @@ TEST_F(Approximation_BasisExpansion, Quadratic){
 
   EXPECT_EQ(1, output.size());
   EXPECT_DOUBLE_EQ(coeffs(0,0) + coeffs(0,1)*evalPt(0) + coeffs(0,2)*evalPt(0)*evalPt(0), output(0));
+
+  Eigen::MatrixXd jac = boost::any_cast<Eigen::MatrixXd>(expansion.Jacobian(0,0,evalPt));
+  EXPECT_EQ(1,jac.rows());
+  EXPECT_EQ(1, jac.cols());
+  EXPECT_EQ(coeffs(1) + 2.0*coeffs(2)*evalPt(0), jac(0,0));
 }
