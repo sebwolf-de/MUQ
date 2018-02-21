@@ -26,12 +26,14 @@ namespace muq{
     public:
       //MonotoneExpansion(boost::property_tree::ptree & params);
 
-      MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>> generalPartsIn,
-                        std::vector<std::shared_ptr<BasisExpansion>> monotonePartsIn);
+      MonotoneExpansion(std::shared_ptr<BasisExpansion> monotonePartsIn);
+
+      MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>> const& generalPartsIn,
+                        std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn);
 
 
     protected:
-      
+
       virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
       virtual void JacobianImpl(unsigned int const                           wrtIn,
@@ -40,6 +42,11 @@ namespace muq{
 
       std::vector<std::shared_ptr<BasisExpansion>> generalParts;
       std::vector<std::shared_ptr<BasisExpansion>> monotoneParts;
+
+      Eigen::VectorXd coeffs;
+      
+      Eigen::VectorXd quadWeights;
+      Eigen::VectorXd quadPts; // quadrature points on [0,1]
 
     }; // class MonotoneExpansion
 

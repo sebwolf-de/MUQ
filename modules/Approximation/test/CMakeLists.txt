@@ -16,6 +16,7 @@ CreateTestGroup(
   APPROXIMATION_POLYNOMIALS
 
   Polynomials/BasisExpansionTest.cpp
+  Polynomials/MonotoneExpansionTest.cpp
   Polynomials/PolynomialTests.cpp
 )
 

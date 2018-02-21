@@ -41,6 +41,7 @@ CreateCompileGroup(
 	Polynomials/Jacobi.cpp
 	Polynomials/HermiteFunction.cpp
   Polynomials/BasisExpansion.cpp
+  Polynomials/MonotoneExpansion.cpp
 )
 
 CreateCompileGroup(

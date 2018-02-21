@@ -167,7 +167,7 @@ std::vector<Eigen::MatrixXd> BasisExpansion::GetHessians(Eigen::VectorXd const& 
 
 Eigen::VectorXd const& BasisExpansion::ProcessInputs(muq::Modeling::ref_vector<boost::any> const& inputs)
 {
-    // If there are two inputs, then the second input will reset he coefficients
+    // If there are two inputs, then the second input will reset the coefficients
   if(inputs.size()>1){
       Eigen::MatrixXd const& newCoeffs = *boost::any_cast<Eigen::MatrixXd>(&inputs.at(1).get());
       assert(newCoeffs.rows() == coeffs.rows());
