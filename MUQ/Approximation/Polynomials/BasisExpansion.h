@@ -6,6 +6,7 @@
 #include "MUQ/Approximation/Polynomials/IndexedScalarBasis.h"
 
 #include "MUQ/Utilities/MultiIndices/MultiIndexSet.h"
+#include "MUQ/Utilities/VariadicMacros.h"
 
 namespace muq{
   namespace Approximation{
@@ -86,13 +87,12 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
       */
       virtual unsigned NumTerms() const{return multis->Size();};
 
-      /** Get the \f$k^{th}\f$ derivative of WorkPiece with respect to the input \f$x\f$.
-          @param[in] derivDim The dimension of the input we want to take the derivative wrt
-          @param[in] derivOrder The order of the derivative we want to compute
-          @param[in] inputs The */
-    //  virtual Eigen::MatrixXd Derivative(unsigned                            derivDim,
-    //                                     unsigned                            derivOrder,
-    //                                     muq::Modeling::ref_vector<boost::any> const& inputs);
+
+
+      Eigen::MatrixXd SecondDerivative(unsigned                                     derivDim1,
+                                       unsigned                                     derivDim2,
+                                       Eigen::VectorXd                       const& evalPt,
+                                       Eigen::MatrixXd                       const& coeffs);
 
     protected:
 
@@ -102,6 +102,8 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
                                 unsigned int const                           wrtOut,
                                 muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
+      Eigen::VectorXd const& ProcessInputs(muq::Modeling::ref_vector<boost::any> const& inputs);
+
       /** Evaluates all the terms in the expansion, but does not multiply by coefficients. */
       Eigen::VectorXd GetAllTerms(Eigen::VectorXd const& x) const;
 
@@ -109,6 +111,9 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
           @return A matrix of size (numTerms, numDims) containing the derivative of each term wrt each input
       */
       Eigen::MatrixXd GetAllDerivs(Eigen::VectorXd const& x) const;
+
+      /** Computes the Hessian matrix for each output of the expansion. */
+      std::vector<Eigen::MatrixXd> GetHessians(Eigen::VectorXd const& x) const;
 
       //Eigen::VectorXd GetAllDerivs(Eigen::VectorXd const& x,
       //                             unsigned               derivOrder) const;

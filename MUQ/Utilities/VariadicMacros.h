@@ -49,5 +49,4 @@ to concatenate a,b,c,d into a vector [a,b,c,d].
         return functionName(bounds);                                                                                        \
     }
 
-
 #endif
