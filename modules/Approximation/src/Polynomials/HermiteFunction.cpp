@@ -4,7 +4,7 @@
 
 using namespace muq::Approximation;
 
-unsigned HermiteFuntion::nChoosek( unsigned n, unsigned k )
+unsigned HermiteFunction::nChoosek( unsigned n, unsigned k )
 {
     if (k > n) return 0;
     if (k * 2 > n) k = n-k;
@@ -47,7 +47,7 @@ double HermiteFunction::DerivativeEvaluate(int const polyOrder,
   for(int i=0; i<=derivOrder; ++i){
     result += nChoosek(derivOrder, i) * std::pow(2, 0.5*(derivOrder-i)) *
               std::sqrt(nfact / std::tgamma(polyOrder - derivOrder + i + 1)) *
-              BasisEvaluate(polyOrder-derivOrder+i, x) * polyBase->Evaluate(i, x);
+              BasisEvaluate(polyOrder-derivOrder+i, x) * polyBase->BasisEvaluate(i, x);
   }
 
   return result;

@@ -24,7 +24,7 @@ TEST(Polynomial, Monomial) {
   const unsigned int max_order = 200;
 
   for( unsigned int p=0; p<max_order; ++p ) {
-      
+
     // evaluate the monomial
     const std::vector<boost::any>& result = mono->Evaluate(p, x);
     EXPECT_EQ(result.size(), 1);
@@ -41,12 +41,12 @@ TEST(Polynomial, Monomial) {
     // Third derivative
     deriv = mono->DerivativeEvaluate(p,3,x);
     EXPECT_DOUBLE_EQ(double(p)*double(p-1)*double(p-2)*std::pow(x,p-3.0), deriv);
-    
+
   }
 
   // Check that the Normalization function returns an exception
   EXPECT_THROW(mono->Normalization(1), muq::NotImplementedError);
-  
+
 }
 
 TEST(Polynomial, PhysicistHermite) {
@@ -89,7 +89,7 @@ TEST(Polynomial, PhysicistHermite) {
   EXPECT_DOUBLE_EQ(sqrt(M_PI)*2.0, hermite->Normalization(1));
   EXPECT_DOUBLE_EQ(sqrt(M_PI)*8.0, hermite->Normalization(2));
   EXPECT_DOUBLE_EQ(sqrt(M_PI)*48.0, hermite->Normalization(3));
-  
+
 }
 
 TEST(Polynomial, ProbabilistHermite) {
@@ -97,12 +97,12 @@ TEST(Polynomial, ProbabilistHermite) {
   auto hermite = std::make_shared<ProbabilistHermite>();
 
   const double x = 1.32;
-  EXPECT_DOUBLE_EQ(1.0, hermite->PolynomialEvaluate(0, x));
-  EXPECT_DOUBLE_EQ(x, hermite->PolynomialEvaluate(1, x));
-  EXPECT_DOUBLE_EQ(x*x-1.0, hermite->PolynomialEvaluate(2, x));
-  EXPECT_DOUBLE_EQ(x*x*x - 3.0*x, hermite->PolynomialEvaluate(3, x));
-  EXPECT_DOUBLE_EQ(x*x*x*x - 6.0*x*x + 3.0, hermite->PolynomialEvaluate(4, x));
-  EXPECT_NEAR(std::pow(x,5) - 10*std::pow(x,3) + 15.0*x, hermite->PolynomialEvaluate(5, x), 1e-10);
+  EXPECT_DOUBLE_EQ(1.0, hermite->BasisEvaluate(0, x));
+  EXPECT_DOUBLE_EQ(x, hermite->BasisEvaluate(1, x));
+  EXPECT_DOUBLE_EQ(x*x-1.0, hermite->BasisEvaluate(2, x));
+  EXPECT_DOUBLE_EQ(x*x*x - 3.0*x, hermite->BasisEvaluate(3, x));
+  EXPECT_DOUBLE_EQ(x*x*x*x - 6.0*x*x + 3.0, hermite->BasisEvaluate(4, x));
+  EXPECT_NEAR(std::pow(x,5) - 10*std::pow(x,3) + 15.0*x, hermite->BasisEvaluate(5, x), 1e-10);
 
   // First derivatives
   EXPECT_DOUBLE_EQ(0.0, hermite->DerivativeEvaluate(0,1,x));
@@ -134,7 +134,7 @@ TEST(Polynomial, ProbabilistHermite) {
 }
 
 TEST(Polynomial, Legendre) {
-    
+
   // create a Legendre object
   auto legendre = std::make_shared<Legendre>();
 
@@ -180,18 +180,18 @@ TEST(Polynomial, Legendre) {
 
 
 TEST(Polynomial, Laguerre) {
-    
+
   // create a Legendre object
   auto poly = std::make_shared<Laguerre>(0.0);
 
   const double x = 1.32;
-  EXPECT_DOUBLE_EQ(1.0, poly->PolynomialEvaluate(0, x));
-  EXPECT_DOUBLE_EQ(-x+1.0, poly->PolynomialEvaluate(1, x));
-  EXPECT_DOUBLE_EQ(0.5*(x*x-4.0*x+2.0), poly->PolynomialEvaluate(2, x));
-  EXPECT_DOUBLE_EQ((1.0/6.0)*(-x*x*x + 9.0*x*x - 18.0*x + 6), poly->PolynomialEvaluate(3, x));
-  EXPECT_DOUBLE_EQ((1.0/24.0)*(std::pow(x,4) - 16.0*std::pow(x,3.0) + 72.0*std::pow(x,2.0) - 96.0*x + 24.0), poly->PolynomialEvaluate(4, x));
-  EXPECT_NEAR((1.0/120)*(-1.0*std::pow(x,5) +25.0*std::pow(x,4) - 200.0*std::pow(x,3.0) + 600.0*std::pow(x,2.0) - 600.0*x + 120.0), poly->PolynomialEvaluate(5, x), 1e-10);
-  
+  EXPECT_DOUBLE_EQ(1.0, poly->BasisEvaluate(0, x));
+  EXPECT_DOUBLE_EQ(-x+1.0, poly->BasisEvaluate(1, x));
+  EXPECT_DOUBLE_EQ(0.5*(x*x-4.0*x+2.0), poly->BasisEvaluate(2, x));
+  EXPECT_DOUBLE_EQ((1.0/6.0)*(-x*x*x + 9.0*x*x - 18.0*x + 6), poly->BasisEvaluate(3, x));
+  EXPECT_DOUBLE_EQ((1.0/24.0)*(std::pow(x,4) - 16.0*std::pow(x,3.0) + 72.0*std::pow(x,2.0) - 96.0*x + 24.0), poly->BasisEvaluate(4, x));
+  EXPECT_NEAR((1.0/120)*(-1.0*std::pow(x,5) +25.0*std::pow(x,4) - 200.0*std::pow(x,3.0) + 600.0*std::pow(x,2.0) - 600.0*x + 120.0), poly->BasisEvaluate(5, x), 1e-10);
+
   // First derivatives
   EXPECT_DOUBLE_EQ(0.0, poly->DerivativeEvaluate(0,1,x));
   EXPECT_DOUBLE_EQ(-1.0, poly->DerivativeEvaluate(1,1,x));
@@ -222,7 +222,7 @@ TEST(Polynomial, Laguerre) {
 
 
 TEST(Polynomial, Jacobi) {
-    
+
   // Compare the jacobi with a=b=0 to a Legendre (which should be the same thing)
   const double a = 0.0;
   const double b = 0.0;
@@ -231,7 +231,7 @@ TEST(Polynomial, Jacobi) {
 
   const double x = 0.32;
   for(unsigned i=0; i<5; ++i){
-      EXPECT_DOUBLE_EQ(legendre->PolynomialEvaluate(i,x), poly->PolynomialEvaluate(i,x));
+      EXPECT_DOUBLE_EQ(legendre->BasisEvaluate(i,x), poly->BasisEvaluate(i,x));
       EXPECT_DOUBLE_EQ(legendre->DerivativeEvaluate(i,1,x), poly->DerivativeEvaluate(i,1,x));
       EXPECT_DOUBLE_EQ(legendre->DerivativeEvaluate(i,2,x), poly->DerivativeEvaluate(i,2,x));
       EXPECT_DOUBLE_EQ(legendre->DerivativeEvaluate(i,3,x), poly->DerivativeEvaluate(i,3,x));
@@ -243,22 +243,22 @@ TEST(Polynomial, Jacobi) {
 TEST(Polynomial, Factory)
 {
 
-    std::shared_ptr<Polynomial> monomial = Polynomial::Construct("Monomial");
+    std::shared_ptr<IndexedScalarBasis> monomial = Polynomial::Construct("Monomial");
     EXPECT_TRUE(std::dynamic_pointer_cast<Monomial>(monomial));
 
-    std::shared_ptr<Polynomial> hermite1 = Polynomial::Construct("PhysicistHermite");
+    std::shared_ptr<IndexedScalarBasis> hermite1 = Polynomial::Construct("PhysicistHermite");
     EXPECT_TRUE(std::dynamic_pointer_cast<PhysicistHermite>(hermite1));
-    
-    std::shared_ptr<Polynomial> hermite2 = Polynomial::Construct("ProbabilistHermite");
+
+    std::shared_ptr<IndexedScalarBasis> hermite2 = Polynomial::Construct("ProbabilistHermite");
     EXPECT_TRUE(std::dynamic_pointer_cast<ProbabilistHermite>(hermite2));
-    
-    std::shared_ptr<Polynomial> legendre = Polynomial::Construct("Legendre");
+
+    std::shared_ptr<IndexedScalarBasis> legendre = Polynomial::Construct("Legendre");
     EXPECT_TRUE(std::dynamic_pointer_cast<Legendre>(legendre));
 
-    std::shared_ptr<Polynomial> laguerre = Polynomial::Construct("Laguerre");
+    std::shared_ptr<IndexedScalarBasis> laguerre = Polynomial::Construct("Laguerre");
     EXPECT_TRUE(std::dynamic_pointer_cast<Laguerre>(laguerre));
-        
-    std::shared_ptr<Polynomial> jacobi = Polynomial::Construct("Jacobi");
+
+    std::shared_ptr<IndexedScalarBasis> jacobi = Polynomial::Construct("Jacobi");
     EXPECT_TRUE(std::dynamic_pointer_cast<Jacobi>(jacobi));
 
     EXPECT_THROW(Polynomial::Construct("CowPoly"), muq::NotRegisteredError);

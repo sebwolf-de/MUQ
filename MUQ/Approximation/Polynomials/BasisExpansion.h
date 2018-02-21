@@ -11,7 +11,7 @@ namespace muq{
   namespace Approximation{
 
     class MonotoneExpansion;
-    
+
     /** @class BasisExpansion
         @ingroup Polynomials
         @brief Class for defining expansions of basis functions defined by a
@@ -70,39 +70,52 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
           Sets all coefficients in the expansion to zero.
       */
       BasisExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
-                     std::shared_ptr<MultiIndexSet>                          multisIn);
+                     std::shared_ptr<muq::Utilities::MultiIndexSet>          multisIn);
 
       /** Construct the expansion by specifying all ingredients: the basis family, multi-indices, and coefficients. */
       BasisExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
-                     std::shared_ptr<MultiIndexSet>                          multisIn,
+                     std::shared_ptr<muq::Utilities::MultiIndexSet>          multisIn,
                      Eigen::MatrixXd                                  const& coeffsIn);
 
       virtual ~BasisExpansion() = default;
 
 
-      /** Get the \f$k^{th}\f$ derivative of WorkPiece with respect to the input \f$x\f$. */
-      virtual Eigen::MatrixXd Derivative(unsigned                            derivOrder,
-                                         std::vector<Eigen::MatrixXd> const& inputs);
+      /** Returns the number of terms in the expansion.  For example, if the
+          expansion is given by \f$f(x) = a_1\Phi(x) + a_2\Phi(x)\f$, this
+          function will return \f$2\f$.
+      */
+      virtual unsigned NumTerms() const{return multis->Size();};
+
+      /** Get the \f$k^{th}\f$ derivative of WorkPiece with respect to the input \f$x\f$.
+          @param[in] derivDim The dimension of the input we want to take the derivative wrt
+          @param[in] derivOrder The order of the derivative we want to compute
+          @param[in] inputs The */
+    //  virtual Eigen::MatrixXd Derivative(unsigned                            derivDim,
+    //                                     unsigned                            derivOrder,
+    //                                     muq::Modeling::ref_vector<boost::any> const& inputs);
 
     protected:
 
       virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
-      virtual void JacobianImpl(unsigned int const                           wrtIn,
-                                unsigned int const                           wrtOut,
-                                muq::Modeling::ref_vector<boost::any> const& inputs) override;
+      //virtual void JacobianImpl(unsigned int const                           wrtIn,
+      //                          unsigned int const                           wrtOut,
+      //                          muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
       // Evaluates all the terms in the expansion, but does not multiply by coefficients
-      Eigen::VectorXd GetAllTerms();
+      Eigen::VectorXd GetAllTerms(Eigen::VectorXd const& x) const;
 
-      // MultiIndexSet defining each term in the expansion
-      std::shared_ptr<MultiIndexSet> multis;
-
-      // Coefficients for the output
-      Eigen::MatrixXd coeffs;
+      //Eigen::VectorXd GetAllDerivs(Eigen::VectorXd const& x,
+      //                             unsigned               derivOrder) const;
 
       // Components of the basis functions
       std::vector<std::shared_ptr<IndexedScalarBasis>> basisComps;
+
+      // MultiIndexSet defining each term in the expansion
+      std::shared_ptr<muq::Utilities::MultiIndexSet> multis;
+
+      // Coefficients for the output
+      Eigen::MatrixXd coeffs;
 
     };
 

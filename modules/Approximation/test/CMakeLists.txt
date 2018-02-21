@@ -12,6 +12,13 @@ CreateTestGroup(
   GaussianProcesses/StateSpaceTests.cpp
 )
 
+CreateTestGroup(
+  APPROXIMATION_POLYNOMIALS
+
+  Polynomials/BasisExpansionTest.cpp
+  Polynomials/PolynomialTests.cpp
+)
+
 #CreateTestGroup(
 #	APPROXIMATION_REGRESSION
 #

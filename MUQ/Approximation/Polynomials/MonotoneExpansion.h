@@ -24,13 +24,14 @@ namespace muq{
     class MonotoneExpansion : public muq::Modeling::WorkPiece{
 
     public:
-      MonotoneExpansion(boost::property_tree::ptree & params);
+      //MonotoneExpansion(boost::property_tree::ptree & params);
 
       MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>> generalPartsIn,
                         std::vector<std::shared_ptr<BasisExpansion>> monotonePartsIn);
-      
+
 
     protected:
+      
       virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
       virtual void JacobianImpl(unsigned int const                           wrtIn,

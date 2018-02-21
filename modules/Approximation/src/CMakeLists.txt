@@ -40,6 +40,7 @@ CreateCompileGroup(
 	Polynomials/Laguerre.cpp
 	Polynomials/Jacobi.cpp
 	Polynomials/HermiteFunction.cpp
+  Polynomials/BasisExpansion.cpp
 )
 
 CreateCompileGroup(
