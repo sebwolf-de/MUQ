@@ -97,3 +97,58 @@ TEST_F(Approximation_MonotoneExpansion1d, EvaluateWithCoeffs){
       oldOutput = newOutput;
   }
 }
+
+class Approximation_MonotoneExpansion2d : public::testing::Test {
+public:
+  Approximation_MonotoneExpansion2d() {
+
+    auto monomial = std::make_shared<Monomial>();
+
+    // Build the general pieces
+    auto bases = std::vector<std::shared_ptr<IndexedScalarBasis>>(1, monomial);
+    std::shared_ptr<MultiIndexSet> multis = MultiIndexFactory::CreateTotalOrder(1, 2);
+    Eigen::MatrixXd coeffs(1,3);
+    coeffs << 0.0, 1.0, 0.5;
+    generalParts.push_back(std::make_shared<BasisExpansion>(bases, multis, coeffs));
+
+    // Build the monotone pieces
+    monoParts.push_back(std::make_shared<BasisExpansion>(bases, multis, coeffs));
+
+    bases = std::vector<std::shared_ptr<IndexedScalarBasis>>(2, monomial);
+    multis = MultiIndexFactory::CreateTotalOrder(2, 2);
+    coeffs = Eigen::MatrixXd::Random(1,multis->Size());
+    monoParts.push_back(std::make_shared<BasisExpansion>(bases, multis, coeffs));
+
+    // Construct the expansion
+    expansion = std::make_shared<MonotoneExpansion>(generalParts, monoParts);
+  };
+
+  virtual ~Approximation_MonotoneExpansion2d() {};
+
+  std::vector<std::shared_ptr<BasisExpansion>> generalParts;
+  std::vector<std::shared_ptr<BasisExpansion>> monoParts;
+
+  std::shared_ptr<MonotoneExpansion> expansion;
+};
+
+TEST_F(Approximation_MonotoneExpansion2d, Evaluate){
+
+  Eigen::VectorXd evalPt = Eigen::VectorXd::Zero(2);
+
+  int numSteps = 10;
+  double ub = 2.0;
+  double lb = -2.0;
+  double dx = (ub-lb)/numSteps;
+
+  evalPt(1) = lb;
+  Eigen::VectorXd oldOutput = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(evalPt).at(0));
+
+  for(int i=1; i<numSteps; ++i){
+    evalPt(1) = lb + dx*double(i);
+    Eigen::VectorXd newOutput = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(evalPt).at(0));
+    EXPECT_GT(newOutput(1), oldOutput(1));
+
+    oldOutput = newOutput;
+  }
+
+}
