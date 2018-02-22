@@ -43,8 +43,6 @@ namespace muq{
       std::vector<std::shared_ptr<BasisExpansion>> generalParts;
       std::vector<std::shared_ptr<BasisExpansion>> monotoneParts;
 
-      Eigen::VectorXd coeffs;
-      
       Eigen::VectorXd quadWeights;
       Eigen::VectorXd quadPts; // quadrature points on [0,1]
 
