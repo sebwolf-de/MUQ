@@ -62,15 +62,67 @@ TEST_F(Approximation_MonotoneExpansion1d, Evaluate){
                      + 0.2*coeffs(2)*coeffs(2)*std::pow(evalPt(0),5.0);
       EXPECT_NEAR(truth, newOutput, 1e-2);
 
+
+      Eigen::MatrixXd jac = boost::any_cast<Eigen::MatrixXd>(expansion->Jacobian(0,0,evalPt));
+      EXPECT_GT(jac(0,0), 0.0);
+
       oldOutput = newOutput;
   }
 }
+
+
+TEST_F(Approximation_MonotoneExpansion1d, JacobianFD){
+
+  Eigen::VectorXd evalPt(1);
+
+  int numSteps = 10;
+  double ub = 2.0;
+  double lb = -2.0;
+  double dx = (ub-lb)/numSteps;
+
+  evalPt << lb;
+
+  const double eps = 1e-3;
+
+  for(int i=1; i<numSteps; ++i){
+
+      evalPt(0) = lb + dx*double(i);
+      double f1 = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(evalPt).at(0))(0);
+
+      Eigen::MatrixXd jac = boost::any_cast<Eigen::MatrixXd>(expansion->Jacobian(0,0,evalPt));
+
+      evalPt(0) += eps;
+      double f2 = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(evalPt).at(0))(0);
+
+      EXPECT_NEAR((f2-f1)/eps, jac(0,0), 3e-3);
+  }
+}
+
+TEST_F(Approximation_MonotoneExpansion1d, CoeffJacobian){
+
+  Eigen::VectorXd evalPt(1);
+  evalPt << 0.25;
+
+  const double eps = 1e-3;
+
+  Eigen::RowVectorXd newCoeffs = coeffs;
+  newCoeffs(0) += eps;
+
+  Eigen::MatrixXd jac = boost::any_cast<Eigen::MatrixXd>(expansion->Jacobian(1,0,evalPt));
+
+  double f1 = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(evalPt).at(0))(0);
+  double f2 = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(evalPt, newCoeffs).at(0))(0);
+
+  EXPECT_NEAR((f2-f1)/eps, jac(0,0), 1e-3);
+}
+
+
 
 TEST_F(Approximation_MonotoneExpansion1d, EvaluateWithCoeffs){
 
   Eigen::VectorXd evalPt(1);
 
-  Eigen::VectorXd newCoeffs(3);
+  Eigen::RowVectorXd newCoeffs(3);
   newCoeffs << 0.5, 2.0, -0.1;
   coeffs.row(0) = newCoeffs;
 

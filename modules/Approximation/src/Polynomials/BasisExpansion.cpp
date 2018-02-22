@@ -199,15 +199,14 @@ void BasisExpansion::JacobianImpl(unsigned int const                           w
                                   unsigned int const                           wrtOut,
                                   muq::Modeling::ref_vector<boost::any> const& inputs)
 {
-  assert(wrtIn < inputs.size());
   assert(wrtOut==0);
 
   Eigen::VectorXd const& x = ProcessInputs(inputs);
 
   if(wrtIn==0){
-    jacobian = (coeffs*GetAllDerivs(x)).eval();
+    jacobian = Eigen::MatrixXd(coeffs*GetAllDerivs(x));
   }else if(wrtIn==1){
-    jacobian = GetAllTerms(x).transpose().replicate(coeffs.rows(),1).eval();
+    jacobian = Eigen::MatrixXd(GetAllTerms(x).transpose().replicate(coeffs.rows(),1));
   }
 }
 
@@ -232,4 +231,15 @@ Eigen::MatrixXd BasisExpansion::SecondDerivative(unsigned                       
   }else{
     return Eigen::MatrixXd::Zero(coeffs.cols(), coeffs.cols());
   }
+}
+
+
+Eigen::MatrixXd BasisExpansion::GetCoeffs() const{
+  return coeffs;
+}
+
+void BasisExpansion::SetCoeffs(Eigen::MatrixXd const& allCoeffs){
+  assert(coeffs.rows()==allCoeffs.rows());
+  assert(coeffs.cols()==allCoeffs.cols());
+  coeffs = allCoeffs;
 }

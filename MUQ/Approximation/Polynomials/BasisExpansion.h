@@ -88,11 +88,14 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
       virtual unsigned NumTerms() const{return multis->Size();};
 
 
-
       Eigen::MatrixXd SecondDerivative(unsigned                                     derivDim1,
                                        unsigned                                     derivDim2,
                                        Eigen::VectorXd                       const& evalPt,
                                        Eigen::MatrixXd                       const& coeffs);
+
+      Eigen::MatrixXd GetCoeffs() const;
+
+      void SetCoeffs(Eigen::MatrixXd const& allCoeffs);
 
     protected:
 

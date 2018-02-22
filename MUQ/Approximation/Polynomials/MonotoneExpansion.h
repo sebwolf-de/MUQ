@@ -31,6 +31,12 @@ namespace muq{
       MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>> const& generalPartsIn,
                         std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn);
 
+      unsigned NumTerms() const;
+
+      Eigen::VectorXd GetCoeffs() const;
+
+      void SetCoeffs(Eigen::RowVectorXd const& allCoeffs);
+
 
     protected:
 
