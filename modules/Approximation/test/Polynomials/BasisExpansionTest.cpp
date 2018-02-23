@@ -104,7 +104,7 @@ TEST_F(Approximation_BasisExpansion, Linear){
   EXPECT_EQ(1, jac.cols());
   EXPECT_EQ(coeffs(1), jac(0,0));
 
-  Eigen::MatrixXd hess = expansion.SecondDerivative(0, 0, evalPt, coeffs);
+  Eigen::MatrixXd hess = expansion.SecondDerivative(0, 0, 0, evalPt, coeffs);
 
   EXPECT_EQ(1, hess.rows());
   EXPECT_EQ(1, hess.cols());
@@ -137,7 +137,7 @@ TEST_F(Approximation_BasisExpansion, Quadratic){
   EXPECT_EQ(1, jac.cols());
   EXPECT_EQ(coeffs(1) + 2.0*coeffs(2)*evalPt(0), jac(0,0));
 
-  Eigen::MatrixXd hess = expansion.SecondDerivative(0, 0, evalPt, coeffs);
+  Eigen::MatrixXd hess = expansion.SecondDerivative(0, 0, 0, evalPt, coeffs);
 
   EXPECT_EQ(1, hess.rows());
   EXPECT_EQ(1, hess.cols());

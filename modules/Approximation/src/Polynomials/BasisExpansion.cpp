@@ -211,23 +211,27 @@ void BasisExpansion::JacobianImpl(unsigned int const                           w
 }
 
 
-Eigen::MatrixXd BasisExpansion::SecondDerivative(unsigned                       derivDim1,
+Eigen::MatrixXd BasisExpansion::SecondDerivative(unsigned                       outputDim,
+                                                 unsigned                       derivDim1,
                                                  unsigned                       derivDim2,
                                                  Eigen::VectorXd         const& x,
                                                  Eigen::MatrixXd         const& newCoeffs)
 {
-  assert(coeffs.rows()==newCoeffs.rows());
-  assert(coeffs.cols()==newCoeffs.cols());
-  assert(coeffs.rows()==1);
+  SetCoeffs(newCoeffs);
+  return SecondDerivative(outputDim, derivDim1, derivDim2, x);
+}
 
-  coeffs = newCoeffs;
-
+Eigen::MatrixXd BasisExpansion::SecondDerivative(unsigned                       outputDim,
+                                                 unsigned                       derivDim1,
+                                                 unsigned                       derivDim2,
+                                                 Eigen::VectorXd         const& x)
+{
   if((derivDim1==0) && (derivDim2==1)){
     return GetAllDerivs(x).transpose();
   }else if((derivDim1==1) && (derivDim2==0)){
     return GetAllDerivs(x);
   }else if(derivDim1==0){
-    return GetHessians(x).at(0);
+    return GetHessians(x).at(outputDim);
   }else{
     return Eigen::MatrixXd::Zero(coeffs.cols(), coeffs.cols());
   }

@@ -9,7 +9,7 @@ MonotoneExpansion::MonotoneExpansion(std::shared_ptr<BasisExpansion> monotonePar
 }
 
 MonotoneExpansion::MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>> const& generalPartsIn,
-                                     std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn) : WorkPiece(std::vector<std::string>({typeid(Eigen::VectorXd).name(), typeid(Eigen::RowVectorXd).name()}),
+                                     std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn) : WorkPiece(std::vector<std::string>({typeid(Eigen::VectorXd).name(), typeid(Eigen::VectorXd).name()}),
                                                                                                                       std::vector<std::string>({typeid(Eigen::VectorXd).name()})),
                                                                                                             generalParts(generalPartsIn),
                                                                                                             monotoneParts(monotonePartsIn)
@@ -51,17 +51,17 @@ Eigen::VectorXd MonotoneExpansion::GetCoeffs() const
   return output;
 }
 
-void MonotoneExpansion::SetCoeffs(Eigen::RowVectorXd const& allCoeffs)
+void MonotoneExpansion::SetCoeffs(Eigen::VectorXd const& allCoeffs)
 {
   unsigned currInd = 0;
 
   for(int i=0; i<generalParts.size(); ++i){
-    generalParts.at(i)->SetCoeffs(allCoeffs.segment(currInd, generalParts.at(i)->NumTerms()));
+    generalParts.at(i)->SetCoeffs(allCoeffs.segment(currInd, generalParts.at(i)->NumTerms()).transpose());
     currInd += generalParts.at(i)->NumTerms();
   }
 
   for(int i=0; i<monotoneParts.size(); ++i){
-    monotoneParts.at(i)->SetCoeffs(allCoeffs.segment(currInd, monotoneParts.at(i)->NumTerms()));
+    monotoneParts.at(i)->SetCoeffs(allCoeffs.segment(currInd, monotoneParts.at(i)->NumTerms()).transpose());
     currInd += monotoneParts.at(i)->NumTerms();
   }
 }
@@ -72,7 +72,7 @@ void MonotoneExpansion::EvaluateImpl(muq::Modeling::ref_vector<boost::any> const
 
   // Update the coefficients if need be
   if(inputs.size()>1){
-    Eigen::RowVectorXd const& coeffs = *boost::any_cast<Eigen::RowVectorXd>(&inputs.at(1).get());
+    Eigen::VectorXd const& coeffs = *boost::any_cast<Eigen::VectorXd>(&inputs.at(1).get());
     SetCoeffs(coeffs);
   }
 
@@ -113,7 +113,7 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
 {
   assert(wrtIn<2);
   if(inputs.size()>1){
-    Eigen::RowVectorXd const& coeffs = *boost::any_cast<Eigen::RowVectorXd>(&inputs.at(1).get());
+    Eigen::VectorXd const& coeffs = *boost::any_cast<Eigen::VectorXd>(&inputs.at(1).get());
     SetCoeffs(coeffs);
   }
 
@@ -126,16 +126,16 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
     double polyEval;
     Eigen::VectorXd polyGrad;
 
+    // Add all of the general parts
+    for(int i=0; i<generalParts.size(); ++i){
+      Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(0,0,x.head(i+1).eval()));
+      jac.block(i+1,0,1,i) += partialJac.block(0,0,1,i);
+    }
+
+    // Add the monotone parts
     for(int i=0; i<monotoneParts.size(); ++i){
       Eigen::VectorXd evalPt = x.head(i+1);
 
-      // Add all of the general parts
-      for(int i=0; i<generalParts.size(); ++i){
-        Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(0,0,x.head(i+1).eval()));
-        jac.block(i+1,0,1,i) += partialJac.block(0,0,1,i);
-      }
-
-      // Add the monotone parts
       for(int k=0; k<quadPts.size(); ++k){
         evalPt(i) = x(i) * quadPts(k);
         polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
@@ -181,4 +181,68 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
   }
 
   jacobian = jac;
+}
+
+
+/** Returns the log determinant of the Jacobian (wrt x) matrix.
+    Because the Jacobian is diagonal, the determinant is given by the
+    product of the diagonal terms.  The log determinant is therefore
+    the sum of the logs of the diagonal terms, which depend only on the
+    monotone pieces of the parameterization.
+*/
+double MonotoneExpansion::LogDeterminant(Eigen::VectorXd const& evalPt,
+                                         Eigen::VectorXd const& coeffs)
+{
+  SetCoeffs(coeffs);
+  return LogDeterminant(evalPt);
+}
+double MonotoneExpansion::LogDeterminant(Eigen::VectorXd const& evalPt)
+{
+  Eigen::MatrixXd jacobian = boost::any_cast<Eigen::MatrixXd>(Jacobian(0,0,evalPt));
+
+  return jacobian.diagonal().array().log().sum();
+}
+
+/** Returns the gradient of the Jacobian log determinant with respect to the coefficients. */
+Eigen::VectorXd MonotoneExpansion::GradLogDeterminant(Eigen::VectorXd const& evalPt,
+                                                      Eigen::VectorXd const& coeffs)
+{
+  SetCoeffs(coeffs);
+  return GradLogDeterminant(evalPt);
+}
+
+Eigen::VectorXd MonotoneExpansion::GradLogDeterminant(Eigen::VectorXd const& x)
+{
+
+  Eigen::VectorXd output = Eigen::VectorXd::Zero(NumTerms());
+
+  double polyEval;
+  Eigen::MatrixXd polyGradX, polyGradC, polyD2;
+
+  // Add the monotone parts
+  unsigned currInd = 0;
+  for(int i=0; i<monotoneParts.size(); ++i){
+    Eigen::VectorXd evalPt = x.head(i+1);
+
+    double part1 = 0.0;
+    Eigen::VectorXd part2 = Eigen::VectorXd::Zero(monotoneParts.at(i)->NumTerms());
+
+    for(int k=0; k<quadPts.size(); ++k){
+      evalPt(i) = x(i) * quadPts(k);
+      polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
+      polyGradX = boost::any_cast<Eigen::MatrixXd>(monotoneParts.at(i)->Jacobian(0,0,evalPt));
+      polyGradC = boost::any_cast<Eigen::MatrixXd>(monotoneParts.at(i)->Jacobian(1,0,evalPt));
+      polyD2 = monotoneParts.at(i)->SecondDerivative(0, 0, 1, evalPt);
+
+      part1 += quadWeights(k) * (polyEval * polyEval + 2.0*x(i)*polyGradX(i)*polyEval*quadPts(k));
+      part2 += 2.0 * quadWeights(k) * (polyEval * polyGradC + x(i) * quadPts(k) * (polyEval*polyD2.row(i) + polyGradX*polyGradC)).transpose();
+
+    }
+
+    output.segment(currInd, monotoneParts.at(i)->NumTerms()) = part2/part1;
+    currInd += monotoneParts.at(i)->NumTerms();
+
+  }
+
+  return output;
 }

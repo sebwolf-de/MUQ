@@ -31,12 +31,28 @@ namespace muq{
       MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>> const& generalPartsIn,
                         std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn);
 
+      /** Returns the number of coefficients across all expansions in all dimension, i.e.,
+          the total number of degrees of freedom describing this expansion.
+      */
       unsigned NumTerms() const;
 
-      Eigen::VectorXd GetCoeffs() const;
+      /** Get the current expansion coefficients.  The coefficients are ordered
+          with coefficients from the general parts preceding coefficients for
+          the monotone parts.  Within the general and montone parts, the coefficients
+          are ordered according to the output dimension.
+      */
+      virtual Eigen::VectorXd GetCoeffs() const;
 
-      void SetCoeffs(Eigen::RowVectorXd const& allCoeffs);
+      virtual void SetCoeffs(Eigen::VectorXd const& allCoeffs);
 
+      /** Returns the log determinant of the Jacobian matrix (wrt x) at a particular point. */
+      virtual double LogDeterminant(Eigen::VectorXd const& evalPt);
+      virtual double LogDeterminant(Eigen::VectorXd const& evalPt, Eigen::VectorXd const& coeffs);
+
+      /** Returns the gradient of the Jacobian log determinant with respect to the coefficients. */
+      virtual Eigen::VectorXd GradLogDeterminant(Eigen::VectorXd const& evalPt);
+      virtual Eigen::VectorXd GradLogDeterminant(Eigen::VectorXd const& evalPt,
+                                                 Eigen::VectorXd const& coeffs);
 
     protected:
 
