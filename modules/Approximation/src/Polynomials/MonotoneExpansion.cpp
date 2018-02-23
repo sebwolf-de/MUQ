@@ -39,12 +39,12 @@ Eigen::VectorXd MonotoneExpansion::GetCoeffs() const
   unsigned currInd = 0;
 
   for(int i=0; i<generalParts.size(); ++i){
-    output.segment(currInd, generalParts.at(i)->NumTerms()) = generalParts.at(i)->GetCoeffs();
+    output.segment(currInd, generalParts.at(i)->NumTerms()) = generalParts.at(i)->GetCoeffs().transpose();
     currInd += generalParts.at(i)->NumTerms();
   }
 
   for(int i=0; i<monotoneParts.size(); ++i){
-    output.segment(currInd, monotoneParts.at(i)->NumTerms()) = monotoneParts.at(i)->GetCoeffs();
+    output.segment(currInd, monotoneParts.at(i)->NumTerms()) = monotoneParts.at(i)->GetCoeffs().transpose();
     currInd += monotoneParts.at(i)->NumTerms();
   }
 
@@ -118,18 +118,19 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
   }
 
   Eigen::VectorXd const& x = *boost::any_cast<Eigen::VectorXd>(&inputs.at(0).get());
+  assert(x.size()==monotoneParts.size());
 
   Eigen::MatrixXd jac;
   if(wrtIn==0){
     jac = Eigen::MatrixXd::Zero(x.size(), x.size());
 
     double polyEval;
-    Eigen::VectorXd polyGrad;
+    Eigen::MatrixXd polyGrad;
 
     // Add all of the general parts
     for(int i=0; i<generalParts.size(); ++i){
       Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(0,0,x.head(i+1).eval()));
-      jac.block(i+1,0,1,i) += partialJac.block(0,0,1,i);
+      jac.block(i+1,0,1,i+1) += partialJac.block(0,0,1,i+1);
     }
 
     // Add the monotone parts
@@ -137,6 +138,7 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
       Eigen::VectorXd evalPt = x.head(i+1);
 
       for(int k=0; k<quadPts.size(); ++k){
+
         evalPt(i) = x(i) * quadPts(k);
         polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
         polyGrad = boost::any_cast<Eigen::MatrixXd>(monotoneParts.at(i)->Jacobian(0,0,evalPt));
@@ -172,7 +174,7 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
         evalPt(i) = x(i) * quadPts(k);
         polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
         polyGrad = boost::any_cast<Eigen::MatrixXd>(monotoneParts.at(i)->Jacobian(1,0,evalPt));
-        jac.block(i,0,1,monotoneParts.at(i)->NumTerms()) += 2.0 * x(i) * quadWeights(k) * polyEval * polyGrad;
+        jac.block(i,currCoeff,1,monotoneParts.at(i)->NumTerms()) += 2.0 * x(i) * quadWeights(k) * polyEval * polyGrad;
       }
 
       currCoeff += monotoneParts.at(i)->NumTerms();
@@ -219,8 +221,12 @@ Eigen::VectorXd MonotoneExpansion::GradLogDeterminant(Eigen::VectorXd const& x)
   double polyEval;
   Eigen::MatrixXd polyGradX, polyGradC, polyD2;
 
-  // Add the monotone parts
+  // Figure out what the first monotone coefficient is
   unsigned currInd = 0;
+  for(int i=0; i<generalParts.size(); ++i)
+    currInd += generalParts.at(i)->NumTerms();
+    
+  // Add the monotone parts to the gradient
   for(int i=0; i<monotoneParts.size(); ++i){
     Eigen::VectorXd evalPt = x.head(i+1);
 
@@ -235,11 +241,11 @@ Eigen::VectorXd MonotoneExpansion::GradLogDeterminant(Eigen::VectorXd const& x)
       polyD2 = monotoneParts.at(i)->SecondDerivative(0, 0, 1, evalPt);
 
       part1 += quadWeights(k) * (polyEval * polyEval + 2.0*x(i)*polyGradX(i)*polyEval*quadPts(k));
-      part2 += 2.0 * quadWeights(k) * (polyEval * polyGradC + x(i) * quadPts(k) * (polyEval*polyD2.row(i) + polyGradX*polyGradC)).transpose();
-
+      part2 += 2.0 * quadWeights(k) * (polyEval * polyGradC + x(i) * quadPts(k) * (polyEval*polyD2.row(i) + polyGradX(i)*polyGradC)).transpose();
     }
 
     output.segment(currInd, monotoneParts.at(i)->NumTerms()) = part2/part1;
+
     currInd += monotoneParts.at(i)->NumTerms();
 
   }

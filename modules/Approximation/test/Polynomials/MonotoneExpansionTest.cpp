@@ -182,10 +182,11 @@ public:
     auto bases = std::vector<std::shared_ptr<IndexedScalarBasis>>(1, monomial);
     std::shared_ptr<MultiIndexSet> multis = MultiIndexFactory::CreateTotalOrder(1, 2);
     Eigen::MatrixXd coeffs(1,3);
-    coeffs << 0.0, 1.0, 0.5;
+    coeffs << 0.0, 0.5, -0.1;
     generalParts.push_back(std::make_shared<BasisExpansion>(bases, multis, coeffs));
 
     // Build the monotone pieces
+    coeffs << 0.1, 1.0, 0.5;
     monoParts.push_back(std::make_shared<BasisExpansion>(bases, multis, coeffs));
 
     bases = std::vector<std::shared_ptr<IndexedScalarBasis>>(2, monomial);
@@ -223,6 +224,79 @@ TEST_F(Approximation_MonotoneExpansion2d, Evaluate){
     EXPECT_GT(newOutput(1), oldOutput(1));
 
     oldOutput = newOutput;
+  }
+
+}
+
+TEST_F(Approximation_MonotoneExpansion2d, Jacobian){
+
+  Eigen::VectorXd evalPt(2);
+  evalPt << 0.1, 0.2;
+
+  Eigen::VectorXd f1 = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(evalPt).at(0));
+  Eigen::MatrixXd jac = boost::any_cast<Eigen::MatrixXd>(expansion->Jacobian(0,0, evalPt));
+
+  EXPECT_GT(jac(0,0),0.0);
+  EXPECT_GT(jac(1,1),0.0);
+
+  const double eps = 1e-6;
+  Eigen::VectorXd newPt = evalPt;
+  newPt(0) += eps;
+  Eigen::VectorXd f2 = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(newPt).at(0));
+
+  for(int i=0; i<f2.size(); ++i)
+    EXPECT_NEAR((f2(i)-f1(i))/eps, jac(i,0), 1e-3);
+
+  newPt = evalPt;
+  newPt(1) += eps;
+  f2 = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(newPt).at(0));
+
+  for(int i=0; i<f2.size(); ++i)
+    EXPECT_NEAR((f2(i)-f1(i))/eps, jac(i,1), 1e-3);
+}
+
+TEST_F(Approximation_MonotoneExpansion2d, CoeffsJacobian){
+
+  Eigen::VectorXd evalPt(2);
+  evalPt << 0.1, 0.2;
+
+  Eigen::VectorXd coeffs = expansion->GetCoeffs();
+
+  const double eps = 1e-3;
+
+  Eigen::VectorXd f1 = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(evalPt).at(0));
+  Eigen::MatrixXd jac = boost::any_cast<Eigen::MatrixXd>(expansion->Jacobian(1,0,evalPt));
+
+  for(int i=0; i<coeffs.size(); ++i){
+    Eigen::VectorXd newCoeffs = coeffs;
+    newCoeffs(i) += eps;
+
+    Eigen::VectorXd f2 = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(evalPt, newCoeffs).at(0));
+
+    for(int j=0; j<f2.size(); ++j)
+      EXPECT_NEAR((f2(j)-f1(j))/eps, jac(j,i), 1e-3);
+  }
+}
+
+TEST_F(Approximation_MonotoneExpansion2d, Determinant){
+
+  Eigen::VectorXd evalPt(2);
+  evalPt << 0.1, 0.2;
+
+  Eigen::VectorXd coeffs = expansion->GetCoeffs();
+
+  double logDet1 = expansion->LogDeterminant(evalPt);
+
+  Eigen::VectorXd grad = expansion->GradLogDeterminant(evalPt);
+
+  const double eps = 1e-7;
+
+  for(int i=0; i<coeffs.size(); ++i){
+    Eigen::VectorXd newCoeffs = coeffs;
+    newCoeffs(i) += eps;
+    double logDet2 = expansion->LogDeterminant(evalPt,newCoeffs);
+
+    EXPECT_NEAR((logDet2-logDet1)/eps, grad(i), 1e-3);
   }
 
 }
