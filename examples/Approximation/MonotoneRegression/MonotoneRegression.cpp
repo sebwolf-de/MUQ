@@ -1,11 +1,16 @@
 /**
 OVERVIEW:
-The goal of this
+The goal of this example is to fit a monotone function to stress-strain
+data obtained during the 2017 Sandia Fracture Challenge.  For our area of
+interest, the stress should be a monotonically increasing function of the
+strain.
 
-
-
-
+The MonotoneExpansion class provides a way of characterizing
+monotone functions and can be fit to data in a least squares sense using
+the Gauss-Newton algorithm, which is implemented in the "FitData" function
+below.
 */
+
 #include "MUQ/Approximation/Polynomials/BasisExpansion.h"
 #include "MUQ/Approximation/Polynomials/MonotoneExpansion.h"
 
@@ -56,6 +61,10 @@ std::shared_ptr<MonotoneExpansion> SetupExpansion(unsigned order)
     return expansion;
 }
 
+/** Find parameters of the montone expansion that minimize the L2 norm between
+    the predictions and observations, i.e., solve the nonlinear least squares
+    problem for the parameters describing the monotone function.
+*/
 void FitData(Eigen::VectorXd             const& x,
              Eigen::VectorXd             const& y,
              std::shared_ptr<MonotoneExpansion> expansion)
@@ -70,7 +79,7 @@ void FitData(Eigen::VectorXd             const& x,
   Eigen::MatrixXd jac(x.size(), coeffs.size());
 
   const int maxLineIts = 10;
-  const int maxIts = 30;
+  const int maxIts = 50;
 
   // Use the current monotone parameterization to make predictions at every point
   for(int k=0; k<x.size(); ++k){
@@ -108,6 +117,7 @@ void FitData(Eigen::VectorXd             const& x,
       step *= 0.5;
       newCoeffs = coeffs + step;
 
+      // Compute the residuals at the new point
       for(int k=0; k<x.size(); ++k){
         xslice = x.segment(k,1);
         newPreds(k) = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(xslice,newCoeffs).at(0))(0);
@@ -122,6 +132,7 @@ void FitData(Eigen::VectorXd             const& x,
       return;
     }
 
+    // The line search was successful, so update the coefficients and residuals
     coeffs = newCoeffs;
     preds = newPreds;
     sse = newsse;
@@ -154,7 +165,7 @@ int main()
   Eigen::VectorXd strain, stress;
   std::tie(strain, stress) = ReadData();
 
-  unsigned polyOrder = 5;
+  unsigned polyOrder = 7;
   auto expansion = SetupExpansion(polyOrder);
 
   FitData(strain, stress, expansion);
