@@ -18,26 +18,32 @@ set(MUQ_REQUIRES )
 set(MUQ_DESIRES )
 foreach(group ${MUQ_GROUPS})
 
-    # Make sure all upstream dependency groups are enabled  
-    message(STATUS "Configuring compile group ${group}")
-    foreach(depend ${${group}_REQUIRES_GROUPS})
-        if(MUQ_ENABLEGROUP_${group} AND NOT MUQ_ENABLEGROUP_${depend})
-            message(STATUS "    The ${group} group depends on the ${depend} group, but the ${depend} group was not enabled.")
-            message(STATUS "    Turning the ${depend} group on.")
-            set(MUQ_ENABLEGROUP_${depend} ON)
-        endif()
-    endforeach()
+      # Make sure all upstream dependency groups are enabled
+      message(STATUS "Configuring compile group ${group}")
+      foreach(depend ${${group}_REQUIRES_GROUPS})
+          if(MUQ_ENABLEGROUP_${group} AND NOT MUQ_ENABLEGROUP_${depend})
+              message(STATUS "    The ${group} group depends on the ${depend} group, but the ${depend} group was not enabled.")
+              message(STATUS "    Turning the ${depend} group on.")
+              set(MUQ_ENABLEGROUP_${depend} ON)
+          endif()
+      endforeach()
 
-    # Add to the list of required external libraries
-    foreach(depend ${${group}_REQUIRES})
-        list(APPEND MUQ_REQUIRES ${depend})
-    endforeach()
+endforeach()
 
-    # Add to the list of desired (i.e., optional) external libraries
-    foreach(depend ${${group}_DESIRES})
-        list(APPEND MUQ_DESIRES ${depend})
-    endforeach()
-    
+foreach(group ${MUQ_GROUPS})
+
+  if(MUQ_ENABLEGROUP_${group})
+      # Add to the list of required external libraries
+      foreach(depend ${${group}_REQUIRES})
+          list(APPEND MUQ_REQUIRES ${depend})
+      endforeach()
+
+      # Add to the list of desired (i.e., optional) external libraries
+      foreach(depend ${${group}_DESIRES})
+          list(APPEND MUQ_DESIRES ${depend})
+      endforeach()
+
+  endif()
 endforeach()
 
 # Remove duplicate requirements
@@ -68,9 +74,9 @@ foreach(target ${MUQ_TARGETS})
 		if(sources_length GREATER 0)
 	            set(${group}_IS_COMPILED ON CACHE INTERNAL "Whether or not the ${group} is used in any library.")
 		endif()
-		
+
 	        list(APPEND ${target}_SOURCES ${${group}_SOURCES})
-                
+
 	    endif()
 	endif()
     endforeach()
@@ -78,6 +84,5 @@ foreach(target ${MUQ_TARGETS})
     if(${target}_SOURCES)
         list(REMOVE_DUPLICATES ${target}_SOURCES)
     endif()
-    
-endforeach()
 
+endforeach()

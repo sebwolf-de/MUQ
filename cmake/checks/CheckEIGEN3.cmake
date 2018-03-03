@@ -11,10 +11,22 @@ CHECK_CXX_SOURCE_COMPILES(
    Eigen::MatrixXf temp = Eigen::MatrixXf::Ones(3,3);
    foo1(temp.col(2));
    foo1(temp.col(0).head(2));
-    return 0; 
+    return 0;
    }
   "
   EIGEN3_REF_COMPILES)
+
+  CHECK_CXX_SOURCE_COMPILES(
+    "
+    #include <Eigen/Core>
+    int main(){
+     Eigen::VectorXd temp(5);
+     temp({0,1});
+     temp({0,2});
+      return 0;
+     }
+    "
+    EIGEN3_INDEXING_COMPILES)
 
 set(CMAKE_REQUIRED_INCLUDES ${EIGEN3_INCLUDE_DIR})
   CHECK_CXX_SOURCE_COMPILES(
@@ -22,18 +34,18 @@ set(CMAKE_REQUIRED_INCLUDES ${EIGEN3_INCLUDE_DIR})
     #include <Eigen/Core>
 	#include <unsupported/Eigen/FFT>
 	#include <complex>
-	
+
     int main(){
      Eigen::VectorXd temp1 = Eigen::VectorXd::Random(1024);
 	 Eigen::Matrix<std::complex<double>,Eigen::Dynamic,1> temp2;
 	 Eigen::FFT<double> fft;
 	 fft.fwd(temp2,temp1);
-      return 0; 
+      return 0;
      }
     "
     EIGEN3_FFT_COMPILES)
-	
-if(NOT EIGEN3_REF_COMPILES OR NOT EIGEN3_FFT_COMPILES)
+
+if(NOT EIGEN3_REF_COMPILES OR NOT EIGEN3_FFT_COMPILES OR NOT EIGEN3_INDEXING_COMPILES)
 	set(EIGEN3_TEST_FAIL 1)
 	set(MUQ_USE_EIGEN3 OFF)
 else()
