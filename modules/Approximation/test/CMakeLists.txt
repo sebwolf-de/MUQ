@@ -2,7 +2,7 @@ CreateTestGroup(
   APPROXIMATION_GP_Kernels
 
   GaussianProcesses/KernelTests.cpp
-  GaussianProcesses/KarhunenLoeveTest.cpp
+  #GaussianProcesses/KarhunenLoeveTest.cpp
 )
 
 CreateTestGroup(

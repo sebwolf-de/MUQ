@@ -16,13 +16,13 @@ namespace muq
 {
 namespace Approximation
 {
-    
+
 /**
 \defgroup CovarianceKernels Covariance Kernels
 \ingroup GaussianProcesses
 \brief Covariance kernels for defining Gaussian Processes
 
-Gaussian processes are defined by their mean function and covariance kernel.  In this group, we provide tools for constructing and using covariance kernels.  Several simple kernels are provided as well as tools for combining simple kernels into more complicated kernels.  
+Gaussian processes are defined by their mean function and covariance kernel.  In this group, we provide tools for constructing and using covariance kernels.  Several simple kernels are provided as well as tools for combining simple kernels into more complicated kernels.
 
 Templates are used extensively in this module to maximize performance (by reducing virtual function calls).  Thus, using the c++11 "auto" keyword can result in much cleaner and readable code.
 
@@ -43,17 +43,17 @@ auto k3 = WhiteNoiseKernel(dim, var3);
 
 auto k = kernel1*kernel2 + kernel3;
 \endcode
-or, more succinctly, as 
+or, more succinctly, as
 \code{.cpp}
 auto k = SquaredExpKernel(dim, var1, length1) * PeriodicKernel(dim, var2, length2, period) + WhiteNoiseKernel(dim, var3);
 \endcode
 
 In either case, the <code>k</code> variable is an instance of "SumKernel<ProductKernel<SquaredExpKernel,PeriodicKernel>, WhiteNoiseKernel>".  The "auto" keyword allows us to avoid typing this long type.
- 
+
 <h2>Anisotropic Kernels</h2>
 In many cases, the correlation of a GP in one dimension will be different that the correlation is some other direction.  For example, let's say we have two spatial variables \f$x\f$ and \f$y\f$ as well as a kernel of the form
 \f[
-k([x_1,y_1], [x_2, y_2]) = k_x(x_1, x_2)\, k_y(y_1, y_2). 
+k([x_1,y_1], [x_2, y_2]) = k_x(x_1, x_2)\, k_y(y_1, y_2).
 \f]
 Such kernels commonly arise when modeling anisotropic media (e.g., hydraulic conductivity fields).  In MUQ, it is possible to specify the dimensions that are used by a kernel.  For example, if \f$k_1\f$ and \f$k_2\f$ were both squared exponential kernels, than \f$k\f$ could be defined as
 \code{.cpp}
@@ -70,9 +70,9 @@ auto k = k1 * k2;
 
 \endcode
 
-It is also possible to define more complicated relationships.  For example, consider a third component \f$z\f$, and let the kernel be defined as 
+It is also possible to define more complicated relationships.  For example, consider a third component \f$z\f$, and let the kernel be defined as
 \f[
-k([x_1,y_1,z_1], [x_2, y_2, z_2]) = k_{xy}([x_1,y_1], [x_2,y_2])\, k_z(z_1, z_2). 
+k([x_1,y_1,z_1], [x_2, y_2, z_2]) = k_{xy}([x_1,y_1], [x_2,y_2])\, k_z(z_1, z_2).
 \f]
 This kernel might be constructed with
 \code{.cpp}
@@ -94,11 +94,11 @@ Gaussian processes are used most often to characterize scalar-valued functions. 
 
 In MUQ, vector-valued Gaussian processes are represented through a vector-valued mean function and a matrix-valued covariance function.
 
-A common way of constructing a vector-valued Gaussian process is to first define a \f$D\times D\f$ dimensional marginal covariance \f$\Sigma\f$ and define the process with scalar-valued Gaussian processes on the eigenvectors of \f$\Sigma\f$.  Let \f$Q\Lambda Q^T=\Sigma\f$ be the eigenvalue decomposition of the covariance matrix, where \f$Q\f$ is a matrix whose columns contain the eigenvectors and \f$\Lambda\f$ is a diagonal matrix containing the corresponding eigenalues.  With this decomposition, the muq::Approximation::CoregionalKernel defines the matrix-valued kernel \f$k\f$ as 
+A common way of constructing a vector-valued Gaussian process is to first define a \f$D\times D\f$ dimensional marginal covariance \f$\Sigma\f$ and define the process with scalar-valued Gaussian processes on the eigenvectors of \f$\Sigma\f$.  Let \f$Q\Lambda Q^T=\Sigma\f$ be the eigenvalue decomposition of the covariance matrix, where \f$Q\f$ is a matrix whose columns contain the eigenvectors and \f$\Lambda\f$ is a diagonal matrix containing the corresponding eigenalues.  With this decomposition, the muq::Approximation::CoregionalKernel defines the matrix-valued kernel \f$k\f$ as
 \f[
 k(x_1,x_2) = \sum_{i=1}^D \sqrt{\lambda_i} k_i(x_1,x_2) Q_i Q_i^T,
 \f]
-where each \f$k_i\f$ is a scalar-valued kernel.  
+where each \f$k_i\f$ is a scalar-valued kernel.
 
 In MUQ, such a kernel can be constructed using
 \code{.cpp}

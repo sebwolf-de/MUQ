@@ -27,33 +27,41 @@ MaternKernel::MaternKernel(unsigned              dimIn,
                            double                lengthIn,
                            double                nuIn,
                            Eigen::Vector2d       sigmaBounds,
-                           Eigen::Vector2d       lengthBounds) : KernelImpl<MaternKernel>(dimIn, dimInds, 1, 2), sigma2(sigma2In), length(lengthIn), nu(nuIn), scale(std::pow(2.0, 1.0-nuIn)/boost::math::tgamma(nuIn))
+                           Eigen::Vector2d       lengthBounds) : KernelImpl<MaternKernel>(dimIn, dimInds, 1, 2), nu(nuIn), scale(std::pow(2.0, 1.0-nuIn)/boost::math::tgamma(nuIn))
 {
     CheckNu();
-        
+
     paramBounds.resize(2,2);
     paramBounds(0,0) = sigmaBounds(0);
     paramBounds(1,0) = sigmaBounds(1);
-	
+
     paramBounds(0,1) = lengthBounds(0);
     paramBounds(1,1) = lengthBounds(1);
+
+    cachedParams.resize(2);
+    cachedParams(0) = sigma2In;
+    cachedParams(1) = lengthIn;
 };
-    
+
 MaternKernel::MaternKernel(unsigned        dimIn,
                            double          sigma2In,
                            double          lengthIn,
                            double          nuIn,
                            Eigen::Vector2d sigmaBounds,
-                           Eigen::Vector2d lengthBounds) : KernelImpl<MaternKernel>(dimIn, 1, 2), sigma2(sigma2In), length(lengthIn), nu(nuIn), scale(std::pow(2.0, 1.0-nuIn)/boost::math::tgamma(nuIn))
+                           Eigen::Vector2d lengthBounds) : KernelImpl<MaternKernel>(dimIn, 1, 2), nu(nuIn), scale(std::pow(2.0, 1.0-nuIn)/boost::math::tgamma(nuIn))
 {
     CheckNu();
-        
+
     paramBounds.resize(2,2);
     paramBounds(0,0) = sigmaBounds(0);
     paramBounds(1,0) = sigmaBounds(1);
-	
+
     paramBounds(0,1) = lengthBounds(0);
     paramBounds(1,1) = lengthBounds(1);
+
+    cachedParams.resize(2);
+    cachedParams(0) = sigma2In;
+    cachedParams(1) = lengthIn;
 };
 
 
@@ -68,45 +76,36 @@ void MaternKernel::CheckNu() const{
 };
 
 
-Eigen::VectorXd MaternKernel::GetParams() const
-{
-    return Eigen::Vector2d{sigma2,length};
-}
-
-void MaternKernel::SetParams(Eigen::VectorXd const& params)
-{
-    sigma2 = params(0);
-    length = params(1);
-}
-
 std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> MaternKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
 {
+    double sigma2 = cachedParams(0);
+    double length = cachedParams(1);
     int p = nu-0.5;
-    
+
     double lambda = sqrt(2.0*nu)/length;
-    
+
     double q = 2.0*sigma2*boost::math::constants::root_pi<double>() * std::pow(lambda, 2*p+1) * tgamma(p+1) / tgamma(p+0.5);
-    
+
     Eigen::VectorXd roots = -lambda*Eigen::VectorXd::Ones(p+1);
     Eigen::VectorXd poly;
-        
+
     Eigen::roots_to_monicPolynomial( roots, poly );
 
     poly = poly.head(poly.size()-1).eval();
-    
+
     auto F = std::make_shared<muq::Utilities::CompanionMatrix>(-1.0*poly);
 
     std::vector<Eigen::Triplet<double>> Lcoeffs;
     Lcoeffs.push_back(Eigen::Triplet<double>(poly.size()-1,0,1.0));
-        
+
     Eigen::SparseMatrix<double> Lmat(poly.size(), 1);
     Lmat.setFromTriplets(Lcoeffs.begin(), Lcoeffs.end());
 
     auto L = muq::Utilities::LinearOperator::Create(Lmat);
-    
+
     Eigen::MatrixXd Q(1,1);
     Q(0,0) = q;
-    
+
 
     // Set up the stochastic differential equation
     auto sde = std::make_shared<muq::Modeling::LinearSDE>(F, L, Q, sdeOptions);
@@ -115,7 +114,7 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
     // Define the observation operator, which is just (1,0,...,0) in this case
     std::vector<Eigen::Triplet<double>> Hcoeffs;
     Hcoeffs.push_back(Eigen::Triplet<double>(0,0,1.0));
-        
+
     Eigen::SparseMatrix<double> Hmat(1,poly.size());
     Hmat.setFromTriplets(Hcoeffs.begin(), Hcoeffs.end());
 
@@ -123,8 +122,8 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
 
     // Solve the continuous time Lyapunov equation to find the stationary covariance
     Q = L->Apply(L->Apply(q*Eigen::VectorXd::Ones(1)).transpose());
-    
+
     Eigen::MatrixXd Pinf = muq::Utilities::LyapunovSolver<double>().compute(F->GetMatrix().transpose(), Q).matrixX().real();
-    
+
     return std::make_tuple(sde, H, Pinf);
 }

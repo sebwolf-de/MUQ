@@ -49,10 +49,11 @@ CreateCompileGroup(
     "Gaussian process covariance kernels."
     muqApproximation
     "MODELING_CORE"
-    "EIGEN3;BOOST"
+    "EIGEN3;BOOST;STANMATH"
     ""
-
+    GaussianProcesses/KernelBase.cpp
     GaussianProcesses/MaternKernel.cpp
+		GaussianProcesses/ProductKernel.cpp
     GaussianProcesses/PeriodicKernel.cpp
     GaussianProcesses/KarhunenLoeveExpansion.cpp
 

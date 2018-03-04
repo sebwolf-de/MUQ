@@ -27,46 +27,28 @@ class WhiteNoiseKernel : public KernelImpl<WhiteNoiseKernel>
 public:
 
     WhiteNoiseKernel(unsigned     dim,
-		     const double sigma2In,
-		     const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : KernelImpl<WhiteNoiseKernel>(dim, 1, 1), sigma2(sigma2In)
+                     const double sigma2In,
+                     const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : KernelImpl<WhiteNoiseKernel>(dim, 1, 1)
     {
-	paramBounds.resize(2,1);
-	paramBounds(0) = sigmaBounds[0]; // lower bound on sigma2
-	paramBounds(1) = sigmaBounds[1]; // upper bound on sigma2
+      paramBounds.resize(2,1);
+      paramBounds(0) = sigmaBounds[0]; // lower bound on sigma2
+      paramBounds(1) = sigmaBounds[1]; // upper bound on sigma2
+
+      cachedParams.resize(1);
+      cachedParams(0) = sigma2In;
     };
 
     virtual ~WhiteNoiseKernel(){};
-    
-    template<typename VecType1, typename VecType2, typename MatrixType>
-    inline void EvaluateImpl(VecType1 const& x1, VecType2 const& x2, MatrixType &cov) const
+
+    template<typename ScalarType1, typename ScalarType2>
+    void FillBlockImpl(Eigen::Ref<const Eigen::Matrix<ScalarType1, Eigen::Dynamic, 1>> const& x1,
+                       Eigen::Ref<const Eigen::Matrix<ScalarType2, Eigen::Dynamic, 1>> const& x2,
+                       Eigen::Ref<const Eigen::VectorXd>                               const& params,
+                       Eigen::Ref<Eigen::Matrix<ScalarType1,Eigen::Dynamic, Eigen::Dynamic>>  block) const
     {
-	double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
-	cov(0,0) = (dist<1e-14) ? sigma2 : 0.0;
+      ScalarType1 squaredDist = (x1-x2).squaredNorm();
+      block(0,0) = (squaredDist<1e-14) ? params(0) : 0.0;
     }
-
-    template<typename VecType1, typename VecType2, typename MatrixType>
-    inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType &derivs) const
-    {
-	assert(wrt==0);
-	double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
-
-	derivs(0,0) = (dist<1e-14) ? 1.0 : 0.0;
-    }
-	
-
-    virtual Eigen::VectorXd GetParams() const override
-    {
-	return sigma2*Eigen::VectorXd::Ones(1);
-    }
-    
-    virtual void SetParams(Eigen::VectorXd const& params) override
-    {
-        sigma2 = params(0);
-    }
-
-private:
-    double sigma2;
-
 };
 
 

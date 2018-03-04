@@ -9,7 +9,7 @@ namespace muq
 namespace Approximation
 {
 
-    
+
 /**
 
 @class SquaredExpKernel
@@ -27,81 +27,51 @@ class SquaredExpKernel : public KernelImpl<SquaredExpKernel>
 public:
 
     SquaredExpKernel(unsigned              dimIn,
-		     std::vector<unsigned> dimInds,
-		     double                sigma2In,
-		     double                lengthIn,
-	             Eigen::Vector2d       sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
-	             Eigen::Vector2d       lengthBounds = {1e-10, std::numeric_limits<double>::infinity()}) : KernelImpl<SquaredExpKernel>(dimIn, dimInds, 1, 2), sigma2(sigma2In), length(lengthIn)
+                     std::vector<unsigned> dimInds,
+                     double                sigma2In,
+                     double                lengthIn,
+                     Eigen::Vector2d       sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
+                     Eigen::Vector2d       lengthBounds = {1e-10, std::numeric_limits<double>::infinity()}) : KernelImpl<SquaredExpKernel>(dimIn, dimInds, 1, 2)
     {
-	paramBounds.resize(2,2);
-	paramBounds(0,0) = sigmaBounds(0);
-	paramBounds(1,0) = sigmaBounds(1);
-	
-	paramBounds(0,1) = lengthBounds(0);
-	paramBounds(1,1) = lengthBounds(1);
+      paramBounds.resize(2,2);
+      paramBounds(0,0) = sigmaBounds(0);
+      paramBounds(1,0) = sigmaBounds(1);
+      paramBounds(0,1) = lengthBounds(0);
+      paramBounds(1,1) = lengthBounds(1);
+
+      cachedParams.resize(2);
+      cachedParams(0) = sigma2In;
+      cachedParams(1) = lengthIn;
     };
-    
+
     SquaredExpKernel(unsigned        dimIn,
-		     double          sigma2In,
-		     double          lengthIn,
-	             Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
-	             Eigen::Vector2d lengthBounds = {1e-10, std::numeric_limits<double>::infinity()}) : KernelImpl<SquaredExpKernel>(dimIn, 1, 2), sigma2(sigma2In), length(lengthIn)
+                     double          sigma2In,
+                     double          lengthIn,
+                     Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
+                     Eigen::Vector2d lengthBounds = {1e-10, std::numeric_limits<double>::infinity()}) : KernelImpl<SquaredExpKernel>(dimIn, 1, 2)
     {
-	paramBounds.resize(2,2);
-	paramBounds(0,0) = sigmaBounds(0);
-	paramBounds(1,0) = sigmaBounds(1);
-	
-	paramBounds(0,1) = lengthBounds(0);
-	paramBounds(1,1) = lengthBounds(1);
+      paramBounds.resize(2,2);
+      paramBounds(0,0) = sigmaBounds(0);
+      paramBounds(1,0) = sigmaBounds(1);
+      paramBounds(0,1) = lengthBounds(0);
+      paramBounds(1,1) = lengthBounds(1);
+
+      cachedParams.resize(2);
+      cachedParams(0) = sigma2In;
+      cachedParams(1) = lengthIn;
     };
 
     virtual ~SquaredExpKernel(){};
-    
-    template<typename VecType1, typename VecType2, typename MatrixType>
-    inline void EvaluateImpl(VecType1 const& x1, VecType2 const& x2, MatrixType &cov ) const
-    {
-	assert(GetShape(x2,0)==GetShape(x1,0));
 
-	double dist = CalcDistance(GetSlice(x1, dimInds), GetSlice(x2, dimInds));
-	
-	cov(0,0) = sigma2*exp(-0.5*pow(dist/length,2.0));
-    }
-
-    template<typename VecType1, typename VecType2, typename MatrixType>
-    inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType & derivs) const
+    template<typename ScalarType1, typename ScalarType2>
+    void FillBlockImpl(Eigen::Ref<const Eigen::Matrix<ScalarType1, Eigen::Dynamic, 1>> const& x1,
+                       Eigen::Ref<const Eigen::Matrix<ScalarType2, Eigen::Dynamic, 1>> const& x2,
+                       Eigen::Ref<const Eigen::VectorXd>                               const& params,
+                       Eigen::Ref<Eigen::Matrix<ScalarType1,Eigen::Dynamic, Eigen::Dynamic>>  block) const
     {
-	assert(wrt<numParams);
-
-	double dist = CalcDistance( GetSlice(x1, dimInds), GetSlice(x2, dimInds) );
-	
-	if(wrt==0) // derivative wrt sigma2
-	{
-	    derivs(0,0) = exp(-0.5*pow(dist/length,2.0));
-	}
-	else if(wrt==1) // derivative wrt length
-	{
-	    derivs(0,0) = sigma2 * exp(-0.5*pow(dist/length,2.0)) * pow(dist,2.0) * pow(length, -3.0);
-	}
-	else
-	{
-	    assert(false);
-	}
+      ScalarType1 squaredDist = (x1-x2).squaredNorm();
+      block(0,0) = params(0)*exp(-0.5*squaredDist/(params(1)*params(1)));
     }
-	
-    virtual Eigen::VectorXd GetParams() const override
-    {
-	return Eigen::Vector2d{sigma2,length};
-    }
-    
-    virtual void SetParams(Eigen::VectorXd const& params) override
-    {
-        sigma2 = params(0);
-	length = params(1);
-    }
-
-private:
-    double sigma2;
-    double length;
 };
 
 }
