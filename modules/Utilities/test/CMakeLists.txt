@@ -17,10 +17,6 @@ CreateTestGroup(
     LinearAlgebra/EigenVectorAlgebraTests.cpp
     LinearAlgebra/EigenMatrixAlgebraTests.cpp
     LinearAlgebra/SundialsAlgebraTests.cpp
-
-    MultiIndices/MultiIndexTests.cpp
-    MultiIndices/MultiIndexLimiterTests.cpp
-    MultiIndices/MultiIndexSetTests.cpp
 )
 
 CreateTestGroup(

@@ -13,6 +13,22 @@ set(MUQ_GROUPS "" CACHE INTERNAL "List of MUQ compile groups.")
 # Go compile everything
 add_subdirectory(modules)
 
+function(ForciblyEnable group)
+  message(STATUS "Forcibly enabling ${group}")
+
+  set(MUQ_ENABLEGROUP_${group} ON CACHE INTERNAL "MUQ_ENABLEGROUP_${group}")
+
+
+  foreach(depend ${${group}_REQUIRES_GROUPS})
+    if(NOT MUQ_ENABLEGROUP_${depend})
+        message(STATUS "    The ${group} group depends on the ${depend} group, but the ${depend} group was not enabled.")
+        message(STATUS "    Turning the ${depend} group on.")
+        set(MUQ_ENABLEGROUP_${depend} ON CACHE INTERNAL "MUQ_ENABLEGROUP_${depend}")
+        ForciblyEnable(${depend})
+    endif()
+  endforeach()
+endfunction(ForciblyEnable)
+
 ## Figure out what dependencies we actually need
 set(MUQ_REQUIRES )
 set(MUQ_DESIRES )
@@ -24,7 +40,7 @@ foreach(group ${MUQ_GROUPS})
           if(MUQ_ENABLEGROUP_${group} AND NOT MUQ_ENABLEGROUP_${depend})
               message(STATUS "    The ${group} group depends on the ${depend} group, but the ${depend} group was not enabled.")
               message(STATUS "    Turning the ${depend} group on.")
-              set(MUQ_ENABLEGROUP_${depend} ON)
+              ForciblyEnable(${depend})
           endif()
       endforeach()
 
@@ -56,6 +72,7 @@ endif()
 set(MUQ_TARGETS )
 foreach(group ${MUQ_GROUPS})
     if(MUQ_ENABLEGROUP_${group})
+        message(STATUS "Adding target ${${group}_LIBRARY} for compile group ${group}")
         list(APPEND MUQ_TARGETS ${${group}_LIBRARY})
     endif()
 endforeach()

@@ -7,14 +7,14 @@
 set(MUQ_LIBRARIES )
 set(MUQ_PYTHON_LIBRARIES )
 
-message("MU_LINK_LIBS = ${MUQ_LINK_LIBS}")
+message("MUQ_LINK_LIBS = ${MUQ_LINK_LIBS}")
 # Build all the targets
 foreach(libName ${MUQ_TARGETS})
 
     list(LENGTH ${libName}_SOURCES strLength)
     if(${strLength} GREATER 0)
 
-
+        message(STATUS "Creating ${libName} target.")
         string(REGEX MATCH "^pymuq" IsPythonWrapper ${libName})
 
         if(IsPythonWrapper)
@@ -28,7 +28,7 @@ foreach(libName ${MUQ_TARGETS})
             ADD_LIBRARY(${libName} SHARED ${${libName}_SOURCES})
             list(APPEND MUQ_LIBRARIES ${libName})
         endif()
-        
+
         TARGET_LINK_LIBRARIES(${libName} PUBLIC ${MUQ_LINK_LIBS})
 
         # Add dependencies for any required dependencies that MUQ is going to build internally
@@ -39,22 +39,22 @@ foreach(libName ${MUQ_TARGETS})
                 add_dependencies(${libName} ${depend})
             endif()
         endforeach()
-    
+
         list(APPEND MUQ_LIBRARIES ${libName})
-        
+
         install(TARGETS ${libName}
                 EXPORT ${CMAKE_PROJECT_NAME}Depends
                 LIBRARY DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
                 ARCHIVE DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
     endif()
-    
+
 endforeach()
 
 INSTALL (
     DIRECTORY ${CMAKE_SOURCE_DIR}/MUQ
     DESTINATION include
     FILES_MATCHING PATTERN "*.h")
-    
+
 # If a group depends on an external library that is going to be built by MUQ, then make sure we account for that dependency
 foreach(group ${MUQ_GROUPS})
 
@@ -74,7 +74,7 @@ foreach(group ${MUQ_GROUPS})
         # Add dependencies between different MUQ libraries
         foreach(depend ${${group}_REQUIRES_GROUPS})
 
-        message(STATUS "Thinking about connection between ${${group}_LIBRARY} and ${${depend}_LIBRARY}") 
+        message(STATUS "Thinking about connection between ${${group}_LIBRARY} and ${${depend}_LIBRARY}")
             if(NOT ${${group}_LIBRARY} STREQUAL ${${depend}_LIBRARY})
                 IF( ${depend}_IS_COMPILED )
                     message(STATUS "Trying to add connection between ${${group}_LIBRARY} and ${${depend}_LIBRARY}")
@@ -84,5 +84,5 @@ foreach(group ${MUQ_GROUPS})
           endif()
         endforeach()
     endif()
-    
+
 endforeach()
