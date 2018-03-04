@@ -3,18 +3,18 @@ macro (GetDependency name)
         # check to see if this dependency is required by any group
         list (FIND MUQ_REQUIRES ${name} dindex)
         if (${dindex} GREATER -1)
-	    set(MUQ_NEEDS_${name} ON)
+	          set(MUQ_NEEDS_${name} ON)
 
             if(NOT DEFINED MUQ_FORCE_INTERNAL_${name})
                 set(MUQ_FORCE_INTERNAL_${name} OFF)
             endif()
-            
+
             if(${MUQ_FORCE_INTERNAL_${name}})
 
                 set(USE_INTERNAL_${name} 1)
 
             else()
-            
+
                 find_package(${name})
                 if(${name}_FOUND)
                     # check to make sure the library can be linked to
@@ -23,19 +23,19 @@ macro (GetDependency name)
                     if(NOT ${name}_TEST_FAIL)
                             set(USE_INTERNAL_${name} 0)
                     else()
-                            set(USE_INTERNAL_${name} 1)	
+                            set(USE_INTERNAL_${name} 1)
                     endif()
 
                 else()
-                    set(USE_INTERNAL_${name} 1)	
+                    set(USE_INTERNAL_${name} 1)
                 endif()
 
             endif()
-            
+
 	    if(USE_INTERNAL_${name})
 		include(Build${name})
 	    endif()
-	
+
 	    # store include directory information
 	    include_directories(${${name}_INCLUDE_DIRS})
 	    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${${name}_INCLUDE_DIRS})
@@ -48,7 +48,7 @@ macro (GetDependency name)
             set(MUQ_NEEDS_${name} OFF)
 	    set(MUQ_HAS_${name} 1)
         endif()
-	
+
 endmacro(GetDependency)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/include)
@@ -57,6 +57,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/include)
 ##### LOOK FOR AND/OR BUILD Eigen ######
 ########################################
 GetDependency(EIGEN3)
+
+########################################
+##### LOOK FOR AND/OR BUILD StanMath ######
+########################################
+GetDependency(STANMATH)
 
 ########################################
 ##### LOOK FOR AND/OR BUILD SUNDIALS ###
@@ -78,7 +83,7 @@ if(MUQ_USE_OPENMPI)
 	LIST(APPEND MUQ_LINK_LIBS_STATIC ${ZLIB_LIBRARIES_STATIC})
 	LIST(APPEND MUQ_EXTERNAL_INCLUDES ${ZLIB_INCLUDE_DIRS})
 	message("ZLIB_LIBRARIES" ${ZLIB_LIBRARIES})
-	
+
 endif()
 
 ########################################
@@ -107,11 +112,11 @@ if (${dindex} GREATER -1)
 	if(NOT BOOST_TEST_FAIL)
 		set(USE_INTERNAL_BOOST 0)
 	else()
-		set(USE_INTERNAL_BOOST 1)	
+		set(USE_INTERNAL_BOOST 1)
 	endif()
 
     else()
-	set(USE_INTERNAL_BOOST 1)	
+	set(USE_INTERNAL_BOOST 1)
     endif()
 
     if(USE_INTERNAL_BOOST)
@@ -151,5 +156,3 @@ endif()
 ########################################
 
 list( REMOVE_DUPLICATES MUQ_EXTERNAL_INCLUDES)
-
-
