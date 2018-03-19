@@ -15,7 +15,7 @@ namespace muq{
         where the functions \f$g_i\f$ and \f$h_i\f$ are both represented through the
         muq::Approximation::BasisExpansion class, and \f$\epsilon>0\f$ is a small nugget
         ensuring that \f$f_i\f$ is strictly increasing with \f$x_i\f$.  By squaring \f$h_i\f$,
-        we guarantee that the integrand positive, which ensures that the integral itself increases
+        we guarantee that the integrand is positive, which ensures that the integral itself increases
         with \f$x_i\f$, i.e., \f$\partial f_i / \partial x_i > 0 \f$.  Also notice how
         the \f$i^{th}\f$ output of the function \f$f\f$ only depends on the first \f$i\$ inputs,
         so the function \f$f\f$ is lower triangular. Combined with the fact that \f$\partial f_i / \partial x_i > 0 \f$,

@@ -87,6 +87,15 @@ public:
     virtual void FillCovariance(Eigen::MatrixXd             const& xs,
                                 Eigen::Ref<Eigen::MatrixXd>        cov) const;
 
+    /** Evaluates a first or higher order derivative of the covariance kernel
+        with respect to one of the position variables.
+    */
+    // virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
+    //                                Eigen::Ref<const Eigen::VectorXd> const& x2,
+    //                                Eigen::Ref<const Eigen::VectorXd> const& params,
+    //                                std::vector<unsigned>             const& wrts,
+    //                                Eigen::Ref<Eigen::MatrixXd>              block) const = 0;
+
     //
     // virtual Eigen::MatrixXd GetPosDerivative(Eigen::VectorXd  const& x1,
     //                                          Eigen::VectorXd  const& x2,
@@ -114,7 +123,7 @@ public:
 
     */
     virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions=boost::property_tree::ptree()) const{
-        throw muq::NotImplementedError("ERROR.  The GetStateSpace() function has not been implemented in this chiled of muq::Approximation::KernelBase.");
+        throw muq::NotImplementedError("ERROR.  The GetStateSpace() function has not been implemented in this child of muq::Approximation::KernelBase.");
     };
 
 
@@ -131,15 +140,6 @@ protected:
 
     Eigen::MatrixXd paramBounds;
 
-
-    /** Evaluates a first or higher order derivative of the covariance kernel
-        with respect to one of the position variables.
-    */
-    // virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
-    //                                Eigen::Ref<const Eigen::VectorXd> const& x2,
-    //                                Eigen::Ref<const Eigen::VectorXd> const& params,
-    //                                std::vector<unsigned>             const& wrts,
-    //                                Eigen::Ref<Eigen::MatrixXd>              block) const = 0;
 private:
 
     static std::vector<unsigned> BuildDimInds(unsigned dim)
