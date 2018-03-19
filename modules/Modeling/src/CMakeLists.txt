@@ -29,11 +29,13 @@ CreateCompileGroup(
 
     WorkGraphPiece.cpp
     LinearSDE.cpp
-    
+
     ConstantPiece.cpp
     IdentityPiece.cpp
 
     LinearSDE.cpp
+
+    Flann/FlannCache.cpp
 )
 
 CreateCompileGroup(
@@ -60,15 +62,4 @@ CreateCompileGroup(
     ODEBase.cpp
     ODE.cpp
     RootfindingIVP.cpp
-)
-
-CreateCompileGroup(
-    MODELING_FLANN
-    "Use the fast library for approximate nearest neighbors (flann) to build model evaluation caches"
-    muqModeling
-    ""
-    "MODELING_CORE;FLANN"
-    ""
-
-    Flann/FlannCache.cpp
 )
