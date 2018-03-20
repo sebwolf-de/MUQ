@@ -1,10 +1,12 @@
 #include "MUQ/Approximation/Polynomials/MonotoneExpansion.h"
-
+#include "MUQ/Approximation/Polynomials/Monomial.h"
+#include <memory>
 
 using namespace muq::Approximation;
 using namespace muq::Utilities;
 
-MonotoneExpansion::MonotoneExpansion(std::shared_ptr<BasisExpansion> monotonePartsIn) : MonotoneExpansion({},{monotonePartsIn})
+MonotoneExpansion::MonotoneExpansion(std::shared_ptr<BasisExpansion> monotonePartsIn) : MonotoneExpansion({std::make_shared<BasisExpansion>(std::vector<std::shared_ptr<IndexedScalarBasis>>({std::make_shared<Monomial>()}))},
+                                                                                                          {monotonePartsIn})
 {
 }
 
@@ -14,7 +16,9 @@ MonotoneExpansion::MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>
                                                                                                             generalParts(generalPartsIn),
                                                                                                             monotoneParts(monotonePartsIn)
 {
-  assert(generalPartsIn.size() == monotonePartsIn.size()-1);
+  assert(generalPartsIn.size() == monotonePartsIn.size());
+  assert(generalPartsIn.at(0)->Multis()->GetMaxOrders().maxCoeff()==0);
+
   numInputs = -1;
   unsigned numQuad = 200;
   quadPts = Eigen::VectorXd::LinSpaced(numQuad+1,0,1).head(numQuad);
@@ -82,7 +86,7 @@ void MonotoneExpansion::EvaluateImpl(muq::Modeling::ref_vector<boost::any> const
 
   // Fill in the general parts
   for(int i=0; i<generalParts.size(); ++i)
-    output(i+1) += boost::any_cast<Eigen::VectorXd>(generalParts.at(i)->Evaluate(x.head(i+1).eval()).at(0))(0);
+    output(i) += boost::any_cast<Eigen::VectorXd>(generalParts.at(i)->Evaluate(x).at(0))(0);
 
   // Now add the monotone part
   Eigen::VectorXd quadEvals(quadPts.size());
@@ -129,8 +133,8 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
 
     // Add all of the general parts
     for(int i=0; i<generalParts.size(); ++i){
-      Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(0,0,x.head(i+1).eval()));
-      jac.block(i+1,0,1,i+1) += partialJac.block(0,0,1,i+1);
+      Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(0,0,x));
+      jac.block(i,0,1,i) += partialJac.block(0,0,1,i);
     }
 
     // Add the monotone parts
@@ -159,8 +163,8 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
     // Fill in the general portion of the jacobian
     unsigned currCoeff = 0;
     for(int i=0; i<generalParts.size(); ++i){
-      Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(1,0,x.head(i+1).eval()));
-      jac.block(i+1, currCoeff, 1, generalParts.at(i)->NumTerms()) += partialJac;
+      Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(1,0,x));
+      jac.block(i, currCoeff, 1, generalParts.at(i)->NumTerms()) += partialJac;
       currCoeff += generalParts.at(i)->NumTerms();
     }
 
@@ -225,7 +229,7 @@ Eigen::VectorXd MonotoneExpansion::GradLogDeterminant(Eigen::VectorXd const& x)
   unsigned currInd = 0;
   for(int i=0; i<generalParts.size(); ++i)
     currInd += generalParts.at(i)->NumTerms();
-    
+
   // Add the monotone parts to the gradient
   for(int i=0; i<monotoneParts.size(); ++i){
     Eigen::VectorXd evalPt = x.head(i+1);

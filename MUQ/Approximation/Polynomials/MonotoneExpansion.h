@@ -38,7 +38,7 @@ namespace muq{
 
       /** Get the current expansion coefficients.  The coefficients are ordered
           with coefficients from the general parts preceding coefficients for
-          the monotone parts.  Within the general and montone parts, the coefficients
+          the monotone parts.  Within the general and monotone parts, the coefficients
           are ordered according to the output dimension.
       */
       virtual Eigen::VectorXd GetCoeffs() const;
