@@ -23,7 +23,11 @@ TEST(Polynomial, Monomial) {
   // the order of the polynomial
   const unsigned int max_order = 200;
 
-  for( unsigned int p=0; p<max_order; ++p ) {
+  Eigen::VectorXd allEvals = mono->EvaluateAllTerms(max_order, x);
+
+  for( unsigned int p=0; p<=max_order; ++p ) {
+
+    EXPECT_DOUBLE_EQ(allEvals(p), std::pow(x, p));
 
     // evaluate the monomial
     const std::vector<boost::any>& result = mono->Evaluate(p, x);
@@ -44,14 +48,12 @@ TEST(Polynomial, Monomial) {
 
   }
 
-  // Check that the Normalization function returns an exception
-  EXPECT_THROW(mono->Normalization(1), muq::NotImplementedError);
-
 }
 
 TEST(Polynomial, PhysicistHermite) {
   // create a Hermite object
   auto hermite = std::make_shared<PhysicistHermite>();
+
 
   // Evaluations
   EXPECT_DOUBLE_EQ(1.0, boost::any_cast<double const>(hermite->Evaluate((unsigned int)0, 0.4) [0]));
@@ -82,7 +84,6 @@ TEST(Polynomial, PhysicistHermite) {
   EXPECT_DOUBLE_EQ(0.0, hermite->DerivativeEvaluate(2,3,x));
   EXPECT_DOUBLE_EQ(48.0, hermite->DerivativeEvaluate(3,3,x));
   EXPECT_DOUBLE_EQ(384.0*x, hermite->DerivativeEvaluate(4,3,x));
-
 
   // Check the normalization constant
   EXPECT_DOUBLE_EQ(sqrt(M_PI), hermite->Normalization(0));
@@ -243,24 +244,24 @@ TEST(Polynomial, Jacobi) {
 TEST(Polynomial, Factory)
 {
 
-    std::shared_ptr<IndexedScalarBasis> monomial = Polynomial::Construct("Monomial");
+    std::shared_ptr<IndexedScalarBasis> monomial = IndexedScalarBasis::Construct("Monomial");
     EXPECT_TRUE(std::dynamic_pointer_cast<Monomial>(monomial));
 
-    std::shared_ptr<IndexedScalarBasis> hermite1 = Polynomial::Construct("PhysicistHermite");
+    std::shared_ptr<IndexedScalarBasis> hermite1 = IndexedScalarBasis::Construct("PhysicistHermite");
     EXPECT_TRUE(std::dynamic_pointer_cast<PhysicistHermite>(hermite1));
 
-    std::shared_ptr<IndexedScalarBasis> hermite2 = Polynomial::Construct("ProbabilistHermite");
+    std::shared_ptr<IndexedScalarBasis> hermite2 = IndexedScalarBasis::Construct("ProbabilistHermite");
     EXPECT_TRUE(std::dynamic_pointer_cast<ProbabilistHermite>(hermite2));
 
-    std::shared_ptr<IndexedScalarBasis> legendre = Polynomial::Construct("Legendre");
+    std::shared_ptr<IndexedScalarBasis> legendre = IndexedScalarBasis::Construct("Legendre");
     EXPECT_TRUE(std::dynamic_pointer_cast<Legendre>(legendre));
 
-    std::shared_ptr<IndexedScalarBasis> laguerre = Polynomial::Construct("Laguerre");
+    std::shared_ptr<IndexedScalarBasis> laguerre = IndexedScalarBasis::Construct("Laguerre");
     EXPECT_TRUE(std::dynamic_pointer_cast<Laguerre>(laguerre));
 
-    std::shared_ptr<IndexedScalarBasis> jacobi = Polynomial::Construct("Jacobi");
+    std::shared_ptr<IndexedScalarBasis> jacobi = IndexedScalarBasis::Construct("Jacobi");
     EXPECT_TRUE(std::dynamic_pointer_cast<Jacobi>(jacobi));
 
-    EXPECT_THROW(Polynomial::Construct("CowPoly"), muq::NotRegisteredError);
+    EXPECT_THROW(IndexedScalarBasis::Construct("CowPoly"), muq::NotRegisteredError);
 
 }
