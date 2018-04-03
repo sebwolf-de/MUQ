@@ -22,13 +22,19 @@ double ProbabilistHermite::Normalization(unsigned int polyOrder) const {
     return sqrt(2.0*M_PI) * std::tgamma(polyOrder+1);
 }
 
-double ProbabilistHermite::alpha(unsigned int k, double x) const {
-  return -x;
+
+double ProbabilistHermite::ak(unsigned int k) const {
+  return 1.0;
 }
 
-double ProbabilistHermite::beta(unsigned int k, double x) const {
-  return k;
+double ProbabilistHermite::bk(unsigned int k) const {
+  return 0.0;
 }
+
+double ProbabilistHermite::ck(unsigned int k) const {
+  return k-1.0;
+}
+
 
 double ProbabilistHermite::phi0(double x) const {
   return 1.0;

@@ -98,10 +98,12 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
                                        unsigned                                     wrtDim1,
                                        unsigned                                     wrtDim2,
                                        Eigen::VectorXd                       const& evalPt);
-                                       
+
       Eigen::MatrixXd GetCoeffs() const;
 
       void SetCoeffs(Eigen::MatrixXd const& allCoeffs);
+
+      const std::shared_ptr<muq::Utilities::MultiIndexSet> Multis() const{return multis;};
 
     protected:
 

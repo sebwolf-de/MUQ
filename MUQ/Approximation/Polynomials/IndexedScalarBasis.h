@@ -39,7 +39,19 @@ namespace muq {
 	        @param[in] x The point where we are evaluating the polynomial
 	        @return The polynomial value
        */
-      virtual double BasisEvaluate(int const order, double const x) const = 0;
+      virtual double BasisEvaluate(int    const order,
+                                   double const x) const = 0;
+
+
+      /// Evaluates all basis functions with order <= maxOrder
+      virtual Eigen::VectorXd EvaluateAllTerms(int    const maxOrder,
+                                               double const x) const
+      {
+        Eigen::VectorXd output(maxOrder+1);
+        for(int i=0; i<=maxOrder; ++i)
+          output(i) = BasisEvaluate(i,x);
+        return output;
+      };
 
       /** Evaluate the \f$n^{th}\f$ derivative of a \f$p^{th}\f$ basis.
           @param[in] polyOrder The integer index \f$p\f$ of the basis.
@@ -47,8 +59,9 @@ namespace muq {
           @param[in] x The location to evaluate the derivative.
           @return The the \f$n^{th}\f$ derivative of a \f$p^{th}\f$ basis
       */
-      virtual double DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const = 0;
-
+      virtual double DerivativeEvaluate(int    const polyOrder,
+                                        int    const derivOrder,
+                                        double const x) const = 0;
 
 
     private:

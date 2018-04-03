@@ -19,18 +19,21 @@ public:
 
     std::shared_ptr<MultiIndexSet> multis = MultiIndexFactory::CreateTotalOrder(1, 2);
 
-    coeffs.resize(1,3);
-    coeffs << -0.01, 0.1, -0.5; // intercept, slope
 
-    monoPart = std::make_shared<BasisExpansion>(bases, multis, coeffs);
+    monoPart = std::make_shared<BasisExpansion>(bases, multis);
     expansion = std::make_shared<MonotoneExpansion>(monoPart);
+
+    coeffs.resize(4);
+    coeffs << 0.0, -0.01, 0.1, -0.5; // intercept, slope
+
+    expansion->SetCoeffs(coeffs);
   }
 
   virtual ~Approximation_MonotoneExpansion1d() {};
 
   std::shared_ptr<BasisExpansion> monoPart;
   std::shared_ptr<MonotoneExpansion> expansion;
-  Eigen::MatrixXd coeffs;
+  Eigen::VectorXd coeffs;
 
 };
 
@@ -52,14 +55,14 @@ TEST_F(Approximation_MonotoneExpansion1d, Evaluate){
       EXPECT_GT(newOutput, oldOutput);
 
       double monoEval = boost::any_cast<Eigen::VectorXd>(monoPart->Evaluate(evalPt).at(0))(0);
-      double trueMono = coeffs(0) + coeffs(1)*evalPt(0) + coeffs(2)*evalPt(0)*evalPt(0);
+      double trueMono = coeffs(1) + coeffs(2)*evalPt(0) + coeffs(3)*evalPt(0)*evalPt(0);
       EXPECT_DOUBLE_EQ(trueMono, monoEval);
 
-      double truth = coeffs(0)*coeffs(0)*evalPt(0)
-                     + coeffs(0)*coeffs(1)*std::pow(evalPt(0),2.0)
-                     + (1.0/3.0)*(2.0*coeffs(0)*coeffs(2)+coeffs(1)*coeffs(1))*std::pow(evalPt(0),3.0)
-                     + 0.5*coeffs(1)*coeffs(2)*std::pow(evalPt(0),4.0)
-                     + 0.2*coeffs(2)*coeffs(2)*std::pow(evalPt(0),5.0);
+      double truth = coeffs(1)*coeffs(1)*evalPt(0)
+                     + coeffs(1)*coeffs(2)*std::pow(evalPt(0),2.0)
+                     + (1.0/3.0)*(2.0*coeffs(1)*coeffs(3)+coeffs(2)*coeffs(2))*std::pow(evalPt(0),3.0)
+                     + 0.5*coeffs(2)*coeffs(3)*std::pow(evalPt(0),4.0)
+                     + 0.2*coeffs(3)*coeffs(3)*std::pow(evalPt(0),5.0);
       EXPECT_NEAR(truth, newOutput, 1e-2);
 
 
@@ -144,9 +147,9 @@ TEST_F(Approximation_MonotoneExpansion1d, EvaluateWithCoeffs){
 
   Eigen::VectorXd evalPt(1);
 
-  Eigen::VectorXd newCoeffs(3);
-  newCoeffs << 0.5, 2.0, -0.1;
-  coeffs.row(0) = newCoeffs;
+  Eigen::VectorXd newCoeffs(4);
+  newCoeffs << 0.1, 0.5, 2.0, -0.1;
+  coeffs = newCoeffs;
 
   int numSteps = 10;
   double ub = 2.0;
@@ -161,11 +164,11 @@ TEST_F(Approximation_MonotoneExpansion1d, EvaluateWithCoeffs){
       double newOutput = boost::any_cast<Eigen::VectorXd>(expansion->Evaluate(evalPt, newCoeffs).at(0))(0);
       EXPECT_GT(newOutput, oldOutput);
 
-      double truth = coeffs(0)*coeffs(0)*evalPt(0)
-                     + coeffs(0)*coeffs(1)*std::pow(evalPt(0),2.0)
-                     + (1.0/3.0)*(2.0*coeffs(0)*coeffs(2)+coeffs(1)*coeffs(1))*std::pow(evalPt(0),3.0)
-                     + 0.5*coeffs(1)*coeffs(2)*std::pow(evalPt(0),4.0)
-                     + 0.2*coeffs(2)*coeffs(2)*std::pow(evalPt(0),5.0);
+      double truth = coeffs(0) + coeffs(1)*coeffs(1)*evalPt(0)
+                     + coeffs(1)*coeffs(2)*std::pow(evalPt(0),2.0)
+                     + (1.0/3.0)*(2.0*coeffs(1)*coeffs(3)+coeffs(2)*coeffs(2))*std::pow(evalPt(0),3.0)
+                     + 0.5*coeffs(2)*coeffs(3)*std::pow(evalPt(0),4.0)
+                     + 0.2*coeffs(3)*coeffs(3)*std::pow(evalPt(0),5.0);
       EXPECT_NEAR(truth, newOutput, 5e-2);
 
       oldOutput = newOutput;
@@ -180,9 +183,11 @@ public:
 
     // Build the general pieces
     auto bases = std::vector<std::shared_ptr<IndexedScalarBasis>>(1, monomial);
+    std::shared_ptr<MultiIndexSet> constantMulti = MultiIndexFactory::CreateTotalOrder(1, 0);
     std::shared_ptr<MultiIndexSet> multis = MultiIndexFactory::CreateTotalOrder(1, 2);
     Eigen::MatrixXd coeffs(1,3);
     coeffs << 0.0, 0.5, -0.1;
+    generalParts.push_back(std::make_shared<BasisExpansion>(bases, constantMulti));
     generalParts.push_back(std::make_shared<BasisExpansion>(bases, multis, coeffs));
 
     // Build the monotone pieces
