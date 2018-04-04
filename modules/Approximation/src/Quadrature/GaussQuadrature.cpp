@@ -4,10 +4,9 @@ using namespace muq::Approximation;
 
 GaussQuadrature::GaussQuadrature() {}
 
-// Will this constructor do anything else?
-// Is this how we can define polyOrder? Where can we get it?
-GaussQuadrature::GaussQuadrature(std::shared_ptr<Polynomial> poly_in)
-                                : poly(poly_in), polyOrder(poly_in->order()) {}
+GaussQuadrature::GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
+                                 int polyOrderIn)
+                                : poly(polyIn), polyOrder(polyOrderIn) {}
 
 void GaussQuadrature::Calculate() {
 
@@ -26,41 +25,32 @@ void GaussQuadrature::Calculate() {
 
     // Off diagonal entries of J
     if (i < polyOrder)
-      J(i-1) = beta_i;
+      subdiag(i-1) = beta_i;
 
   }
 
-  Eigen::SelfAdjointEigenSolver<MatrixXd> es;
+  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es;
   es.computeFromTridiagonal(diag, subdiag);
 
   // Set gauss points
-  // Can you assign a VectorXd this way?
-  gauss_pts = es.eigenvalues();
+  gaussPts = es.eigenvalues();
 
   // Get mu_0 value (integral of weighting function)
-  // Where do we get this from?
-  double mu_0 = poly->mu();
+  double mu0 = poly->Normalization(0);
 
-  for (unsigned int i=0; i<polyOrder; i++) {
-
-    // Check if these eigenvectors have magnitude 1.0
-    Eigen::VectorXd eigen_vector_i = es.eigenvectors().col(i);
-
-    // Set gauss weights
-    gauss_wts(i) = mu_0*eigen_vector_i(0)**2;
-
-  }
+  // Set gauss weights
+  gaussWts = mu0*es.eigenvectors().row(0).array().square();
 
 }
 
-Eigen::VectorXd const& GaussQuadrature::points() const {
+Eigen::VectorXd const& GaussQuadrature::Points() const {
 
-  return gauss_pts;
+  return gaussPts;
 
 }
 
-Eigen::VectorXd const& GaussQuadrature::weights() const {
+Eigen::VectorXd const& GaussQuadrature::Weights() const {
 
-  return gauss_wts;
+  return gaussWts;
 
 }

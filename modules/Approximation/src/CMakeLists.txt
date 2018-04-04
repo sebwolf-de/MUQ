@@ -42,6 +42,7 @@ CreateCompileGroup(
 	Polynomials/HermiteFunction.cpp
   Polynomials/BasisExpansion.cpp
   Polynomials/MonotoneExpansion.cpp
+  Quadrature/GaussQuadrature.cpp
 )
 
 CreateCompileGroup(

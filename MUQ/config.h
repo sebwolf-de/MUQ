@@ -1,5 +1,5 @@
 #ifndef MUQ_HAS_GTEST
-#define MUQ_HAS_GTEST 1
+#define MUQ_HAS_GTEST 
 #endif
 
 #ifndef MUQ_HAS_SUNDIALS

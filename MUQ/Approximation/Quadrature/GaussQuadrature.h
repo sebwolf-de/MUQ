@@ -1,7 +1,9 @@
 #ifndef GAUSSQUADRATURE_H_
 #define GAUSSQUADRATURE_H_
 
-// What header files do we need? Add here.
+#include "MUQ/Approximation/Polynomials/OrthogonalPolynomial.h"
+#include <Eigen/Core>
+#include <Eigen/Eigenvalues>
 
 namespace muq {
 
@@ -13,21 +15,24 @@ namespace muq {
 
       GaussQuadrature();
 
-      GaussQuadrature(std::shared_ptr<Polynomial> poly_in);
-
-      // Do we need a destructor?
+      GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
+                      int polyOrderIn);
 
       void Calculate();
 
+      Eigen::VectorXd const& Points() const;
+
+      Eigen::VectorXd const& Weights() const;
+
     private:
 
+      Eigen::VectorXd gaussPts;
+
+      Eigen::VectorXd gaussWts;
+
+      std::shared_ptr<OrthogonalPolynomial> poly;
+
       int polyOrder;
-
-      Eigen::VectorXd gauss_pts;
-
-      Eigen::VectorXd gauss_wts;
-
-      std::shared_ptr<Polynomial> poly;
 
     };
 

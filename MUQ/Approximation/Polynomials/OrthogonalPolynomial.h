@@ -9,6 +9,8 @@
 namespace muq {
   namespace Approximation {
 
+    class GaussQuadrature;
+
     /// A 1D polynomial (monomial, Hermite, or Legendre)
     /**
        In general, we use an recursive formula to evaluate a \f$d^{th}\f$ degree
@@ -25,6 +27,9 @@ namespace muq {
        The BasisEvaluate function Uses the Clenshaw algorithm from: http://en.wikipedia.org/wiki/Clenshaw_algorithm.
      */
     class OrthogonalPolynomial : public IndexedScalarBasis {
+
+      friend class GaussQuadrature;
+
     public:
 
       /// Create a polynomial
