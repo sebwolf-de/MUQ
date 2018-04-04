@@ -5,7 +5,7 @@ using namespace muq::Approximation;
 GaussQuadrature::GaussQuadrature() {}
 
 // Will this constructor do anything else?
-// Is this how we can define polyOrder?
+// Is this how we can define polyOrder? Where can we get it?
 GaussQuadrature::GaussQuadrature(std::shared_ptr<Polynomial> poly_in)
                                 : poly(poly_in), polyOrder(poly_in->order()) {}
 
@@ -17,9 +17,9 @@ void GaussQuadrature::Calculate() {
 
   for (unsigned int i=1; i<polyOrder+1; i++) {
 
-    // Need to connect to the a,b, and c functions for the specic polynomial
-    double alpha_i = -b(i)/a(i);
-    double beta_i = std::sqrt(c(i+1)/(a(i)*a(i+1)));
+    // Calling ak, bk, ad ck correctly?
+    double alpha_i = -poly->bk(i)/poly->ak(i);
+    double beta_i = std::sqrt(poly->ck(i+1)/(poly->ak(i)*poly->ak(i+1)));
 
     // Diagonal entry of J
     diag(i-1) = alpha_i;
@@ -34,13 +34,12 @@ void GaussQuadrature::Calculate() {
   es.computeFromTridiagonal(diag, subdiag);
 
   // Set gauss points
-  // Will the eigenvalues function return an Eigen::VectorXd?
   // Can you assign a VectorXd this way?
   gauss_pts = es.eigenvalues();
 
   // Get mu_0 value (integral of weighting function)
   // Where do we get this from?
-  double mu_0 = poly->mu;
+  double mu_0 = poly->mu();
 
   for (unsigned int i=0; i<polyOrder; i++) {
 
