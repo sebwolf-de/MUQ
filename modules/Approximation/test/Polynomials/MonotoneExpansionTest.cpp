@@ -19,7 +19,6 @@ public:
 
     std::shared_ptr<MultiIndexSet> multis = MultiIndexFactory::CreateTotalOrder(1, 2);
 
-
     monoPart = std::make_shared<BasisExpansion>(bases, multis);
     expansion = std::make_shared<MonotoneExpansion>(monoPart);
 
@@ -63,7 +62,7 @@ TEST_F(Approximation_MonotoneExpansion1d, Evaluate){
                      + (1.0/3.0)*(2.0*coeffs(1)*coeffs(3)+coeffs(2)*coeffs(2))*std::pow(evalPt(0),3.0)
                      + 0.5*coeffs(2)*coeffs(3)*std::pow(evalPt(0),4.0)
                      + 0.2*coeffs(3)*coeffs(3)*std::pow(evalPt(0),5.0);
-      EXPECT_NEAR(truth, newOutput, 1e-2);
+      EXPECT_NEAR(truth, newOutput, 1e-4);
 
 
       Eigen::MatrixXd jac = boost::any_cast<Eigen::MatrixXd>(expansion->Jacobian(0,0,evalPt));

@@ -19,7 +19,7 @@ namespace muq {
       GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
                       int polyOrderIn);
 
-      void Calculate();
+      void Compute();
 
       Eigen::VectorXd const& Points() const;
 

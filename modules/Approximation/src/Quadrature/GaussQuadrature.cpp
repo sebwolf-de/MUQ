@@ -8,7 +8,7 @@ GaussQuadrature::GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
                                  int polyOrderIn)
                                 : poly(polyIn), polyOrder(polyOrderIn) {}
 
-void GaussQuadrature::Calculate() {
+void GaussQuadrature::Compute() {
 
   // Create diagonal and subdiagonal vectors
   Eigen::VectorXd diag = Eigen::VectorXd::Zero(polyOrder);

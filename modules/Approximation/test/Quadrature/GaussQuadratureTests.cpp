@@ -36,8 +36,8 @@ TEST(Quadrature, PhysicistHermite) {
   // Create quadrature object
   GaussQuadrature gq(poly, polyOrder);
 
-  // Calculate pts and Weights
-  gq.Calculate();
+  // Compute pts and Weights
+  gq.Compute();
   Eigen::VectorXd gaussPts = gq.Points();
   Eigen::VectorXd gaussWts = gq.Weights();
 
@@ -78,8 +78,8 @@ TEST(Quadrature, ProbabilistHermite) {
   // Create quadrature object
   GaussQuadrature gq(poly, polyOrder);
 
-  // Calculate pts and Weights
-  gq.Calculate();
+  // Compute pts and Weights
+  gq.Compute();
   Eigen::VectorXd gaussPts = gq.Points();
   Eigen::VectorXd gaussWts = gq.Weights();
 
@@ -116,8 +116,8 @@ TEST(Quadrature, Legendre) {
   // Create quadrature object
   GaussQuadrature gq(poly, polyOrder);
 
-  // Calculate pts and Weights
-  gq.Calculate();
+  // Compute pts and Weights
+  gq.Compute();
   Eigen::VectorXd gaussPts = gq.Points();
   Eigen::VectorXd gaussWts = gq.Weights();
 
@@ -154,8 +154,8 @@ TEST(Quadrature, LaguerreDefault) {
   // Create quadrature object
   GaussQuadrature gq(poly, polyOrder);
 
-  // Calculate pts and Weights
-  gq.Calculate();
+  // Compute pts and Weights
+  gq.Compute();
   Eigen::VectorXd gaussPts = gq.Points();
   Eigen::VectorXd gaussWts = gq.Weights();
 
@@ -195,8 +195,8 @@ TEST(Quadrature, Laguerre) {
   // Create quadrature object
   GaussQuadrature gq(poly, polyOrder);
 
-  // Calculate pts and Weights
-  gq.Calculate();
+  // Compute pts and Weights
+  gq.Compute();
   Eigen::VectorXd gaussPts = gq.Points();
   Eigen::VectorXd gaussWts = gq.Weights();
 
@@ -233,8 +233,8 @@ TEST(Quadrature, JacobiDefault) {
   // Create quadrature object
   GaussQuadrature gq(poly, polyOrder);
 
-  // Calculate pts and Weights
-  gq.Calculate();
+  // Compute pts and Weights
+  gq.Compute();
   Eigen::VectorXd gaussPts = gq.Points();
   Eigen::VectorXd gaussWts = gq.Weights();
 
@@ -275,8 +275,8 @@ TEST(Quadrature, Jacobi) {
   // Create quadrature object
   GaussQuadrature gq(poly, polyOrder);
 
-  // Calculate pts and Weights
-  gq.Calculate();
+  // Compute pts and Weights
+  gq.Compute();
   Eigen::VectorXd gaussPts = gq.Points();
   Eigen::VectorXd gaussWts = gq.Weights();
 

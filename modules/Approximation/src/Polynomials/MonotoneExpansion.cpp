@@ -1,5 +1,9 @@
 #include "MUQ/Approximation/Polynomials/MonotoneExpansion.h"
 #include "MUQ/Approximation/Polynomials/Monomial.h"
+
+#include "MUQ/Approximation/Quadrature/GaussQuadrature.h"
+#include "MUQ/Approximation/Polynomials/Legendre.h"
+
 #include <memory>
 
 using namespace muq::Approximation;
@@ -20,9 +24,20 @@ MonotoneExpansion::MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>
   assert(generalPartsIn.at(0)->Multis()->GetMaxOrders().maxCoeff()==0);
 
   numInputs = -1;
-  unsigned numQuad = 200;
-  quadPts = Eigen::VectorXd::LinSpaced(numQuad+1,0,1).head(numQuad);
-  quadWeights = (1.0/numQuad)*Eigen::VectorXd::Ones(numQuad);
+
+  // Get the maximum order of of the monotone parts
+  int maxOrder = 0;
+  for(int i=0; i<monotoneParts.size(); ++i)
+    maxOrder = std::max(maxOrder, monotoneParts.at(i)->Multis()->GetMaxOrders()(i) );
+
+  // Number of quadrature points is based on the fact that an N point Gauss-quadrature
+  // rule can integrate exactly a polynomial of order 2N-1
+  int numQuadPts = ceil(0.5*(2.0*maxOrder + 1.0));
+  GaussQuadrature gqSolver(std::make_shared<Legendre>(), numQuadPts);
+  gqSolver.Compute();
+
+  quadPts = 0.5*(gqSolver.Points()+Eigen::VectorXd::Ones(numQuadPts));
+  quadWeights = 0.5*gqSolver.Weights();
 }
 
 unsigned MonotoneExpansion::NumTerms() const{
