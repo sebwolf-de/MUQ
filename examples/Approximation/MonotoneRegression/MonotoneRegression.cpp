@@ -79,7 +79,7 @@ void FitData(Eigen::VectorXd             const& x,
   Eigen::MatrixXd jac(x.size(), coeffs.size());
 
   const int maxLineIts = 10;
-  const int maxIts = 50;
+  const int maxIts = 20;
 
   // Use the current monotone parameterization to make predictions at every point
   for(int k=0; k<x.size(); ++k){
