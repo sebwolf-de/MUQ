@@ -18,6 +18,7 @@ CreateTestGroup(
   Polynomials/BasisExpansionTest.cpp
   Polynomials/MonotoneExpansionTest.cpp
   Polynomials/PolynomialTests.cpp
+  Quadrature/GaussQuadratureTests.cpp
 )
 
 #CreateTestGroup(

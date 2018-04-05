@@ -2,6 +2,7 @@
 #define GAUSSQUADRATURE_H_
 
 #include "MUQ/Approximation/Polynomials/OrthogonalPolynomial.h"
+
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
