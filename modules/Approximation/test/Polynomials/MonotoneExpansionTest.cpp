@@ -232,6 +232,25 @@ TEST_F(Approximation_MonotoneExpansion2d, Evaluate){
 
 }
 
+TEST_F(Approximation_MonotoneExpansion2d, Inverse){
+
+  Eigen::VectorXd tgtPt = Eigen::Vector2d{0.1, 0.5};
+  Eigen::VectorXd refPt = expansion->EvaluateForward(tgtPt);
+  Eigen::VectorXd invPt = expansion->EvaluateInverse(refPt);
+
+  EXPECT_NEAR(tgtPt(0), invPt(0), 1e-8);
+  EXPECT_NEAR(tgtPt(1), invPt(1), 1e-8);
+
+  tgtPt = Eigen::Vector2d{-9.2, 5.5};
+  refPt = expansion->EvaluateForward(tgtPt);
+  invPt = expansion->EvaluateInverse(refPt);
+
+  EXPECT_NEAR(tgtPt(0), invPt(0), 1e-8);
+  EXPECT_NEAR(tgtPt(1), invPt(1), 1e-8);
+}
+
+
+
 TEST_F(Approximation_MonotoneExpansion2d, Jacobian){
 
   Eigen::VectorXd evalPt(2);
