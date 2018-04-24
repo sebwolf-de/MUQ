@@ -27,7 +27,10 @@ MaternKernel::MaternKernel(unsigned              dimIn,
                            double                lengthIn,
                            double                nuIn,
                            Eigen::Vector2d       sigmaBounds,
-                           Eigen::Vector2d       lengthBounds) : KernelImpl<MaternKernel>(dimIn, dimInds, 1, 2), nu(nuIn), scale(std::pow(2.0, 1.0-nuIn)/boost::math::tgamma(nuIn))
+                           Eigen::Vector2d       lengthBounds) : KernelImpl<MaternKernel>(dimIn, dimInds, 1, 2),
+                                                                 nu(nuIn),
+                                                                 scale(boost::math::tgamma(nuIn+0.5)/boost::math::tgamma(2.0*nuIn)),
+                                                                 weights(BuildWeights(nu-0.5))
 {
     CheckNu();
 
@@ -48,7 +51,10 @@ MaternKernel::MaternKernel(unsigned        dimIn,
                            double          lengthIn,
                            double          nuIn,
                            Eigen::Vector2d sigmaBounds,
-                           Eigen::Vector2d lengthBounds) : KernelImpl<MaternKernel>(dimIn, 1, 2), nu(nuIn), scale(std::pow(2.0, 1.0-nuIn)/boost::math::tgamma(nuIn))
+                           Eigen::Vector2d lengthBounds) : KernelImpl<MaternKernel>(dimIn, 1, 2),
+                                                           nu(nuIn),
+                                                           scale(boost::math::tgamma(nuIn+0.5)/boost::math::tgamma(2.0*nuIn)),
+                                                           weights(BuildWeights(nu-0.5))
 {
     CheckNu();
 
@@ -126,4 +132,19 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
     Eigen::MatrixXd Pinf = muq::Utilities::LyapunovSolver<double>().compute(F->GetMatrix().transpose(), Q).matrixX().real();
 
     return std::make_tuple(sde, H, Pinf);
+}
+
+
+Eigen::VectorXd MaternKernel::BuildWeights(int p)
+{
+  Eigen::VectorXd output(p+1);
+  for(int i=0; i<=p; ++i){
+
+    if(i<p){
+      output(i) = static_cast<double>(Factorial(p+i))/(static_cast<double>(Factorial(i)*Factorial(p-i)));
+    }else{
+      output(i) = static_cast<double>(Factorial(p+i)) / static_cast<double>(Factorial(i));
+    }
+  }
+  return output;
 }

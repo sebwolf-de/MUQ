@@ -44,6 +44,17 @@ public:
       block = A*temp*A.transpose();
     }
 
+    virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                   Eigen::Ref<const Eigen::VectorXd> const& x2,
+                                   Eigen::Ref<const Eigen::VectorXd> const& params,
+                                   std::vector<int>                  const& wrts,
+                                   Eigen::Ref<Eigen::MatrixXd>              block) const override
+    {
+      Eigen::MatrixXd temp(K->coDim,K->coDim);
+      K->FillPosDerivBlock(x1,x2, params, wrts, temp);
+      block = A*temp*A.transpose();
+    }
+
     virtual std::shared_ptr<KernelBase> Clone() const override{return std::make_shared<LinearTransformKernel>(*this);};
 
 private:
@@ -59,6 +70,11 @@ LinearTransformKernel TransformKernel(Eigen::MatrixXd const& A, KernelType const
     return LinearTransformKernel(A,K.Clone());
 }
 
+template<typename KernelType, typename = typename std::enable_if<std::is_base_of<KernelBase, KernelType>::value>::type>
+LinearTransformKernel operator*(Eigen::MatrixXd const& A, KernelType const& kernel)
+{
+    return LinearTransformKernel(A, kernel.Clone());
+}
 
 }
 }

@@ -34,6 +34,8 @@ k(x,x^\prime) = \left[\begin{array}{cc}k_1(x,x^\prime) & 0\\ 0 & k_2(x,x^\prime)
 
         virtual ~ConcatenateKernel(){};
 
+        virtual std::shared_ptr<KernelBase> Clone() const override{return std::make_shared<ConcatenateKernel>(kernel1,kernel2);};
+
         virtual void FillBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
                                Eigen::Ref<const Eigen::VectorXd> const& x2,
                                Eigen::Ref<const Eigen::VectorXd> const& params,
@@ -44,6 +46,16 @@ k(x,x^\prime) = \left[\begin{array}{cc}k_1(x,x^\prime) & 0\\ 0 & k_2(x,x^\prime)
           kernel2->FillBlock(x1, x2, params, block.block(kernel1->coDim,kernel1->coDim,kernel2->coDim, kernel2->coDim));
         }
 
+        virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                       Eigen::Ref<const Eigen::VectorXd> const& x2,
+                                       Eigen::Ref<const Eigen::VectorXd> const& params,
+                                       std::vector<int>                  const& wrts,
+                                       Eigen::Ref<Eigen::MatrixXd>              block) const override
+        {
+          block = Eigen::MatrixXd::Zero(coDim, coDim);
+          kernel1->FillPosDerivBlock(x1, x2, params, wrts, block.block(0,0,kernel1->coDim, kernel1->coDim));
+          kernel2->FillPosDerivBlock(x1, x2, params, wrts, block.block(kernel1->coDim,kernel1->coDim,kernel2->coDim, kernel2->coDim));
+        };
 
         // template<typename VecType1, typename VecType2, typename MatType>
         //     inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatType & derivs) const
@@ -76,8 +88,8 @@ k(x,x^\prime) = \left[\begin{array}{cc}k_1(x,x^\prime) & 0\\ 0 & k_2(x,x^\prime)
 
 
 
-template<class KernelType1, class KernelType2>
-ConcatenateKernel<KernelType1, KernelType2> Concatenate(KernelType1 const& kernel1, KernelType2 const& kernel2)
+template<typename KernelType1, typename KernelType2>
+ConcatenateKernel Concatenate(KernelType1 const& kernel1, KernelType2 const& kernel2)
 {
     return ConcatenateKernel(kernel1.Clone(), kernel2.Clone());
 }

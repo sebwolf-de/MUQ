@@ -44,11 +44,11 @@ public:
 
     virtual ~PeriodicKernel(){};
 
-    template<typename ScalarType1, typename ScalarType2>
+    template<typename ScalarType1, typename ScalarType2, typename ScalarType3>
     void FillBlockImpl(Eigen::Ref<const Eigen::Matrix<ScalarType1, Eigen::Dynamic, 1>> const& x1,
-                       Eigen::Ref<const Eigen::Matrix<ScalarType2, Eigen::Dynamic, 1>> const& x2,
-                       Eigen::Ref<const Eigen::VectorXd>                               const& params,
-                       Eigen::Ref<Eigen::Matrix<ScalarType1,Eigen::Dynamic, Eigen::Dynamic>>  block) const
+                       Eigen::Ref<const Eigen::Matrix<ScalarType1, Eigen::Dynamic, 1>> const& x2,
+                       Eigen::Ref<const Eigen::Matrix<ScalarType2, Eigen::Dynamic, 1>> const& params,
+                       Eigen::Ref<Eigen::Matrix<ScalarType3,Eigen::Dynamic, Eigen::Dynamic>>  block) const
     {
       ScalarType1 dist = (x1-x2).norm();
       block(0,0) = params(0) * exp(-2.0 * pow(sin(pi*dist/params(2)),2.0) / pow(params(1),2.0));

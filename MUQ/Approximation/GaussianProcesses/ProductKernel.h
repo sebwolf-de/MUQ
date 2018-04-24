@@ -45,6 +45,51 @@ public:
                            Eigen::Ref<const Eigen::VectorXd> const& params,
                            Eigen::Ref<Eigen::MatrixXd>              block) const override;
 
+    virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                   Eigen::Ref<const Eigen::VectorXd> const& x2,
+                                   Eigen::Ref<const Eigen::VectorXd> const& params,
+                                   std::vector<int>                  const& wrts,
+                                   Eigen::Ref<Eigen::MatrixXd>              block) const override
+    {
+
+
+      Eigen::MatrixXd eval1(coDim,coDim);
+      kernel1->FillBlock(x1,x2,params.head(kernel1->numParams),eval1);
+
+      Eigen::MatrixXd eval2(coDim,coDim);
+      kernel2->FillBlock(x1,x2,params.tail(kernel2->numParams),eval2);
+
+      Eigen::MatrixXd deriv1_i(coDim,coDim);
+      kernel1->FillPosDerivBlock(x1,x2,params.head(kernel1->numParams),{wrts.at(0)}, deriv1_i);
+
+      Eigen::MatrixXd deriv2_i(coDim,coDim);
+      kernel2->FillPosDerivBlock(x1,x2,params.tail(kernel2->numParams), {wrts.at(0)}, deriv2_i);
+
+      if(wrts.size()==1){
+        block = (deriv2_i.array() * eval1.array() + deriv1_i.array()*eval2.array()).matrix();
+
+      }else if(wrts.size()==2){
+        Eigen::MatrixXd deriv1_j(coDim,coDim);
+        kernel1->FillPosDerivBlock(x1,x2,params.head(kernel1->numParams),{wrts.at(1)}, deriv1_j);
+
+        Eigen::MatrixXd deriv2_j(coDim,coDim);
+        kernel2->FillPosDerivBlock(x1,x2,params.tail(kernel2->numParams), {wrts.at(1)}, deriv2_j);
+
+        Eigen::MatrixXd secDeriv1_ij(coDim,coDim);
+        kernel1->FillPosDerivBlock(x1,x2,params.head(kernel1->numParams), wrts, secDeriv1_ij);
+
+        Eigen::MatrixXd secDeriv2_ij(coDim,coDim);
+        kernel2->FillPosDerivBlock(x1,x2,params.tail(kernel2->numParams), wrts, secDeriv2_ij);
+
+        block = (secDeriv1_ij.array() * eval2.array() + deriv1_i.array()*deriv2_j.array() + deriv1_j.array()*deriv2_i.array() + eval1.array()*secDeriv2_ij.array()).matrix();
+
+      }else{
+        assert(false);
+      }
+    }
+
+    virtual std::shared_ptr<KernelBase> Clone() const override{return std::make_shared<ProductKernel>(kernel1,kernel2);};
+
   //   template<typename VecType1, typename VecType2, typename MatType>
   //   inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatType & derivs) const
   //   {
@@ -97,6 +142,14 @@ protected:
                                                                                                                                                                 boost::property_tree::ptree sdeOptions) const;
 
 };
+
+
+// Operator overload
+template<typename KernelType1, typename KernelType2, typename = typename std::enable_if<std::is_base_of<KernelBase, KernelType1>::value && std::is_base_of<KernelBase, KernelType2>::value, KernelType1>::type>
+ProductKernel operator*(KernelType1 const& k1, KernelType2 const& k2)
+{
+  return ProductKernel(k1.Clone(), k2.Clone());
+}
 
 
 }

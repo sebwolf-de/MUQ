@@ -51,6 +51,25 @@ public:
 
 	     block = A * rhoVec.asDiagonal() * A.transpose();
     }
+
+    virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                   Eigen::Ref<const Eigen::VectorXd> const& x2,
+                                   Eigen::Ref<const Eigen::VectorXd> const& params,
+                                   std::vector<int>                  const& wrts,
+                                   Eigen::Ref<Eigen::MatrixXd>              block) const override
+    {
+      Eigen::VectorXd rhoVec(coDim);
+
+      Eigen::MatrixXd temp(1,1);
+
+      unsigned currInd = 0;
+      for(int i=0; i<coDim; ++i){
+        kernels.at(i)->FillPosDerivBlock(x1,x2,params.segment(currInd, kernels.at(i)->numParams),wrts,temp);
+        rhoVec(i) = temp(0,0);
+        currInd += kernels.at(i)->numParams;
+      }
+      block = A * rhoVec.asDiagonal() * A.transpose();
+    }
   //
   //   template<typename VecType1, typename VecType2, typename MatrixType>
   //   inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatrixType & derivs) const
@@ -80,7 +99,7 @@ public:
   //   }
 
   virtual std::shared_ptr<KernelBase> Clone() const override{return std::make_shared<CoregionalKernel>(*this);};
-  
+
 private:
 
     Eigen::MatrixXd A;

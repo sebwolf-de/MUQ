@@ -55,49 +55,79 @@ public:
     };
 
 
-    // virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
-    //                                Eigen::Ref<const Eigen::VectorXd> const& x2,
-    //                                Eigen::Ref<const Eigen::VectorXd> const& params,
-    //                                std::vector<unsigned>             const& wrts,
-    //                                Eigen::Ref<Eigen::MatrixXd>              block) const override
-    // {
-    //   FillPosDerivBlockImpl(x1,x2,params,wrts,block);
-    // }
-    //
-    // template<typename ScalarType>
-    // virtual void FillPosDerivBlockImpl(Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>  const& x1,
-    //                                    Eigen::Ref<const Eigen::VectorXd>             const& x2,
-    //                                    Eigen::Ref<const Eigen::VectorXd> const&             params,
-    //                                    std::vector<int>                              const& wrts,
-    //                                    Eigen::Ref<Eigen::MatrixXd>                          block) const
-    // {
-    //   if(dimWrts.size()==0){
-    //
-    //     ChildType::FillBlockImpl(x1, x2, params, block);
-    //
-    //   }else{
-    //
-    //     Eigen::Matrix<stan::math::fvar<ScalarType>, Eigen::Dynamic, 1> x1_temp(x1.size());
-    //     for(int i=0; i<x1.size(); ++i){
-    //       x1_temp(i).val_ = x1(i);
-    //       x1_temp(i).d_ = 0.0;
-    //     }
-    //     x1_temp(dimWrts.at(0)).d_ = 1.0;
-    //
-    //     std::vector<int> newWrts(dimWrts.begin()+1, dimWrts.end());
-    //
-    //     Eigen::Matrix<stan::math::fvar<ScalarType>, Eigen::Dynamic, Eigen::Dynamic> cov;
-    //     FillPosDerivBlock(x1, x2, params, newWrts, cov);
-    //
-    //     for(int j=0; j<coDim.cols(); ++j){
-    //       for(int i=0; i<coDim.rows(); ++i){
-    //         block(i,j) = cov(i,j).d_;
-    //       }
-    //     }
-    //
-    //   }
-    // };
+    virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                   Eigen::Ref<const Eigen::VectorXd> const& x2,
+                                   Eigen::Ref<const Eigen::VectorXd> const& params,
+                                   std::vector<int>                  const& wrts,
+                                   Eigen::Ref<Eigen::MatrixXd>              block) const override
+    {
+      FillPosDerivBlockImpl(x1,x2,params,wrts,block);
+    }
 
+    void FillPosDerivBlockImpl(Eigen::Ref<const Eigen::VectorXd>  const& x1,
+                               Eigen::Ref<const Eigen::VectorXd>  const& x2,
+                               Eigen::Ref<const Eigen::VectorXd>  const& params,
+                               std::vector<int>                   const& wrts,
+                               Eigen::Ref<Eigen::MatrixXd>               block) const
+    {
+      // STAN will sometimes fail with third derivatives
+      assert(wrts.size()<3);
+
+      if(wrts.size()==0){
+
+        static_cast<const ChildType*>(this)->FillBlockImpl(x1, x2, params, block);
+        return;
+      }
+
+
+      Eigen::Matrix<stan::math::fvar<double>, Eigen::Dynamic, 1> x1Temp(x1.size());
+      Eigen::Matrix<stan::math::fvar<double>, Eigen::Dynamic, 1> x2Temp(x2.size());
+
+      for(int i=0; i<x1.size(); ++i){
+        x1Temp(i).val_ = x1(i);
+        x1Temp(i).d_ = 0.0;
+        x2Temp(i).val_ = x2(i);
+        x2Temp(i).d_ = 0.0;
+      }
+      x1Temp(wrts.at(0)).d_ = 1.0;
+
+      if(wrts.size()==1){
+        Eigen::Matrix<stan::math::fvar<double>, Eigen::Dynamic, Eigen::Dynamic> cov(coDim, coDim);
+        static_cast<const ChildType*>(this)->template FillBlockImpl<stan::math::fvar<double>,double, stan::math::fvar<double>>(x1Temp, x2Temp, params, cov);
+
+        for(int j=0; j<coDim; ++j){
+          for(int i=0; i<coDim; ++i){
+            block(i,j) = cov(i,j).d_;
+          }
+        }
+        return;
+      }
+
+      // At this point,
+      if(wrts.size()==2){
+
+        Eigen::Matrix<stan::math::fvar<stan::math::fvar<double>>, Eigen::Dynamic, 1> x1Temp2(x1.size());
+        Eigen::Matrix<stan::math::fvar<stan::math::fvar<double>>, Eigen::Dynamic, 1> x2Temp2(x1.size());
+        for(int i=0; i<x1.size(); ++i){
+          x1Temp2(i).val_ = x1Temp(i);
+          x1Temp2(i).d_ = 0.0;
+          x2Temp2(i).val_ = x2Temp(i);
+          x2Temp2(i).d_ = 0.0;
+        }
+        x1Temp2(wrts.at(1)).d_ = 1.0;
+
+        Eigen::Matrix<stan::math::fvar<stan::math::fvar<double>>, Eigen::Dynamic, Eigen::Dynamic> cov(coDim,coDim);
+        static_cast<const ChildType*>(this)->template FillBlockImpl<stan::math::fvar<stan::math::fvar<double>>,double,stan::math::fvar<stan::math::fvar<double>>>(x1Temp2, x2Temp2, params, cov);
+
+        for(int j=0; j<coDim; ++j){
+          for(int i=0; i<coDim; ++i){
+            block(i,j) = cov(i,j).d_.d_;
+          }
+        }
+
+        return;
+      }
+    };
 };
 
 

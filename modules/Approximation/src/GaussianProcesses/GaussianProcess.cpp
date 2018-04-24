@@ -89,7 +89,7 @@ void GaussianProcess::ProcessObservations()
 
             baseCov = covKernel->BuildCovariance(observations.at(j)->loc, observations.at(j)->loc);
             trainCov.block(currRow, currRow, observations.at(j)->H->rows(), observations.at(j)->H->rows()) = observations.at(j)->H->Apply(observations.at(j)->H->Apply(baseCov).transpose()) + observations.at(j)->obsCov;
-            
+
             currCol += observations.at(j)->H->rows();
         }
 
@@ -311,49 +311,50 @@ double GaussianProcess::MarginalLogLikelihood()
 double  GaussianProcess::MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
                                                bool                        computeGrad)
 {
-    ProcessObservations();
-
-    // Compute the log determinant of the covariance
-    Eigen::MatrixXd L = covSolver.matrixL();
-    L = (L*covSolver.vectorD().cwiseSqrt().asDiagonal()).eval();
-    L = (covSolver.transpositionsP().transpose() * L).eval();
-    double logDet = 0.0;
-    for(int i=0; i<L.rows(); ++i)
-	logDet += 2.0*log(L(i,i));
-
-    // Make the mean prediction and compute the difference with observations
-    double logLikely = -0.5 * trainDiff.transpose() * sigmaTrainDiff - 0.5*logDet - 0.5*observations.size()*log(2.0*pi);
-
-    if(computeGrad)
-    {
-	// Compute the gradient of the log likelihood
-	const int numParams = covKernel->numParams;
-	grad.resize(numParams);
-
-	for(int p=0; p<numParams; ++p)
-	{
-            // Build the derivative matrix
-            Eigen::MatrixXd derivMat(obsDim, obsDim);
-            Eigen::MatrixXd tempDerivMat;
-            int currRow=0;
-            int currCol=0;
-
-            for(int j=0; j<observations.size(); ++j)
-            {
-                currRow = 0;
-                for(int i=0; i<=j; ++i)
-                {
-                    tempDerivMat = covKernel->GetDerivative(observations.at(i)->loc, observations.at(j)->loc, p);
-                    derivMat.block(currRow,currCol, observations.at(i)->H->rows(), observations.at(j)->H->rows()) = observations.at(i)->H->Apply( observations.at(j)->H->Apply(tempDerivMat).transpose() );
-
-                    currRow += observations.at(i)->H->rows();
-                }
-                currCol += observations.at(j)->H->rows();
-            }
-
-	    grad(p) = 0.5*(sigmaTrainDiff*sigmaTrainDiff.transpose()*derivMat - covSolver.solve(derivMat)).trace();
-	}
-    }
-
-    return logLikely;
+  assert(false);
+  //   ProcessObservations();
+  //
+  //   // Compute the log determinant of the covariance
+  //   Eigen::MatrixXd L = covSolver.matrixL();
+  //   L = (L*covSolver.vectorD().cwiseSqrt().asDiagonal()).eval();
+  //   L = (covSolver.transpositionsP().transpose() * L).eval();
+  //   double logDet = 0.0;
+  //   for(int i=0; i<L.rows(); ++i)
+	// logDet += 2.0*log(L(i,i));
+  //
+  //   // Make the mean prediction and compute the difference with observations
+  //   double logLikely = -0.5 * trainDiff.transpose() * sigmaTrainDiff - 0.5*logDet - 0.5*observations.size()*log(2.0*pi);
+  //
+  //   if(computeGrad)
+  //   {
+	// // Compute the gradient of the log likelihood
+	// const int numParams = covKernel->numParams;
+	// grad.resize(numParams);
+  //
+	// for(int p=0; p<numParams; ++p)
+	// {
+  //           // Build the derivative matrix
+  //           Eigen::MatrixXd derivMat(obsDim, obsDim);
+  //           Eigen::MatrixXd tempDerivMat;
+  //           int currRow=0;
+  //           int currCol=0;
+  //
+  //           for(int j=0; j<observations.size(); ++j)
+  //           {
+  //               currRow = 0;
+  //               for(int i=0; i<=j; ++i)
+  //               {
+  //                   tempDerivMat = covKernel->GetDerivative(observations.at(i)->loc, observations.at(j)->loc, p);
+  //                   derivMat.block(currRow,currCol, observations.at(i)->H->rows(), observations.at(j)->H->rows()) = observations.at(i)->H->Apply( observations.at(j)->H->Apply(tempDerivMat).transpose() );
+  //
+  //                   currRow += observations.at(i)->H->rows();
+  //               }
+  //               currCol += observations.at(j)->H->rows();
+  //           }
+  //
+	//     grad(p) = 0.5*(sigmaTrainDiff*sigmaTrainDiff.transpose()*derivMat - covSolver.solve(derivMat)).trace();
+	// }
+  //   }
+  //
+  //   return logLikely;
 };

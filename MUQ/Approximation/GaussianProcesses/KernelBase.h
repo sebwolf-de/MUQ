@@ -64,14 +64,6 @@ public:
     virtual std::vector<std::shared_ptr<KernelBase>> GetSeperableComponents() {return std::vector<std::shared_ptr<KernelBase>>(1,Clone()); };
 
 
-    /** For particular points and parameters, this function fills in one
-        block of the covariance matrix.
-    */
-    virtual void FillBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
-                           Eigen::Ref<const Eigen::VectorXd> const& x2,
-                           Eigen::Ref<const Eigen::VectorXd> const& params,
-                           Eigen::Ref<Eigen::MatrixXd>              block) const = 0;
-
     virtual Eigen::MatrixXd Evaluate(Eigen::VectorXd const& x1,
                                      Eigen::VectorXd const& x2) const;
 
@@ -87,19 +79,10 @@ public:
     virtual void FillCovariance(Eigen::MatrixXd             const& xs,
                                 Eigen::Ref<Eigen::MatrixXd>        cov) const;
 
-    /** Evaluates a first or higher order derivative of the covariance kernel
-        with respect to one of the position variables.
-    */
-    // virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
-    //                                Eigen::Ref<const Eigen::VectorXd> const& x2,
-    //                                Eigen::Ref<const Eigen::VectorXd> const& params,
-    //                                std::vector<unsigned>             const& wrts,
-    //                                Eigen::Ref<Eigen::MatrixXd>              block) const = 0;
 
-    //
-    // virtual Eigen::MatrixXd GetPosDerivative(Eigen::VectorXd  const& x1,
-    //                                          Eigen::VectorXd  const& x2,
-    //                                          std::vector<int> const& wrts) const;
+    virtual Eigen::MatrixXd GetPosDerivative(Eigen::VectorXd  const& x1,
+                                             Eigen::VectorXd  const& x2,
+                                             std::vector<int> const& wrts) const;
 
     // virtual Eigen::MatrixXd GetParamDerivative(Eigen::VectorXd  const& x1,
     //                                            Eigen::VectorXd  const& x2,
@@ -133,6 +116,24 @@ public:
     const unsigned inputDim;
     const unsigned coDim;
     const unsigned numParams;
+
+    /** Evaluates a first or higher order derivative of the covariance kernel
+        with respect to one of the position variables.
+    */
+    virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                                   Eigen::Ref<const Eigen::VectorXd> const& x2,
+                                   Eigen::Ref<const Eigen::VectorXd> const& params,
+                                   std::vector<int>                  const& wrts,
+                                   Eigen::Ref<Eigen::MatrixXd>              block) const = 0;
+
+
+    /** For particular points and parameters, this function fills in one
+        block of the covariance matrix.
+    */
+    virtual void FillBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
+                           Eigen::Ref<const Eigen::VectorXd> const& x2,
+                           Eigen::Ref<const Eigen::VectorXd> const& params,
+                           Eigen::Ref<Eigen::MatrixXd>              block) const = 0;
 
 protected:
 

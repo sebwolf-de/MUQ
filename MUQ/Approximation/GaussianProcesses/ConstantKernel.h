@@ -38,20 +38,26 @@ public:
 
     ConstantKernel(unsigned               dim,
 	                 Eigen::MatrixXd const& sigma2In,
-                   const Eigen::Vector2d  sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : KernelImpl<ConstantKernel>(dim, sigma2In.rows(), GetNumParams(sigma2In)), sigma2(sigma2In)
+                   const Eigen::Vector2d  sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : KernelImpl<ConstantKernel>(dim, sigma2In.rows(), GetNumParams(sigma2In))
     {
     	paramBounds.resize(2,1);
     	paramBounds(0,0) = sigmaBounds(0);
     	paramBounds(1,0) = sigmaBounds(1);
 
-      cachedParams.resize(3);
-      cachedParams(0) = sigma2In;
+      cachedParams.resize(numParams);
+      int ind = 0;
+      for(int i=0; i<sigma2In.rows(); ++i){
+        for(int j=0; j<=i; ++j){
+          cachedParams(ind) = sigma2In(i,j);
+          ind++;
+        }
+      }
     };
 
     ConstantKernel(unsigned               dim,
 		               std::vector<unsigned>  dimInds,
 	                 Eigen::MatrixXd const& sigma2In,
-                   const Eigen::Vector2d  sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : KernelImpl<ConstantKernel>(dim, dimInds, sigma2In.rows(), GetNumParams(sigma2In)), sigma2(sigma2In)
+                   const Eigen::Vector2d  sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : KernelImpl<ConstantKernel>(dim, dimInds, sigma2In.rows(), GetNumParams(sigma2In))
     {
     	paramBounds.resize(2,1);
     	paramBounds(0,0) = sigmaBounds(0);
@@ -69,11 +75,11 @@ public:
 
     virtual ~ConstantKernel(){};
 
-    template<typename ScalarType1, typename ScalarType2>
+    template<typename ScalarType1, typename ScalarType2, typename ScalarType3>
     void FillBlockImpl(Eigen::Ref<const Eigen::Matrix<ScalarType1, Eigen::Dynamic, 1>> const& x1,
-                       Eigen::Ref<const Eigen::Matrix<ScalarType2, Eigen::Dynamic, 1>> const& x2,
-                       Eigen::Ref<const Eigen::VectorXd>                               const& params,
-                       Eigen::Ref<Eigen::Matrix<ScalarType1,Eigen::Dynamic, Eigen::Dynamic>>  block) const
+                       Eigen::Ref<const Eigen::Matrix<ScalarType1, Eigen::Dynamic, 1>> const& x2,
+                       Eigen::Ref<const Eigen::Matrix<ScalarType2, Eigen::Dynamic, 1>> const& params,
+                       Eigen::Ref<Eigen::Matrix<ScalarType3,Eigen::Dynamic, Eigen::Dynamic>>  block) const
     {
       int ind = 0;
       for(int i=0; i<coDim; ++i){

@@ -8,9 +8,6 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
-
-#include <boost/math/special_functions/bessel.hpp>
-#include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/constants/constants.hpp>
 
 
@@ -58,31 +55,39 @@ public:
     virtual ~MaternKernel(){};
 
 
-    template<typename ScalarType1, typename ScalarType2>
+    template<typename ScalarType1, typename ScalarType2, typename ScalarType3>
     void FillBlockImpl(Eigen::Ref<const Eigen::Matrix<ScalarType1, Eigen::Dynamic, 1>> const& x1,
-                       Eigen::Ref<const Eigen::Matrix<ScalarType2, Eigen::Dynamic, 1>> const& x2,
-                       Eigen::Ref<const Eigen::VectorXd>                               const& params,
-                       Eigen::Ref<Eigen::Matrix<ScalarType1,Eigen::Dynamic, Eigen::Dynamic>>  block) const
+                       Eigen::Ref<const Eigen::Matrix<ScalarType1, Eigen::Dynamic, 1>> const& x2,
+                       Eigen::Ref<const Eigen::Matrix<ScalarType2, Eigen::Dynamic, 1>> const& params,
+                       Eigen::Ref<Eigen::Matrix<ScalarType3,Eigen::Dynamic, Eigen::Dynamic>>  block) const
     {
+      int p = round(nu-0.5);
 
       ScalarType1 dist = (x1-x2).norm();
 
-      if(dist < 4.0*std::numeric_limits<double>::epsilon()){
-        block(0,0) = params(0);
-      }else{
-        ScalarType1 temp = sqrt(2.0*nu)*dist/params(1);
-        block(0,0) = params(0) * scale * pow(temp, nu) * boost::math::cyl_bessel_k(nu, temp);
-      }
+      block(0,0) = 0.0;
+      for(int i=0; i<=p; ++i)
+        block(0,0) +=  weights(i) * pow(sqrt(8.0*nu)*dist/params(1), p-i);
+
+      block(0,0) *= params(0)*exp(-sqrt(2.0*nu)*dist / params(1)) * scale;
     }
 
     virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions = boost::property_tree::ptree()) const override;
 
 private:
 
-    double nu;
-    double scale; // std::pow(2.0, 1.0-nu)/boost::math::tgamma(nu)
+    const double nu;
+    const double scale; // std::pow(2.0, 1.0-nu)/boost::math::tgamma(nu)
+
+    const Eigen::VectorXd weights;
 
     void CheckNu() const;
+
+    static Eigen::VectorXd BuildWeights(int p);
+
+    static inline int Factorial(int n){
+      return (n == 1 || n == 0) ? 1 : Factorial(n - 1) * n;
+    }
 };
 
 }
