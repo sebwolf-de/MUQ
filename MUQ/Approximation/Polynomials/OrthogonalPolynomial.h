@@ -1,5 +1,5 @@
-#ifndef POLYNOMIAL_H_
-#define POLYNOMIAL_H_
+#ifndef ORTHOGONALPOLYNOMIAL_H_
+#define ORTHOGONALPOLYNOMIAL_H_
 
 #include <functional>
 #include <string>
@@ -9,25 +9,33 @@
 namespace muq {
   namespace Approximation {
 
+    class GaussQuadrature;
+
     /// A 1D polynomial (monomial, Hermite, or Legendre)
     /**
-       In general, we use an recursive formula to evaluate a \f$d^{th}\f$ degree polynomial using a three term recurrence:
+       In general, we use an recursive formula to evaluate a \f$d^{th}\f$ degree
+        polynomial using a three term recurrence:
        \f{eqnarray*}{
        p_0(x) &=& \phi_0(x) \\
        p_1(x) &=& \phi_1(x) \\
-       p_{k+1}(x) &=& - \alpha_k(x)p_k(x) - \beta_k(x) p_{k-1}(x)
+       p_{k}(x) & = & (a_k x + b_k) p_{k-1}(x) - c_k p_{k-2}(x)
        \f}
-       Subclasses specialize for particular polynomials (e.g., Hermite) by implementing \f$\alpha_k(x)\f$, \f$\beta_k(x)\f$, \f$\phi_0(x)\f$, and \f$\phi_1(x)\f$.
+       Subclasses specialize for particular polynomials (e.g., Hermite) by
+      implementing functions for \f$a_k\f$, \f$b_k\f$, \f$c_k\f$,
+      \f$\phi_0(x)\f$, and \f$\phi_1(x)\f$.
 
-       Uses the Clenshaw algorithm from: http://en.wikipedia.org/wiki/Clenshaw_algorithm.
+       The BasisEvaluate function Uses the Clenshaw algorithm from: http://en.wikipedia.org/wiki/Clenshaw_algorithm.
      */
-    class Polynomial : public IndexedScalarBasis {
+    class OrthogonalPolynomial : public IndexedScalarBasis {
+
+      friend class GaussQuadrature;
+
     public:
 
       /// Create a polynomial
-      Polynomial() : IndexedScalarBasis(){};
+      OrthogonalPolynomial() : IndexedScalarBasis(){};
 
-      virtual ~Polynomial() = default;
+      virtual ~OrthogonalPolynomial() = default;
 
       /// Evaluate the specific polynomial type (must be implemented by the child)
       /**
@@ -40,14 +48,8 @@ namespace muq {
        */
       virtual double BasisEvaluate(int const order, double const x) const override;
 
-      /** Evaluate the \f$n^{th}\f$ derivative of a \f$p^{th}\f$ order polynomial.
-          @param[in] polyOrder The order \f$p\f$ of the polynomial.
-          @param[in] derivOrder The order \f$n\f$ of the derivative.
-          @param[in] x The location to evaluate the derivative.
-      */
-      //virtual double DerivativeEvaluate(int const polyOrder, int const derivOrder, double const x) const = 0;
-
-
+      virtual Eigen::VectorXd EvaluateAllTerms(int    const maxOrder,
+                                               double const x) const override;
 
       /**
          @brief Returns the normalization constant for the polynomial of order \f$p\f$.
@@ -64,29 +66,33 @@ where \f$\delta_{mn}\f$ is the Kronecker delta function, \f$w(x)\f$ is a weighti
 
     private:
 
-      /// Implement \f$\alpha_k(x)\f$
+      /// Implement \f$a_k(x)\f$
       /**
-	 @param[in] k The order of the polynomial
-	 @param[in] x The point where w are evaluating the polynomial
+	     @param[in] k The order of the polynomial
        */
-      virtual double alpha(unsigned int k, double x) const = 0;
+      virtual double ak(unsigned int k) const = 0;
 
-      /// Implement \f$\beta_k(x)\f$
+      /// Implement \f$b_k(x)\f$
       /**
-	 @param[in] k The order of the polynomial
-	 @param[in] x The point where w are evaluating the polynomial
+	       @param[in] k The order of the polynomial
        */
-      virtual double beta(unsigned int k, double x) const = 0;
+      virtual double bk(unsigned int k) const = 0;
+
+      /// Implement \f$c_k(x)\f$
+      /**
+	       @param[in] k The order of the polynomial
+       */
+      virtual double ck(unsigned int k) const = 0;
 
       /// Implement \f$\phi_0(x)\f$
       /**
-	 @param[in] x The point where w are evaluating the polynomial
+	       @param[in] x The point where w are evaluating the polynomial
        */
       virtual double phi0(double x) const = 0;
 
       /// Implement \f$\phi_1(x)\f$
       /**
-	 @param[in] x The point where w are evaluating the polynomial
+	       @param[in] x The point where w are evaluating the polynomial
        */
       virtual double phi1(double x) const = 0;
     };

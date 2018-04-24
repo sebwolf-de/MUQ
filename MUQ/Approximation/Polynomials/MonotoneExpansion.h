@@ -36,9 +36,23 @@ namespace muq{
       */
       unsigned NumTerms() const;
 
+      /** Given a monotone expansion with components T(x) = [T_1(x_1), T_2(x_1,x_2), ..., T_N(x_1,...,x_N)],
+          this function returns a new monotone expansion with just the first components:
+          T_{new}(x) = [T_1(x_1), T_2(x_1,x_2), ..., T_M(x_1,...,x_M)].  The number
+          of terms to keep, M, is the sole input to this function.
+      */
+      std::shared_ptr<MonotoneExpansion> Head(int numRows) const;
+
+      /** Evaluate the inverse of this map. */
+      Eigen::VectorXd EvaluateInverse(Eigen::VectorXd const& refPt) const;
+      Eigen::VectorXd EvaluateInverse(Eigen::VectorXd const& refPt,
+                                      Eigen::VectorXd const& tgtPt0) const;
+
+      Eigen::VectorXd EvaluateForward(Eigen::VectorXd const& x) const;
+
       /** Get the current expansion coefficients.  The coefficients are ordered
           with coefficients from the general parts preceding coefficients for
-          the monotone parts.  Within the general and montone parts, the coefficients
+          the monotone parts.  Within the general and monotone parts, the coefficients
           are ordered according to the output dimension.
       */
       virtual Eigen::VectorXd GetCoeffs() const;
@@ -61,6 +75,8 @@ namespace muq{
       virtual void JacobianImpl(unsigned int const                           wrtIn,
                                 unsigned int const                           wrtOut,
                                 muq::Modeling::ref_vector<boost::any> const& inputs) override;
+
+      Eigen::MatrixXd JacobianWrtX(Eigen::VectorXd const& x) const;
 
       std::vector<std::shared_ptr<BasisExpansion>> generalParts;
       std::vector<std::shared_ptr<BasisExpansion>> monotoneParts;

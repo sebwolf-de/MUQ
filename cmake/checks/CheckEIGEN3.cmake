@@ -20,13 +20,13 @@ CHECK_CXX_SOURCE_COMPILES(
     "
     #include <Eigen/Core>
     int main(){
-     Eigen::VectorXd temp(5);
-     temp({0,1});
-     temp({0,2});
-      return 0;
+     Eigen::VectorXd diag, subDiag;
+     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver;
+     solver.computeFromTridiagonal(diag,subDiag);
+     return 0;
      }
     "
-    EIGEN3_INDEXING_COMPILES)
+    EIGEN3_TRIDIAGONALEIGEN_COMPILES)
 
 set(CMAKE_REQUIRED_INCLUDES ${EIGEN3_INCLUDE_DIR})
   CHECK_CXX_SOURCE_COMPILES(
@@ -45,7 +45,7 @@ set(CMAKE_REQUIRED_INCLUDES ${EIGEN3_INCLUDE_DIR})
     "
     EIGEN3_FFT_COMPILES)
 
-if(NOT EIGEN3_REF_COMPILES OR NOT EIGEN3_FFT_COMPILES OR NOT EIGEN3_INDEXING_COMPILES)
+if(NOT EIGEN3_REF_COMPILES OR NOT EIGEN3_FFT_COMPILES OR NOT EIGEN3_TRIDIAGONALEIGEN_COMPILES)
 	set(EIGEN3_TEST_FAIL 1)
 	set(MUQ_USE_EIGEN3 OFF)
 else()

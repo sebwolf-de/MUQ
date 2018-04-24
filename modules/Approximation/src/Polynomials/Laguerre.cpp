@@ -13,13 +13,14 @@ double Laguerre::DerivativeEvaluate(int const polyOrder, int const derivOrder, d
     return c * Laguerre(a + derivOrder).BasisEvaluate(polyOrder-derivOrder,x);
 }
 
-
-double Laguerre::alpha(unsigned int k, double x) const {
-    return (x - 2.0*k - a - 1.0) / (k+1);
+double Laguerre::ak(unsigned int k) const{
+  return -1.0/double(k);
 }
-
-double Laguerre::beta(unsigned int k, double x) const {
-    return (k + a)/(k+1);
+double Laguerre::bk(unsigned int k) const{
+  return (2.0*k+a-1.0)/double(k);
+}
+double Laguerre::ck(unsigned int k) const{
+  return (k-1.0+a)/double(k);
 }
 
 double Laguerre::phi0(double x) const {

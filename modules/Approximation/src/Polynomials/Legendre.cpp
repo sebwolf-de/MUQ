@@ -2,7 +2,7 @@
 
 using namespace muq::Approximation;
 
-Legendre::Legendre() : Polynomial() {}
+Legendre::Legendre() : OrthogonalPolynomial() {}
 
 Legendre::~Legendre() {}
 
@@ -19,13 +19,16 @@ double Legendre::DerivativeEvaluate(int const polyOrder, int const derivOrder, d
     }
 }
 
-
-double Legendre::alpha(unsigned int k, double x) const {
-  return -(2.0*(double)k+1.0)*x/((double)k+1.0);
+double Legendre::ak(unsigned int k) const {
+  return (2.0*k-1.0) / k;
 }
 
-double Legendre::beta(unsigned int k, double x) const {
-  return (double)k/((double)k+1.0);
+double Legendre::bk(unsigned int k) const {
+  return 0.0;
+}
+
+double Legendre::ck(unsigned int k) const {
+  return (k-1.0)/double(k);
 }
 
 double Legendre::phi0(double x) const {

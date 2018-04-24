@@ -32,7 +32,7 @@ CreateCompileGroup(
 	""
 	""
 	Polynomials/IndexedScalarBasis.cpp
-	Polynomials/Polynomial.cpp
+	Polynomials/OrthogonalPolynomial.cpp
 	Polynomials/Monomial.cpp
 	Polynomials/PhysicistHermite.cpp
 	Polynomials/ProbabilistHermite.cpp
@@ -42,6 +42,7 @@ CreateCompileGroup(
 	Polynomials/HermiteFunction.cpp
   Polynomials/BasisExpansion.cpp
   Polynomials/MonotoneExpansion.cpp
+  Quadrature/GaussQuadrature.cpp
 )
 
 CreateCompileGroup(

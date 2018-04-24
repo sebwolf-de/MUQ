@@ -1,10 +1,16 @@
 #include "MUQ/Approximation/Polynomials/MonotoneExpansion.h"
+#include "MUQ/Approximation/Polynomials/Monomial.h"
 
+#include "MUQ/Approximation/Quadrature/GaussQuadrature.h"
+#include "MUQ/Approximation/Polynomials/Legendre.h"
+
+#include <memory>
 
 using namespace muq::Approximation;
 using namespace muq::Utilities;
 
-MonotoneExpansion::MonotoneExpansion(std::shared_ptr<BasisExpansion> monotonePartsIn) : MonotoneExpansion({},{monotonePartsIn})
+MonotoneExpansion::MonotoneExpansion(std::shared_ptr<BasisExpansion> monotonePartsIn) : MonotoneExpansion({std::make_shared<BasisExpansion>(std::vector<std::shared_ptr<IndexedScalarBasis>>({std::make_shared<Monomial>()}))},
+                                                                                                          {monotonePartsIn})
 {
 }
 
@@ -14,12 +20,77 @@ MonotoneExpansion::MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>
                                                                                                             generalParts(generalPartsIn),
                                                                                                             monotoneParts(monotonePartsIn)
 {
-  assert(generalPartsIn.size() == monotonePartsIn.size()-1);
+  assert(generalPartsIn.size() == monotonePartsIn.size());
+  assert(generalPartsIn.at(0)->Multis()->GetMaxOrders().maxCoeff()==0);
+
   numInputs = -1;
-  unsigned numQuad = 200;
-  quadPts = Eigen::VectorXd::LinSpaced(numQuad+1,0,1).head(numQuad);
-  quadWeights = (1.0/numQuad)*Eigen::VectorXd::Ones(numQuad);
+
+  // Get the maximum order of of the monotone parts
+  int maxOrder = 0;
+  for(int i=0; i<monotoneParts.size(); ++i)
+    maxOrder = std::max(maxOrder, monotoneParts.at(i)->Multis()->GetMaxOrders()(i) );
+
+  // Number of quadrature points is based on the fact that an N point Gauss-quadrature
+  // rule can integrate exactly a polynomial of order 2N-1
+  int numQuadPts = ceil(0.5*(2.0*maxOrder + 1.0));
+  GaussQuadrature gqSolver(std::make_shared<Legendre>(), numQuadPts);
+  gqSolver.Compute();
+
+  quadPts = 0.5*(gqSolver.Points()+Eigen::VectorXd::Ones(numQuadPts));
+  quadWeights = 0.5*gqSolver.Weights();
 }
+
+std::shared_ptr<MonotoneExpansion> MonotoneExpansion::Head(int numRows) const
+{
+  assert(numRows<=generalParts.size());
+
+  std::vector<std::shared_ptr<BasisExpansion>> newGenerals(numRows);
+  std::vector<std::shared_ptr<BasisExpansion>> newMonotones(numRows);
+
+  for(int i=0; i<numRows; ++i){
+    newGenerals.at(i) = generalParts.at(i);
+    newMonotones.at(i) = monotoneParts.at(i);
+  }
+
+  return std::make_shared<MonotoneExpansion>(newGenerals, newMonotones);
+}
+
+Eigen::VectorXd MonotoneExpansion::EvaluateInverse(Eigen::VectorXd const& refPt) const{
+  Eigen::VectorXd tgtPt0 = Eigen::VectorXd::Zero(refPt.size());
+  return EvaluateInverse(refPt, tgtPt0);
+}
+
+Eigen::VectorXd MonotoneExpansion::EvaluateInverse(Eigen::VectorXd const& refPt,
+                                                   Eigen::VectorXd const& tgtPt0) const{
+
+  Eigen::VectorXd tgtPt = tgtPt0;
+  Eigen::VectorXd mappedPt, resid, step, newPt;
+  double residNorm = 1e4;
+  double newResidNorm;
+  const int maxLineIts = 20;
+
+  while(residNorm>1e-8){
+    resid = EvaluateForward(tgtPt) - refPt;
+    step = JacobianWrtX(tgtPt).triangularView<Eigen::Lower>().solve(resid);
+
+    double stepSize = 1.0;
+    newPt = tgtPt - stepSize * step;
+
+    for(int lineIt=0; lineIt<maxLineIts; ++lineIt){
+      newResidNorm = (EvaluateForward(newPt) - refPt).norm();
+      if(newResidNorm<(1.0-1e-5)*residNorm)
+        break;
+      stepSize *= 0.5;
+      newPt = tgtPt - stepSize * step;
+    }
+
+    residNorm = newResidNorm;
+    tgtPt = newPt;
+  }
+
+  return tgtPt;
+}
+
 
 unsigned MonotoneExpansion::NumTerms() const{
 
@@ -66,23 +137,13 @@ void MonotoneExpansion::SetCoeffs(Eigen::VectorXd const& allCoeffs)
   }
 }
 
+Eigen::VectorXd MonotoneExpansion::EvaluateForward(Eigen::VectorXd const& x) const{
 
-void MonotoneExpansion::EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs)
-{
-
-  // Update the coefficients if need be
-  if(inputs.size()>1){
-    Eigen::VectorXd const& coeffs = *boost::any_cast<Eigen::VectorXd>(&inputs.at(1).get());
-    SetCoeffs(coeffs);
-  }
-
-  Eigen::VectorXd output = Eigen::VectorXd::Zero(monotoneParts.size());
-
-  Eigen::VectorXd const& x = *boost::any_cast<Eigen::VectorXd>(&inputs.at(0).get());
+  Eigen::VectorXd refPt = Eigen::VectorXd::Zero(x.size());
 
   // Fill in the general parts
   for(int i=0; i<generalParts.size(); ++i)
-    output(i+1) += boost::any_cast<Eigen::VectorXd>(generalParts.at(i)->Evaluate(x.head(i+1).eval()).at(0))(0);
+    refPt(i) += boost::any_cast<Eigen::VectorXd>(generalParts.at(i)->Evaluate(x).at(0))(0);
 
   // Now add the monotone part
   Eigen::VectorXd quadEvals(quadPts.size());
@@ -100,12 +161,56 @@ void MonotoneExpansion::EvaluateImpl(muq::Modeling::ref_vector<boost::any> const
       polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
       quadEvals(k) = polyEval*polyEval;
     }
-    output(i) += quadEvals.dot(quadWeights)*x(i);
+    refPt(i) += quadEvals.dot(quadWeights)*x(i);
   }
 
-  outputs.resize(1);
-  outputs.at(0) = output;
+  return refPt;
 }
+void MonotoneExpansion::EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs)
+{
+
+  // Update the coefficients if need be
+  if(inputs.size()>1){
+    Eigen::VectorXd const& coeffs = *boost::any_cast<Eigen::VectorXd>(&inputs.at(1).get());
+    SetCoeffs(coeffs);
+  }
+
+  Eigen::VectorXd const& x = *boost::any_cast<Eigen::VectorXd>(&inputs.at(0).get());
+
+  outputs.resize(1);
+  outputs.at(0) = EvaluateForward(x);
+}
+
+
+Eigen::MatrixXd MonotoneExpansion::JacobianWrtX(Eigen::VectorXd const& x) const{
+
+  Eigen::MatrixXd jac = Eigen::MatrixXd::Zero(x.size(), x.size());
+
+  double polyEval;
+  Eigen::MatrixXd polyGrad;
+
+  // Add all of the general parts
+  for(int i=0; i<generalParts.size(); ++i){
+    Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(0,0,x));
+    jac.block(i,0,1,i) += partialJac.block(0,0,1,i);
+  }
+
+  // Add the monotone parts
+  for(int i=0; i<monotoneParts.size(); ++i){
+    Eigen::VectorXd evalPt = x.head(i+1);
+
+    for(int k=0; k<quadPts.size(); ++k){
+      evalPt(i) = x(i) * quadPts(k);
+      polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
+      polyGrad = boost::any_cast<Eigen::MatrixXd>(monotoneParts.at(i)->Jacobian(0,0,evalPt));
+      jac.block(i,0,1,i) += 2.0 * x(i) * quadWeights(k) * polyEval * polyGrad.block(0,0,1,i);
+      jac(i,i) += quadWeights(k) * (polyEval * polyEval + 2.0*x(i)*polyGrad(i)*polyEval*quadPts(k));
+    }
+  }
+
+  return jac;
+}
+
 
 void MonotoneExpansion::JacobianImpl(unsigned int const                           wrtIn,
                                      unsigned int const                           wrtOut,
@@ -122,31 +227,8 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
 
   Eigen::MatrixXd jac;
   if(wrtIn==0){
-    jac = Eigen::MatrixXd::Zero(x.size(), x.size());
 
-    double polyEval;
-    Eigen::MatrixXd polyGrad;
-
-    // Add all of the general parts
-    for(int i=0; i<generalParts.size(); ++i){
-      Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(0,0,x.head(i+1).eval()));
-      jac.block(i+1,0,1,i+1) += partialJac.block(0,0,1,i+1);
-    }
-
-    // Add the monotone parts
-    for(int i=0; i<monotoneParts.size(); ++i){
-      Eigen::VectorXd evalPt = x.head(i+1);
-
-      for(int k=0; k<quadPts.size(); ++k){
-
-        evalPt(i) = x(i) * quadPts(k);
-        polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
-        polyGrad = boost::any_cast<Eigen::MatrixXd>(monotoneParts.at(i)->Jacobian(0,0,evalPt));
-
-        jac.block(i,0,1,i) += 2.0 * x(i) * quadWeights(k) * polyEval * polyGrad.block(0,0,1,i);
-        jac(i,i) += quadWeights(k) * (polyEval * polyEval + 2.0*x(i)*polyGrad(i)*polyEval*quadPts(k));
-      }
-    }
+    jac = JacobianWrtX(x);
 
   }else if(wrtIn==1){
 
@@ -159,8 +241,8 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
     // Fill in the general portion of the jacobian
     unsigned currCoeff = 0;
     for(int i=0; i<generalParts.size(); ++i){
-      Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(1,0,x.head(i+1).eval()));
-      jac.block(i+1, currCoeff, 1, generalParts.at(i)->NumTerms()) += partialJac;
+      Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(1,0,x));
+      jac.block(i, currCoeff, 1, generalParts.at(i)->NumTerms()) += partialJac;
       currCoeff += generalParts.at(i)->NumTerms();
     }
 
@@ -225,7 +307,7 @@ Eigen::VectorXd MonotoneExpansion::GradLogDeterminant(Eigen::VectorXd const& x)
   unsigned currInd = 0;
   for(int i=0; i<generalParts.size(); ++i)
     currInd += generalParts.at(i)->NumTerms();
-    
+
   // Add the monotone parts to the gradient
   for(int i=0; i<monotoneParts.size(); ++i){
     Eigen::VectorXd evalPt = x.head(i+1);

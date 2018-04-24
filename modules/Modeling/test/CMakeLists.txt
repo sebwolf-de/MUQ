@@ -1,6 +1,6 @@
 CreateTestGroup(
     MODELING_CORE
-    
+
     WorkPieceTests.cpp
     WorkPieceDerivativesTests.cpp
     WorkGraphTests.cpp
@@ -8,6 +8,8 @@ CreateTestGroup(
 
     ConstantPieceTests.cpp
     IdentityPieceTests.cpp
+
+    FlannTest/FlannCacheTests.cpp
 )
 
 CreateTestGroup(
@@ -19,15 +21,14 @@ CreateTestGroup(
 
 CreateTestGroup(
     MODELING_FLANN
-    
+
     FlannTest/FlannCacheTests.cpp
 )
 
 CreateTestGroup(
     MODELING_DISTRIBUTIONS
-    
+
     DistributionsTests/DistributionTests.cpp
     DistributionsTests/UniformDistributionTests.cpp
     DistributionsTests/GaussianDistributionTests.cpp
 )
-
