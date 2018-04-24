@@ -13,10 +13,10 @@ KarhunenLoeveExpansion::KarhunenLoeveExpansion(std::shared_ptr<KernelBase> kerne
 {
 
     int numModes = options.get("KarhunenLoeve.NumModes", seedWts.size());
-    
+
     // We will approximation the KL modes as the GP with known values at the seed points.  To get those values, we first need to solve the discrete eigenvalue problem
     Eigen::MatrixXd seedCov = covKernel->BuildCovariance(seedPts);
-    
+
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigSolver;
     eigSolver.compute(seedCov);
 
@@ -25,7 +25,7 @@ KarhunenLoeveExpansion::KarhunenLoeveExpansion(std::shared_ptr<KernelBase> kerne
         std::cerr << "YIKES!  The covariance matrix wasn't positive definite.";
         assert(minEig>0);
     }
-    
+
     modeEigs = eigSolver.eigenvalues().tail(numModes).reverse();
     modeVecs = eigSolver.eigenvectors().rightCols(numModes).rowwise().reverse();
 }

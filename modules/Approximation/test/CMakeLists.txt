@@ -10,6 +10,7 @@ CreateTestGroup(
 
   GaussianProcesses/GaussianProcessTests.cpp
   GaussianProcesses/StateSpaceTests.cpp
+  GaussianProcesses/KarhunenLoeveTest.cpp
 )
 
 CreateTestGroup(

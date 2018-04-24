@@ -69,7 +69,7 @@ Eigen::VectorXd MonotoneExpansion::EvaluateInverse(Eigen::VectorXd const& refPt,
   double newResidNorm;
   const int maxLineIts = 20;
 
-  while(residNorm>1e-8){
+  while(residNorm>1e-11){
     resid = EvaluateForward(tgtPt) - refPt;
     step = JacobianWrtX(tgtPt).triangularView<Eigen::Lower>().solve(resid);
 
@@ -78,7 +78,7 @@ Eigen::VectorXd MonotoneExpansion::EvaluateInverse(Eigen::VectorXd const& refPt,
 
     for(int lineIt=0; lineIt<maxLineIts; ++lineIt){
       newResidNorm = (EvaluateForward(newPt) - refPt).norm();
-      if(newResidNorm<(1.0-1e-5)*residNorm)
+      if(newResidNorm<(1.0-1e-9)*residNorm)
         break;
       stepSize *= 0.5;
       newPt = tgtPt - stepSize * step;
