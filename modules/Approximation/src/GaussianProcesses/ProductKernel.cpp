@@ -93,10 +93,17 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
 
 		if(periodicCast1 && (!periodicCast2)){
 			return GetProductStateSpace(periodicCast1, kernel2, sdeOptions);
-		}else if((!periodicCast2) && periodicCast1){
+		}else if((!periodicCast1) && periodicCast2){
 			return GetProductStateSpace(periodicCast2, kernel1, sdeOptions);
 		}else{
-			throw muq::NotImplementedError("ERROR.  The GetStateSpace() function has not been implemented for these types.");
+      int status = 0;
+
+      std::unique_ptr<char, void(*)(void*)> res1 {abi::__cxa_demangle(typeid(*kernel1).name(), NULL, NULL, &status), std::free};
+      std::string type1 = res1.get();
+      std::unique_ptr<char, void(*)(void*)> res2 {abi::__cxa_demangle(typeid(*kernel2).name(), NULL, NULL, &status), std::free};
+      std::string type2 = res2.get();
+
+      throw muq::NotImplementedError("ERROR in ProductKernel::GetStateSpace().  The GetStateSpace() function has not been implemented for these types: \"" + type1 + "\" and \"" + type2 + "\"");
 		}
 };
 

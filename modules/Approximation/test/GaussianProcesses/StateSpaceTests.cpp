@@ -175,7 +175,7 @@ TEST(Approximation_GP, ProductStateSpace)
     EXPECT_EQ(int(nu+0.5), gp2.stateDim);
 
     StateSpaceGP gp12(mu, kernel12, options);
-    StateSpaceGP gp22(mu, kernel21, options);
+    StateSpaceGP gp21(mu, kernel21, options);
 
     EXPECT_THROW(kernel22.GetStateSpace(options), muq::NotImplementedError);
     EXPECT_EQ(gp1.stateDim *gp2.stateDim, gp12.stateDim);

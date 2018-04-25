@@ -1,9 +1,9 @@
 #ifndef PRODUCTKERNEL_H
 #define PRODUCTKERNEL_H
 
+#include "MUQ/Approximation/GaussianProcesses/KernelBase.h"
 #include "MUQ/Approximation/GaussianProcesses/KernelImpl.h"
 #include "MUQ/Approximation/GaussianProcesses/PeriodicKernel.h"
-#include "MUQ/Approximation/GaussianProcesses/KernelBase.h"
 
 #include "MUQ/Modeling/LinearSDE.h"
 
@@ -12,8 +12,6 @@
 #include "MUQ/Utilities/LinearAlgebra/BlockRowOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/SumOperator.h"
 #include "MUQ/Utilities/LinearAlgebra/IdentityOperator.h"
-
-
 
 #include "MUQ/Utilities/Exceptions.h"
 
