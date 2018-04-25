@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "MUQ/Approximation/GaussianProcesses/Utilities.h"
+#include "MUQ/Approximation/TemplatedArrayUtilities.h"
 
 //#include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
 
@@ -36,7 +36,6 @@ class KernelBase : public std::enable_shared_from_this<muq::Approximation::Kerne
 {
 
 public:
-
 
     KernelBase(unsigned inputDimIn,
                unsigned coDimIn,
@@ -79,6 +78,11 @@ public:
     virtual void FillCovariance(Eigen::MatrixXd             const& xs,
                                 Eigen::Ref<Eigen::MatrixXd>        cov) const;
 
+
+    virtual void FillDerivCovariance(Eigen::MatrixXd             const& xs,
+                                     Eigen::MatrixXd             const& ys,
+                                     std::vector<int>            const& wrts,
+                                     Eigen::Ref<Eigen::MatrixXd>        cov) const;
 
     virtual Eigen::MatrixXd GetPosDerivative(Eigen::VectorXd  const& x1,
                                              Eigen::VectorXd  const& x2,

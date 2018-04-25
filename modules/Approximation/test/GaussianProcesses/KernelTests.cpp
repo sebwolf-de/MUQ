@@ -18,7 +18,7 @@ TEST(Approximation_GP, LinearTransformKernel)
     const unsigned dim = 2;
     Eigen::MatrixXd sigma2(2,2);
     sigma2 << 1.0, 0.9,
-	      0.9, 1.5;
+	            0.9, 1.5;
 
     auto kernel = ConstantKernel(dim, sigma2) * SquaredExpKernel(dim, 2.0, 0.35 );
 
@@ -42,11 +42,11 @@ TEST(Approximation_GP, LinearTransformKernel)
 
     for(int j=0; j<A.rows(); ++j)
     {
-	for(int i=0; i<A.rows(); ++i)
-	{
-	    EXPECT_NEAR(expected(i,j), result2(i,j), 1e-15);
-	    EXPECT_NEAR(expected(i,j), result3(i,j), 1e-15);
-	}
+	    for(int i=0; i<A.rows(); ++i)
+	    {
+	      EXPECT_NEAR(expected(i,j), result2(i,j), 1e-15);
+	      EXPECT_NEAR(expected(i,j), result3(i,j), 1e-15);
+	    }
     }
 }
 
@@ -158,7 +158,7 @@ TEST(Approximation_GP, SquaredExpKernel)
 
 
     // Finite difference derivative test
-    const double eps = 1e-6;
+    const double eps = 1e-5;
     Eigen::VectorXd leftPt = pt1;
     leftPt(0) -= eps;
     Eigen::VectorXd rightPt = pt1;
@@ -174,7 +174,7 @@ TEST(Approximation_GP, SquaredExpKernel)
 
     // Check second derivative
     deriv = kernel.GetPosDerivative(pt1,pt2,{0,0})(0,0);
-    EXPECT_NEAR((rightVal - 2.0*centerVal + leftVal)/(eps*eps), deriv, 1e-4);
+    EXPECT_NEAR((rightVal - 2.0*centerVal + leftVal)/(eps*eps), deriv, 1e-3);
 }
 
 

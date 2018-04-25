@@ -3,6 +3,8 @@
 
 #include "MUQ/Approximation/GaussianProcesses/CovarianceKernels.h"
 
+#include "MUQ/Approximation/GaussianProcesses/ObservationInformation.h"
+
 #include <Eigen/Core>
 
 #include <set>
@@ -223,29 +225,7 @@ namespace muq
 	return SumMean(mu1, mu2);
     }
 
-
-    class ObservationInformation
-    {
-    public:
-
-        ObservationInformation(std::shared_ptr<muq::Utilities::LinearOperator> Hin,
-                               Eigen::Ref<const Eigen::VectorXd> const&        locIn,
-                               Eigen::Ref<const Eigen::VectorXd> const&        obsIn,
-                               Eigen::Ref<const Eigen::MatrixXd> const&        obsCovIn) : H(Hin), loc(locIn), obs(obsIn), obsCov(obsCovIn){};
-
-        // The observation operator
-        std::shared_ptr<muq::Utilities::LinearOperator> H;
-
-        // The location of the observation
-        Eigen::VectorXd loc;
-
-        // The observed data
-        Eigen::VectorXd obs;
-
-        // The covariance of the observational noise
-        Eigen::MatrixXd obsCov;
-    };
-
+    
 
 
     /** @class GaussianProcess

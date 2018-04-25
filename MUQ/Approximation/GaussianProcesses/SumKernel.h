@@ -31,6 +31,9 @@ public:
     {
       assert(kernel2->inputDim == kernel2->inputDim);
 	    assert(kernel1->coDim == kernel2->coDim);
+      cachedParams.resize(numParams);
+      cachedParams.head(kernel1->numParams) = kernel1->GetParams();
+      cachedParams.tail(kernel2->numParams) = kernel2->GetParams();
     };
 
     virtual ~SumKernel(){};

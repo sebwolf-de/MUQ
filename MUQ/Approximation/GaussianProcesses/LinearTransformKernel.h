@@ -26,19 +26,21 @@ public:
 
 
     LinearTransformKernel(Eigen::MatrixXd       const& Ain,
-		                      std::shared_ptr<KernelBase>  Kin) : KernelBase(Kin->inputDim, Ain.rows(), Kin->numParams), A(Ain), K(Kin)
+		                      std::shared_ptr<KernelBase>  Kin) : KernelBase(Kin->inputDim, Ain.rows(), Kin->numParams),
+                                                              A(Ain), K(Kin)
     {
 	     assert(Ain.cols() == Kin->coDim);
+       cachedParams = Kin->GetParams();
     };
 
     virtual ~LinearTransformKernel(){};
+
 
     virtual void FillBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
                            Eigen::Ref<const Eigen::VectorXd> const& x2,
                            Eigen::Ref<const Eigen::VectorXd> const& params,
                            Eigen::Ref<Eigen::MatrixXd>              block) const override
     {
-
       Eigen::MatrixXd temp(K->coDim,K->coDim);
       K->FillBlock(x1,x2, params, temp);
       block = A*temp*A.transpose();
@@ -55,7 +57,7 @@ public:
       block = A*temp*A.transpose();
     }
 
-    virtual std::shared_ptr<KernelBase> Clone() const override{return std::make_shared<LinearTransformKernel>(*this);};
+    virtual std::shared_ptr<KernelBase> Clone() const override{return std::make_shared<LinearTransformKernel>(A,K);};
 
 private:
     Eigen::MatrixXd A;
@@ -70,7 +72,8 @@ LinearTransformKernel TransformKernel(Eigen::MatrixXd const& A, KernelType const
     return LinearTransformKernel(A,K.Clone());
 }
 
-template<typename KernelType, typename = typename std::enable_if<std::is_base_of<KernelBase, KernelType>::value>::type>
+template<typename KernelType,
+         typename = typename std::enable_if<std::is_base_of<KernelBase, KernelType>::value>::type>
 LinearTransformKernel operator*(Eigen::MatrixXd const& A, KernelType const& kernel)
 {
     return LinearTransformKernel(A, kernel.Clone());

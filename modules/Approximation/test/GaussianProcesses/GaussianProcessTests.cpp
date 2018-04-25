@@ -16,7 +16,7 @@ TEST(Approximation_GP, HyperFit1d)
 {
     const unsigned numPred  = 50;
     const unsigned maxTrain = 10;
-    
+
     const double pi = 4.0 * atan(1.0);
 
     // Set linearly space locations where we want to evaluate the Gaussian Process
@@ -25,17 +25,17 @@ TEST(Approximation_GP, HyperFit1d)
 
     // Generate random training locations
     Eigen::RowVectorXd trainLocs = Eigen::RowVectorXd::LinSpaced(maxTrain, 0, 1);
-    
+
     // Generate the training data (with some random noise)
     Eigen::RowVectorXd trainData(maxTrain);
     for(int i=0; i<maxTrain; ++i)
-	trainData(i) = sin(4*2*pi*trainLocs(i) );
+	    trainData(i) = sin(4*2*pi*trainLocs(i) );
 
     trainData += sqrt(1e-4)*RandomGenerator::GetNormal(maxTrain).transpose();
-    
+
     const unsigned dim = 1;
-    auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} ) * PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});    
-   
+    auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} ) * PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});
+
     // Create the GP
     ZeroMean mean(dim, 1);
     GaussianProcess gp(mean, kernel);
@@ -45,14 +45,14 @@ TEST(Approximation_GP, HyperFit1d)
         gp.Condition(trainLocs.col(i), trainData.col(i));
 
     // Fit the hyperparameters
-    gp.Optimize();
-    
+    //gp.Optimize();
+
     // Make a prediction
     Eigen::MatrixXd postMean = gp.PredictMean(predLocs);
 
     //for(int i=0; i<predLocs.cols(); ++i)
     //	std::cout << "[" << predLocs(0,i) << ", " << postMean(0,i) << "]," << std::endl;
-    
+
 }
 
 TEST(Approximation_GP, HyperFit2d)
@@ -62,32 +62,30 @@ TEST(Approximation_GP, HyperFit2d)
     std::uniform_real_distribution<double> uniform_dist(0.0, 1.0);
     std::normal_distribution<double> normal_dist(0.0, 1.0);
 
-
     const unsigned numPred  = 50;
     const unsigned maxTrain = 50;
 
-    
     // Set linearly space locations where we want to evaluate the Gaussian Process
     Eigen::MatrixXd predLocs(2, numPred);
     for(int i=0; i<numPred; ++i)
     {
-	predLocs(0,i) = uniform_dist(e1);
-	predLocs(1,i) = uniform_dist(e1);
+	    predLocs(0,i) = uniform_dist(e1);
+	    predLocs(1,i) = uniform_dist(e1);
     }
-    
+
     // Generate random training locations
     Eigen::MatrixXd trainLocs(2, maxTrain);
-  
+
     for(int i=0; i<maxTrain; ++i)
     {
-	trainLocs(0,i) = uniform_dist(e1);
-	trainLocs(1,i) = uniform_dist(e1);
+	    trainLocs(0,i) = uniform_dist(e1);
+	    trainLocs(1,i) = uniform_dist(e1);
     }
-    
+
     // Generate the training data (with some random noise)
     Eigen::RowVectorXd trainData(maxTrain);
     for(int i=0; i<maxTrain; ++i)
-	trainData(i) = trainLocs.col(i).squaredNorm();
+	    trainData(i) = trainLocs.col(i).squaredNorm();
 
     // define a tensor product kernel
     std::vector<unsigned> inds1{0};
@@ -102,11 +100,9 @@ TEST(Approximation_GP, HyperFit2d)
     for(int i=0; i<trainLocs.cols(); ++i)
         gp.Condition(trainLocs.col(i),trainData.col(i));
 
-    gp.Optimize();
-    
+    //gp.Optimize();
+
     // Make a prediction
     std::pair<Eigen::MatrixXd, Eigen::MatrixXd> post = gp.Predict(predLocs, GaussianProcess::FullCov);
 
 }
-
-

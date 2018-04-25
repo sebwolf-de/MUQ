@@ -5,7 +5,6 @@
 
 #include <stan/math/fwd/scal.hpp>
 
-
 namespace muq
 {
 namespace Approximation

@@ -14,6 +14,7 @@ ProductKernel::ProductKernel(std::shared_ptr<KernelBase> kernel1In,
 	 cachedParams.resize(numParams);
 	 cachedParams.head(kernel1In->numParams) = kernel1In->GetParams();
 	 cachedParams.tail(kernel2In->numParams) = kernel2In->GetParams();
+
 };
 
 
@@ -26,7 +27,7 @@ void ProductKernel::FillBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
 	Eigen::MatrixXd temp2(kernel2->coDim, kernel2->coDim);
 
 	kernel1->FillBlock(x1, x2, params.head(kernel1->numParams), temp1);
-	kernel2->FillBlock(x1, x2, params.head(kernel2->numParams), temp2);
+	kernel2->FillBlock(x1, x2, params.tail(kernel2->numParams), temp2);
 
 	if(kernel1->coDim==kernel2->coDim)
 	{

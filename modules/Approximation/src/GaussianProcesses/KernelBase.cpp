@@ -84,15 +84,15 @@ void KernelBase::FillCovariance(Eigen::MatrixXd      const& x1,
 	}
 }
 
-
-Eigen::MatrixXd KernelBase::GetPosDerivative(Eigen::VectorXd  const& x1,
-                                             Eigen::VectorXd  const& x2,
-                                             std::vector<int> const& wrts) const
+void KernelBase::FillDerivCovariance(Eigen::MatrixXd             const& x1,
+                                     Eigen::MatrixXd             const& x2,
+                                     std::vector<int>            const& wrts,
+                                     Eigen::Ref<Eigen::MatrixXd>        output) const
 {
   int numRows = x1.cols();
 	int numCols = x2.cols();
 
-  Eigen::MatrixXd output(numRows*coDim,numCols*coDim);
+  output.resize(numRows*coDim,numCols*coDim);
 
   Eigen::MatrixXd x1Parts(dimInds.size(), x1.cols());
   Eigen::MatrixXd x2Parts(dimInds.size(), x2.cols());
@@ -107,6 +107,18 @@ Eigen::MatrixXd KernelBase::GetPosDerivative(Eigen::VectorXd  const& x1,
 			FillPosDerivBlock(x1Parts.col(i), x2Parts.col(j), cachedParams, wrts, output.block(i*coDim, j*coDim, coDim, coDim));
     }
 	}
+}
+
+Eigen::MatrixXd KernelBase::GetPosDerivative(Eigen::VectorXd  const& x1,
+                                             Eigen::VectorXd  const& x2,
+                                             std::vector<int> const& wrts) const
+{
+  int numRows = x1.cols();
+	int numCols = x2.cols();
+
+  Eigen::MatrixXd output(numRows*coDim,numCols*coDim);
+
+  FillDerivCovariance(x1,x2,wrts,output);
 
   return output;
 }

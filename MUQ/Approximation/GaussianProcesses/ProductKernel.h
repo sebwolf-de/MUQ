@@ -145,7 +145,8 @@ protected:
 
 
 // Operator overload
-template<typename KernelType1, typename KernelType2, typename = typename std::enable_if<std::is_base_of<KernelBase, KernelType1>::value && std::is_base_of<KernelBase, KernelType2>::value, KernelType1>::type>
+template<typename KernelType1, typename KernelType2,
+         typename = typename std::enable_if<std::is_base_of<KernelBase, KernelType1>::value && std::is_base_of<KernelBase, KernelType2>::value, KernelType1>::type>
 ProductKernel operator*(KernelType1 const& k1, KernelType2 const& k2)
 {
   return ProductKernel(k1.Clone(), k2.Clone());
