@@ -2,6 +2,9 @@
 
 #include "MUQ/Utilities/HDF5/H5Object.h"
 
+
+
+
 class DatasetTest : public::testing::Test {
 protected:
 
@@ -65,6 +68,68 @@ TEST_F(DatasetTest, DoubleSetGet)
 
     for(int i=0; i<numThird; ++i)
 	EXPECT_DOUBLE_EQ(double(i)/double(numThird-1), third(i));
+}
+
+TEST_F(DatasetTest, CopyDataset)
+{
+  muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
+
+  f["/something/first"] = 1.0;
+
+  f["/something/second"] = f["/something/first"];
+
+  EXPECT_EQ(1, f["/something/second"].rows());
+  EXPECT_EQ(1, f["/something/second"].cols());
+  EXPECT_DOUBLE_EQ(1.0, f["/something/second"](0));
+    
+}
+
+TEST_F(DatasetTest, CopyDatasetWithAttribute)
+{
+  muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
+  
+  f["/something/first"] = 1.0;
+  f["/something/first"].attrs["meta1"] = "Units";
+  f["/something/first"].attrs["meta2"] = 10.0;
+  
+  f["/something/second"] = f["/something/first"];
+  
+  EXPECT_EQ(1, f["/something/second"].rows());
+  EXPECT_EQ(1, f["/something/second"].cols());
+  EXPECT_DOUBLE_EQ(1.0, f["/something/second"](0));
+
+  std::string meta1 = f["/something/second"].attrs["meta1"];
+  EXPECT_EQ(std::string("Units"), meta1);
+  EXPECT_DOUBLE_EQ(10.0, f["/something/second"].attrs["meta2"]);
+}
+
+TEST_F(DatasetTest, CopyGroup)
+{
+  muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
+  
+  f["/something/first"] = 1.0;
+  f["/something/first"].attrs["meta1"] = "Units";
+  f["/something/first"].attrs["meta2"] = 10.0;
+  
+  f["/something/second"] = f["/something/first"];
+  
+  f["/somethingelse"] = f["/something"];
+
+  EXPECT_EQ(1, f["/somethingelse/first"].rows());
+  EXPECT_EQ(1, f["/somethingelse/first"].cols());
+  EXPECT_DOUBLE_EQ(1.0, f["/somethingelse/first"](0));
+
+  std::string meta1 = f["/somethingelse/first"].attrs["meta1"];
+  EXPECT_EQ(std::string("Units"), meta1);
+  EXPECT_DOUBLE_EQ(10.0, f["/somethingelse/first"].attrs["meta2"]);
+
+  EXPECT_EQ(1, f["/somethingelse/second"].rows());
+  EXPECT_EQ(1, f["/somethingelse/second"].cols());
+  EXPECT_DOUBLE_EQ(1.0, f["/somethingelse/second"](0));
+
+  meta1 = std::string(f["/somethingelse/second"].attrs["meta1"]);
+  EXPECT_EQ(std::string("Units"), meta1);
+  EXPECT_DOUBLE_EQ(10.0, f["/somethingelse/second"].attrs["meta2"]);
 }
 
 TEST_F(DatasetTest, AttributeSetGet)
@@ -165,149 +230,6 @@ TEST_F(DatasetTest, BlockReadOps)
     
 }
 
-TEST_F(DatasetTest, ObjectWriteAny_Double)
-{
-
-    muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
-
-    Eigen::MatrixXd aDouble(2,2);
-    aDouble << 2, 1,
-               1, 2;
-
-    f["/A"] = aDouble;
-
-    double test = f["/A"](0,0);
-    EXPECT_DOUBLE_EQ(2.0, test);
-
-    test = f["/A"](0,1);
-    EXPECT_DOUBLE_EQ(1.0, test);
-
-    
-    boost::any anyObj = Eigen::MatrixXd::Identity(2,2).eval();
-    f["/A"] = anyObj;
-
-    test = f["/A"](0,0);
-    EXPECT_DOUBLE_EQ(1.0, test);
-
-    test = f["/A"](0,1);
-    EXPECT_DOUBLE_EQ(0.0, test);
-
-    test = f["/A"](1,0);
-    EXPECT_DOUBLE_EQ(0.0, test);
-
-    test = f["/A"](1,1);
-    EXPECT_DOUBLE_EQ(1.0, test);
-    
-}
-
-
-TEST_F(DatasetTest, BlockWriteAny_Double)
-{
-
-    muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
-
-    Eigen::MatrixXd aDouble(3,3);
-    aDouble << 2, 1, 0,
-	 1, 2, 1,
-	 0, 2, 3;
-
-    f["/A"] = aDouble;
-
-    double test = f["/A"](0,0);
-    EXPECT_DOUBLE_EQ(aDouble(0,0), test);
-
-    boost::any anyObj = double(3.0);
-    f["/A"].block(0,0,1,1) = anyObj;
-
-    test = f["/A"](0,0);
-    EXPECT_DOUBLE_EQ(3.0, test);
-
-    // Make sure we can use a boost::any wrapped around a matrix
-    anyObj = Eigen::MatrixXd::Zero(2,2).eval();
-    f["/A"].block(0,0,2,2) = anyObj;
-
-    EXPECT_EQ(3, f["/A"].rows());
-    EXPECT_EQ(3, f["/A"].cols());
-    
-    test = f["/A"](0,0);
-    EXPECT_DOUBLE_EQ(0.0, test);
-    test = f["/A"](0,1);
-    EXPECT_DOUBLE_EQ(0.0, test);
-    test = f["/A"](1,0);
-    EXPECT_DOUBLE_EQ(0.0, test);
-    test = f["/A"](1,1);
-    EXPECT_DOUBLE_EQ(0.0, test);
-
-    anyObj = Eigen::VectorXd::Ones(3,1).eval();
-    f["/A"].col(0) = anyObj;
-
-    test = f["/A"](0,0);
-    EXPECT_DOUBLE_EQ(1.0,test);
-    
-    test = f["/A"](1,0);
-    EXPECT_DOUBLE_EQ(1.0,test);
-    
-    test = f["/A"](2,0);
-    EXPECT_DOUBLE_EQ(1.0,test);
-
-    test = f["/A"](0,1);
-    EXPECT_DOUBLE_EQ(0.0, test);
-}
-
-TEST_F(DatasetTest, BlockWriteAny_Float)
-{
-
-    muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
-
-    Eigen::MatrixXf aFloat(3,3);
-    aFloat << 2, 1, 0,
-	      1, 2, 1,
-	      0, 2, 3;
-
-    f["/A"] = aFloat;
-
-    float test = f["/A"](0,0);
-    EXPECT_FLOAT_EQ(aFloat(0,0), test);
-
-    boost::any anyObj = float(3.0);
-    f["/A"].block(0,0,1,1) = anyObj;
-
-    test = f["/A"](0,0);
-    EXPECT_FLOAT_EQ(3.0, test);
-
-    // Make sure we can use a boost::any wrapped around a matrix
-    anyObj = Eigen::MatrixXf::Zero(2,2).eval();
-    f["/A"].block(0,0,2,2) = anyObj;
-
-    EXPECT_EQ(3, f["/A"].rows());
-    EXPECT_EQ(3, f["/A"].cols());
-    
-    test = f["/A"](0,0);
-    EXPECT_FLOAT_EQ(0.0, test);
-    test = f["/A"](0,1);
-    EXPECT_FLOAT_EQ(0.0, test);
-    test = f["/A"](1,0);
-    EXPECT_FLOAT_EQ(0.0, test);
-    test = f["/A"](1,1);
-    EXPECT_FLOAT_EQ(0.0, test);
-
-    anyObj = Eigen::VectorXf::Ones(3,1).eval();
-    f["/A"].col(0) = anyObj;
-
-    test = f["/A"](0,0);
-    EXPECT_FLOAT_EQ(1.0,test);
-    
-    test = f["/A"](1,0);
-    EXPECT_FLOAT_EQ(1.0,test);
-    
-    test = f["/A"](2,0);
-    EXPECT_FLOAT_EQ(1.0,test);
-
-    test = f["/A"](0,1);
-    EXPECT_FLOAT_EQ(0.0, test);
-}
-
-
 TEST_F(DatasetTest, BlockWriteOps)
 {
 
@@ -331,7 +253,6 @@ TEST_F(DatasetTest, BlockWriteOps)
     EXPECT_DOUBLE_EQ(-2, A2(1,1));
     EXPECT_DOUBLE_EQ(-3, A2(2,1));
 }
-
 
 TEST_F(DatasetTest, IntSetGet)
 {

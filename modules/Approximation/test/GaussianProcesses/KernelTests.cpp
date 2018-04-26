@@ -29,10 +29,10 @@ TEST(Approximation_GP, LinearTransformKernel)
     auto kernel2 = A*kernel;
     auto kernel3 = A * ConstantKernel(dim, sigma2) * SquaredExpKernel(dim, 2.0, 0.35 );
 
-    Eigen::MatrixXd x1(dim,1);
+    Eigen::VectorXd x1(dim);
     x1 << 0.1, 0.4;
 
-    Eigen::MatrixXd x2(dim,1);
+    Eigen::VectorXd x2(dim);
     x2 << 0.2, 0.7;
 
     Eigen::MatrixXd result2 = kernel2.Evaluate(x1,x2);
@@ -76,6 +76,18 @@ TEST(Approximation_GP, Clone)
     Eigen::MatrixXd result_ptr = kernel_copy->Evaluate(x1,x2);
 
     EXPECT_DOUBLE_EQ(result(0,0), result_ptr(0,0));
+}
+
+TEST(Approximation_GP, KernelConcatenation)
+{
+    const double sigma2 = 2.0;
+    const double length = 0.5;
+
+    MaternKernel kernel12(1, sigma2, length, 1.0/2.0);
+    MaternKernel kernel32(1, sigma2, length, 3.0/2.0);
+
+    auto kernel2 = Concatenate(kernel12, kernel32);
+
 }
 
 

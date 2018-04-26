@@ -64,7 +64,6 @@ public:
                                                             attrs(file_, path_),
  	                                                    path(path_),
 	                                                    isDataset(isDataset_){};
-	
 
     typedef std::function<void(boost::any const&, H5Object& )> AnyWriterType;
     typedef std::unordered_map<std::type_index, AnyWriterType> AnyWriterMapType;
@@ -94,8 +93,8 @@ public:
     };
 
     // Use this templated function for non-arithmetic types
-    template<typename MatrixType, typename = typename std::enable_if< !std::is_arithmetic<MatrixType>::value, MatrixType>::type>
-    H5Object& operator=(MatrixType const& val)
+    template<typename Derived>
+    H5Object& operator=(Eigen::DenseBase<Derived> const& val)
     {
 	return (*this)=val.eval();
     };
@@ -122,10 +121,15 @@ public:
 	return eval<scalarType,rows,cols>();
     }
 
+    /** 
+        @brief Performs a deep copy of the datasets and groups in otherObj into this object.
+    */
+    H5Object& operator=(H5Object const& otherObj); 
+
     template<typename scalarType=double, int rows=Eigen::Dynamic, int cols=Eigen::Dynamic>
-	Eigen::Matrix<scalarType,rows,cols> eval()
+    Eigen::Matrix<scalarType,rows,cols> eval()
     {
-		if(isDataset)
+        if(isDataset)
 	{
 	    return file->ReadMatrix<scalarType,rows,cols>(path).template cast<scalarType>();
 	}
@@ -193,6 +197,16 @@ public:
     
 private:
     
+    /** @brief Creates an exact copy.  
+        @details Equivalent to the default assignment operator.  Does not copy datasets,
+                 only the path, children, and isDataset values from another H5Object.
+    */
+    void ExactCopy(H5Object const& otherObj);
+
+
+    // Copy the other objects content into the current dataset
+    void DeepCopy(H5Object const& otherObj);
+
   std::string path;
   
   std::map<std::string, H5Object> children;

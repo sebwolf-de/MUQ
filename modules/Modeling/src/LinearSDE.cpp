@@ -5,6 +5,7 @@
 #include <unsupported/Eigen/MatrixFunctions>
 
 #include "MUQ/Utilities/RandomGenerator.h"
+#include "MUQ/Utilities/Exceptions.h"
 
 #include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
 
@@ -16,6 +17,16 @@ LinearSDE::LinearSDE(std::shared_ptr<LinearOperator>    Fin,
                      Eigen::MatrixXd             const& Qin,
                      boost::property_tree::ptree        options) : stateDim(Fin->rows()), F(Fin), L(Lin), Q(Qin)
 {
+    if(F->rows() != F->cols())
+    {
+      throw muq::WrongSizeError("The system transition matrix, F, must be square, but F has " + std::to_string(F->rows()) + " rows and " + std::to_string(F->cols()) + " columns."); 
+    }
+
+    if(F->rows() != L->rows())
+    {
+      throw muq::WrongSizeError("F and L must have the same number of rows, but F has " + std::to_string(F->rows()) + " rows and L has " + std::to_string(L->rows()) + " rows.");
+    }
+
     // Extract options from the ptree
     ExtractOptions(options);
     

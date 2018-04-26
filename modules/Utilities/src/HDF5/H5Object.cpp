@@ -3,6 +3,28 @@
 
 using namespace muq::Utilities;
 
+void H5Object::DeepCopy(H5Object const& otherObj)
+{
+  file->Copy(path, otherObj.file, otherObj.path);
+  children = otherObj.children;
+  isDataset = otherObj.isDataset;
+}
+
+H5Object& H5Object::operator=(H5Object const& otherObj) 
+{ 
+  DeepCopy(otherObj);  
+  return *this;
+}
+
+void H5Object::ExactCopy(H5Object const& otherObj)
+{ 
+  file = otherObj.file;
+  attrs = otherObj.attrs;
+  
+  path = otherObj.path;
+  children = otherObj.children;
+  isDataset = otherObj.isDataset;
+}
 
 H5Object& H5Object::CreateDataset(std::string const& grpName)
 {
@@ -10,26 +32,27 @@ H5Object& H5Object::CreateDataset(std::string const& grpName)
 
     if(pathParts.second.length()==0)
     {
-	children[pathParts.first] = H5Object(file, path+grpName, true);
-	
-	//children[pathParts.first] = H5Object(file, path + grpName, true);
-	return children[pathParts.first];
+      children[pathParts.first].ExactCopy( H5Object(file, path+grpName, true) ); 
+      return children[pathParts.first];
     }
 	
-    if(children.find( pathParts.first ) == children.end()) 
-    {
-	if((path.length()==1) && (path.at(0)=='/'))
-	    pathParts.first = pathParts.first.substr(1);
-
+    if(children.find( pathParts.first ) == children.end()){
+      if((path.length()==1) && (path.at(0)=='/'))
+      {
+	file->CreateGroup(pathParts.first);
+	children[pathParts.first].ExactCopy( H5Object(file, pathParts.first ,false) );
+      }
+      else
+      {
 	file->CreateGroup(path + pathParts.first);
-	children[pathParts.first] = H5Object(file, path + pathParts.first ,false);
-	
-	//children[pathParts.first] = H5Object(file, path + pathParts.first, false);
-	return children[pathParts.first].CreateDataset(pathParts.second);
+	children[pathParts.first].ExactCopy( H5Object(file, path + pathParts.first ,false) );        
+      }
+      
+      return children[pathParts.first].CreateDataset(pathParts.second);
     } 
     else
     {
-	return children[pathParts.first].CreateDataset(pathParts.second);
+      return children[pathParts.first].CreateDataset(pathParts.second);
     } 
 };
 
@@ -46,7 +69,7 @@ H5Object& H5Object::CreateGroup(std::string const& grpName)
     if(children.find( pathParts.first ) == children.end()) 
     {
 	file->CreateGroup(path + pathParts.first);
-	children[pathParts.first] = H5Object(file, path + pathParts.first, false);
+	children[pathParts.first].ExactCopy( H5Object(file, path + pathParts.first, false) );
 
 	if(pathParts.second.length()!=0)
 	{
@@ -67,26 +90,25 @@ H5Object& H5Object::CreateGroup(std::string const& grpName)
 
 
 H5Object& H5Object::operator[](std::string const& targetPath)
-    {
-      if(isDataset || (targetPath.length()==0))
-      {
-	  return *this;
-      }
-      else
-      {
-	  auto pathParts = SplitString(targetPath);
-	  
-	  if(children.find( pathParts.first ) != children.end())  
-	  {
-	      return children.at(pathParts.first)[pathParts.second];
-	  }
-	  else
-	  {
-	      return CreateDataset(targetPath);
-	  }
-      }
+{
+  if(isDataset || (targetPath.length()==0))
+  {
+    return *this;
+  }
+  else
+  {
+    auto pathParts = SplitString(targetPath);
     
-  };
+    if(children.find( pathParts.first ) != children.end())  
+    {
+      return children.at(pathParts.first)[pathParts.second];
+    }
+    else
+    {
+      return CreateDataset(targetPath);
+    }
+  }  
+};
 
 
 // const H5Object& H5Object::operator[](std::string const& path) const
@@ -111,6 +133,7 @@ BlockDataset H5Object::block(unsigned startRow, unsigned startCol, unsigned numR
     assert(isDataset);
 
     Eigen::VectorXi shape = file->GetDataSetSize(path);
+    assert(shape.size()>0);
     assert(startRow+numRows <= shape(0));
     if(shape.size()>1){
       assert(startCol+numCols <= shape(1));
@@ -185,7 +208,25 @@ BlockDataset H5Object::segment(unsigned startInd, unsigned numInds) const
 
 BlockDataset H5Object::head(unsigned numInds) const
 {
-    return block(0,0,numInds,1);
+    // Make sure the object is one dimensional 
+    Eigen::VectorXi shape = file->GetDataSetSize(path);
+    
+    if(shape.size()==0){
+      std::cerr << "\nERROR: The dataset, " << path << ", does not exist.\n" << std::endl;
+      assert(shape.size()>0);
+    }
+
+    if(shape.size()==1){
+      return block(0,0,numInds,1);
+    }else if(shape(0)==1){
+      return block(0,0,1,numInds);
+    }else if(shape(1)==1){
+      return block(0,0,numInds,1);
+    }else{
+      std::cerr << "\nERROR: The head() function requires the dataset to be one dimensional and \"" << path << "\" does not seem to be one dimensional.\n" << std::endl; 
+      assert(false);
+      return block(0,0,numInds,1);
+    }
 }
 
 BlockDataset H5Object::tail(unsigned numInds) const
@@ -203,14 +244,16 @@ unsigned H5Object::rows() const
 unsigned H5Object::cols() const
 {
     Eigen::VectorXi shape = file->GetDataSetSize(path);
-
-    return shape(1);
+    if(shape.size()==1)
+      return 1;
+    else
+      return shape(1);
 }
 
 unsigned H5Object::size() const
 {
     Eigen::VectorXi shape = file->GetDataSetSize(path);
-    return shape(0)*shape(1);
+    return shape.prod();
 }
 
 double H5Object::operator()(int i) const
@@ -229,7 +272,7 @@ double H5Object::operator()(int i, int j) const
 {
     if(isDataset)
     {
-	return file->ReadPartialMatrix(path, i,j,1,1)(0,0);
+     	return file->ReadPartialMatrix(path, i,j,1,1)(0,0);
     }
     else
     {
@@ -274,7 +317,7 @@ H5Object muq::Utilities::AddChildren(std::shared_ptr<HDF5File>        file,
 	    fullChildPath += "/";
 	fullChildPath += childPath;
 	
-	output.children[fullChildPath] = AddChildren(file, fullChildPath);
+	output.children[fullChildPath].ExactCopy( AddChildren(file, fullChildPath) );
     }
     return output;
 }
@@ -289,45 +332,3 @@ H5Object muq::Utilities::OpenFile(std::string const& filename)
     std::shared_ptr<HDF5File> file = std::make_shared<HDF5File>(filename);
     return AddChildren(file, "/");
 }
-
-
-
-H5Object& H5Object::operator=(boost::any const& val) {
-
-    AnyWriterMapType& map = *GetAnyWriterMap();
-    auto iter = map.find(val.type());
-    if(iter == map.end()){
-        std::cerr << "ERROR: MUQ does not know how to write a boost::any with underlying type \"" << val.type().name() << "\".  Currently implemented types are:\n";
-        for(auto mapIter = map.begin(); mapIter!=map.end(); ++mapIter)
-            std::cerr << "    " << mapIter->first.name() << std::endl;
-        std::cerr << std::endl;
-
-        assert(iter != map.end());
-    }
-    
-    map[val.type()](val, *this);
-    
-    return *this;
-}
-
-std::shared_ptr<H5Object::AnyWriterMapType> H5Object::GetAnyWriterMap() {
-    
-  static std::shared_ptr<H5Object::AnyWriterMapType> map;
-
-  if( !map )
-    map = std::make_shared<H5Object::AnyWriterMapType>();
-
-  return map;
-}
-
-
-REGISTER_HDF5OBJECT_ANYTYPE(double, double)
-REGISTER_HDF5OBJECT_ANYTYPE(float, float)
-REGISTER_HDF5OBJECT_ANYTYPE(int, int)
-REGISTER_HDF5OBJECT_ANYTYPE(unsigned, unsigned)
-REGISTER_HDF5OBJECT_ANYTYPE(MatrixXd, Eigen::MatrixXd)
-REGISTER_HDF5OBJECT_ANYTYPE(MatrixXi, Eigen::MatrixXi)
-REGISTER_HDF5OBJECT_ANYTYPE(MatrixXf, Eigen::MatrixXf)
-REGISTER_HDF5OBJECT_ANYTYPE(VectorXf, Eigen::VectorXf)
-REGISTER_HDF5OBJECT_ANYTYPE(VectorXd, Eigen::VectorXd)
-REGISTER_HDF5OBJECT_ANYTYPE(VectorXi, Eigen::VectorXi)

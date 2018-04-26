@@ -49,6 +49,12 @@ namespace Utilities
 	*/
 	void Close();
 
+        /// Copy the contents of one dataset into another
+        /**
+           Copies the dataset at location srcName in the file srcFile into the location destName of this file.  This is a deep copy.
+         */
+        void Copy(std::string const& destName, std::shared_ptr<HDF5File> srcFile, std::string const& srcName);
+
 	/// Write data set to file
 	/**
 	   Write a new data set to file.  If the dataset (and corresponding group) does not exist it will be created.  If the dataset does exist it is deleted and overwritten.
@@ -84,7 +90,6 @@ namespace Utilities
 
 	    // the dataset we are writing to
 	    hid_t dataID;
-
 	    if( DoesDataSetExist(name) ) {
 
 		// open the data
@@ -300,6 +305,7 @@ namespace Utilities
 									  int numRows,
 									  int numCols) const
 	{
+
 
 	    // make sure the file is open
 	    assert(fileID>0);
