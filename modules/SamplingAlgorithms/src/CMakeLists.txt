@@ -16,7 +16,7 @@ CreateCompileGroup(
     SAMPLING_ALGORITHM
     "Implement sampling algorithms such as Monte Carlo, importance sampling, and Markov chain Monte Carlo"
     muqSamplingAlgorithms
-    "MODELING_CORE"
+    "MODELING_CORE;UTILITIES_CORE"
     ""
     ""
     SamplingAlgorithm.cpp
