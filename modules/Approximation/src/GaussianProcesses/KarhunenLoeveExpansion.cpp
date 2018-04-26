@@ -15,8 +15,9 @@ KarhunenLoeveExpansion::KarhunenLoeveExpansion(std::shared_ptr<KernelBase> kerne
     int numModes = options.get("KarhunenLoeve.NumModes", seedWts.size());
 
     // We will approximation the KL modes as the GP with known values at the seed points.  To get those values, we first need to solve the discrete eigenvalue problem
-    Eigen::MatrixXd seedCov = covKernel->BuildCovariance(seedPts);
+    Eigen::VectorXd sqrtWts = seedWts.array().sqrt();
 
+    Eigen::MatrixXd seedCov = sqrtWts.asDiagonal()*covKernel->BuildCovariance(seedPts)*sqrtWts.asDiagonal();
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigSolver;
     eigSolver.compute(seedCov);
 
@@ -36,12 +37,12 @@ Eigen::MatrixXd KarhunenLoeveExpansion::GetModes(Eigen::Ref<const Eigen::MatrixX
     // Build the cross covariance between the seed points and the evaluation points
     Eigen::MatrixXd crossCov = covKernel->BuildCovariance(pts,seedPts);
 
-    Eigen::VectorXd scale = seedWts.array()/modeEigs.array();
-    return crossCov * modeVecs * scale.asDiagonal();
+    //Eigen::VectorXd scale = seedWts.array().sqrt()/modeEigs.array();
+    return crossCov *  seedWts.array().sqrt().matrix().asDiagonal() * modeVecs * modeEigs.array().inverse().sqrt().matrix().asDiagonal();// * scale.asDiagonal();
 }
 
 Eigen::VectorXd KarhunenLoeveExpansion::Evaluate(Eigen::Ref<const Eigen::MatrixXd> const& pts,
                                                  Eigen::Ref<const Eigen::VectorXd> const& coeffs)
 {
-    return GetModes(pts) * (modeEigs.array().sqrt()*coeffs.array()).matrix();
+    return GetModes(pts) * coeffs;
 }
