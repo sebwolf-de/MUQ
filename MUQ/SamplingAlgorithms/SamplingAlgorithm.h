@@ -20,6 +20,9 @@ namespace muq {
 
       ~SamplingAlgorithm();
 
+
+      SampleCollection const& GetSamples() const;
+
       /// Compute the expected first moment
       /**
 	 Uses the samples stored in muq::Modeling::WorkPiece::outputs (must have run the sampling algorithm).
@@ -65,6 +68,8 @@ namespace muq {
 
       /// Are the samples correlated?
       const bool correlated;
+
+      SampleCollection samples;
 
     };
   } // namespace SamplingAlgorithms

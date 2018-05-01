@@ -15,21 +15,22 @@ namespace muq {
     class SamplingState {
     public:
 
-      SamplingState(boost::any const& state, double weight = 1.0);
+      SamplingState(boost::any const& stateIn, double weight = 1.0);
+      SamplingState(std::vector<boost::any> const& stateIn, double weight = 1.0);
 
       ~SamplingState();
 
       /// The state variables
-      const boost::any state;
+      const std::vector<boost::any> state;
 
       /// The weight of this state
       double weight;
 
-      /// A map containing extra information like the target density, run time, forward model output, etc...
-      std::unordered_map<std::string, boost::any> meta;
-
       /// Checks to see if the meta map contains a particular key
       bool HasMeta(std::string const& metaKey);
+
+      /// A map containing extra information like the target density, run time, forward model output, etc...
+      std::unordered_map<std::string, boost::any> meta;
 
     private:
 
