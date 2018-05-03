@@ -25,6 +25,7 @@ CreateCompileGroup(
     MCMC.cpp
 
     SamplingState.cpp
+    SampleCollection.cpp
 
     TransitionKernel.cpp
     MCKernel.cpp

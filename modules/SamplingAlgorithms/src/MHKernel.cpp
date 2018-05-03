@@ -27,10 +27,10 @@ void MHKernel::EvaluateImpl(ref_vector<boost::any> const& inputs) {
 
   // compute acceptance probability
   if( !current->HasMeta("LogTarget") ){
-     current->meta["LogTarget"] = problem->EvaluateLogTarget(ref_vector<boost::any>(1, std::cref(current->state)));
+     current->meta["LogTarget"] = problem->EvaluateLogTarget(ref_vector<boost::any>(1, std::cref(current->state.at(0))));
   }
   if( !prop->HasMeta("LogTarget") ){
-     prop->meta["LogTarget"] = problem->EvaluateLogTarget(ref_vector<boost::any>(1, std::cref(prop->state)));
+     prop->meta["LogTarget"] = problem->EvaluateLogTarget(ref_vector<boost::any>(1, std::cref(prop->state.at(0))));
   }
 
   double propTarget = AnyCast(prop->meta["LogTarget"]);

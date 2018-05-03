@@ -6,6 +6,7 @@
 #include "MUQ/Modeling/WorkPiece.h"
 
 #include "MUQ/SamplingAlgorithms/TransitionKernel.h"
+#include "MUQ/SamplingAlgorithms/SampleCollection.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
