@@ -1,30 +1,42 @@
 #include "MUQ/SamplingAlgorithms/SamplingProblem.h"
+#include "MUQ/SamplingAlgorithms/SamplingState.h"
 
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
-SamplingProblem::SamplingProblem(std::shared_ptr<Distribution> target) : target(target) {}
+SamplingProblem::SamplingProblem(std::shared_ptr<muq::Modeling::Distribution> targetIn,
+                                 std::vector<int> const& inputSizes) : AbstractSamplingProblem(inputSizes.size(), inputSizes),
+                                                                       target(targetIn) {}
 
-SamplingProblem::SamplingProblem(std::shared_ptr<Distribution> target, std::shared_ptr<Distribution> bias) : target(target), bias(bias) {}
+SamplingProblem::SamplingProblem(std::shared_ptr<muq::Modeling::Distribution> targetIn) : SamplingProblem(targetIn, GetBlockSizes(targetIn)) {}
 
-SamplingProblem::~SamplingProblem() {}
 
-boost::any SamplingProblem::SampleTarget(ref_vector<boost::any> const& inputs) const {
+double SamplingProblem::LogDensity(std::shared_ptr<SamplingState> state) {
   assert(target);
-  return target->Sample(inputs);
+  return target->LogDensity(state->state);
 }
 
-double SamplingProblem::EvaluateLogTarget(muq::Modeling::ref_vector<boost::any> const& inputs) const {
-  assert(target);
-  return target->LogDensity(inputs);
+boost::any SamplingProblem::GradLogDensity(std::shared_ptr<SamplingState> state,
+                                           unsigned                       blockWrt)
+{
+  return target->Jacobian(blockWrt, 0, state->state);
 }
 
-boost::any SamplingProblem::SampleBiasingDistribution(muq::Modeling::ref_vector<boost::any> const& inputs) const {
-  assert(bias);
-  return (*bias)->Sample(inputs);
+std::vector<int> SamplingProblem::GetBlockSizes(std::shared_ptr<Distribution> target)
+{
+  int numBlocks = GetNumBlocks(target);
+
+  std::vector<int> output(numBlocks);
+  for(int i=0; i<numBlocks; ++i)
+    output.at(i) = target->InputSize(i);
+
+  return output;
 }
 
-double SamplingProblem::EvaluateLogBiasingDistribution(muq::Modeling::ref_vector<boost::any> const& inputs) const {
-  assert(bias);
-  return (*bias)->LogDensity(inputs);
+unsigned SamplingProblem::GetNumBlocks(std::shared_ptr<Distribution> target)
+{
+  if(target->numInputs < 0){
+    throw std::invalid_argument("When not manually specified, \"SamplingProblem\" requires the target distribution to have a specified number of inputs, but \"" + target->Name() + "\" does not specify a fixed number of inputs, i.e., target->numInputs < 0.");
+  }
+  return target->numInputs;
 }

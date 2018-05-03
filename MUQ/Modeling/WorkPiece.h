@@ -443,6 +443,11 @@ namespace muq {
        */
       std::string InputType(unsigned int inputNum, bool const demangle = true) const;
 
+      /// Get the length of a vector valued input with fixed size
+      int InputSize(unsigned int inputNum) const;
+
+      void SetInputSize(unsigned int inputNum, int newSize);
+
       /// Get the output type (if we know it) for a specific output
       /**
 	 The return output type name is "demangled" so it is more human readable.
@@ -542,6 +547,8 @@ namespace muq {
 	 Each element specifies the type of the corresponding output.  This vector must have the same number of elements as WorkPiece::numOutputs or it is empty (default), which indicates that the output types are variable.
       */
       std::map<unsigned int, std::string> outputTypes;
+
+      std::map<unsigned int, int> inputSizes;
 
       /// Convert a vector of input types to a map
       /**

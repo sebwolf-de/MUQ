@@ -9,7 +9,8 @@ namespace muq {
     class AMProposal : public MHProposal {
     public:
 
-      AMProposal(boost::property_tree::ptree const& pt);
+      AMProposal(boost::property_tree::ptree const& pt,
+                 std::shared_ptr<AbstractSamplingProblem> prob);
 
       ~AMProposal();
 
@@ -20,7 +21,7 @@ namespace muq {
 	 @param[in] state The current state
        */
       virtual void Adapt(unsigned int const t, std::shared_ptr<SamplingState> state) override;
-      
+
     private:
 
       /// Update the covariance of the samples
@@ -44,7 +45,7 @@ namespace muq {
       const unsigned int adaptStart;
 
     };
-    
+
   } // namespace SamplingAlgorithms
 } // namespace muq
 

@@ -6,13 +6,10 @@ using namespace muq::SamplingAlgorithms;
 
 REGISTER_TRANSITION_KERNEL(MCKernel)
 
-MCKernel::MCKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) : TransitionKernel(pt, problem), N(pt.get<unsigned int>("SamplingAlgorithm.NumSamples")) {}
+MCKernel::MCKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) : TransitionKernel(pt, problem) {}
 
-MCKernel::~MCKernel() {}
-
-void MCKernel::EvaluateImpl(ref_vector<boost::any> const& inputs) {
-  const boost::any state = problem->SampleTarget(inputs);
-
-  outputs.resize(1);
-  outputs[0] = std::make_shared<SamplingState>(state, 1.0);
+std::shared_ptr<SamplingState>  MCKernel::Step(std::shared_ptr<SamplingState> prevState)
+{
+  const boost::any newState = problem->GetDistribution()->Sample(prevState->state);
+  return std::make_shared<SamplingState>(newState, 1.0);
 }

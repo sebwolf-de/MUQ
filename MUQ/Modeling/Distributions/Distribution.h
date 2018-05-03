@@ -29,6 +29,7 @@ namespace muq {
 	 \return The log density
        */
       virtual double LogDensity(ref_vector<boost::any> const& inputs);
+      virtual double LogDensity(std::vector<boost::any> const& inputs){return LogDensity(ToRefVector(inputs));};;
 
       /// Evaluate the log-density
       /**
@@ -53,6 +54,7 @@ namespace muq {
 	 \return A sample
        */
       boost::any Sample(ref_vector<boost::any> const& inputs);
+      boost::any Sample(std::vector<boost::any> const& inputs){return Sample(ToRefVector(inputs));};
 
       /// Sample the distribution with no inputs
       /**
@@ -76,7 +78,7 @@ namespace muq {
 	// begin calling Sample recursively
 	return Sample(inputs, args...);
       }
-      
+
     private:
 
       /// Implement the log-density
@@ -106,17 +108,17 @@ namespace muq {
       template<typename ith, typename... Args>
 	inline double LogDensity(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size()+1; // add one, the first input is always whether we are evaluting the log-density or sampling
-		
+
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
 	assert(numInputs<0 || inputNum<numInputs);
 
 	// check the input type
 	assert(CheckInputType(inputNum, typeid(in).name()));
-	
+
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	// call LogDensity recursively
 	return LogDensity(inputs, args...);
       }
@@ -132,17 +134,17 @@ namespace muq {
       template<typename ith, typename... Args>
 	inline boost::any Sample(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size()+1; // add one, the first input is always whether we are evaluting the log-density or sampling
-		
+
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
 	assert(numInputs<0 || inputNum<numInputs);
 
 	// check the input type
 	assert(CheckInputType(inputNum, typeid(in).name()));
-	
+
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	// call Sample recursively
 	return Sample(inputs, args...);
       }

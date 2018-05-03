@@ -4,8 +4,7 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
-TransitionKernel::TransitionKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) :
-  WorkPiece(/*std::vector<std::string>(1,typeid(std::shared_ptr<SamplingState>).name()), WorkPiece::Fix::Outputs*/), problem(problem) {}
+TransitionKernel::TransitionKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) : problem(problem) {}
 
 TransitionKernel::~TransitionKernel() {}
 
@@ -30,7 +29,7 @@ std::shared_ptr<TransitionKernel> TransitionKernel::Construct(pt::ptree const& p
   auto iter = kernelMap->find(kernelName);
   if(iter == kernelMap->end()){
     std::cerr << "ERROR: Could not find Transition Kernel \"" << kernelName << "\", available types are:\n";
-    
+
     for(auto it=kernelMap->begin(); it!=kernelMap->end(); ++it)
       std::cerr << "  " << it->first << std::endl;
     std::cerr << std::endl;

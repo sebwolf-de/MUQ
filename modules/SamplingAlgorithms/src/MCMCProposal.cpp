@@ -8,7 +8,8 @@ MCMCProposal::MCMCProposal() : Distribution() {}
 
 MCMCProposal::~MCMCProposal() {}
 
-std::shared_ptr<MCMCProposal> MCMCProposal::Construct(pt::ptree const& pt) {
+std::shared_ptr<MCMCProposal> MCMCProposal::Construct(pt::ptree                         const& pt,
+                                                      std::shared_ptr<AbstractSamplingProblem> prob) {
 
   // get the name of the proposal
   std::string proposalName = pt.get("MCMC.Proposal", "MHProposal");
@@ -26,7 +27,7 @@ std::shared_ptr<MCMCProposal> MCMCProposal::Construct(pt::ptree const& pt) {
     assert(iter!=proposalMap->end());
   }
 
-  return iter->second(pt);
+  return iter->second(pt,prob);
 
 }
 

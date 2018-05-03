@@ -12,6 +12,7 @@ Gaussian::Gaussian(boost::any const& obj, Gaussian::Mode const mode) :
   mean(mode==Gaussian::Mode::Mean? obj : boost::none),
   cov(mode==Gaussian::Mode::Covariance? SaveCovPrec(obj) : boost::none),
   prec(mode==Gaussian::Mode::Precision? SaveCovPrec(obj) : boost::none) {
+  SetInputSize(0,dim);
   ComputeScalingConstant();
 }
 
@@ -42,7 +43,7 @@ boost::any Gaussian::SaveCovPrec(boost::any const& in) {
   if( in.type()==typeid(Eigen::MatrixXd) ) {
     Eigen::LLT<Eigen::MatrixXd> chol;
     chol.compute(boost::any_cast<Eigen::MatrixXd const&>(in));
-    
+
     return chol;
   }
 
@@ -54,7 +55,7 @@ void Gaussian::ResetHyperparameters(ref_vector<boost::any> const& hyperparas) {
   for( auto hp : hyperparas ) {
     // get the hyperparameter
     const std::pair<boost::any, Gaussian::Mode>& hyperpara = boost::any_cast<std::pair<boost::any, Gaussian::Mode> >(hp);
-    
+
     switch( hyperpara.second ) {
     case Gaussian::Mode::Mean: {
       // reset the mean
@@ -103,7 +104,7 @@ double Gaussian::LogDensityImpl(ref_vector<boost::any> const& inputs) {
 
 boost::any Gaussian::SampleImpl(ref_vector<boost::any> const& inputs) {
   ResetHyperparameters(ref_vector<boost::any>(inputs.begin(), inputs.end()));
-    
+
   // make sure the dimension is nonzero
   assert(dim>0);
 
@@ -146,13 +147,13 @@ boost::any Gaussian::GetCovariance() const {
 void Gaussian::SetCovariance(boost::any const& newcov) {
   // reset the mode
   mode = Gaussian::Mode::Covariance;
-  
+
   // reset the covaraince and the precision
   prec = boost::none;
   precSqrt = boost::none;
   cov = SaveCovPrec(newcov);
   covSqrt = boost::none;
-  
+
   // recompute the scaling constant
   ComputeScalingConstant();
 }
@@ -160,13 +161,13 @@ void Gaussian::SetCovariance(boost::any const& newcov) {
 void Gaussian::SetPrecision(boost::any const& newprec) {
   // reset the mode
   mode = Gaussian::Mode::Precision;
-  
+
   // reset the covaraince and the precision
   prec = SaveCovPrec(newprec);
   precSqrt = boost::none;
   cov = boost::none;
   covSqrt = boost::none;
-  
+
   // recompute the scaling constant
   ComputeScalingConstant();
 }

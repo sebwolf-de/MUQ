@@ -4,57 +4,22 @@
 #include "MUQ/Modeling/Distributions/UniformBox.h"
 
 #include "MUQ/SamplingAlgorithms/SamplingProblem.h"
+#include "MUQ/SamplingAlgorithms/SamplingState.h"
 
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
 TEST(SamplingProblem, GaussianTarget) {
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
-  auto dist = std::make_shared<Gaussian>(); // it is standard normal (1D) by default
+  Eigen::VectorXd mu(2);
+  mu << 1,1;
+  auto dist = std::make_shared<Gaussian>(mu); // it is standard normal (1D) by default
 
   // create a sampling problem
-  auto problem = std::make_shared<SamplingProblem>(dist);
+  auto problem = std::make_shared<SamplingProblem>(dist,std::vector<int>{2});
 
-  const unsigned int N = 1.0e5;
-  double mean = boost::any_cast<double const>(problem->SampleTarget(ref_vector<boost::any>()));
-  for( unsigned int i=0; i<N; ++i ) {
-    mean += boost::any_cast<double const>(problem->SampleTarget(ref_vector<boost::any>()));
-  }
-  mean /= (double)N;
-  
-  EXPECT_NEAR(mean, 0.0, 1.0e-2);
-}
+  boost::any xc = Eigen::VectorXd::Zero(2).eval();
+  auto state = std::make_shared<SamplingState>(xc, 1.0);
 
-TEST(SamplingProblem, ImportanceSamplingSetup) {
-  // create a Gaussian distribution---this is the biasing distribution
-  auto bias = std::make_shared<Gaussian>(); // it is standard normal (1D) by default
-
-  // create a uniform distribution---the sampling problem is built around characterizing this distribution
-  auto bounds = std::make_pair(-0.5,1.0);
-  auto dist = std::make_shared<UniformBox>(bounds);
-
-  // create a sampling problem
-  auto problem = std::make_shared<SamplingProblem>(dist, bias);
-
-  // make sure we are correctly sampling the baising distribution
-  const unsigned int N = 1.0e5;
-  double mean = boost::any_cast<double const>(problem->SampleBiasingDistribution(ref_vector<boost::any>()));
-  for( unsigned int i=0; i<N; ++i ) {
-    mean += boost::any_cast<double const>(problem->SampleBiasingDistribution(ref_vector<boost::any>()));
-  }
-  mean /= (double)N;
-  EXPECT_NEAR(mean, 0.0, 1.0e-2);
-
-  // make sure we are correctly evaluating the target
-  boost::any x = 0.0;
-  double logTarget = problem->EvaluateLogTarget(ref_vector<boost::any>(1, std::cref(x)));
-  double logBias = problem->EvaluateLogBiasingDistribution(ref_vector<boost::any>(1, std::cref(x)));
-  EXPECT_DOUBLE_EQ(logTarget, log(1.0/(bounds.second - bounds.first)));
-  EXPECT_DOUBLE_EQ(logBias, bias->LogDensity(x));
-  //x = 2.0;
-  x = 1.27591;
-  logTarget = problem->EvaluateLogTarget(ref_vector<boost::any>(1, std::cref(x)));
-  logBias = problem->EvaluateLogBiasingDistribution(ref_vector<boost::any>(1, std::cref(x)));
-  EXPECT_TRUE(std::isinf(logTarget));
-  EXPECT_DOUBLE_EQ(logBias, bias->LogDensity(x));
+  EXPECT_DOUBLE_EQ(dist->LogDensity(xc), problem->LogDensity(state));
 }

@@ -14,14 +14,14 @@ namespace muq {
 
       MCKernel(boost::property_tree::ptree const& pt, std::shared_ptr<SamplingProblem> problem);
 
-      ~MCKernel();
-      
+      virtual ~MCKernel() = default;
+
+      virtual std::shared_ptr<SamplingState>  Step(std::shared_ptr<SamplingState> prevState) override;
+
     private:
 
-      virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
-
       /// The number of Monte Carlo samples
-      const unsigned int N;
+      //const unsigned int N;
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

@@ -16,7 +16,7 @@
 
 namespace muq {
   namespace SamplingAlgorithms {
-    class TransitionKernel : public muq::Modeling::WorkPiece {
+    class TransitionKernel { //: public muq::Modeling::WorkPiece {
     public:
 
       TransitionKernel(boost::property_tree::ptree const& pt, std::shared_ptr<SamplingProblem> problem);
@@ -45,11 +45,13 @@ namespace muq {
        */
       virtual void PostStep(unsigned int const t, std::shared_ptr<SamplingState> state);
 
+      virtual std::shared_ptr<SamplingState> Step(std::shared_ptr<SamplingState> prevState) = 0;
+
     protected:
 
       /// The sampling problem that evaluates/samples the target distribution
       std::shared_ptr<SamplingProblem> problem;
-      
+
     private:
     };
   } // namespace SamplingAlgorithms

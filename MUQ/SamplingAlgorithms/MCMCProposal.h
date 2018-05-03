@@ -3,7 +3,7 @@
 
 #include <map>
 
-#include <boost/function.hpp>
+#include <functional>
 #include <boost/property_tree/ptree.hpp>
 
 #include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
@@ -12,6 +12,7 @@
 #include "MUQ/Modeling/Distributions/Distribution.h"
 
 #include "MUQ/SamplingAlgorithms/SamplingState.h"
+#include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
@@ -28,10 +29,10 @@ namespace muq {
 	 @param[in] pt The options for the MCMC kernel
 	 \return The MCMC proposal
        */
-      static std::shared_ptr<MCMCProposal> Construct(boost::property_tree::ptree const& pt);
+      static std::shared_ptr<MCMCProposal> Construct(boost::property_tree::ptree       const& pt,
+                                                     std::shared_ptr<AbstractSamplingProblem> prob);
 
-      typedef boost::function<std::shared_ptr<MCMCProposal>(boost::property_tree::ptree)> MCMCProposalConstructor;
-
+      typedef std::function<std::shared_ptr<MCMCProposal>(boost::property_tree::ptree,std::shared_ptr<AbstractSamplingProblem>)> MCMCProposalConstructor;
       typedef std::map<std::string, MCMCProposalConstructor> MCMCProposalMap;
 
       static std::shared_ptr<MCMCProposalMap> GetMCMCProposalMap();
@@ -48,15 +49,15 @@ namespace muq {
 
       /// An any algebra
       std::shared_ptr<muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>();
-      
+
     private:
 
-    };    
+    };
   } // namespace SamplingAlgoirthms
 } // namespace muq
 
 #define REGISTER_MCMC_PROPOSAL(NAME) static auto reg ##NAME		\
   = muq::SamplingAlgorithms::MCMCProposal::GetMCMCProposalMap()->insert(std::make_pair(#NAME, muq::Utilities::shared_factory<NAME>()));
-    
+
 
 #endif

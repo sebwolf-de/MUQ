@@ -11,7 +11,7 @@ namespace muq {
     class MHProposal : public MCMCProposal {
     public:
 
-      MHProposal(boost::property_tree::ptree const& pt);
+      MHProposal(boost::property_tree::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> prob);
 
       ~MHProposal();
 
@@ -19,7 +19,7 @@ namespace muq {
 
       /// The proposal distribution
       std::shared_ptr<muq::Modeling::Gaussian> proposal;
-      
+
     private:
 
       /// Propose a new point
@@ -29,8 +29,8 @@ namespace muq {
       virtual double LogDensityImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
     };
-    
+
   } // namespace SamplingAlgoirthms
-} // namespace muq 
+} // namespace muq
 
 #endif

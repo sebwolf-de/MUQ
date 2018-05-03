@@ -1,4 +1,5 @@
 #include "MUQ/SamplingAlgorithms/MHKernel.h"
+#include "MUQ/SamplingAlgorithms/MCMCProposal.h"
 
 #include "MUQ/Utilities/AnyHelpers.h"
 #include "MUQ/Utilities/RandomGenerator.h"
@@ -10,40 +11,45 @@ using namespace muq::SamplingAlgorithms;
 
 REGISTER_TRANSITION_KERNEL(MHKernel)
 
-MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) : MCMCKernel(pt, problem) {}
+MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) : TransitionKernel(pt, problem),
+                                                                                    blockInd(pt.get("BlockIndex",0)),
+                                                                                    proposal(MCMCProposal::Construct(pt, problem)) {}
+
 
 MHKernel::~MHKernel() {}
 
-void MHKernel::EvaluateImpl(ref_vector<boost::any> const& inputs) {
+std::shared_ptr<SamplingState> MHKernel::Step(std::shared_ptr<SamplingState> prevState){
 
-  boost::any temp = inputs.at(0);
-
-  // current state
-  std::shared_ptr<SamplingState> current = boost::any_cast<std::shared_ptr<SamplingState> >(inputs.at(0).get());
-  assert(current);
+  assert(proposal);
 
   // propose a new point
-  std::shared_ptr<SamplingState> prop = boost::any_cast<std::shared_ptr<SamplingState> >(proposal->Sample(current));
+  boost::any propAny = proposal->Sample(prevState);
+  std::shared_ptr<SamplingState> prop = AnyCast(propAny);
 
   // compute acceptance probability
-  if( !current->HasMeta("LogTarget") ){
-     current->meta["LogTarget"] = problem->EvaluateLogTarget(ref_vector<boost::any>(1, std::cref(current->state.at(0))));
-  }
-  if( !prop->HasMeta("LogTarget") ){
-     prop->meta["LogTarget"] = problem->EvaluateLogTarget(ref_vector<boost::any>(1, std::cref(prop->state.at(0))));
+  double propTarget;
+  double currentTarget;
+
+  if( prevState->HasMeta("LogTarget") ){
+    currentTarget = AnyCast( prevState->meta["LogTarget"]);
+  }else{
+    currentTarget = problem->LogDensity(prevState);
+    prevState->meta["LogTarget"] = currentTarget;
   }
 
-  double propTarget = AnyCast(prop->meta["LogTarget"]);
-  double currentTarget = AnyCast(current->meta["LogTarget"]);
+  propTarget = problem->LogDensity(prop);
+  prop->meta["LogTarget"] = propTarget;
 
-  const double alpha = std::exp(propTarget + proposal->LogDensity(current, prop)- currentTarget -proposal->LogDensity(prop, current));
+  // Aceptance probability
+  const double forwardPropDens = proposal->LogDensity(prevState, prop);
+  const double backPropDens = proposal->LogDensity(prop, prevState);
+  const double alpha = std::exp(propTarget + forwardPropDens - currentTarget - backPropDens);
 
   // accept/reject
-  outputs.resize(1);
   if( RandomGenerator::GetUniform()<alpha ) {
-    outputs[0] = prop;
+    return prop;
   } else {
-    current->weight += 1.0;
-    outputs[0] = boost::none;
+    prevState->weight += 1.0;
+    return prevState;
   }
 }

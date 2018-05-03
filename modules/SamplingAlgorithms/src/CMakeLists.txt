@@ -21,7 +21,7 @@ CreateCompileGroup(
     ""
     SamplingAlgorithm.cpp
     MonteCarlo.cpp
-    ImportanceSampling.cpp
+    #ImportanceSampling.cpp
     MCMC.cpp
 
     SamplingState.cpp
@@ -29,9 +29,9 @@ CreateCompileGroup(
 
     TransitionKernel.cpp
     MCKernel.cpp
-    ISKernel.cpp
+    #ISKernel.cpp
     MHKernel.cpp
-    MCMCKernel.cpp
+    #MCMCKernel.cpp
 
     MCMCProposal.cpp
     MHProposal.cpp
