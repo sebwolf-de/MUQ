@@ -19,10 +19,10 @@ namespace muq {
       ~MHKernel();
 
       virtual std::shared_ptr<MCMCProposal> Proposal(){return proposal;};
-      
+
       virtual void PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) override;
 
-      virtual std::vector<std::shared_ptr<SamplingState>> Step(std::shared_ptr<SamplingState> prevState) override;
+      virtual std::vector<std::shared_ptr<SamplingState>> Step(unsigned int const t, std::shared_ptr<SamplingState> prevState) override;
 
     protected:
       std::shared_ptr<MCMCProposal> proposal;

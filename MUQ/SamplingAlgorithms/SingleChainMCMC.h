@@ -28,8 +28,8 @@ namespace muq{
 
     protected:
 
-      int numSamps;
-      
+      unsigned numSamps;
+
       // A vector of transition kernels: One for each block
       std::vector<std::shared_ptr<TransitionKernel>> kernels;
 

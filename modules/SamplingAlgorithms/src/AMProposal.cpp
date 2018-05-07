@@ -41,14 +41,14 @@ void AMProposal::UpdateOne(unsigned int const numSamps, std::shared_ptr<Sampling
   // update the mean
   Eigen::VectorXd oldMean = AnyCast(mean);
   Eigen::VectorXd& newMean = AnyCast(mean);
-  Eigen::VectorXd const& newState  = AnyConstCast(state);
+  Eigen::VectorXd const& newState  = AnyConstCast(state->state.at(blockInd));
 
   newMean = (oldMean*numSamps + newState)/(numSamps+1.0);
 
   // If we haven't compute the covariance before...
   if( cov.type()==typeid(boost::none) ){
 
-    cov = Eigen::MatrixXd::Zero(oldMean.size(),oldMean.size());
+    cov = Eigen::MatrixXd::Zero(oldMean.size(),oldMean.size()).eval();
     Eigen::MatrixXd& newCov = AnyCast(cov);
 
     //compute covariance from scratch, from the definition
@@ -58,7 +58,6 @@ void AMProposal::UpdateOne(unsigned int const numSamps, std::shared_ptr<Sampling
   }else{
     Eigen::MatrixXd& newCov = AnyCast(cov);
     newCov *= (numSamps - 1.0) / numSamps;
-
     //note that the asymmetric form fixes the fact that the old mean was wrong
     newCov += (1.0 / static_cast<double>(numSamps)) * (newState - oldMean) * (newState - newMean).transpose();
   }

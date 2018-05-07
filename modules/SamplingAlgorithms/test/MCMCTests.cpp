@@ -8,11 +8,12 @@
 #include "MUQ/SamplingAlgorithms/MHKernel.h"
 #include "MUQ/SamplingAlgorithms/MHProposal.h"
 #include "MUQ/SamplingAlgorithms/AMProposal.h"
+#include "MUQ/Utilities/AnyHelpers.h"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
-
+using namespace muq::Utilities;
 
 TEST(MCMC, MHKernel_MHProposal) {
 
@@ -25,7 +26,7 @@ TEST(MCMC, MHKernel_MHProposal) {
   pt.put("MyMCMC.Kernel1.Method","MHKernel");
   pt.put("MyMCMC.Kernel1.Proposal", "MyProposal"); // the proposal
   pt.put("MyMCMC.Kernel1.MyProposal.Method", "MHProposal");
-  pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 1e-3); // the variance of the isotropic MH proposal
+  pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 1.0); // the variance of the isotropic MH proposal
 
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
   const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
@@ -51,13 +52,28 @@ TEST(MCMC, MHKernel_MHProposal) {
   std::shared_ptr<MHProposal> proposalMH = std::dynamic_pointer_cast<MHProposal>(proposalBase);
   EXPECT_TRUE(proposalMH);
 
-  mcmc->Run(start);
+  SampleCollection const& samps = mcmc->Run(start);
+
+  boost::any anyMean = samps.Mean();
+  Eigen::VectorXd const& mean = AnyCast(anyMean);
+
+  EXPECT_NEAR(mu(0), mean(0), 1e-1);
+  EXPECT_NEAR(mu(1), mean(1), 1e-1);
+
+  boost::any anyCov = samps.Covariance();
+  Eigen::MatrixXd const& cov = AnyCast(anyCov);
+  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
+
+
 }
 
 TEST(MCMC, MHKernel_AMProposal) {
 
 
-  const unsigned int N = 2.0e5;
+  const unsigned int N = 1e4;
 
   // parameters for the sampler
   pt::ptree pt;
@@ -66,10 +82,10 @@ TEST(MCMC, MHKernel_AMProposal) {
   pt.put("MyMCMC.Kernel1.Method","MHKernel");
   pt.put("MyMCMC.Kernel1.Proposal", "MyProposal"); // the proposal
   pt.put("MyMCMC.Kernel1.MyProposal.Method", "AMProposal");
-  pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 1e-3); // the variance of the isotropic MH proposal
+  pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 1.0); // the variance of the isotropic MH proposal
   pt.put("MyMCMC.Kernel1.MyProposal.AdaptSteps",200);
   pt.put("MyMCMC.Kernel1.MyProposal.AdaptStart",2000);
-  pt.put("MyMCMC.Kernel1.MyProposal.AdaptScale",1e-1);
+  pt.put("MyMCMC.Kernel1.MyProposal.AdaptScale",1.0);
 
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
   const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
@@ -85,7 +101,6 @@ TEST(MCMC, MHKernel_AMProposal) {
   // evaluate
   // create an instance of MCMC
   auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"), problem);
-  mcmc->Run(start);
 
   std::shared_ptr<TransitionKernel> kernelBase = mcmc->Kernels().at(0);
   std::shared_ptr<MHKernel> kernelMH = std::dynamic_pointer_cast<MHKernel>(kernelBase);
@@ -94,4 +109,19 @@ TEST(MCMC, MHKernel_AMProposal) {
   std::shared_ptr<MCMCProposal> proposalBase = kernelMH->Proposal();
   std::shared_ptr<AMProposal> proposalAM = std::dynamic_pointer_cast<AMProposal>(proposalBase);
   EXPECT_TRUE(proposalAM);
+
+  SampleCollection const& samps = mcmc->Run(start);
+
+  boost::any anyMean = samps.Mean();
+  Eigen::VectorXd const& mean = AnyCast(anyMean);
+
+  EXPECT_NEAR(mu(0), mean(0), 1e-1);
+  EXPECT_NEAR(mu(1), mean(1), 1e-1);
+
+  boost::any anyCov = samps.Covariance();
+  Eigen::MatrixXd const& cov = AnyCast(anyCov);
+  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
 }

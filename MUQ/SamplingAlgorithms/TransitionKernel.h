@@ -45,7 +45,7 @@ namespace muq {
        */
       virtual void PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) {};
 
-      virtual std::vector<std::shared_ptr<SamplingState>> Step(std::shared_ptr<SamplingState> prevState) = 0;
+      virtual std::vector<std::shared_ptr<SamplingState>> Step(unsigned int const t, std::shared_ptr<SamplingState> prevState) = 0;
 
       // What block of the state does this kernel work on?
       const int blockInd = 0;

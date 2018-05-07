@@ -47,6 +47,8 @@ namespace muq{
       std::shared_ptr<SamplingState> at(unsigned i);
       const std::shared_ptr<SamplingState> at(unsigned i) const;
 
+      unsigned size() const{return samples.size();};
+
       //  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order
       boost::any CentralMoment(unsigned order, int blockDim=-1) const;
 

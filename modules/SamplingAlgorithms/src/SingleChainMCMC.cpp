@@ -28,5 +28,36 @@ SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree&             pt,
 
 SampleCollection const& SingleChainMCMC::RunImpl(std::vector<boost::any> const& x0)
 {
+  unsigned sampNum = 0;
+  std::vector<std::shared_ptr<SamplingState>> newStates;
+  std::shared_ptr<SamplingState> prevState = std::make_shared<SamplingState>(x0);
+
+  samples.Add(prevState);
+
+  // Run until we've received the desired number of samples
+  while(sampNum < numSamps)
+  {
+    // Loop through each parameter block
+    for(int blockInd=0; blockInd<kernels.size(); ++blockInd){
+
+      kernels.at(blockInd)->PreStep(sampNum, prevState);
+      newStates = kernels.at(blockInd)->Step(sampNum, prevState);
+
+      // Add the new states to the SampleCollection
+      for(int i=0; i<newStates.size(); ++i){
+        if(newStates.at(i)!=prevState){
+          prevState = newStates.at(i);
+          samples.Add(newStates.at(i));
+        }else{
+          prevState->weight += 1;
+        }
+      }
+
+      kernels.at(blockInd)->PostStep(sampNum, newStates);
+
+      // Increment the sample number
+      sampNum += newStates.size();
+    }
+  }
   return samples;
 }

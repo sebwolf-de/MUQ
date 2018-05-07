@@ -32,7 +32,7 @@ void MHKernel::PostStep(unsigned int const t, std::vector<std::shared_ptr<Sampli
   proposal->Adapt(t,state);
 }
 
-std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(std::shared_ptr<SamplingState> prevState){
+std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t, std::shared_ptr<SamplingState> prevState){
 
   assert(proposal);
 
@@ -63,7 +63,6 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(std::shared_ptr<Sampl
   if( RandomGenerator::GetUniform()<alpha ) {
     return std::vector<std::shared_ptr<SamplingState>>(1,prop);
   } else {
-    prevState->weight += 1.0;
     return std::vector<std::shared_ptr<SamplingState>>(1,prevState);
   }
 }
