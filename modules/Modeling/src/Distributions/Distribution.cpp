@@ -8,7 +8,7 @@ Distribution::~Distribution() {}
 Distribution::Distribution() : WorkPiece() {}
 
 void Distribution::EvaluateImpl(ref_vector<boost::any> const& inputs) {
-    
+
   // get the mode
   const Distribution::Mode mode = boost::any_cast<Distribution::Mode const>(inputs[0]);
 
@@ -36,13 +36,13 @@ void Distribution::EvaluateImpl(ref_vector<boost::any> const& inputs) {
 double Distribution::LogDensity(ref_vector<boost::any> const& inputs) {
   // the first input is always whether we are evaluting the log-density or sampling; we either have n-1 inputs or they are unknown
   assert(numInputs-1==inputs.size() || numInputs<0);
-  
+
   return LogDensityImpl(inputs);
 }
 
 // default behavior of log-density is to return infinity
 double Distribution::LogDensityImpl(ref_vector<boost::any> const& inputs) {
-    
+
   throw muq::NotImplementedError("LogDensityImpl was not implemented for class " + std::string(typeid(*this).name()) );
   return -std::numeric_limits<double>::infinity();
 }

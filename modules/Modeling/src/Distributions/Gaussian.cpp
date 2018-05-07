@@ -5,28 +5,55 @@
 using namespace muq::Utilities;
 using namespace muq::Modeling;
 
-Gaussian::Gaussian(boost::any const& obj, Gaussian::Mode const mode) :
-  Distribution(),
-  mode(mode),
-  dim(algebra->Size(obj,0)),
-  mean(mode==Gaussian::Mode::Mean? obj : boost::none),
-  cov(mode==Gaussian::Mode::Covariance? SaveCovPrec(obj) : boost::none),
-  prec(mode==Gaussian::Mode::Precision? SaveCovPrec(obj) : boost::none) {
+Gaussian::Gaussian(boost::any               const& obj,
+                   Gaussian::Mode           const  mode,
+                   Gaussian::ExpectedInputs const  expected) :
+      Distribution(),
+      mode(mode),
+      dim(algebra->Size(obj,0)),
+      mean(mode==Gaussian::Mode::Mean? obj : boost::none),
+      cov(mode==Gaussian::Mode::Covariance? SaveCovPrec(obj) : boost::none),
+      prec(mode==Gaussian::Mode::Precision? SaveCovPrec(obj) : boost::none)
+{
   SetInputSize(0,dim);
+  SetInputTypes(expected);
   ComputeScalingConstant();
 }
 
-Gaussian::Gaussian(boost::any const& mean, boost::any const& obj, Gaussian::Mode const mode) :
-  Distribution(),
-  mode(mode),
-  dim(algebra->Size(obj,0)),
-  mean(mean),
-  cov(mode==Gaussian::Mode::Covariance? SaveCovPrec(obj) : boost::none),
-  prec(mode==Gaussian::Mode::Precision? SaveCovPrec(obj) : boost::none) {
+Gaussian::Gaussian(boost::any               const& mean,
+                   boost::any               const& obj,
+                   Gaussian::Mode           const  mode,
+                   Gaussian::ExpectedInputs const  expected) :
+      Distribution(),
+      mode(mode),
+      dim(algebra->Size(obj,0)),
+      mean(mean),
+      cov(mode==Gaussian::Mode::Covariance? SaveCovPrec(obj) : boost::none),
+      prec(mode==Gaussian::Mode::Precision? SaveCovPrec(obj) : boost::none)
+{
+  SetInputTypes(expected);
   ComputeScalingConstant();
 }
 
 Gaussian::~Gaussian() {}
+
+
+void Gaussian::SetInputTypes(Gaussian::ExpectedInputs const  expected)
+{
+  if(expected == ExpectedInputs::LocationOnly){
+    numInputs = 2;
+
+  }else if(expected == ExpectedInputs::LocationMean){
+    numInputs = 3;
+
+  }else if(expected == ExpectedInputs::All){
+    numInputs = 4;
+
+  }else if(expected == ExpectedInputs::Flexible){
+    numInputs = -1;
+  }
+}
+
 
 void Gaussian::ComputeScalingConstant() {
   scalingConstant = dim*std::log(2.0*M_PI);

@@ -66,9 +66,71 @@ TEST(MCMC, MHKernel_MHProposal) {
   EXPECT_NEAR(0.0, cov(0,1), 1e-1);
   EXPECT_NEAR(0.0, cov(1,0), 1e-1);
   EXPECT_NEAR(1.0, cov(1,1), 1e-1);
-
-
 }
+
+
+TEST(MCMC, MetropolisInGibbs_IsoGauss) {
+
+  const unsigned int N = 1e4;
+
+  // parameters for the sampler
+  pt::ptree pt;
+  pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.KernelList", "Kernel1,Kernel2"); // the transition kernel
+
+  // MH Kernel for first block
+  pt.put("MyMCMC.Kernel1.Method","MHKernel");
+  pt.put("MyMCMC.Kernel1.Proposal", "MyProposal");
+  pt.put("MyMCMC.Kernel1.MyProposal.Method", "MHProposal");
+  pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 1.0);
+
+  pt.put("MyMCMC.Kernel2.Method","MHKernel");
+  pt.put("MyMCMC.Kernel2.Proposal", "MyProposal");
+  pt.put("MyMCMC.Kernel2.MyProposal.Method", "MHProposal");
+  pt.put("MyMCMC.Kernel2.MyProposal.ProposalVariance", 1.2);
+
+  // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
+  const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
+  auto dist = std::make_shared<Gaussian>(mu); // standard normal Gaussian
+
+  // create a sampling problem
+  std::vector<int> blockSizes(2,1);
+  auto problem = std::make_shared<SamplingProblem>(dist, blockSizes);
+
+  // starting point
+  const Eigen::VectorXd start = Eigen::VectorXd::Random(2);
+
+  // evaluate
+  // create an instance of MCMC
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
+
+  // Make sure the kernel and proposal are correct
+  std::shared_ptr<TransitionKernel> kernelBase = mcmc->Kernels().at(0);
+  std::shared_ptr<MHKernel> kernelMH = std::dynamic_pointer_cast<MHKernel>(kernelBase);
+  EXPECT_TRUE(kernelMH);
+
+  std::shared_ptr<MCMCProposal> proposalBase = kernelMH->Proposal();
+  std::shared_ptr<MHProposal> proposalMH = std::dynamic_pointer_cast<MHProposal>(proposalBase);
+  EXPECT_TRUE(proposalMH);
+
+  SampleCollection const& samps = mcmc->Run(start);
+
+  boost::any anyMean = samps.Mean();
+  Eigen::VectorXd const& mean = AnyCast(anyMean);
+
+  EXPECT_NEAR(mu(0), mean(0), 1e-1);
+  EXPECT_NEAR(mu(1), mean(1), 1e-1);
+
+  boost::any anyCov = samps.Covariance();
+  Eigen::MatrixXd const& cov = AnyCast(anyCov);
+  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
+}
+
+
+
 
 TEST(MCMC, MHKernel_AMProposal) {
 

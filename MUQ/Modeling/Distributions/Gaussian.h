@@ -12,14 +12,23 @@ namespace muq {
 
       /// Are we specifying the mean, covariance matrix, or precision matrix
       enum Mode {
-	/// We are specifying the mean
-	Mean,
+      	/// We are specifying the mean
+      	Mean,
 
-	/// We are specifying the covariance
-	Covariance,
+      	/// We are specifying the covariance
+      	Covariance,
 
-	/// We are specifying the precision
-	Precision
+      	/// We are specifying the precision
+      	Precision
+      };
+
+
+      /// Are we specifying the mean, covariance matrix, or precision matrix
+      enum ExpectedInputs {
+        LocationOnly, /// Only the location can be specified.  All other inputs are fixed apriori.
+        LocationMean, /// Only the location and mean need to be specified
+        All,          /// Every evaluation requires specifying all inputs
+        Flexible      /// Input type may change with every evaluation
       };
 
       /// Construct a Gaussian with scaled identity covariance/precision
@@ -27,7 +36,9 @@ namespace muq {
 	 @param[in] obj Either the mean, covariance, or the precision (depending on the second paameter)
 	 @param[in] mode Are we specifying mean, covariance, or precision (defaults to mean)
        */
-      Gaussian(boost::any const& obj = 0.0, Gaussian::Mode const mode = Gaussian::Mode::Mean);
+      Gaussian(boost::any               const& obj = 0.0,
+               Gaussian::Mode           const  mode = Gaussian::Mode::Mean,
+               Gaussian::ExpectedInputs const  expected = Gaussian::ExpectedInputs::LocationOnly);
 
       /// Construct a Gaussian with scaled identity covariance/precision
       /**
@@ -35,7 +46,10 @@ namespace muq {
 	 @param[in] obj Either the covariance or the precision (depending on the second paameter)
 	 @param[in] mode Are we specifying mean, covariance, or precision (defaults to covariance)
        */
-      Gaussian(boost::any const& mean, boost::any const& obj, Gaussian::Mode const mode = Gaussian::Mode::Covariance);
+      Gaussian(boost::any               const& mean,
+               boost::any               const& obj,
+               Gaussian::Mode           const  mode = Gaussian::Mode::Covariance,
+               Gaussian::ExpectedInputs const  expected = Gaussian::ExpectedInputs::LocationOnly);
 
       ~Gaussian();
 
@@ -63,6 +77,8 @@ namespace muq {
        */
       void SetPrecision(boost::any const& newprec);
 
+      void SetInputTypes(Gaussian::ExpectedInputs const  expected);
+      
     private:
 
       /// Compute the distribution's scaling constant
@@ -85,7 +101,7 @@ namespace muq {
 	 <ol>
 	 <li> The state \f$x\f$
 	 </ol>
-	 \return The log-density 
+	 \return The log-density
        */
       virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) override;
 
@@ -98,13 +114,13 @@ namespace muq {
       /// Have we specified the covariance or the precision
       Gaussian::Mode mode;
 
-      /// The dimension 
+      /// The dimension
       const unsigned int dim;
 
       /// The mean of the distribution
       boost::optional<boost::any> mean;
 
-      /// The covariance 
+      /// The covariance
       boost::optional<boost::any> cov;
 
       /// The square root of the covariance

@@ -8,6 +8,7 @@ using namespace muq::Modeling;
 UniformBox::UniformBox(Eigen::MatrixXd const& boundsIn) : Distribution(), bounds(boundsIn), volume(ComputeVolume(boundsIn)) {
   // initialize the any algebra
   algebra = std::make_shared<AnyAlgebra>();
+  numInputs = 2;
 }
 
 double UniformBox::ComputeVolume(Eigen::MatrixXd const& boundsIn)
@@ -22,20 +23,20 @@ Eigen::MatrixXd UniformBox::CreateBoundsPairs(std::vector<std::pair<double,doubl
         bounds(i,0) = boundsVec.at(i).first;
         bounds(i,1) = boundsVec.at(i).second;
     }
-    
+
     return bounds;
 }
 
 Eigen::MatrixXd UniformBox::CreateBoundsDouble(std::vector<double> const& boundsVec)
 {
     assert(boundsVec.size()%2==0);
-    
+
     Eigen::MatrixXd bounds(boundsVec.size()/2,2);
     for(int i=0; i<boundsVec.size()/2; ++i){
         bounds(i,0) = boundsVec.at(2*i);
         bounds(i,1) = boundsVec.at(2*i+1);
     }
-    
+
     return bounds;
 }
 
