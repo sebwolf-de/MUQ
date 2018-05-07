@@ -20,7 +20,7 @@ namespace muq {
 	 @param[in] t The current step
 	 @param[in] state The current state
        */
-      virtual void Adapt(unsigned int const t, std::shared_ptr<SamplingState> state) override;
+      virtual void Adapt(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& states) override;
 
     private:
 
@@ -30,7 +30,8 @@ namespace muq {
 	 @param[in] t The current step
 	 @param[in] state The current state
        */
-      void Update(unsigned int const t, std::shared_ptr<SamplingState> state);
+      void Update(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& states);      
+      void UpdateOne(unsigned int const numSamps, std::shared_ptr<SamplingState> state);
 
       /// The current mean
       boost::any mean = boost::none;
@@ -43,6 +44,9 @@ namespace muq {
 
       /// When should we start adapting?
       const unsigned int adaptStart;
+
+      // Multiplicative scaling of the sample covariance
+      const double adaptScale;
 
     };
 

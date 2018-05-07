@@ -12,7 +12,7 @@ std::shared_ptr<MCMCProposal> MCMCProposal::Construct(pt::ptree                 
                                                       std::shared_ptr<AbstractSamplingProblem> prob) {
 
   // get the name of the proposal
-  std::string proposalName = pt.get("MCMC.Proposal", "MHProposal");
+  std::string proposalName = pt.get<std::string>("Method");
 
   auto proposalMap = GetMCMCProposalMap();
   auto iter = proposalMap->find(proposalName);
@@ -42,5 +42,3 @@ std::shared_ptr<MCMCProposal::MCMCProposalMap> MCMCProposal::GetMCMCProposalMap(
 
   return map;
 }
-
-void MCMCProposal::Adapt(unsigned int const t, std::shared_ptr<SamplingState> state) {}

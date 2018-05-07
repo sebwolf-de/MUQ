@@ -3,7 +3,7 @@
 
 #include "MUQ/SamplingAlgorithms/TransitionKernel.h"
 
-#include "MUQ/Modeling/Distributions/Distribution.h"
+#include "MUQ/SamplingAlgorithms/MCMCProposal.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
@@ -14,17 +14,18 @@ namespace muq {
     class MHKernel : public TransitionKernel {
     public:
 
-      MHKernel(boost::property_tree::ptree const& pt, std::shared_ptr<SamplingProblem> problem);
+      MHKernel(boost::property_tree::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem);
 
       ~MHKernel();
 
-      virtual std::shared_ptr<SamplingState> Step(std::shared_ptr<SamplingState> prevState) override;
+      virtual std::shared_ptr<MCMCProposal> Proposal(){return proposal;};
+      
+      virtual void PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) override;
 
-      // What block of the state does this kernel work on?
-      const int blockInd;
+      virtual std::vector<std::shared_ptr<SamplingState>> Step(std::shared_ptr<SamplingState> prevState) override;
 
     protected:
-      std::shared_ptr<muq::Modeling::Distribution> proposal;
+      std::shared_ptr<MCMCProposal> proposal;
 
     };
   } // namespace SamplingAlgorithms

@@ -16,7 +16,7 @@ namespace muq {
 
       virtual ~MCKernel() = default;
 
-      virtual std::shared_ptr<SamplingState>  Step(std::shared_ptr<SamplingState> prevState) override;
+      virtual std::vector<std::shared_ptr<SamplingState>>  Step(std::shared_ptr<SamplingState> prevState) override;
 
     private:
 

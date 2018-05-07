@@ -32,4 +32,5 @@ CreateTestGroup(
 
     RandomGeneratorTest.cpp
     AnyCastTest.cpp
+    StringUtilitiesTest.cpp
 )

@@ -4,7 +4,7 @@ CreateTestGroup(
     SamplingProblemTests.cpp
     SampleCollectionTests.cpp
 
-    MonteCarloTests.cpp
+    #MonteCarloTests.cpp
     #ImportanceSamplingTests.cpp
     MCMCTests.cpp
 )

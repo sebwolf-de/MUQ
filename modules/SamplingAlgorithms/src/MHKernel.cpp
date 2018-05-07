@@ -11,14 +11,28 @@ using namespace muq::SamplingAlgorithms;
 
 REGISTER_TRANSITION_KERNEL(MHKernel)
 
-MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) : TransitionKernel(pt, problem),
-                                                                                    blockInd(pt.get("BlockIndex",0)),
-                                                                                    proposal(MCMCProposal::Construct(pt, problem)) {}
+MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : TransitionKernel(pt, problem)
+{
+  // Extract the proposal parts from the ptree
+  std::string proposalName = pt.get<std::string>("Proposal");
+
+  boost::property_tree::ptree subTree = pt.get_child(proposalName);
+  subTree.put("BlockIndex", blockInd);
+
+  // Construct the proposal
+  proposal = MCMCProposal::Construct(subTree, problem);
+  assert(proposal);
+}
+
 
 
 MHKernel::~MHKernel() {}
 
-std::shared_ptr<SamplingState> MHKernel::Step(std::shared_ptr<SamplingState> prevState){
+void MHKernel::PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state){
+  proposal->Adapt(t,state);
+}
+
+std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(std::shared_ptr<SamplingState> prevState){
 
   assert(proposal);
 
@@ -47,9 +61,9 @@ std::shared_ptr<SamplingState> MHKernel::Step(std::shared_ptr<SamplingState> pre
 
   // accept/reject
   if( RandomGenerator::GetUniform()<alpha ) {
-    return prop;
+    return std::vector<std::shared_ptr<SamplingState>>(1,prop);
   } else {
     prevState->weight += 1.0;
-    return prevState;
+    return std::vector<std::shared_ptr<SamplingState>>(1,prevState);
   }
 }

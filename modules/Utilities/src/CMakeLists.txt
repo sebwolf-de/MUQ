@@ -35,6 +35,7 @@ CreateCompileGroup(
     "EIGEN3"
     ""
     RandomGenerator.cpp
+    StringUtilities.cpp
 )
 
 CreateCompileGroup(

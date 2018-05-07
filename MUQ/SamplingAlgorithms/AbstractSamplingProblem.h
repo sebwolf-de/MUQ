@@ -2,6 +2,8 @@
 #define ABSTRACTSAMPLINGPROBLEM_H
 
 #include <vector>
+#include <boost/any.hpp>
+#include <assert.h>
 
 namespace muq{
   namespace SamplingAlgorithms{

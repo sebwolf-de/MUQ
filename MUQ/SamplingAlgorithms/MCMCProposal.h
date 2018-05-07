@@ -34,7 +34,6 @@ namespace muq {
 
       typedef std::function<std::shared_ptr<MCMCProposal>(boost::property_tree::ptree,std::shared_ptr<AbstractSamplingProblem>)> MCMCProposalConstructor;
       typedef std::map<std::string, MCMCProposalConstructor> MCMCProposalMap;
-
       static std::shared_ptr<MCMCProposalMap> GetMCMCProposalMap();
 
       /// Adapt the proposal after each step
@@ -43,14 +42,9 @@ namespace muq {
 	 @param[in] t The current step
 	 @param[in] state The current state
        */
-      virtual void Adapt(unsigned int const t, std::shared_ptr<SamplingState> state);
+      virtual void Adapt(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) {};
 
-    protected:
-
-      /// An any algebra
-      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>();
-
-    private:
+      const int blockInd = 0;
 
     };
   } // namespace SamplingAlgoirthms

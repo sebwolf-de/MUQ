@@ -19,16 +19,16 @@ CreateCompileGroup(
     "MODELING_CORE;UTILITIES_CORE"
     ""
     ""
-    SamplingAlgorithm.cpp
-    MonteCarlo.cpp
+    #SamplingAlgorithm.cpp
+    #MonteCarlo.cpp
     #ImportanceSampling.cpp
-    MCMC.cpp
+    SingleChainMCMC.cpp
 
     SamplingState.cpp
     SampleCollection.cpp
 
     TransitionKernel.cpp
-    MCKernel.cpp
+    #MCKernel.cpp
     #ISKernel.cpp
     MHKernel.cpp
     #MCMCKernel.cpp

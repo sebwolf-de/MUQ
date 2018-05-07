@@ -11,7 +11,7 @@ MHProposal::MHProposal(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProb
   unsigned int problemDim = prob->blockSizes.at(0);
 
   // compute the (diagonal) covariance for the proposal
-  const Eigen::VectorXd cov = pt.get("MCMC.Proposal.MH.ProposalSize", 1.0)*Eigen::VectorXd::Ones(problemDim);
+  const Eigen::VectorXd cov = pt.get("ProposalVariance", 1.0)*Eigen::VectorXd::Ones(problemDim);
 
   // created a Gaussian with scaled identity covariance
   if( cov.size()==1 ) {

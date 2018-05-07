@@ -19,7 +19,7 @@ namespace muq {
     class TransitionKernel { //: public muq::Modeling::WorkPiece {
     public:
 
-      TransitionKernel(boost::property_tree::ptree const& pt, std::shared_ptr<SamplingProblem> problem);
+      TransitionKernel(boost::property_tree::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem);
 
       ~TransitionKernel();
 
@@ -29,13 +29,13 @@ namespace muq {
 	 @param[in] problem The sampling problem that evaluates/samples the distribution we are trying to characterize
 	 \return The transition kernel
        */
-      static std::shared_ptr<TransitionKernel> Construct(boost::property_tree::ptree const& pt, std::shared_ptr<SamplingProblem> problem);
-
-      typedef boost::function<std::shared_ptr<TransitionKernel>(boost::property_tree::ptree, std::shared_ptr<SamplingProblem>)> TransitionKernelConstructor;
-
+      static std::shared_ptr<TransitionKernel> Construct(boost::property_tree::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem);
+      typedef boost::function<std::shared_ptr<TransitionKernel>(boost::property_tree::ptree, std::shared_ptr<AbstractSamplingProblem>)> TransitionKernelConstructor;
       typedef std::map<std::string, TransitionKernelConstructor> TransitionKernelMap;
-
       static std::shared_ptr<TransitionKernelMap> GetTransitionKernelMap();
+
+
+      virtual void PreStep(unsigned t, std::shared_ptr<SamplingState> state) {};
 
       /// Allow the kernel to adapt given a new state
       /**
@@ -43,14 +43,17 @@ namespace muq {
 	 @param[in] t The current step
 	 @param[in] state The current state
        */
-      virtual void PostStep(unsigned int const t, std::shared_ptr<SamplingState> state);
+      virtual void PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) {};
 
-      virtual std::shared_ptr<SamplingState> Step(std::shared_ptr<SamplingState> prevState) = 0;
+      virtual std::vector<std::shared_ptr<SamplingState>> Step(std::shared_ptr<SamplingState> prevState) = 0;
+
+      // What block of the state does this kernel work on?
+      const int blockInd = 0;
 
     protected:
 
       /// The sampling problem that evaluates/samples the target distribution
-      std::shared_ptr<SamplingProblem> problem;
+      std::shared_ptr<AbstractSamplingProblem> problem;
 
     private:
     };

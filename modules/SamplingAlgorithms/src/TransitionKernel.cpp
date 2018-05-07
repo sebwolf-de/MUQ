@@ -4,7 +4,9 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
-TransitionKernel::TransitionKernel(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) : problem(problem) {}
+TransitionKernel::TransitionKernel(pt::ptree                 const& pt,
+                                   std::shared_ptr<AbstractSamplingProblem> problem) : blockInd(pt.get("BlockIndex",0)),
+                                                                               problem(problem)  {}
 
 TransitionKernel::~TransitionKernel() {}
 
@@ -20,9 +22,9 @@ std::shared_ptr<TransitionKernel::TransitionKernelMap> TransitionKernel::GetTran
   return map;
 }
 
-std::shared_ptr<TransitionKernel> TransitionKernel::Construct(pt::ptree const& pt, std::shared_ptr<SamplingProblem> problem) {
+std::shared_ptr<TransitionKernel> TransitionKernel::Construct(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) {
   // get the name of the kernel
-  const std::string& kernelName = pt.get<std::string>("SamplingAlgorithm.TransitionKernel");
+  const std::string& kernelName = pt.get<std::string>("Method");
 
   // construct it from the map
   auto kernelMap = GetTransitionKernelMap();
@@ -39,7 +41,4 @@ std::shared_ptr<TransitionKernel> TransitionKernel::Construct(pt::ptree const& p
   }
 
   return iter->second(pt, problem);
-
 }
-
-void TransitionKernel::PostStep(unsigned int const t, std::shared_ptr<SamplingState> state) {}
