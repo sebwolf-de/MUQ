@@ -50,6 +50,8 @@ CreateCompileGroup(
     Distributions/UniformBox.cpp
     Distributions/Gaussian.cpp
     Distributions/DensityProduct.cpp
+    Distributions/Density.cpp
+    Distributions/RandomVariable.cpp
 )
 
 CreateCompileGroup(
