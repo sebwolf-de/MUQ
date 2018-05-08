@@ -20,7 +20,8 @@ namespace muq {
     class MCMCProposal : public muq::Modeling::Distribution {
     public:
 
-      MCMCProposal();
+      MCMCProposal(boost::property_tree::ptree       const& pt,
+                   std::shared_ptr<AbstractSamplingProblem> prob);
 
       ~MCMCProposal();
 

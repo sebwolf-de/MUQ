@@ -41,6 +41,7 @@ SampleCollection const& SingleChainMCMC::RunImpl(std::vector<boost::any> const& 
     for(int blockInd=0; blockInd<kernels.size(); ++blockInd){
 
       kernels.at(blockInd)->PreStep(sampNum, prevState);
+
       newStates = kernels.at(blockInd)->Step(sampNum, prevState);
 
       // Add the new states to the SampleCollection

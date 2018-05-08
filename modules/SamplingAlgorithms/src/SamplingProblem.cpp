@@ -4,16 +4,16 @@
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
-SamplingProblem::SamplingProblem(std::shared_ptr<muq::Modeling::Distribution> targetIn,
+SamplingProblem::SamplingProblem(std::shared_ptr<muq::Modeling::WorkPiece> targetIn,
                                  std::vector<int> const& inputSizes) : AbstractSamplingProblem(inputSizes.size(), inputSizes),
                                                                        target(targetIn) {}
 
-SamplingProblem::SamplingProblem(std::shared_ptr<muq::Modeling::Distribution> targetIn) : SamplingProblem(targetIn, GetBlockSizes(targetIn)) {}
+SamplingProblem::SamplingProblem(std::shared_ptr<muq::Modeling::WorkPiece> targetIn) : SamplingProblem(targetIn, GetBlockSizes(targetIn)) {}
 
 
 double SamplingProblem::LogDensity(std::shared_ptr<SamplingState> state) {
   assert(target);
-  return target->LogDensity(state->state);
+  return boost::any_cast<double>(target->Evaluate(state->state).at(0));
 }
 
 boost::any SamplingProblem::GradLogDensity(std::shared_ptr<SamplingState> state,
@@ -22,7 +22,7 @@ boost::any SamplingProblem::GradLogDensity(std::shared_ptr<SamplingState> state,
   return target->Jacobian(blockWrt, 0, state->state);
 }
 
-std::vector<int> SamplingProblem::GetBlockSizes(std::shared_ptr<Distribution> target)
+std::vector<int> SamplingProblem::GetBlockSizes(std::shared_ptr<WorkPiece> target)
 {
   int numBlocks = GetNumBlocks(target);
 
@@ -33,7 +33,7 @@ std::vector<int> SamplingProblem::GetBlockSizes(std::shared_ptr<Distribution> ta
   return output;
 }
 
-unsigned SamplingProblem::GetNumBlocks(std::shared_ptr<Distribution> target)
+unsigned SamplingProblem::GetNumBlocks(std::shared_ptr<WorkPiece> target)
 {
   if(target->numInputs < 0){
     throw std::invalid_argument("When not manually specified, \"SamplingProblem\" requires the target distribution to have a specified number of inputs, but \"" + target->Name() + "\" does not specify a fixed number of inputs, i.e., target->numInputs < 0.");

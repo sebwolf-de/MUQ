@@ -1,7 +1,7 @@
 #ifndef SAMPLINGPROBLEM_H_
 #define SAMPLINGPROBLEM_H_
 
-#include "MUQ/Modeling/Distributions/Distribution.h"
+#include "MUQ/Modeling/WorkPiece.h"
 #include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
 
 namespace muq {
@@ -12,12 +12,12 @@ namespace muq {
     class SamplingProblem : public AbstractSamplingProblem{
     public:
 
-      SamplingProblem(std::shared_ptr<muq::Modeling::Distribution> targetIn,
-                      std::vector<int>                      const& inputSizes);
+      SamplingProblem(std::shared_ptr<muq::Modeling::WorkPiece> targetIn,
+                      std::vector<int>                   const& inputSizes);
       /**
 	     @param[in] target The target distribution
        */
-      SamplingProblem(std::shared_ptr<muq::Modeling::Distribution> targetIn);
+      SamplingProblem(std::shared_ptr<muq::Modeling::WorkPiece> targetIn);
 
       virtual ~SamplingProblem() = default;
 
@@ -28,15 +28,15 @@ namespace muq {
                                         unsigned                       blockWrt) override;
 
 
-      std::shared_ptr<muq::Modeling::Distribution> GetDistribution(){return target;};
+      std::shared_ptr<muq::Modeling::WorkPiece> GetDistribution(){return target;};
 
     private:
 
       /// The target distribution (the prior in the inference case)
-      std::shared_ptr<muq::Modeling::Distribution> target;
+      std::shared_ptr<muq::Modeling::WorkPiece> target;
 
-      static unsigned GetNumBlocks(std::shared_ptr<muq::Modeling::Distribution> target);
-      static std::vector<int> GetBlockSizes(std::shared_ptr<muq::Modeling::Distribution> target);
+      static unsigned GetNumBlocks(std::shared_ptr<muq::Modeling::WorkPiece> target);
+      static std::vector<int> GetBlockSizes(std::shared_ptr<muq::Modeling::WorkPiece> target);
 
     };
   } // namespace SamplingAlgorithms

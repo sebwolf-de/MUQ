@@ -4,7 +4,8 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
-MCMCProposal::MCMCProposal() : Distribution() {}
+MCMCProposal::MCMCProposal(boost::property_tree::ptree       const& pt,
+                           std::shared_ptr<AbstractSamplingProblem> prob) : Distribution(), blockInd(pt.get<int>("BlockIndex")) {}
 
 MCMCProposal::~MCMCProposal() {}
 

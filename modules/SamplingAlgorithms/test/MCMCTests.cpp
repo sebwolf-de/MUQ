@@ -2,7 +2,10 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include "MUQ/Modeling/WorkGraph.h"
+#include "MUQ/Modeling/WorkGraphPiece.h"
 #include "MUQ/Modeling/Distributions/Gaussian.h"
+#include "MUQ/Modeling/Distributions/DensityProduct.h"
 
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 #include "MUQ/SamplingAlgorithms/MHKernel.h"
@@ -90,23 +93,45 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   pt.put("MyMCMC.Kernel2.MyProposal.ProposalVariance", 1.2);
 
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
-  const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
-  auto dist = std::make_shared<Gaussian>(mu); // standard normal Gaussian
+  const Eigen::VectorXd mu1 = 1.0*Eigen::VectorXd::Ones(2);
+  const Eigen::VectorXd mu2 = 1.5*Eigen::VectorXd::Ones(2);
+  auto dist1 = std::make_shared<Gaussian>(mu1); // standard normal Gaussian
+  auto dist2 = std::make_shared<Gaussian>(mu2); // standard normal Gaussian
+
+  auto graph = std::make_shared<WorkGraph>();
+  graph->AddNode(dist1->AsDensity(), "Gaussian1");
+  graph->AddNode(dist2->AsDensity(), "Gaussian2");
+
+  graph->AddNode(std::make_shared<DensityProduct>(2), "ProductDensity");
+  graph->AddEdge("Gaussian1",0,"ProductDensity",0);
+  graph->AddEdge("Gaussian2",0,"ProductDensity",1);
+
+  graph->Visualize("Graph.pdf");
+  auto dens = graph->CreateWorkPiece("ProductDensity");
 
   // create a sampling problem
-  std::vector<int> blockSizes(2,1);
-  auto problem = std::make_shared<SamplingProblem>(dist, blockSizes);
+  std::vector<int> blockSizes{2,2};
+  auto problem = std::make_shared<SamplingProblem>(dens, blockSizes);
+
 
   // starting point
-  const Eigen::VectorXd start = Eigen::VectorXd::Random(2);
+  std::vector<boost::any> start(2);
+  start.at(0) = Eigen::VectorXd::Random(2).eval();
+  start.at(1) = Eigen::VectorXd::Random(2).eval();
 
   // evaluate
   // create an instance of MCMC
   auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
 
   // Make sure the kernel and proposal are correct
+  EXPECT_EQ(2,mcmc->Kernels().size());
+
   std::shared_ptr<TransitionKernel> kernelBase = mcmc->Kernels().at(0);
   std::shared_ptr<MHKernel> kernelMH = std::dynamic_pointer_cast<MHKernel>(kernelBase);
+  EXPECT_TRUE(kernelMH);
+
+  kernelBase = mcmc->Kernels().at(1);
+  kernelMH = std::dynamic_pointer_cast<MHKernel>(kernelBase);
   EXPECT_TRUE(kernelMH);
 
   std::shared_ptr<MCMCProposal> proposalBase = kernelMH->Proposal();
@@ -118,15 +143,21 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   boost::any anyMean = samps.Mean();
   Eigen::VectorXd const& mean = AnyCast(anyMean);
 
-  EXPECT_NEAR(mu(0), mean(0), 1e-1);
-  EXPECT_NEAR(mu(1), mean(1), 1e-1);
+  EXPECT_NEAR(mu1(0), mean(0), 1e-1);
+  EXPECT_NEAR(mu1(1), mean(1), 1e-1);
+  EXPECT_NEAR(mu2(0), mean(2), 1e-1);
+  EXPECT_NEAR(mu2(1), mean(3), 1e-1);
 
   boost::any anyCov = samps.Covariance();
   Eigen::MatrixXd const& cov = AnyCast(anyCov);
-  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
-  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
-  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
-  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
+  for(int j=0; j<cov.cols(); ++j){
+    for(int i=0; i<cov.rows(); ++i){
+      if(i!=j)
+        EXPECT_NEAR(0.0, cov(i,j), 1e-1);
+      else
+        EXPECT_NEAR(1.0, cov(i,j), 1e-1);
+    }
+  }
 }
 
 

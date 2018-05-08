@@ -85,15 +85,11 @@ std::map<unsigned int, std::string> Distribution::AddModeInput(std::map<unsigned
 }
 
 boost::any Distribution::Sample(ref_vector<boost::any> const& inputs) {
-  // the first input is always whether we are evaluting the log-density or sampling; we either have n-1 inputs or they are unknown
-  assert(numInputs-1==inputs.size() || numInputs<0);
 
   return SampleImpl(inputs);
 }
 
 boost::any Distribution::Sample() {
-  // the first input is always whether we are evaluting the log-density or sampling; we either have 1 input or they are unknown
-  assert(numInputs==1 || numInputs<0);
 
   return Sample(ref_vector<boost::any>());
 }
