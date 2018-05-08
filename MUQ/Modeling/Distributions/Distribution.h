@@ -5,16 +5,19 @@
 
 namespace muq {
   namespace Modeling {
-    class Distribution : public WorkPiece {
+    class Density;
+
+    class Distribution : public std::enable_shared_from_this<Distribution>, public WorkPiece {
     public:
+      friend class Density;
 
       /// Are we evaluting the log-density or sampling?
       enum Mode {
-	/// Evaluate the log-density
-	EvaluateLogDensity,
+	      /// Evaluate the log-density
+	      EvaluateLogDensity,
 
-	/// Sample the distribution
-	SampleDistribution
+	      /// Sample the distribution
+	      SampleDistribution
       };
 
       virtual ~Distribution();
@@ -29,6 +32,7 @@ namespace muq {
 	 \return The log density
        */
       virtual double LogDensity(ref_vector<boost::any> const& inputs);
+      virtual double LogDensity(std::vector<boost::any> const& inputs){return LogDensity(ToRefVector(inputs));};;
 
       /// Evaluate the log-density
       /**
@@ -53,6 +57,7 @@ namespace muq {
 	 \return A sample
        */
       boost::any Sample(ref_vector<boost::any> const& inputs);
+      boost::any Sample(std::vector<boost::any> const& inputs){return Sample(ToRefVector(inputs));};
 
       /// Sample the distribution with no inputs
       /**
@@ -76,7 +81,41 @@ namespace muq {
 	// begin calling Sample recursively
 	return Sample(inputs, args...);
       }
-      
+
+
+      /** @brief Returns a density built from this distribution.
+          @details The distribution class allows users to both evaluate the density
+          corresponding to a probability distribution and draw a sample of the
+          corresponding random variable.  Both of these actions are supported
+          through the Evaluate function, where the first input to Evaluate specifies
+          what action to perform: evaluate the density or sample the RV.
+          However, sometimes we only want to focus on the density part of the
+          distribution.  This function returns a Density object that only supports
+          evaluting the log density and does not require the extra input specifying
+          what type of action to perform.
+
+          For example,
+@code
+std::shared_ptr<Distribution> dist = std::make_shared<Gaussian>(mu,cov);
+
+Eigen::VectorXd x;
+// ... initialize the point x
+
+// To obtain the density through Evaluate, we need to call
+boost::any densVal = dist->Evaluate(Distribution::Mode::EvaluateLogDensity, x);
+
+// With Density however, we don't need to add the additional flag
+boost::any densVal2 = dist->AsDensity()->Evaluate(x);
+
+// or, analogously
+std::shared_ptr<Density> dens = dist->AsDensity();
+boost::any densVal3 = dens->Evaluate(x);
+@endcode
+      */
+      std::shared_ptr<Density> AsDensity();
+
+      //std::shared_ptr<Density> AsVariable() const;
+
     private:
 
       /// Implement the log-density
@@ -106,17 +145,17 @@ namespace muq {
       template<typename ith, typename... Args>
 	inline double LogDensity(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size()+1; // add one, the first input is always whether we are evaluting the log-density or sampling
-		
+
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
 	assert(numInputs<0 || inputNum<numInputs);
 
 	// check the input type
 	assert(CheckInputType(inputNum, typeid(in).name()));
-	
+
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	// call LogDensity recursively
 	return LogDensity(inputs, args...);
       }
@@ -132,17 +171,17 @@ namespace muq {
       template<typename ith, typename... Args>
 	inline boost::any Sample(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size()+1; // add one, the first input is always whether we are evaluting the log-density or sampling
-		
+
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
 	assert(numInputs<0 || inputNum<numInputs);
 
 	// check the input type
 	assert(CheckInputType(inputNum, typeid(in).name()));
-	
+
 	// add the last input to the input vector
 	const boost::any in_any(in);
 	inputs.push_back(std::cref(in_any));
-	
+
 	// call Sample recursively
 	return Sample(inputs, args...);
       }

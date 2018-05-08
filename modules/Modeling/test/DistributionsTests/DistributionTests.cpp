@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "MUQ/Modeling/Distributions/Distribution.h"
+#include "MUQ/Modeling/Distributions/Density.h"
+
 #include "MUQ/Utilities/Exceptions.h"
 
 using namespace muq::Modeling;
@@ -16,7 +18,7 @@ public:
 
     return -x*x-std::sin(2.0*M_PI*x);
   }
-  
+
 private:
 };
 
@@ -28,7 +30,7 @@ public:
         double outputVal = 0.1;
         return boost::any(outputVal);
     }
-    
+
 private:
 };
 
@@ -46,11 +48,17 @@ TEST(Distribution, EvaluateDensity) {
   EXPECT_DOUBLE_EQ(logdens, -x*x-std::sin(2.0*M_PI*x));
 
   // evaluate the log density using evaluate
-  const auto& result = dens->Evaluate(Distribution::Mode::EvaluateLogDensity, x);
+  std::vector<boost::any> const& result = dens->Evaluate(Distribution::Mode::EvaluateLogDensity, x);
   logdens = boost::any_cast<double const>(result[0]);
-
   // make sure we get the density we implemented
   EXPECT_DOUBLE_EQ(logdens, -x*x-std::sin(2.0*M_PI*x));
+
+  std::shared_ptr<Density> densPiece = dens->AsDensity();
+  ASSERT_TRUE(densPiece);
+
+  std::vector<boost::any> const& result2 = densPiece->Evaluate(x);
+  double logDens2 = boost::any_cast<double const>(result.at(0));
+  EXPECT_DOUBLE_EQ(logDens2, -x*x-std::sin(2.0*M_PI*x));
 
   // Make sure we can't sample
   EXPECT_THROW(dens->Sample(x), muq::NotImplementedError);
