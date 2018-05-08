@@ -2,6 +2,7 @@
 
 #include "MUQ/Modeling/Distributions/Distribution.h"
 #include "MUQ/Modeling/Distributions/Density.h"
+#include "MUQ/Modeling/Distributions/RandomVariable.h"
 
 #include "MUQ/Utilities/Exceptions.h"
 
@@ -75,6 +76,9 @@ TEST(Distribution, EvaluateSample) {
     EXPECT_DOUBLE_EQ(0.1, boost::any_cast<double>(samp));
 
     samp = rv->Evaluate(Distribution::Mode::SampleDistribution, x)[0];
+    EXPECT_DOUBLE_EQ(0.1, boost::any_cast<double>(samp));
+
+    samp = rv->AsVariable()->Evaluate(x)[0];
     EXPECT_DOUBLE_EQ(0.1, boost::any_cast<double>(samp));
 
     // Make sure we can't evaluate the density

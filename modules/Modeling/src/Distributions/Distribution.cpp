@@ -1,5 +1,6 @@
 #include "MUQ/Modeling/Distributions/Distribution.h"
 #include "MUQ/Modeling/Distributions/Density.h"
+#include "MUQ/Modeling/Distributions/RandomVariable.h"
 
 #include "MUQ/Utilities/Exceptions.h"
 
@@ -12,6 +13,11 @@ Distribution::Distribution() : WorkPiece() {}
 std::shared_ptr<Density> Distribution::AsDensity()
 {
   return std::make_shared<Density>(shared_from_this());
+}
+
+std::shared_ptr<RandomVariable> Distribution::AsVariable()
+{
+  return std::make_shared<RandomVariable>(shared_from_this());
 }
 
 void Distribution::EvaluateImpl(ref_vector<boost::any> const& inputs) {
