@@ -386,7 +386,6 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
 
   // get the inputs to the cut graph
   std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > inputs = newGraph->GraphInputs();
-  std::cout << "inputs.size() " << inputs.size() << std::endl;
 
   // the name of each input
   std::vector<std::string> inputNames;
@@ -400,7 +399,6 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
 
       assert(newGraph->graph->operator[](it->first)->piece->numInputs>=0);
     }
-    std::cout << "  " << newGraph->graph->operator[](it->first)->piece->Name() << std::endl;
 
     std::stringstream temp;
     temp << newGraph->graph->operator[](it->first)->name << "_";

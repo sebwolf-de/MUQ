@@ -6,14 +6,12 @@
 namespace muq{
   namespace Modeling{
 
-    class Density : public WorkPiece{
-
+    class DensityBase : public WorkPiece{
     public:
-      Density(std::shared_ptr<Distribution> distIn);
+      DensityBase();
+      virtual ~DensityBase() = default;
 
-      virtual ~Density() = default;
-
-      virtual double LogDensity(ref_vector<boost::any> const& inputs);
+      virtual double LogDensity(ref_vector<boost::any> const& inputs){return LogDensityImpl(inputs);};
       virtual double LogDensity(std::vector<boost::any> const& inputs){return LogDensity(ToRefVector(inputs));};
 
       template<typename... Args>
@@ -23,11 +21,40 @@ namespace muq{
 	      return LogDensity(inputs, args...);
       }
 
+    protected:
+
+      virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) = 0;
+
+
+      virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
+
+    private:
+      template<typename ith, typename... Args>
+      inline double LogDensity(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
+        const int inputNum = inputs.size();
+        assert(numInputs<0 || inputNum<numInputs);
+        assert(CheckInputType(inputNum, typeid(in).name()));
+
+        const boost::any in_any(in);
+        inputs.push_back(std::cref(in_any));
+        return LogDensity(inputs, args...);
+      }
+
+    };
+
+    class Density : public DensityBase{
+
+    public:
+      Density(std::shared_ptr<Distribution> distIn);
+
+      virtual ~Density() = default;
 
     protected:
       std::shared_ptr<Distribution> dist;
 
       boost::any input0;
+
+      virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) override;
 
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 
@@ -44,19 +71,6 @@ namespace muq{
                                                unsigned int           const  wrtOut,
                                                boost::any             const& vec,
                                                ref_vector<boost::any> const& inputs) override;
-
-    private:
-
-      template<typename ith, typename... Args>
-      inline double LogDensity(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
-        const int inputNum = inputs.size();
-        assert(numInputs<0 || inputNum<numInputs);
-        assert(CheckInputType(inputNum, typeid(in).name()));
-
-        const boost::any in_any(in);
-        inputs.push_back(std::cref(in_any));
-        return LogDensity(inputs, args...);
-      }
 
 
       ref_vector<boost::any> CreateInputs(ref_vector<boost::any> const& oldInputs);

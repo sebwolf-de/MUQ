@@ -2,8 +2,16 @@
 
 using namespace muq::Modeling;
 
+DensityBase::DensityBase() : WorkPiece(1, WorkPiece::Fix::Outputs){}
 
-Density::Density(std::shared_ptr<Distribution> distIn) : WorkPiece(), dist(distIn), input0(Distribution::Mode::EvaluateLogDensity)
+void DensityBase::EvaluateImpl(ref_vector<boost::any> const& inputs)
+{
+    outputs.resize(1);
+    outputs.at(0) = LogDensity(inputs);
+}
+
+
+Density::Density(std::shared_ptr<Distribution> distIn) : DensityBase(), dist(distIn), input0(Distribution::Mode::EvaluateLogDensity)
 {
   assert(dist);
   numInputs = std::max(dist->numInputs-1, -1);
@@ -21,7 +29,7 @@ ref_vector<boost::any> Density::CreateInputs(ref_vector<boost::any> const& oldIn
   return newInputs;
 }
 
-double Density::LogDensity(ref_vector<boost::any> const& inputs)
+double Density::LogDensityImpl(ref_vector<boost::any> const& inputs)
 {
   return dist->LogDensity(inputs);
 }

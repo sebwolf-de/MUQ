@@ -313,14 +313,9 @@ void WorkGraphPiece::OutputMap() {
 
   // loop over the run order
   for( auto it : runOrder ) {
-
-    std::cout << "Trying to evaluate " << graph->operator[](it)->piece->Name() << std::endl;
     // the inputs to this WorkPiece
     const ref_vector<boost::any>& ins = Inputs(it);
 
-    for(auto& aa : ins){
-      std::cout<< "input type  = " << aa.get().type().name() << std::endl;
-    }
     // evaluate the current map and store the value
     graph->operator[](it)->piece->Evaluate(ins);
     valMap[graph->operator[](it)->piece->ID()] = ToRefVector(graph->operator[](it)->piece->outputs);
