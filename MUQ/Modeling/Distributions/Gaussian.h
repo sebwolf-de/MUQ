@@ -31,12 +31,14 @@ namespace muq {
         Flexible      /// Input type may change with every evaluation
       };
 
+    Gaussian(Gaussian::ExpectedInputs const  expected = Gaussian::ExpectedInputs::Flexible);
+    
       /// Construct a Gaussian with scaled identity covariance/precision
       /**
 	 @param[in] obj Either the mean, covariance, or the precision (depending on the second paameter)
 	 @param[in] mode Are we specifying mean, covariance, or precision (defaults to mean)
        */
-      Gaussian(boost::any               const& obj = 0.0,
+      Gaussian(boost::any               const& obj,
                Gaussian::Mode           const  mode = Gaussian::Mode::Mean,
                Gaussian::ExpectedInputs const  expected = Gaussian::ExpectedInputs::LocationOnly);
 
@@ -78,7 +80,7 @@ namespace muq {
       void SetPrecision(boost::any const& newprec);
 
       void SetInputTypes(Gaussian::ExpectedInputs const  expected);
-      
+
     private:
 
       /// Compute the distribution's scaling constant

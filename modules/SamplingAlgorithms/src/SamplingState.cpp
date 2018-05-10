@@ -5,8 +5,8 @@
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
-SamplingState::SamplingState(boost::any const& stateIn, double weight) : state({stateIn}), weight(weight) {}
-SamplingState::SamplingState(std::vector<boost::any> const& stateIn, double const weight) : state(stateIn), weight(weight) {}
+SamplingState::SamplingState(Eigen::VectorXd const& stateIn, double weight) : state({stateIn}), weight(weight) {}
+SamplingState::SamplingState(std::vector<Eigen::VectorXd> const& stateIn, double const weight) : state(stateIn), weight(weight) {}
 
 SamplingState::~SamplingState() {}
 

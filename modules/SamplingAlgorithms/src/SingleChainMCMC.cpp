@@ -26,7 +26,7 @@ SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree&             pt,
 
 }
 
-SampleCollection const& SingleChainMCMC::RunImpl(std::vector<boost::any> const& x0)
+SampleCollection const& SingleChainMCMC::RunImpl(std::vector<Eigen::VectorXd> const& x0)
 {
   unsigned sampNum = 0;
   std::vector<std::shared_ptr<SamplingState>> newStates;

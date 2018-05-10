@@ -20,10 +20,8 @@ void AMProposal::Adapt(unsigned int const t, std::vector<std::shared_ptr<Samplin
   Update(t, states);
 
   if( t%adaptSteps==0 && t>adaptStart ) {
-    // the new proposal covariance
-    Eigen::MatrixXd const& sampCov = AnyConstCast(cov);
 
-    Eigen::MatrixXd adjustedCov = adaptScale * sampCov + 1e-10 * Eigen::MatrixXd::Identity(sampCov.rows(), sampCov.cols());
+    Eigen::MatrixXd adjustedCov = adaptScale * cov + 1e-10 * Eigen::MatrixXd::Identity(cov.rows(), cov.cols());
 
     // update the proposal covariance
     proposal->SetCovariance(adjustedCov);
@@ -33,33 +31,30 @@ void AMProposal::Adapt(unsigned int const t, std::vector<std::shared_ptr<Samplin
 void AMProposal::UpdateOne(unsigned int const numSamps, std::shared_ptr<SamplingState> state)
 {
   // first sample---we have no mean, just set it to the first sample
-  if( mean.type()==typeid(boost::none) ){
+  if( mean.size()==0 ){
     mean = state->state.at(blockInd);
     return;
   }
 
   // update the mean
-  Eigen::VectorXd oldMean = AnyCast(mean);
-  Eigen::VectorXd& newMean = AnyCast(mean);
-  Eigen::VectorXd const& newState  = AnyConstCast(state->state.at(blockInd));
+  Eigen::VectorXd oldMean = mean;
+  Eigen::VectorXd const& newState  = state->state.at(blockInd);
 
-  newMean = (oldMean*numSamps + newState)/(numSamps+1.0);
+  mean = (oldMean*numSamps + newState)/(numSamps+1.0);
 
   // If we haven't compute the covariance before...
-  if( cov.type()==typeid(boost::none) ){
+  if( cov.rows()==0 ){
 
-    cov = Eigen::MatrixXd::Zero(oldMean.size(),oldMean.size()).eval();
-    Eigen::MatrixXd& newCov = AnyCast(cov);
+    cov = Eigen::MatrixXd::Zero(oldMean.size(),oldMean.size());
 
     //compute covariance from scratch, from the definition
-    newCov.selfadjointView<Eigen::Lower>().rankUpdate(oldMean - newMean, 1.0);
-    newCov.selfadjointView<Eigen::Lower>().rankUpdate(newState - newMean, 1.0);
+    cov.selfadjointView<Eigen::Lower>().rankUpdate(oldMean - mean, 1.0);
+    cov.selfadjointView<Eigen::Lower>().rankUpdate(newState - mean, 1.0);
 
   }else{
-    Eigen::MatrixXd& newCov = AnyCast(cov);
-    newCov *= (numSamps - 1.0) / numSamps;
+    cov *= (numSamps - 1.0) / numSamps;
     //note that the asymmetric form fixes the fact that the old mean was wrong
-    newCov += (1.0 / static_cast<double>(numSamps)) * (newState - oldMean) * (newState - newMean).transpose();
+    cov += (1.0 / static_cast<double>(numSamps)) * (newState - oldMean) * (newState - mean).transpose();
   }
 }
 

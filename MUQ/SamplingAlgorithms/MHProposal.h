@@ -20,13 +20,11 @@ namespace muq {
       /// The proposal distribution
       std::shared_ptr<muq::Modeling::Gaussian> proposal;
 
-    private:
+      virtual std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> currentState) override;
 
-      /// Propose a new point
-      virtual boost::any SampleImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
+      virtual double LogDensity(std::shared_ptr<SamplingState> currState,
+                                std::shared_ptr<SamplingState> propState) override;
 
-      /// Evaluate the proposal distribution
-      virtual double LogDensityImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
     };
 

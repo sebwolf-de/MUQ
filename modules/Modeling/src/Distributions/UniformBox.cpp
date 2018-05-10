@@ -8,7 +8,7 @@ using namespace muq::Modeling;
 UniformBox::UniformBox(Eigen::MatrixXd const& boundsIn) : Distribution(), bounds(boundsIn), volume(ComputeVolume(boundsIn)) {
   // initialize the any algebra
   algebra = std::make_shared<AnyAlgebra>();
-  numInputs = 2;
+  //numInputs = 2;
 }
 
 double UniformBox::ComputeVolume(Eigen::MatrixXd const& boundsIn)

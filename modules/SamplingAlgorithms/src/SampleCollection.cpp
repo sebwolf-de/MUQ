@@ -13,16 +13,14 @@ Eigen::VectorXd const& SamplingStateIdentity::operator()(SamplingState const& a)
     output.resize(totalSize);
     int currInd = 0;
     for(int i=0; i<numBlocks; ++i){
-      Eigen::VectorXd const& aVec = AnyConstCast(a.state.at(i));
-      output.segment(currInd,aVec.size()) = aVec;
-      currInd += aVec.size();
+      output.segment(currInd,a.state.at(i).size()) = a.state.at(i);
+      currInd += a.state.at(i).size();
     }
     return output;
 
   }else{
     output.resize(0);
-    Eigen::VectorXd const& aVec = AnyConstCast(a.state.at(blockInd));
-    return aVec;
+    return a.state.at(blockInd);
   }
 }
 
@@ -35,15 +33,13 @@ Eigen::VectorXd const& SamplingStatePartialMoment::operator()(SamplingState cons
     output.resize(totalSize);
     int currInd = 0;
     for(int i=0; i<numBlocks; ++i){
-      Eigen::VectorXd const& aVec = AnyConstCast(a.state.at(i));
-      output.segment(currInd,aVec.size()) = (aVec-mu.segment(currInd,aVec.size())).array().pow(momentPower).matrix();
-      currInd += aVec.size();
+      output.segment(currInd,a.state.at(i).size()) = (a.state.at(i)-mu.segment(currInd,a.state.at(i).size())).array().pow(momentPower).matrix();
+      currInd += a.state.at(i).size();
     }
     return output;
 
   }else{
-    Eigen::VectorXd const& aVec = AnyConstCast(a.state.at(blockInd));
-    output = (aVec-mu).array().pow(momentPower).matrix();
+    output = (a.state.at(blockInd)-mu).array().pow(momentPower).matrix();
     return output;
   }
 }
@@ -63,10 +59,9 @@ const std::shared_ptr<SamplingState> SampleCollection::at(unsigned i) const
 }
 
 //  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order
-boost::any SampleCollection::CentralMoment(unsigned order, int blockNum) const
+Eigen::VectorXd SampleCollection::CentralMoment(unsigned order, int blockNum) const
 {
-  boost::any muAny = Mean(blockNum);
-  Eigen::VectorXd const& mu = AnyConstCast(muAny);
+  Eigen::VectorXd mu = Mean(blockNum);
   SamplingStatePartialMoment op(blockNum, order, mu);
 
   Eigen::VectorXd stateSum;
@@ -76,19 +71,18 @@ boost::any SampleCollection::CentralMoment(unsigned order, int blockNum) const
   return (stateSum / weightSum).eval();
 }
 
-boost::any SampleCollection::Mean(int blockNum) const
+Eigen::VectorXd SampleCollection::Mean(int blockNum) const
 {
     SamplingStateIdentity op(blockNum);
 
     Eigen::VectorXd stateSum;
     double weightSum;
 
-
     std::tie(weightSum, stateSum) = RecursiveSum(samples.begin(), samples.end(), op);
     return (stateSum / weightSum).eval();
 }
 
-boost::any SampleCollection::Covariance(int blockInd) const
+Eigen::MatrixXd SampleCollection::Covariance(int blockInd) const
 {
   const int numSamps = samples.size();
   Eigen::MatrixXd samps;
@@ -106,9 +100,8 @@ boost::any SampleCollection::Covariance(int blockInd) const
 
       int currInd = 0;
       for(int block = 0; block<numBlocks; ++block){
-        Eigen::VectorXd const& tempVec  = AnyConstCast(samples.at(i)->state.at(block));
-        samps.col(i).segment(currInd, tempVec.size()) = tempVec;
-        currInd += tempVec.size();
+        samps.col(i).segment(currInd, samples.at(i)->state.at(block).size()) = samples.at(i)->state.at(block);
+        currInd += samples.at(i)->state.at(block).size();
       }
 
     }
@@ -116,13 +109,13 @@ boost::any SampleCollection::Covariance(int blockInd) const
   }else{
 
 
-    const int blockSize = boost::any_cast<Eigen::VectorXd const&>(samples.at(0)->state.at(blockInd)).size();
+    const int blockSize = samples.at(0)->state.at(blockInd).size();
 
     samps.resize(blockSize, numSamps);
 
     for(int i=0; i<numSamps; ++i){
       weights(i) = samples.at(i)->weight;
-      samps.col(i) = boost::any_cast<Eigen::VectorXd const&>(samples.at(i)->state.at(blockInd));
+      samps.col(i) = samples.at(i)->state.at(blockInd);
     }
   }
 

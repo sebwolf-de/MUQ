@@ -24,8 +24,8 @@ namespace muq {
 
       virtual double LogDensity(std::shared_ptr<SamplingState> state) override;
 
-      virtual boost::any GradLogDensity(std::shared_ptr<SamplingState> state,
-                                        unsigned                       blockWrt) override;
+      virtual Eigen::VectorXd GradLogDensity(std::shared_ptr<SamplingState> state,
+                                             unsigned                       blockWrt) override;
 
 
       std::shared_ptr<muq::Modeling::WorkPiece> GetDistribution(){return target;};

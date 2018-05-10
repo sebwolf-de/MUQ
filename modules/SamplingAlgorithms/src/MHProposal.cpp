@@ -27,35 +27,24 @@ MHProposal::MHProposal(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProb
 
 MHProposal::~MHProposal() {}
 
-boost::any MHProposal::SampleImpl(ref_vector<boost::any> const& inputs) {
-  // get the current state
-  std::shared_ptr<SamplingState> current = boost::any_cast<std::shared_ptr<SamplingState> >(inputs[0]);
-  assert(current);
+std::shared_ptr<SamplingState> MHProposal::Sample(std::shared_ptr<SamplingState> currentState) {
 
   // the mean of the proposal is the current point
-  std::vector<boost::any> props = current->state;
-  Eigen::VectorXd const& xc = AnyConstCast(current->state.at(blockInd));
+  std::vector<Eigen::VectorXd> props = currentState->state;
+  Eigen::VectorXd const& xc = currentState->state.at(blockInd);
 
   boost::any anyProp = proposal->AsVariable()->Sample();
   Eigen::VectorXd const& prop = AnyConstCast(anyProp);
 
-  props.at(blockInd) =  (xc + prop).eval();
+  props.at(blockInd) = xc + prop;
 
   // store the new state in the output
   return std::make_shared<SamplingState>(props, 1.0);
 }
 
-double MHProposal::LogDensityImpl(ref_vector<boost::any> const& inputs) {
-  // get the state
-  std::shared_ptr<SamplingState> state = boost::any_cast<std::shared_ptr<SamplingState> >(inputs[0]);
-  assert(state);
+double MHProposal::LogDensity(std::shared_ptr<SamplingState> currState,
+                              std::shared_ptr<SamplingState> propState) {
 
-  // get the conditioned state
-  std::shared_ptr<SamplingState> conditioned = boost::any_cast<std::shared_ptr<SamplingState> >(inputs[1]);
-  assert(conditioned);
-
-  Eigen::VectorXd const& a = AnyConstCast(state->state.at(blockInd));
-  Eigen::VectorXd const& b = AnyConstCast(conditioned->state.at(blockInd));
-
-  return proposal->LogDensity(boost::any((b-a).eval()));//, std::pair<boost::any, Gaussian::Mode>(conditioned->state.at(blockInd), Gaussian::Mode::Mean));
+  Eigen::VectorXd diff = currState->state.at(blockInd)-propState->state.at(blockInd);
+  return proposal->LogDensity(boost::any(diff));//, std::pair<boost::any, Gaussian::Mode>(conditioned->state.at(blockInd), Gaussian::Mode::Mean));
 }

@@ -28,7 +28,11 @@ TEST(Distribution_DensityProduct, EvaluateOnGraph) {
   bnds << 1.0, 2.0;
 
   std::shared_ptr<DensityBase> gaussDens = std::make_shared<Gaussian>(mu)->AsDensity();
+  gaussDens->numInputs = 1;
+
   std::shared_ptr<DensityBase> uniformDens = std::make_shared<UniformBox>(bnds)->AsDensity();
+  uniformDens->numInputs = 1;
+
 
   graph->AddNode(gaussDens, "Gaussian");
   graph->AddNode(uniformDens, "Uniform");

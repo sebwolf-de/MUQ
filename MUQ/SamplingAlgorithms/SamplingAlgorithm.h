@@ -1,8 +1,6 @@
 #ifndef SAMPLINGALGORITHM_H_
 #define SAMPLINGALGORITHM_H_
 
-#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
-
 #include "MUQ/Modeling/WorkPiece.h"
 
 #include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
@@ -20,11 +18,11 @@ namespace muq {
 
       SampleCollection const& GetSamples() const;
 
-      virtual SampleCollection const& Run(){return Run(std::vector<boost::any>());};
-      virtual SampleCollection const& Run(boost::any const& x0){return Run(std::vector<boost::any>(1,x0));};
-      virtual SampleCollection const& Run(std::vector<boost::any> const& x0){return RunImpl(x0);};
-      
-      virtual SampleCollection const& RunImpl(std::vector<boost::any> const& x0) = 0;
+      virtual SampleCollection const& Run(){return Run(std::vector<Eigen::VectorXd>());};
+      virtual SampleCollection const& Run(Eigen::VectorXd const& x0){return Run(std::vector<Eigen::VectorXd>(1,x0));};
+      virtual SampleCollection const& Run(std::vector<Eigen::VectorXd> const& x0){return RunImpl(x0);};
+
+      virtual SampleCollection const& RunImpl(std::vector<Eigen::VectorXd> const& x0) = 0;
 
     protected:
 

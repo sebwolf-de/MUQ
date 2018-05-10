@@ -37,8 +37,7 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   assert(proposal);
 
   // propose a new point
-  boost::any propAny = proposal->Sample(prevState);
-  std::shared_ptr<SamplingState> prop = AnyCast(propAny);
+  std::shared_ptr<SamplingState> prop = proposal->Sample(prevState);
 
   // compute acceptance probability
   double propTarget;

@@ -2,8 +2,9 @@
 #define ABSTRACTSAMPLINGPROBLEM_H
 
 #include <vector>
-#include <boost/any.hpp>
 #include <assert.h>
+
+#include <Eigen/Core>
 
 namespace muq{
   namespace SamplingAlgorithms{
@@ -32,8 +33,8 @@ namespace muq{
 
       virtual double LogDensity(std::shared_ptr<SamplingState> state) = 0;
 
-      virtual boost::any GradLogDensity(std::shared_ptr<SamplingState> state,
-                                        unsigned                       blockWrt) = 0;
+      virtual Eigen::VectorXd GradLogDensity(std::shared_ptr<SamplingState> state,
+                                             unsigned                       blockWrt) = 0;
 
       const int numBlocks;
       const std::vector<int> blockSizes;

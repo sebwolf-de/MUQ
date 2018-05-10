@@ -6,7 +6,6 @@
 #include <functional>
 #include <boost/property_tree/ptree.hpp>
 
-#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 #include "MUQ/Utilities/RegisterClassName.h"
 
 #include "MUQ/Modeling/Distributions/Distribution.h"
@@ -17,7 +16,7 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
-    class MCMCProposal : public muq::Modeling::Distribution {
+    class MCMCProposal{
     public:
 
       MCMCProposal(boost::property_tree::ptree       const& pt,
@@ -44,6 +43,11 @@ namespace muq {
 	 @param[in] state The current state
        */
       virtual void Adapt(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) {};
+
+      virtual std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> currentState) = 0;
+
+      virtual double LogDensity(std::shared_ptr<SamplingState> currState,
+                                std::shared_ptr<SamplingState> propState) = 0;
 
       const int blockInd = 0;
 

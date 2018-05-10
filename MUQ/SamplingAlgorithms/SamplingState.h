@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <Eigen/Core>
 #include <boost/any.hpp>
 
 namespace muq {
@@ -16,13 +17,13 @@ namespace muq {
     class SamplingState {
     public:
 
-      SamplingState(boost::any const& stateIn, double weight = 1.0);
-      SamplingState(std::vector<boost::any> const& stateIn, double weight = 1.0);
+      SamplingState(Eigen::VectorXd const& stateIn, double weight = 1.0);
+      SamplingState(std::vector<Eigen::VectorXd> const& stateIn, double weight = 1.0);
 
       ~SamplingState();
 
       /// The state variables
-      const std::vector<boost::any> state;
+      const std::vector<Eigen::VectorXd> state;
 
       /// The weight of this state
       double weight;

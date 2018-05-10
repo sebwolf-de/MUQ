@@ -13,13 +13,18 @@ SamplingProblem::SamplingProblem(std::shared_ptr<muq::Modeling::WorkPiece> targe
 
 double SamplingProblem::LogDensity(std::shared_ptr<SamplingState> state) {
   assert(target);
-  return boost::any_cast<double>(target->Evaluate(state->state).at(0));
+
+  std::vector<boost::any> anyState(state->state.size());
+  for(int i=0; i<state->state.size(); ++i)
+    anyState.at(i) = state->state.at(i);
+
+  return boost::any_cast<double>(target->Evaluate(anyState).at(0));
 }
 
-boost::any SamplingProblem::GradLogDensity(std::shared_ptr<SamplingState> state,
+Eigen::VectorXd SamplingProblem::GradLogDensity(std::shared_ptr<SamplingState> state,
                                            unsigned                       blockWrt)
 {
-  return target->Jacobian(blockWrt, 0, state->state);
+  return boost::any_cast<Eigen::MatrixXd>(target->Jacobian(blockWrt, 0, state->state));
 }
 
 std::vector<int> SamplingProblem::GetBlockSizes(std::shared_ptr<WorkPiece> target)

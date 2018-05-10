@@ -24,7 +24,7 @@ namespace muq{
 
       virtual std::vector<std::shared_ptr<TransitionKernel>>& Kernels(){return kernels;};
 
-      virtual SampleCollection const& RunImpl(std::vector<boost::any> const& x0) override;
+      virtual SampleCollection const& RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
 
     protected:
 

@@ -5,6 +5,8 @@
 using namespace muq::Utilities;
 using namespace muq::Modeling;
 
+Gaussian::Gaussian(ExpectedInputs const  expected) : Gaussian(0.0, Gaussian::Mode::Mean, expected){};
+
 Gaussian::Gaussian(boost::any               const& obj,
                    Gaussian::Mode           const  mode,
                    Gaussian::ExpectedInputs const  expected) :

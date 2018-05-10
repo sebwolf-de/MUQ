@@ -30,14 +30,14 @@ namespace muq {
 	 @param[in] t The current step
 	 @param[in] state The current state
        */
-      void Update(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& states);      
+      void Update(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& states);
       void UpdateOne(unsigned int const numSamps, std::shared_ptr<SamplingState> state);
 
       /// The current mean
-      boost::any mean = boost::none;
+      Eigen::VectorXd mean;
 
       /// The current covariance
-      boost::any cov = boost::none;
+      Eigen::MatrixXd cov;
 
       /// How frequently should we update the adaption?
       const unsigned int adaptSteps;

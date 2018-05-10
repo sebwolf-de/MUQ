@@ -50,11 +50,11 @@ namespace muq{
       unsigned size() const{return samples.size();};
 
       //  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order
-      boost::any CentralMoment(unsigned order, int blockDim=-1) const;
+      Eigen::VectorXd CentralMoment(unsigned order, int blockDim=-1) const;
 
-      boost::any Mean(int blockDim=-1) const;
-      boost::any Variance(int blockDim=-1) const{return CentralMoment(2,blockDim);};
-      boost::any Covariance(int blockDim=-1) const;
+      Eigen::VectorXd Mean(int blockDim=-1) const;
+      Eigen::VectorXd Variance(int blockDim=-1) const{return CentralMoment(2,blockDim);};
+      Eigen::MatrixXd Covariance(int blockDim=-1) const;
 
       /** @brief Returns the effective sample size of the samples
           @details For almost all random variables of interest, the central limit
@@ -79,7 +79,7 @@ namespace muq{
                    of two approaches:
                    - If the samples are correlated (i.e., the come from an MCMC algorithm)
       */
-      double ESS(bool correlated=false) const;
+      Eigen::VectorXd ESS(bool correlated=false) const;
 
     private:
 
