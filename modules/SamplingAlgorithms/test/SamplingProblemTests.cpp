@@ -17,7 +17,7 @@ TEST(SamplingProblem, GaussianTarget) {
   auto dist = std::make_shared<Gaussian>(mu)->AsDensity(); // it is standard normal (1D) by default
 
   // create a sampling problem
-  auto problem = std::make_shared<SamplingProblem>(dist,std::vector<int>{2});
+  auto problem = std::make_shared<SamplingProblem>(dist);
 
   Eigen::VectorXd xc = Eigen::VectorXd::Zero(2);
   auto state = std::make_shared<SamplingState>(xc, 1.0);

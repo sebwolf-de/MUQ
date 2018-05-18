@@ -20,22 +20,11 @@ namespace muq {
 
     private:
 
-      virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) override;
+      virtual double LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
-      virtual void JacobianImpl(unsigned int           const  wrtIn,
-                                unsigned int           const  wrtOut,
-                                ref_vector<boost::any> const& inputs) override;
+      virtual Eigen::VectorXd GradLogDensityImpl(unsigned int wrt,
+                                                 ref_vector<Eigen::VectorXd> const& inputs) override;
 
-      virtual void JacobianActionImpl(unsigned int           const  wrtIn,
-                                      unsigned int           const  wrtOut,
-                                      boost::any             const& vec,
-                                      ref_vector<boost::any> const& inputs) override;
-
-      virtual void JacobianTransposeActionImpl(unsigned int           const  wrtIn,
-                                               unsigned int           const  wrtOut,
-                                               boost::any             const& vec,
-                                               ref_vector<boost::any> const& inputs) override;
-                                               
     };
   } // namespace Modeling
 } // namespace muq

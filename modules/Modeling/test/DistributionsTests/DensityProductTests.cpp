@@ -13,7 +13,13 @@ using namespace muq::Utilities;
 TEST(Distribution_DensityProduct, EvaluateDensity) {
   std::shared_ptr<DensityBase> prod = std::make_shared<DensityProduct>(2);
 
-  double res = prod->LogDensity(1.0, -2.0);
+  Eigen::VectorXd dens1(1);
+  dens1 << 1.0;
+
+  Eigen::VectorXd dens2(1);
+  dens2 << -2.0;
+
+  double res = prod->LogDensity(dens1,dens2);
   EXPECT_DOUBLE_EQ(-1.0, res);
 }
 
@@ -33,7 +39,6 @@ TEST(Distribution_DensityProduct, EvaluateOnGraph) {
   std::shared_ptr<DensityBase> uniformDens = std::make_shared<UniformBox>(bnds)->AsDensity();
   uniformDens->numInputs = 1;
 
-
   graph->AddNode(gaussDens, "Gaussian");
   graph->AddNode(uniformDens, "Uniform");
 
@@ -52,8 +57,13 @@ TEST(Distribution_DensityProduct, EvaluateOnGraph) {
   Eigen::VectorXd x2(1);
   x2 << 1.5;
 
-  boost::any resAny = graphPiece->Evaluate(x1,x2).at(0);
+  Eigen::VectorXd res = AnyConstCast(graphPiece->Evaluate(x1,x2).at(0));
 
-   double res = AnyConstCast(resAny);
-   EXPECT_DOUBLE_EQ(prodPiece->LogDensity(gaussDens->LogDensity(x1),uniformDens->LogDensity(x2)), res);
+  Eigen::VectorXd v1(1);
+  v1(0) = gaussDens->LogDensity(x1);
+
+  Eigen::VectorXd v2(1);
+  v2(0) = uniformDens->LogDensity(x1);
+
+  EXPECT_DOUBLE_EQ(prodPiece->LogDensity(v1,v2), res(0));
 }

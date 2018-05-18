@@ -36,8 +36,7 @@ TEST(MCMC, MHKernel_MHProposal) {
   auto dist = std::make_shared<Gaussian>(mu)->AsDensity(); // standard normal Gaussian
 
   // create a sampling problem
-  std::vector<int> blockSizes(1,mu.size());
-  auto problem = std::make_shared<SamplingProblem>(dist, blockSizes);
+  auto problem = std::make_shared<SamplingProblem>(dist);
 
   // starting point
   const Eigen::VectorXd start = Eigen::VectorXd::Random(2);
@@ -110,8 +109,7 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   auto dens = graph->CreateWorkPiece("ProductDensity");
 
   // create a sampling problem
-  std::vector<int> blockSizes{2,2};
-  auto problem = std::make_shared<SamplingProblem>(dens, blockSizes);
+  auto problem = std::make_shared<SamplingProblem>(dens);
 
 
   // starting point
@@ -181,8 +179,7 @@ TEST(MCMC, MHKernel_AMProposal) {
   auto dist = std::make_shared<Gaussian>(mu)->AsDensity(); // standard normal Gaussian
 
   // create a sampling problem
-  std::vector<int> blockSizes(1,mu.size());
-  auto problem = std::make_shared<SamplingProblem>(dist, blockSizes);
+  auto problem = std::make_shared<SamplingProblem>(dist);
 
   // starting point
   const Eigen::VectorXd start = Eigen::VectorXd::Random(2);
