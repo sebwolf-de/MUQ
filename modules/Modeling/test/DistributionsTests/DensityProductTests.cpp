@@ -34,10 +34,7 @@ TEST(Distribution_DensityProduct, EvaluateOnGraph) {
   bnds << 1.0, 2.0;
 
   std::shared_ptr<DensityBase> gaussDens = std::make_shared<Gaussian>(mu)->AsDensity();
-  gaussDens->numInputs = 1;
-
   std::shared_ptr<DensityBase> uniformDens = std::make_shared<UniformBox>(bnds)->AsDensity();
-  uniformDens->numInputs = 1;
 
   graph->AddNode(gaussDens, "Gaussian");
   graph->AddNode(uniformDens, "Uniform");
@@ -47,8 +44,6 @@ TEST(Distribution_DensityProduct, EvaluateOnGraph) {
   graph->AddNode(prodPiece, "Product");
   graph->AddEdge("Gaussian", 0, "Product", 0);
   graph->AddEdge("Uniform", 0, "Product", 1);
-
-  graph->Visualize("Graph.pdf");
 
   auto graphPiece = graph->CreateWorkPiece("Product");
 
@@ -63,7 +58,7 @@ TEST(Distribution_DensityProduct, EvaluateOnGraph) {
   v1(0) = gaussDens->LogDensity(x1);
 
   Eigen::VectorXd v2(1);
-  v2(0) = uniformDens->LogDensity(x1);
+  v2(0) = uniformDens->LogDensity(x2);
 
   EXPECT_DOUBLE_EQ(prodPiece->LogDensity(v1,v2), res(0));
 }

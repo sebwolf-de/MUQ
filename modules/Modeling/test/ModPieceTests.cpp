@@ -33,6 +33,13 @@ private:
   {
     gradient = sensitivity.array() * cos(input.at(0).get().array());
   }
+
+  virtual void JacobianImpl(unsigned int                const  outputDimWrt,
+                            unsigned int                const  inputDimWrt,
+                            ref_vector<Eigen::VectorXd> const& input) override
+  {
+    jacobian = Eigen::MatrixXd(input.at(0).get().array().cos().matrix().asDiagonal());
+  }
 };
 
 // define a simple two input forward model
@@ -167,10 +174,9 @@ TEST(ModPieceTest, NamingTest)
   auto testFooMod = std::make_shared<FooMod>(dim, dim);
 
   EXPECT_STREQ(testSinMod->Name().substr(0,6).c_str(), "SinMod");
-  EXPECT_STREQ(testFooMod->Name().substr(0,18).c_str(), "RandomModPieceName");
+  EXPECT_STREQ(testFooMod->Name().substr(0,6).c_str(), "FooMod");
 
   testSinMod->SetName("RenamedSinMod");
-
   EXPECT_STREQ(testSinMod->Name().c_str(), "RenamedSinMod");
 }
 
@@ -203,6 +209,8 @@ TEST(ModPieceTest, FiniteDifference)
 
   Eigen::VectorXd gradVec  = testSinMod->GradientByFD(0,0, vecVec, sensIn);
   Eigen::VectorXd trueGrad = vecIn.array().cos();
+
+  EXPECT_EQ(dim+1, testSinMod->GetNumCalls("Evaluate"));
 
   for(int i=0; i<dim; ++i)
     EXPECT_NEAR(trueGrad(i), gradVec(i),1e-4);

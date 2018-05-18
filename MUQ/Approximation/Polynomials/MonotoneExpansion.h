@@ -26,10 +26,12 @@ namespace muq{
     public:
       //MonotoneExpansion(boost::property_tree::ptree & params);
 
-      MonotoneExpansion(std::shared_ptr<BasisExpansion> monotonePartsIn);
+      MonotoneExpansion(std::shared_ptr<BasisExpansion> monotonePartsIn,
+                        bool                            coeffInput=false);
 
       MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>> const& generalPartsIn,
-                        std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn);
+                        std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn,
+                        bool                                                coeffInput=false);
 
       /** Returns the number of coefficients across all expansions in all dimension, i.e.,
           the total number of degrees of freedom describing this expansion.
@@ -84,6 +86,11 @@ namespace muq{
 
       Eigen::VectorXd quadWeights;
       Eigen::VectorXd quadPts; // quadrature points on [0,1]
+
+    private:
+      static Eigen::VectorXi GetInputSizes(std::vector<std::shared_ptr<BasisExpansion>> const& generalPartsIn,
+                                           std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn,
+                                           bool                                                coeffInput);
 
     }; // class MonotoneExpansion
 

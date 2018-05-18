@@ -14,10 +14,9 @@ DensityProduct::DensityProduct(int numPiecesIn) : DensityBase(Eigen::VectorXi::O
 double DensityProduct::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs)
 {
   double sum = 0.0;
-  for(int i=0; i<inputs.size(); ++i){
-    double part = AnyConstCast(inputs.at(i).get());
-    sum += part;
-  }
+  for(int i=0; i<inputs.size(); ++i)
+    sum += inputs.at(i).get()(0);
+
   return sum;
 }
 

@@ -71,96 +71,96 @@ TEST(MCMC, MHKernel_MHProposal) {
 }
 
 
-TEST(MCMC, MetropolisInGibbs_IsoGauss) {
-
-  const unsigned int N = 1e4;
-
-  // parameters for the sampler
-  pt::ptree pt;
-  pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
-  pt.put("MyMCMC.KernelList", "Kernel1,Kernel2"); // the transition kernel
-
-  // MH Kernel for first block
-  pt.put("MyMCMC.Kernel1.Method","MHKernel");
-  pt.put("MyMCMC.Kernel1.Proposal", "MyProposal");
-  pt.put("MyMCMC.Kernel1.MyProposal.Method", "MHProposal");
-  pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 1.5);
-
-  pt.put("MyMCMC.Kernel2.Method","MHKernel");
-  pt.put("MyMCMC.Kernel2.Proposal", "MyProposal");
-  pt.put("MyMCMC.Kernel2.MyProposal.Method", "MHProposal");
-  pt.put("MyMCMC.Kernel2.MyProposal.ProposalVariance", 1.5);
-
-  // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
-  const Eigen::VectorXd mu1 = 1.0*Eigen::VectorXd::Ones(2);
-  const Eigen::VectorXd mu2 = 1.5*Eigen::VectorXd::Ones(2);
-  auto dist1 = std::make_shared<Gaussian>(mu1); // standard normal Gaussian
-  auto dist2 = std::make_shared<Gaussian>(mu2); // standard normal Gaussian
-
-  auto graph = std::make_shared<WorkGraph>();
-  graph->AddNode(dist1->AsDensity(), "Gaussian1");
-  graph->AddNode(dist2->AsDensity(), "Gaussian2");
-
-  graph->AddNode(std::make_shared<DensityProduct>(2), "ProductDensity");
-  graph->AddEdge("Gaussian1",0,"ProductDensity",0);
-  graph->AddEdge("Gaussian2",0,"ProductDensity",1);
-
-  graph->Visualize("Graph.pdf");
-  auto dens = graph->CreateWorkPiece("ProductDensity");
-
-  // create a sampling problem
-  auto problem = std::make_shared<SamplingProblem>(dens);
-
-
-  // starting point
-  std::vector<Eigen::VectorXd> start(2);
-  start.at(0) = mu1;
-  start.at(1) = mu2;
-
-  // evaluate
-  // create an instance of MCMC
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
-
-  // Make sure the kernel and proposal are correct
-  EXPECT_EQ(2,mcmc->Kernels().size());
-
-  std::shared_ptr<TransitionKernel> kernelBase = mcmc->Kernels().at(0);
-  std::shared_ptr<MHKernel> kernelMH = std::dynamic_pointer_cast<MHKernel>(kernelBase);
-  EXPECT_TRUE(kernelMH);
-
-  kernelBase = mcmc->Kernels().at(1);
-  kernelMH = std::dynamic_pointer_cast<MHKernel>(kernelBase);
-  EXPECT_TRUE(kernelMH);
-
-  std::shared_ptr<MCMCProposal> proposalBase = kernelMH->Proposal();
-  std::shared_ptr<MHProposal> proposalMH = std::dynamic_pointer_cast<MHProposal>(proposalBase);
-  EXPECT_TRUE(proposalMH);
-
-  SampleCollection const& samps = mcmc->Run(start);
-
-  Eigen::VectorXd mean = samps.Mean();
-
-  EXPECT_NEAR(mu1(0), mean(0), 1e-1);
-  EXPECT_NEAR(mu1(1), mean(1), 1e-1);
-  EXPECT_NEAR(mu2(0), mean(2), 1e-1);
-  EXPECT_NEAR(mu2(1), mean(3), 1e-1);
-
-  Eigen::MatrixXd cov = samps.Covariance();
-  for(int j=0; j<cov.cols(); ++j){
-    for(int i=0; i<cov.rows(); ++i){
-      if(i!=j)
-        EXPECT_NEAR(0.0, cov(i,j), 2e-1);
-      else
-        EXPECT_NEAR(1.0, cov(i,j), 2e-1);
-    }
-  }
-}
+// TEST(MCMC, MetropolisInGibbs_IsoGauss) {
+//
+//   const unsigned int N = 1e4;
+//
+//   // parameters for the sampler
+//   pt::ptree pt;
+//   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+//   pt.put("MyMCMC.KernelList", "Kernel1,Kernel2"); // the transition kernel
+//
+//   // MH Kernel for first block
+//   pt.put("MyMCMC.Kernel1.Method","MHKernel");
+//   pt.put("MyMCMC.Kernel1.Proposal", "MyProposal");
+//   pt.put("MyMCMC.Kernel1.MyProposal.Method", "MHProposal");
+//   pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 1.5);
+//
+//   pt.put("MyMCMC.Kernel2.Method","MHKernel");
+//   pt.put("MyMCMC.Kernel2.Proposal", "MyProposal");
+//   pt.put("MyMCMC.Kernel2.MyProposal.Method", "MHProposal");
+//   pt.put("MyMCMC.Kernel2.MyProposal.ProposalVariance", 1.5);
+//
+//   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
+//   const Eigen::VectorXd mu1 = 1.0*Eigen::VectorXd::Ones(2);
+//   const Eigen::VectorXd mu2 = 1.5*Eigen::VectorXd::Ones(2);
+//   auto dist1 = std::make_shared<Gaussian>(mu1); // standard normal Gaussian
+//   auto dist2 = std::make_shared<Gaussian>(mu2); // standard normal Gaussian
+//
+//   auto graph = std::make_shared<WorkGraph>();
+//   graph->AddNode(dist1->AsDensity(), "Gaussian1");
+//   graph->AddNode(dist2->AsDensity(), "Gaussian2");
+//
+//   graph->AddNode(std::make_shared<DensityProduct>(2), "ProductDensity");
+//   graph->AddEdge("Gaussian1",0,"ProductDensity",0);
+//   graph->AddEdge("Gaussian2",0,"ProductDensity",1);
+//
+//   graph->Visualize("Graph.pdf");
+//   auto dens = graph->CreateWorkPiece("ProductDensity");
+//
+//   // create a sampling problem
+//   auto problem = std::make_shared<SamplingProblem>(dens);
+//
+//
+//   // starting point
+//   std::vector<Eigen::VectorXd> start(2);
+//   start.at(0) = mu1;
+//   start.at(1) = mu2;
+//
+//   // evaluate
+//   // create an instance of MCMC
+//   auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
+//
+//   // Make sure the kernel and proposal are correct
+//   EXPECT_EQ(2,mcmc->Kernels().size());
+//
+//   std::shared_ptr<TransitionKernel> kernelBase = mcmc->Kernels().at(0);
+//   std::shared_ptr<MHKernel> kernelMH = std::dynamic_pointer_cast<MHKernel>(kernelBase);
+//   EXPECT_TRUE(kernelMH);
+//
+//   kernelBase = mcmc->Kernels().at(1);
+//   kernelMH = std::dynamic_pointer_cast<MHKernel>(kernelBase);
+//   EXPECT_TRUE(kernelMH);
+//
+//   std::shared_ptr<MCMCProposal> proposalBase = kernelMH->Proposal();
+//   std::shared_ptr<MHProposal> proposalMH = std::dynamic_pointer_cast<MHProposal>(proposalBase);
+//   EXPECT_TRUE(proposalMH);
+//
+//   SampleCollection const& samps = mcmc->Run(start);
+//
+//   Eigen::VectorXd mean = samps.Mean();
+//
+//   EXPECT_NEAR(mu1(0), mean(0), 1e-1);
+//   EXPECT_NEAR(mu1(1), mean(1), 1e-1);
+//   EXPECT_NEAR(mu2(0), mean(2), 1e-1);
+//   EXPECT_NEAR(mu2(1), mean(3), 1e-1);
+//
+//   Eigen::MatrixXd cov = samps.Covariance();
+//   for(int j=0; j<cov.cols(); ++j){
+//     for(int i=0; i<cov.rows(); ++i){
+//       if(i!=j)
+//         EXPECT_NEAR(0.0, cov(i,j), 2e-1);
+//       else
+//         EXPECT_NEAR(1.0, cov(i,j), 2e-1);
+//     }
+//   }
+// }
 
 
 TEST(MCMC, MHKernel_AMProposal) {
 
 
-  const unsigned int N = 1e4;
+  const unsigned int N = 5e4;
 
   // parameters for the sampler
   pt::ptree pt;

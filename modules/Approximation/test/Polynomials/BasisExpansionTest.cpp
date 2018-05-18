@@ -61,19 +61,21 @@ TEST_F(Approximation_BasisExpansion, Constructor3){
   const unsigned numOut = 10;
   Eigen::MatrixXd coeffs = Eigen::MatrixXd::Zero(numOut, multis->Size());
 
-  BasisExpansion expansion(bases, multis, coeffs);
+  BasisExpansion expansion1(bases, multis, coeffs);
 
   // Evaluate with just the input
   Eigen::VectorXd evalPt = Eigen::VectorXd::Ones(numDims);
-  Eigen::VectorXd output = expansion.Evaluate(evalPt).at(0);
+  Eigen::VectorXd output = expansion1.Evaluate(evalPt).at(0);
 
   EXPECT_EQ(numOut, output.size());
   for(int i=0; i<numOut; ++i)
     EXPECT_DOUBLE_EQ(0.0, output(i));
 
+  BasisExpansion expansion2(bases, multis, coeffs, true);
+
   coeffs = Eigen::MatrixXd::Ones(numOut, multis->Size());
   Eigen::VectorXd coeffVec = Eigen::Map<Eigen::VectorXd>(coeffs.data(), coeffs.rows()*coeffs.cols());
-  output = expansion.Evaluate(evalPt, coeffVec).at(0);
+  output = expansion2.Evaluate(evalPt, coeffVec).at(0);
 
   EXPECT_EQ(numOut, output.size());
   for(int i=0; i<numOut; ++i)

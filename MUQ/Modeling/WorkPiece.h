@@ -432,7 +432,7 @@ namespace muq {
       /**
 	 \return The name of the muq::Modeling::WorkPiece
        */
-      std::string const& Name() const;
+      std::string const& Name();
 
       /// Set the name of this work piece
       void SetName(std::string const& newName);
@@ -612,7 +612,7 @@ namespace muq {
 
     private:
 
-      std::string CreateName(unsigned id) const;
+      virtual std::string CreateName() const;
 
 
       /// User-implemented function that determines the behavior of this muq::Modeling::WorkPiece

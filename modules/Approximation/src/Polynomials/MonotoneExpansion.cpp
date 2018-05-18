@@ -9,16 +9,19 @@
 using namespace muq::Approximation;
 using namespace muq::Utilities;
 
-MonotoneExpansion::MonotoneExpansion(std::shared_ptr<BasisExpansion> monotonePartsIn) : MonotoneExpansion({std::make_shared<BasisExpansion>(std::vector<std::shared_ptr<IndexedScalarBasis>>({std::make_shared<Monomial>()}))},
-                                                                                                          {monotonePartsIn})
+MonotoneExpansion::MonotoneExpansion(std::shared_ptr<BasisExpansion> monotonePartsIn,
+                                     bool                            coeffInput) : MonotoneExpansion({std::make_shared<BasisExpansion>(std::vector<std::shared_ptr<IndexedScalarBasis>>({std::make_shared<Monomial>()}))},
+                                                                                                     {monotonePartsIn},
+                                                                                                     coeffInput)
 {
 }
 
 MonotoneExpansion::MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>> const& generalPartsIn,
-                                     std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn) : ModPiece(monotonePartsIn.size()*Eigen::VectorXi::Ones(1),
-                                                                                                                     monotonePartsIn.size()*Eigen::VectorXi::Ones(1)),
-                                                                                                            generalParts(generalPartsIn),
-                                                                                                            monotoneParts(monotonePartsIn)
+                                     std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn,
+                                     bool                                                coeffInput) : ModPiece(GetInputSizes(monotonePartsIn, generalPartsIn, coeffInput),
+                                                                                                                monotonePartsIn.size()*Eigen::VectorXi::Ones(1)),
+                                                                                                       generalParts(generalPartsIn),
+                                                                                                       monotoneParts(monotonePartsIn)
 {
   assert(generalPartsIn.size() == monotonePartsIn.size());
   assert(generalPartsIn.at(0)->Multis()->GetMaxOrders().maxCoeff()==0);
@@ -150,7 +153,7 @@ Eigen::VectorXd MonotoneExpansion::EvaluateForward(Eigen::VectorXd const& x) con
   for(int i=0; i<monotoneParts.size(); ++i){
 
     // Loop over quadrature points
-    Eigen::VectorXd evalPt = x.head(i+1);
+    Eigen::VectorXd evalPt = x;//.head(i+1);
     evalPt(i) = x(i) * quadPts(0);
 
     double polyEval = monotoneParts.at(i)->Evaluate(evalPt).at(0)(0);
@@ -168,7 +171,6 @@ Eigen::VectorXd MonotoneExpansion::EvaluateForward(Eigen::VectorXd const& x) con
 }
 void MonotoneExpansion::EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs)
 {
-
   // Update the coefficients if need be
   if(inputs.size()>1){
     SetCoeffs(inputs.at(1).get());
@@ -194,7 +196,7 @@ Eigen::MatrixXd MonotoneExpansion::JacobianWrtX(Eigen::VectorXd const& x) const{
 
   // Add the monotone parts
   for(int i=0; i<monotoneParts.size(); ++i){
-    Eigen::VectorXd evalPt = x.head(i+1);
+    Eigen::VectorXd evalPt = x;//.head(i+1);
 
     for(int k=0; k<quadPts.size(); ++k){
       evalPt(i) = x(i) * quadPts(k);
@@ -213,7 +215,7 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
                                      unsigned int const                                wrtOut,
                                      muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs)
 {
-  if(inputSizes.size()>1){
+  if(inputs.size()>1){
     SetCoeffs(inputs.at(1).get());
   }
 
@@ -245,7 +247,7 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
     double polyEval;
     Eigen::MatrixXd polyGrad;
     for(int i=0; i<monotoneParts.size(); ++i){
-      Eigen::VectorXd evalPt = x.head(i+1);
+      Eigen::VectorXd evalPt = x;//.head(i+1);
 
       for(int k=0; k<quadPts.size(); ++k){
         evalPt(i) = x(i) * quadPts(k);
@@ -277,7 +279,11 @@ double MonotoneExpansion::LogDeterminant(Eigen::VectorXd const& evalPt,
 }
 double MonotoneExpansion::LogDeterminant(Eigen::VectorXd const& evalPt)
 {
-  return Jacobian(0,0,evalPt).diagonal().array().log().sum();
+  assert(evalPt.rows() == inputSizes(0));
+  muq::Modeling::ref_vector<Eigen::VectorXd> vecIn;
+  vecIn.push_back(std::cref(evalPt));
+  JacobianImpl(0,0,vecIn);
+  return jacobian.diagonal().array().log().sum();
 }
 
 /** Returns the gradient of the Jacobian log determinant with respect to the coefficients. */
@@ -303,7 +309,7 @@ Eigen::VectorXd MonotoneExpansion::GradLogDeterminant(Eigen::VectorXd const& x)
 
   // Add the monotone parts to the gradient
   for(int i=0; i<monotoneParts.size(); ++i){
-    Eigen::VectorXd evalPt = x.head(i+1);
+    Eigen::VectorXd evalPt = x;//.head(i+1);
 
     double part1 = 0.0;
     Eigen::VectorXd part2 = Eigen::VectorXd::Zero(monotoneParts.at(i)->NumTerms());
@@ -325,5 +331,29 @@ Eigen::VectorXd MonotoneExpansion::GradLogDeterminant(Eigen::VectorXd const& x)
 
   }
 
+  return output;
+}
+
+
+Eigen::VectorXi MonotoneExpansion::GetInputSizes(std::vector<std::shared_ptr<BasisExpansion>> const& generalPartsIn,
+                                                 std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn,
+                                                 bool                                                coeffInput)
+{
+  Eigen::VectorXi output;
+  if(coeffInput){
+
+    int numCoeffs = 0;
+    for(int i=0; i<generalPartsIn.size(); ++i)
+      numCoeffs += generalPartsIn.at(i)->NumTerms();
+    for(int i=0; i<monotonePartsIn.size(); ++i)
+      numCoeffs += monotonePartsIn.at(i)->NumTerms();
+
+    output.resize(2);
+    output << monotonePartsIn.size(), numCoeffs;
+
+  }else{
+    output.resize(1);
+    output << monotonePartsIn.size();
+  }
   return output;
 }

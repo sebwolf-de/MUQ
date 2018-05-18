@@ -1,5 +1,7 @@
 #include "MUQ/Modeling/WorkPiece.h"
 
+#include "MUQ/Utilities/Exceptions.h"
+
 // define the muq namespace
 using namespace muq::Modeling;
 
@@ -8,7 +10,7 @@ WorkPiece::WorkPiece() :
   numInputs(-1), // the number of inputs is unfixed
   numOutputs(-1), // the number of ouputs is unfixed
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
@@ -16,7 +18,7 @@ WorkPiece::WorkPiece(int const num, WorkPiece::Fix const fix) :
   numInputs(fix==WorkPiece::Fix::Inputs? num : -1), // possibly fix the number of inputs
   numOutputs(fix==WorkPiece::Fix::Outputs? num : -1), // possibly fix the number of outputs
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs or outputs and variable input/output types.
@@ -24,7 +26,7 @@ WorkPiece::WorkPiece(int const numIns, int const numOuts) :
   numInputs(numIns), // fix the number of inputs
   numOutputs(numOuts), // fix the number of outputs
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece with either a fixed number of inputs with specified types or a fixed number of outputs with specified types
@@ -34,7 +36,7 @@ WorkPiece::WorkPiece(std::vector<std::string> const& types, WorkPiece::Fix const
   inputTypes(fix==WorkPiece::Fix::Inputs? Types(types) : std::map<unsigned int, std::string>()), // possibly fix the input types
   outputTypes(fix==WorkPiece::Fix::Outputs? Types(types) : std::map<unsigned int, std::string>()), // possibly fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece where either some of the inputs have specified types or some of the outputs have specified types
@@ -44,7 +46,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& types, WorkPiece
   inputTypes(fix==WorkPiece::Fix::Inputs? types : std::map<unsigned int, std::string>()), // possibly fix the input types
   outputTypes(fix==WorkPiece::Fix::Outputs? types : std::map<unsigned int, std::string>()), // possibly fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece where either some of the inputs have specified types or some of the outputs have specified types and either the number of inputs or the number of outputs is fixed
@@ -54,7 +56,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& types, int const
   inputTypes(fixTypes==WorkPiece::Fix::Inputs? types : std::map<unsigned int, std::string>()), // possibly fix the input types
   outputTypes(fixTypes==WorkPiece::Fix::Outputs? types : std::map<unsigned int, std::string>()), // possibly fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece with a fixed number of inputs with specified types and a fixed number of outputs (of uknown type)
@@ -63,7 +65,7 @@ WorkPiece::WorkPiece(std::vector<std::string> const& types, int const num) :
   numOutputs(num), // fix the number of outputs
   inputTypes(Types(types)), // fix the input types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece with a fixed number of outputs with specified types and a fixed number of inputs (of uknown type)
@@ -72,7 +74,7 @@ WorkPiece::WorkPiece(int const num, std::vector<std::string> const& types) :
   numOutputs(types.size()), // fix the number of outputs
   outputTypes(Types(types)), // fix the input types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece where some of the inputs are known and we know the input and output numbers
@@ -81,7 +83,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, int con
   numOutputs(numOuts), // fix the number of outputs
   inputTypes(inTypes), // fix the input types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece where some of the outputs are known and we know the input and output numbers
@@ -90,7 +92,7 @@ WorkPiece::WorkPiece(int const numIns, std::map<unsigned int, std::string> const
   numOutputs(numOuts), // fix the number of outputs
   outputTypes(outTypes), // fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece with a fixed number of inputs and outputs with specified types
@@ -100,7 +102,7 @@ WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::vector<std::s
   inputTypes(Types(inTypes)), // fix the input types
   outputTypes(Types(outTypes)), // fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Mdoeling::WorkPiece where some of the inputs and all of the outputs have specified types
@@ -110,7 +112,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::ve
   inputTypes(inTypes), // fix the inputs types
   outputTypes(Types(outTypes)), // fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece where some of the inputs are known with a known number of inputs and all of the outputs have specified types
@@ -120,7 +122,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, int con
   inputTypes(inTypes), // fix the inputs types
   outputTypes(Types(outTypes)), // fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Mdoeling::WorkPiece where some of the outputs and all of the inputs have specified types
@@ -130,7 +132,7 @@ WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::map<unsigned 
   inputTypes(Types(inTypes)), // fix the inputs types
   outputTypes(outTypes), // fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece where some of the outputs with a known number of outputs and all of the inputs have specified types
@@ -140,7 +142,7 @@ WorkPiece::WorkPiece(std::vector<std::string> const& inTypes, std::map<unsigned 
   inputTypes(Types(inTypes)), // fix the inputs types
   outputTypes(outTypes), // fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types
@@ -150,7 +152,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::ma
   inputTypes(inTypes), // fix the input types
   outputTypes(outTypes), // fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types with a fixed number of inputs
@@ -160,7 +162,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, int con
   inputTypes(inTypes), // fix the input types
   outputTypes(outTypes), // fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Mdoeling::WorkPiece where some of the inputs and some of the outputs have specified types with a fixed number of outputs
@@ -170,7 +172,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, std::ma
   inputTypes(inTypes), // fix the input types
   outputTypes(outTypes), // fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 // Create a muq::Modeling::WorkPiece where some of the inputs and some of the outputs have specified types with a fixed number of inputs and outputs
@@ -180,7 +182,7 @@ WorkPiece::WorkPiece(std::map<unsigned int, std::string> const& inTypes, int con
   inputTypes(inTypes), // fix the input types
   outputTypes(outTypes), // fix the output types
   id(CreateID()), // the unique id of this WorkPiece
-  name(CreateName(id))
+  name("")
 {}
 
 std::map<unsigned int, std::string> WorkPiece::Types(std::vector<std::string> const& typesVec) const {
@@ -241,7 +243,9 @@ std::vector<boost::any> WorkPiece::Evaluate() {
 
 std::vector<boost::any> WorkPiece::Evaluate(ref_vector<boost::any> const& ins) {
   // make sure we have the correct number of inputs
-  assert(numInputs<0 || ins.size()==numInputs);
+  if((numInputs>=0) && (ins.size()!=numInputs))
+    throw muq::WrongSizeError("In WorkPiece::Evaluate: Expected " + std::to_string(numInputs) + " inputs, but " + std::to_string(ins.size()) + " were given.");
+
 
   // we have new outputs
   Clear();
@@ -250,7 +254,8 @@ std::vector<boost::any> WorkPiece::Evaluate(ref_vector<boost::any> const& ins) {
   EvaluateImpl(ins);
 
   // make sure the output types are correct
-  assert(numOutputs<0 || outputs.size()==numOutputs);
+  if((numOutputs>=0) && (outputs.size()!=numOutputs))
+    throw muq::WrongSizeError("In WorkPiece::Evaluate: EvaluateImpl function returned " + std::to_string(outputs.size()) + " outputs, but " + std::to_string(numOutputs) + " were expected.");
 
   // check the output types
   for( unsigned int i=0; i<outputs.size(); ++i ) {
@@ -529,12 +534,15 @@ std::vector<boost::any> WorkPiece::Evaluate(std::vector<boost::any> const& ins) 
 //   jacobianTransposeAction = (Eigen::VectorXd)(jac.transpose()*vecref);
 // }
 
-std::string const& WorkPiece::Name() const
+std::string const& WorkPiece::Name()
 {
+  if(name.length()==0)
+    name = CreateName();
+
   return name;
 }
 
-std::string WorkPiece::CreateName(unsigned id) const {
+std::string WorkPiece::CreateName() const {
   int status;
   std::stringstream ss;
 

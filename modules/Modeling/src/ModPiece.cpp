@@ -134,6 +134,10 @@ void ModPiece::EvaluateImpl(ref_vector<boost::any> const& inputs){
     eigenInputs.push_back( std::cref(boost::any_cast<Eigen::VectorXd const&>(inputs.at(i))) );
 
   EvaluateImpl(eigenInputs);
+
+  WorkPiece::outputs.resize(outputs.size());
+  for(int i=0; i<outputs.size(); ++i)
+    WorkPiece::outputs.at(i) = boost::any(outputs.at(i));
 }
 
 
@@ -159,17 +163,23 @@ void ModPiece::EvaluateImpl(ref_vector<boost::any> const& inputs){
 void ModPiece::CheckInputs(ref_vector<Eigen::VectorXd> const& input)
 {
   bool errorOccured = false;
-  std::string msg = "Error evaluating ModPiece:\n";
 
-  if(input.size() != inputSizes.size())
+  std::string msg = "\nError evaluating ModPiece:\n";
+
+  if(input.size() != inputSizes.size()){
     msg += "  - Wrong number of input arguments.  Expected " + std::to_string(inputSizes.size()) + " inputs, but " + std::to_string(input.size()) + " were given.\n";
-
-  for(int i=0; i<std::min<int>(input.size(), inputSizes.size()); ++i){
-    if(input.at(i).get().size() != inputSizes(i))
-      msg += "  - Input " + std::to_string(i) + " has the wrong size.  Expected size " + std::to_string(inputSizes(i)) + ", but given input with size " + std::to_string(input.at(i).get().size()) + "\n";
+    errorOccured=true;
   }
 
-  throw muq::WrongSizeError(msg);
+  for(int i=0; i<std::min<int>(input.size(), inputSizes.size()); ++i){
+    if(input.at(i).get().size() != inputSizes(i)){
+      msg += "  - Input " + std::to_string(i) + " has the wrong size.  Expected size " + std::to_string(inputSizes(i)) + ", but given input with size " + std::to_string(input.at(i).get().size()) + "\n";
+      errorOccured = true;
+    }
+  }
+
+  if(errorOccured)
+    throw muq::WrongSizeError(msg);
 }
 
 

@@ -54,6 +54,8 @@ namespace muq {
 
       virtual ~Gaussian() = default;
 
+      Mode GetMode() const{return mode;};
+
       unsigned int Dimension() const;
 
       /// Get the covariance

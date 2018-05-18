@@ -25,8 +25,8 @@ TEST(GaussianDistributionTests, SpecifyMean) {
   Eigen::VectorXd x3(3);
   x3 << 2.0, 1.4, 3.0;
 
-  EXPECT_DOUBLE_EQ(standard1D->LogDensity(x), -0.5*std::log(2.0*M_PI)-x(0)*x(0)/2.0);
-  EXPECT_DOUBLE_EQ(standard->LogDensity(x3), -0.5*3.0*std::log(2.0*M_PI)-(x3-mu).dot(x3-mu)/2.0);
+  EXPECT_DOUBLE_EQ(standard1D->LogDensity(x), -0.5*std::log(2.0*M_PI) - 0.5*x(0)*x(0));
+  EXPECT_DOUBLE_EQ(standard->LogDensity(x3), -0.5*mu.size()*std::log(2.0*M_PI)-0.5*(x3-mu).dot(x3-mu));
 
   const unsigned int N = 1.0e5;
 
@@ -69,8 +69,8 @@ TEST(GaussianDistributionTests, ChangeHyperparameters) {
 
   double mean = samps.mean();
   double sigma2 = ((samps.array()-mean)*(samps.array()-mean)).sum()/(N-1);
-  EXPECT_NEAR(mean, 1.0, 1.0e-2);
-  EXPECT_NEAR(sigma2, 1.0, 1.0e-2);
+  EXPECT_NEAR(mean, 1.0, 8.0e-2);
+  EXPECT_NEAR(sigma2, 1.0, 8.0e-2);
 
   standard = std::make_shared<Gaussian>(1, Gaussian::Mean | Gaussian::FullCovariance);
   Eigen::VectorXd covVec = Eigen::Map<Eigen::VectorXd>(cov.data(), cov.rows()*cov.cols()).eval();
@@ -82,8 +82,8 @@ TEST(GaussianDistributionTests, ChangeHyperparameters) {
   mean = samps.sum()/(N+1.0);
   samps = samps.array()-mean;
   sigma2 = (samps.array()*samps.array()).sum()/N;
-  EXPECT_NEAR(mean, 1.0, 1.0e-2);
-  EXPECT_NEAR(sigma2, 0.25, 1.0e-2);
+  EXPECT_NEAR(mean, 1.0, 8.0e-2);
+  EXPECT_NEAR(sigma2, 0.25, 8.0e-2);
 
   // EXPECT_DOUBLE_EQ(standard->LogDensity(x, prec), -0.5*(std::log(2.0*M_PI)+std::log(0.5))-(1.0-x(0))*(1.0-x(0)));
   // samps(0) = boost::any_cast<double>(standard->Sample(prec));
@@ -175,16 +175,19 @@ TEST(GaussianDistributionTests, MatrixCovPrec) {
   Eigen::LLT<Eigen::MatrixXd> precChol(prec);
   const Eigen::MatrixXd precL = precChol.matrixL();
 
-    Eigen::VectorXd mu = Eigen::VectorXd::Zero(dim);
+  Eigen::VectorXd mu = Eigen::VectorXd::Zero(dim);
   auto covDist = std::make_shared<Gaussian>(mu, cov, Gaussian::Mode::Covariance);
   auto precDist = std::make_shared<Gaussian>(mu, prec, Gaussian::Mode::Precision);
   EXPECT_EQ(covDist->Dimension(), dim);
+  EXPECT_EQ(Gaussian::Mode::Covariance, covDist->GetMode());
+  EXPECT_EQ(Gaussian::Mode::Precision, precDist->GetMode());
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(dim);
   Eigen::VectorXd delta = covL.triangularView<Eigen::Lower>().solve(x);
   covL.triangularView<Eigen::Lower>().transpose().solveInPlace(delta);
   EXPECT_DOUBLE_EQ(covDist->LogDensity(x), -0.5*(dim*std::log(2.0*M_PI)+2.0*covL.diagonal().array().log().sum())-x.dot(delta)/2.0);
   EXPECT_DOUBLE_EQ(precDist->LogDensity(x), -0.5*(dim*std::log(2.0*M_PI)-2.0*precL.diagonal().array().log().sum())-x.dot(prec*x)/2.0);
+
 
   const unsigned int N = 5.0e5;
   Eigen::VectorXd meanCov = boost::any_cast<Eigen::VectorXd>(covDist->Sample());

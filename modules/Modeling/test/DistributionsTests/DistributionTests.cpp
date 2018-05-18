@@ -67,10 +67,10 @@ TEST(Distribution, EvaluateSample) {
     x << 2.5;
 
     // draw a sample
-    Eigen::VectorXd samp = rv->Sample(x);
+    Eigen::VectorXd samp = rv->Sample();
     EXPECT_DOUBLE_EQ(0.1, samp(0));
 
-    samp = rv->AsVariable()->Evaluate(x).at(0);
+    samp = rv->AsVariable()->Evaluate().at(0);
     EXPECT_DOUBLE_EQ(0.1, samp(0));
 
     // Make sure we can't evaluate the density

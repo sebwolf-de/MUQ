@@ -87,6 +87,7 @@ WorkGraphPiece::WorkGraphPiece(std::shared_ptr<const Graph> graph,
 WorkGraphPiece::~WorkGraphPiece() {}
 
 void WorkGraphPiece::EvaluateImpl(ref_vector<boost::any> const& inputs) {
+
   // set the inputs
   SetInputs(inputs);
 

@@ -11,7 +11,9 @@ Gaussian::Gaussian(unsigned int dim,
                                                inputTypes(extraInputs),
                                                mean(Eigen::VectorXd::Zero(dim)),
                                                covPrec(Eigen::VectorXd::Ones(dim))
-{}
+{
+  ComputeNormalization();
+}
 
 Gaussian::Gaussian(Eigen::VectorXd const& muIn,
                    InputMask              extraInputs) : Distribution(muIn.size(), GetExtraSizes(muIn.size(), extraInputs)),
@@ -19,7 +21,9 @@ Gaussian::Gaussian(Eigen::VectorXd const& muIn,
                                                          inputTypes(extraInputs),
                                                          mean(muIn),
                                                          covPrec(Eigen::VectorXd::Ones(muIn.size()))
-{}
+{
+  ComputeNormalization();
+}
 
 
 Gaussian::Gaussian(Eigen::VectorXd const& muIn,
@@ -35,6 +39,11 @@ Gaussian::Gaussian(Eigen::VectorXd const& muIn,
   assert(mean.rows()==covPrec.rows());
   if(covPrec.cols()>1)
     assert(mean.rows()==covPrec.cols());
+
+  if(covPrec.cols()>1)
+    sqrtCovPrec = covPrec.selfadjointView<Eigen::Lower>().llt();
+
+  ComputeNormalization();
 }
 
 void Gaussian::CheckInputTypes(InputMask extraInputs, Mode mode)
@@ -152,6 +161,8 @@ void Gaussian::ResetHyperparameters(ref_vector<Eigen::VectorXd> const& inputs)
     covPrec = mat;
     sqrtCovPrec = covPrec.selfadjointView<Eigen::Lower>().llt();
   }
+
+  ComputeNormalization();
 }
 
 double Gaussian::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) {
@@ -172,7 +183,7 @@ double Gaussian::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) {
       if(covPrec.cols()==1){
         return logNormalization - 0.5 * delta.dot( (covPrec.col(0).array() * delta.array()).matrix());
       }else{
-        return logNormalization - 0.5 * delta.dot( sqrtCovPrec.matrixL() * delta );
+        return logNormalization - 0.5 * delta.dot( covPrec.selfadjointView<Eigen::Lower>() * delta );
       }
     }
     default: {
