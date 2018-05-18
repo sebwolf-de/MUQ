@@ -783,3 +783,19 @@ bool WorkPiece::CheckOutputType(unsigned int const outputNum, std::string const&
 
   return true;
 }
+
+
+int WorkPiece::InputSize(unsigned int inputNum) const
+{
+  auto iter = inputSizes.find(inputNum);
+  if(iter != inputSizes.end()){
+    return iter->second;
+  }else{
+    return -1;
+  }
+}
+
+void WorkPiece::SetInputSize(unsigned int inputNum, int newSize)
+{
+  inputSizes[inputNum] = newSize;
+}

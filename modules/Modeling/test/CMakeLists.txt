@@ -31,4 +31,5 @@ CreateTestGroup(
     DistributionsTests/DistributionTests.cpp
     DistributionsTests/UniformDistributionTests.cpp
     DistributionsTests/GaussianDistributionTests.cpp
+    DistributionsTests/DensityProductTests.cpp
 )

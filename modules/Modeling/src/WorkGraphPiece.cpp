@@ -94,183 +94,183 @@ void WorkGraphPiece::EvaluateImpl(ref_vector<boost::any> const& inputs) {
     outputs.at(i) = valMap[outputID].at(i).get();
   }
 }
-//
-// void WorkGraphPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) {
-//   // set the inputs
-//   SetInputs(inputs);
-//
-//   // fill the map from the WorkPiece ID to its outputs
-//   OutputMap();
-//
-//   // a map from the WorkPiece ID a map from the output number to the jacobian of that output wrt the specified input
-//   std::map<unsigned int, std::map<unsigned int, boost::any> > jacMap;
-//
-//   // loop through each downstream node
-//   for( auto node : boost::adaptors::reverse(derivRunOrders[wrtIn]) ) {
-//     // the ID of the current node
-//     const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
-//
-//     // get the outputs of this node that depend on the specified input
-//     const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > & requiredOutNodes = RequiredOutputs(node, wrtIn, wrtOut);
-//     // remove duplicates
-//     std::vector<unsigned int> requiredOuts;
-//     requiredOuts.reserve(requiredOutNodes.size());
-//     for( auto out : requiredOutNodes ) {
-//       auto it = std::find(requiredOuts.begin(), requiredOuts.end(), std::get<1>(out));
-//       if( it==requiredOuts.end() ) {
-// 	requiredOuts.push_back(std::get<1>(out));
-//       }
-//     }
-//
-//     // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
-//     const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
-//
-//     // the inputs to this WorkPiece
-//     const ref_vector<boost::any>& ins = Inputs(node);
-//
-//     // compute the jacobian of each required output wrt each input
-//     for( auto out : requiredOuts ) {
-//       if( requiredIns.size()==0 ) {
-// 	// if there are no inputs, it is the input so set the Jacobian to the identity
-// 	jacMap[nodeID][out] = algebra->Identity(valMap[nodeID][out].get().type(), algebra->Size(valMap[nodeID][out]), algebra->Size(valMap[nodeID][out]));
-//       } else {
-// 	// initize the jacobian to nothing
-// 	jacMap[nodeID][out] = boost::none;
-//
-// 	for( auto in : requiredIns ) {
-// 	  // compute the Jacobian with respect to each required input
-// 	  graph->operator[](node)->piece->Jacobian(std::get<2>(in), out, ins);
-//
-// 	  // use chain rule to get the jacobian wrt to the required input
-// 	  const boost::any tempJac = algebra->Multiply(*(graph->operator[](node)->piece->jacobian), jacMap[std::get<0>(in)][std::get<1>(in)]);
-// 	  jacMap[nodeID][out] = algebra->Add(jacMap[nodeID][out], tempJac);
-// 	}
-//       }
-//     }
-//   }
-//
-//   // set the Jacobian for this WorkPiece
-//   jacobian = jacMap[outputID][wrtOut];
-// }
-//
-// void WorkGraphPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
-//   // set the inputs
-//   SetInputs(inputs);
-//
-//   // fill the map from the WorkPiece ID to its outputs
-//   OutputMap();
-//
-//   // a map from the WorkPiece ID a map from the output number to the action of the jacobian of that output wrt the specified input
-//   std::map<unsigned int, std::map<unsigned int, boost::any> > jacActionMap;
-//
-//   // loop through each downstream node
-//   for( auto node : boost::adaptors::reverse(derivRunOrders[wrtIn]) ) {
-//     // the ID of the current node
-//     const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
-//
-//     // get the outputs of this node that depend on the specified input
-//     const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredOutNodes = RequiredOutputs(node, wrtIn, wrtOut);
-//     // remove duplicates
-//     std::vector<unsigned int> requiredOuts;
-//     requiredOuts.reserve(requiredOutNodes.size());
-//     for( auto out : requiredOutNodes ) {
-//       auto it = std::find(requiredOuts.begin(), requiredOuts.end(), std::get<1>(out));
-//       if( it==requiredOuts.end() ) {
-// 	requiredOuts.push_back(std::get<1>(out));
-//       }
-//     }
-//
-//     // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
-//     const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
-//
-//     // the inputs to this WorkPiece
-//     const ref_vector<boost::any>& ins = Inputs(node);
-//
-//     // compute the jacobian of each required output wrt each input
-//     for( auto out : requiredOuts ) {
-//       if( requiredIns.size()==0 ) {
-// 	// if there are no inputs, it is the input so set the Jacobian to the identity
-// 	jacActionMap[nodeID][out] = vec;
-//       } else {
-// 	// initize the jacobian to nothing
-// 	jacActionMap[nodeID][out] = boost::none;
-//
-// 	for( auto in : requiredIns ) {
-// 	  // compute the Jacobian with respect to each required input
-// 	  graph->operator[](node)->piece->JacobianAction(std::get<2>(in), out, jacActionMap[std::get<0>(in)][std::get<1>(in)], ins);
-//
-// 	  // use chain rule to get the jacobian wrt to the required input
-// 	  jacActionMap[nodeID][out] = algebra->Add(jacActionMap[nodeID][out], *(graph->operator[](node)->piece->jacobianAction));
-// 	}
-//       }
-//     }
-//   }
-//
-//   // set the action of the Jacobian for this WorkPiece
-//   jacobianAction = jacActionMap[outputID][wrtOut];
-// }
-//
-// void WorkGraphPiece::JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
-//     // set the inputs
-//   SetInputs(inputs);
-//
-//   // fill the map from the WorkPiece ID to its outputs
-//   OutputMap();
-//
-//   // a map from the WorkPiece ID a map from the output number to the action of the jacobian of that output wrt the specified input
-//   std::map<unsigned int, std::map<unsigned int, boost::any> > jacTransActionMap;
-//
-//   // loop through each downstream node
-//   for( auto node : derivRunOrders[wrtIn] ) {
-//     // the ID of the current node
-//     const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
-//
-//     // get the outputs of this node that depend on the specified input
-//     const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredOuts = RequiredOutputs(node, wrtIn, wrtOut);
-//
-//     // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
-//     const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
-//
-//     // the inputs to this WorkPiece
-//     const ref_vector<boost::any>& ins = Inputs(node);
-//
-//     for( auto in : requiredIns ) {
-//       if( nodeID==outputID ) {
-// 	assert(requiredOuts.size()==1);
-// 	assert(std::get<1>(requiredOuts[0])==wrtOut);
-//
-// 	// compute the Jacobian transpose action of the output node
-// 	graph->operator[](node)->piece->JacobianTransposeAction(std::get<2>(in), wrtOut, vec, ins);
-// 	jacTransActionMap[nodeID][std::get<2>(in)] = *(graph->operator[](node)->piece->jacobianTransposeAction);
-//       } else {
-// 	// initialize the jacobian transpose action to nothing
-// 	jacTransActionMap[nodeID][std::get<2>(in)] = boost::none;
-//
-// 	// loop through the outputs
-// 	for( auto out : requiredOuts ) {
-// 	  // compute the jacobian transpose action for this output
-// 	  graph->operator[](node)->piece->JacobianTransposeAction(std::get<2>(in), std::get<1>(out), jacTransActionMap[std::get<0>(out)][std::get<2>(out)], ins);
-// 	  // add it (chain rule)
-// 	  jacTransActionMap[nodeID][std::get<2>(in)] = algebra->Add(jacTransActionMap[nodeID][std::get<2>(in)], *(graph->operator[](node)->piece->jacobianTransposeAction));
-// 	}
-//       }
-//     }
-//
-//     // if this is the input node
-//     if( requiredIns.size()==0 ) {
-//       // loop though the outputs
-//       for( auto out : requiredOuts ) {
-// 	if( jacobianTransposeAction ) { // if the jacobian transpose action has not be initilized ...
-// 	  // it is equal to the action of the output
-// 	  *jacobianTransposeAction = algebra->Add(*jacobianTransposeAction, jacTransActionMap[std::get<0>(out)][std::get<1>(out)]);
-// 	} else {
-// 	  // add it to the existing jacobian transpose action (chain rule)
-// 	  jacobianTransposeAction = jacTransActionMap[std::get<0>(out)][std::get<1>(out)];
-// 	}
-//       }
-//     }
-//   }
-// }
+
+void WorkGraphPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) {
+  // set the inputs
+  SetInputs(inputs);
+
+  // fill the map from the WorkPiece ID to its outputs
+  OutputMap();
+
+  // a map from the WorkPiece ID a map from the output number to the jacobian of that output wrt the specified input
+  std::map<unsigned int, std::map<unsigned int, boost::any> > jacMap;
+
+  // loop through each downstream node
+  for( auto node : boost::adaptors::reverse(derivRunOrders[wrtIn]) ) {
+    // the ID of the current node
+    const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
+
+    // get the outputs of this node that depend on the specified input
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > & requiredOutNodes = RequiredOutputs(node, wrtIn, wrtOut);
+    // remove duplicates
+    std::vector<unsigned int> requiredOuts;
+    requiredOuts.reserve(requiredOutNodes.size());
+    for( auto out : requiredOutNodes ) {
+      auto it = std::find(requiredOuts.begin(), requiredOuts.end(), std::get<1>(out));
+      if( it==requiredOuts.end() ) {
+	requiredOuts.push_back(std::get<1>(out));
+      }
+    }
+
+    // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
+
+    // the inputs to this WorkPiece
+    const ref_vector<boost::any>& ins = Inputs(node);
+
+    // compute the jacobian of each required output wrt each input
+    for( auto out : requiredOuts ) {
+      if( requiredIns.size()==0 ) {
+	// if there are no inputs, it is the input so set the Jacobian to the identity
+	jacMap[nodeID][out] = algebra->Identity(valMap[nodeID][out].get().type(), algebra->Size(valMap[nodeID][out]), algebra->Size(valMap[nodeID][out]));
+      } else {
+	// initize the jacobian to nothing
+	jacMap[nodeID][out] = boost::none;
+
+	for( auto in : requiredIns ) {
+	  // compute the Jacobian with respect to each required input
+	  graph->operator[](node)->piece->Jacobian(std::get<2>(in), out, ins);
+
+	  // use chain rule to get the jacobian wrt to the required input
+	  const boost::any tempJac = algebra->Multiply(*(graph->operator[](node)->piece->jacobian), jacMap[std::get<0>(in)][std::get<1>(in)]);
+	  jacMap[nodeID][out] = algebra->Add(jacMap[nodeID][out], tempJac);
+	}
+      }
+    }
+  }
+
+  // set the Jacobian for this WorkPiece
+  jacobian = jacMap[outputID][wrtOut];
+}
+
+void WorkGraphPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
+  // set the inputs
+  SetInputs(inputs);
+
+  // fill the map from the WorkPiece ID to its outputs
+  OutputMap();
+
+  // a map from the WorkPiece ID a map from the output number to the action of the jacobian of that output wrt the specified input
+  std::map<unsigned int, std::map<unsigned int, boost::any> > jacActionMap;
+
+  // loop through each downstream node
+  for( auto node : boost::adaptors::reverse(derivRunOrders[wrtIn]) ) {
+    // the ID of the current node
+    const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
+
+    // get the outputs of this node that depend on the specified input
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredOutNodes = RequiredOutputs(node, wrtIn, wrtOut);
+    // remove duplicates
+    std::vector<unsigned int> requiredOuts;
+    requiredOuts.reserve(requiredOutNodes.size());
+    for( auto out : requiredOutNodes ) {
+      auto it = std::find(requiredOuts.begin(), requiredOuts.end(), std::get<1>(out));
+      if( it==requiredOuts.end() ) {
+	requiredOuts.push_back(std::get<1>(out));
+      }
+    }
+
+    // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
+
+    // the inputs to this WorkPiece
+    const ref_vector<boost::any>& ins = Inputs(node);
+
+    // compute the jacobian of each required output wrt each input
+    for( auto out : requiredOuts ) {
+      if( requiredIns.size()==0 ) {
+	// if there are no inputs, it is the input so set the Jacobian to the identity
+	jacActionMap[nodeID][out] = vec;
+      } else {
+	// initize the jacobian to nothing
+	jacActionMap[nodeID][out] = boost::none;
+
+	for( auto in : requiredIns ) {
+	  // compute the Jacobian with respect to each required input
+	  graph->operator[](node)->piece->JacobianAction(std::get<2>(in), out, jacActionMap[std::get<0>(in)][std::get<1>(in)], ins);
+
+	  // use chain rule to get the jacobian wrt to the required input
+	  jacActionMap[nodeID][out] = algebra->Add(jacActionMap[nodeID][out], *(graph->operator[](node)->piece->jacobianAction));
+	}
+      }
+    }
+  }
+
+  // set the action of the Jacobian for this WorkPiece
+  jacobianAction = jacActionMap[outputID][wrtOut];
+}
+
+void WorkGraphPiece::JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
+    // set the inputs
+  SetInputs(inputs);
+
+  // fill the map from the WorkPiece ID to its outputs
+  OutputMap();
+
+  // a map from the WorkPiece ID a map from the output number to the action of the jacobian of that output wrt the specified input
+  std::map<unsigned int, std::map<unsigned int, boost::any> > jacTransActionMap;
+
+  // loop through each downstream node
+  for( auto node : derivRunOrders[wrtIn] ) {
+    // the ID of the current node
+    const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
+
+    // get the outputs of this node that depend on the specified input
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredOuts = RequiredOutputs(node, wrtIn, wrtOut);
+
+    // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
+
+    // the inputs to this WorkPiece
+    const ref_vector<boost::any>& ins = Inputs(node);
+
+    for( auto in : requiredIns ) {
+      if( nodeID==outputID ) {
+	assert(requiredOuts.size()==1);
+	assert(std::get<1>(requiredOuts[0])==wrtOut);
+
+	// compute the Jacobian transpose action of the output node
+	graph->operator[](node)->piece->JacobianTransposeAction(std::get<2>(in), wrtOut, vec, ins);
+	jacTransActionMap[nodeID][std::get<2>(in)] = *(graph->operator[](node)->piece->jacobianTransposeAction);
+      } else {
+	// initialize the jacobian transpose action to nothing
+	jacTransActionMap[nodeID][std::get<2>(in)] = boost::none;
+
+	// loop through the outputs
+	for( auto out : requiredOuts ) {
+	  // compute the jacobian transpose action for this output
+	  graph->operator[](node)->piece->JacobianTransposeAction(std::get<2>(in), std::get<1>(out), jacTransActionMap[std::get<0>(out)][std::get<2>(out)], ins);
+	  // add it (chain rule)
+	  jacTransActionMap[nodeID][std::get<2>(in)] = algebra->Add(jacTransActionMap[nodeID][std::get<2>(in)], *(graph->operator[](node)->piece->jacobianTransposeAction));
+	}
+      }
+    }
+
+    // if this is the input node
+    if( requiredIns.size()==0 ) {
+      // loop though the outputs
+      for( auto out : requiredOuts ) {
+	if( jacobianTransposeAction ) { // if the jacobian transpose action has not be initilized ...
+	  // it is equal to the action of the output
+	  *jacobianTransposeAction = algebra->Add(*jacobianTransposeAction, jacTransActionMap[std::get<0>(out)][std::get<1>(out)]);
+	} else {
+	  // add it to the existing jacobian transpose action (chain rule)
+	  jacobianTransposeAction = jacTransActionMap[std::get<0>(out)][std::get<1>(out)];
+	}
+      }
+    }
+  }
+}
 
 void WorkGraphPiece::SetInputs(ref_vector<boost::any> const& inputs) {
   // get the inputs and set them to the ConstantPiece nodes

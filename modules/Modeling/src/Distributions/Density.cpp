@@ -2,64 +2,64 @@
 
 using namespace muq::Modeling;
 
+DensityBase::DensityBase() : WorkPiece(1, WorkPiece::Fix::Outputs){}
 
-Density::Density(std::shared_ptr<Distribution> distIn) : Distribution(distIn->varSize, distIn->hyperSizes),
-                                                         ModPiece(GetInputSizes(distIn),
-                                                                  Eigen::VectorXi::Ones(1)),
-                                                         dist(distIn)
+void DensityBase::EvaluateImpl(ref_vector<boost::any> const& inputs)
+{
+    outputs.resize(1);
+    outputs.at(0) = LogDensity(inputs);
+}
+
+
+Density::Density(std::shared_ptr<Distribution> distIn) : DensityBase(), dist(distIn), input0(Distribution::Mode::EvaluateLogDensity)
 {
   assert(dist);
+  numInputs = std::max(dist->numInputs-1, -1);
+
+  for(auto& it : dist->inputTypes){
+    if(it.first > 1)
+      inputTypes[it.first-1] = it.second;
+  }
 }
 
-void Density::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs)
+ref_vector<boost::any> Density::CreateInputs(ref_vector<boost::any> const& oldInputs)
 {
-  outputs.resize(1);
-  outputs.at(0) = dist->LogDensity(inputs)*Eigen::VectorXd(1);
+  ref_vector<boost::any> newInputs(1, std::cref(input0));
+  newInputs.insert(newInputs.end(), oldInputs.begin(),oldInputs.end());
+  return newInputs;
 }
 
-
-void Density::GradientImpl(unsigned int                const  outputDimWrt,
-                           unsigned int                const  inputDimWrt,
-                           ref_vector<Eigen::VectorXd> const& input,
-                           Eigen::VectorXd             const& sensitivity)
-{
-  gradient = sensitivity(0)*dist->GradLogDensity(inputDimWrt, input);
-}
-
-void Density::JacobianImpl(unsigned int                const  outputDimWrt,
-                           unsigned int                const  inputDimWrt,
-                           ref_vector<Eigen::VectorXd> const& input)
-{
-  jacobian = dist->GradLogDensity(inputDimWrt, input).transpose();
-}
-
-void Density::ApplyJacobianImpl(unsigned int                const  outputDimWrt,
-                                 unsigned int                const  inputDimWrt,
-                                 ref_vector<Eigen::VectorXd> const& input,
-                                 Eigen::VectorXd             const& vec)
-{
-  jacobianAction = dist->GradLogDensity(inputDimWrt, input).transpose() * vec;
-}
-
-double Density::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs)
+double Density::LogDensityImpl(ref_vector<boost::any> const& inputs)
 {
   return dist->LogDensity(inputs);
-};
-
-Eigen::VectorXd Density::GradLogDensityImpl(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs)
-{
-  return dist->GradLogDensity(wrt, inputs);
 }
 
-Eigen::VectorXd Density::SampleImpl(ref_vector<Eigen::VectorXd> const& inputs)
+
+void Density::EvaluateImpl(ref_vector<boost::any> const& inputs)
 {
-  return dist->Sample(inputs);
+  outputs = dist->Evaluate(CreateInputs(inputs));
 }
 
-Eigen::VectorXi Density::GetInputSizes(std::shared_ptr<Distribution> distIn)
+
+void Density::JacobianImpl(unsigned int           const  wrtIn,
+                           unsigned int           const  wrtOut,
+                           ref_vector<boost::any> const& inputs)
 {
-  Eigen::VectorXi sizes(distIn->hyperSizes.size()+1);
-  sizes(0) = distIn->varSize;
-  sizes.tail(distIn->hyperSizes.size()) = distIn->hyperSizes;
-  return sizes;
+  jacobian = dist->Jacobian(wrtIn+1,wrtOut, CreateInputs(inputs));
+}
+
+void Density::JacobianActionImpl(unsigned int           const  wrtIn,
+                                 unsigned int           const  wrtOut,
+                                 boost::any             const& vec,
+                                 ref_vector<boost::any> const& inputs)
+{
+  jacobianAction = dist->JacobianAction(wrtIn+1,wrtOut, vec, CreateInputs(inputs));
+}
+
+void Density::JacobianTransposeActionImpl(unsigned int           const  wrtIn,
+                                          unsigned int           const  wrtOut,
+                                          boost::any             const& vec,
+                                          ref_vector<boost::any> const& inputs)
+{
+  jacobianTransposeAction = dist->JacobianTransposeAction(wrtIn+1, wrtOut, vec, CreateInputs(inputs));
 }

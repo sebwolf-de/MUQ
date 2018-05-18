@@ -12,6 +12,7 @@
 
 namespace muq {
   namespace Modeling {
+
     /// This class keeps track of which nodes are downstream of a specified input
     class DependentPredicate {
     public:
@@ -84,7 +85,12 @@ namespace muq {
 	 @param[in] outputNode The muq::Modeling::WorkPiece that we ultimately want to evaluate
 	 @param[in] algebra Algebra to preform basic operations between different types (defaults to base class, which has common types)
        */
-      WorkGraphPiece(std::shared_ptr<const Graph> graph, std::vector<std::shared_ptr<ConstantPiece> > const& constantPieces, std::vector<std::string> const& inputNames, std::map<unsigned int, std::string> const& inTypes, std::shared_ptr<WorkPiece> outputNode, std::shared_ptr<const muq::Utilities::AnyAlgebra> algebra);
+      WorkGraphPiece(std::shared_ptr<const Graph>                        graph,
+                     std::vector<std::shared_ptr<ConstantPiece> > const& constantPieces,
+                     std::vector<std::string>                     const& inputNames,
+                     std::map<unsigned int, std::string>          const& inTypes,
+                     std::shared_ptr<WorkPiece>                          outputNode,
+                     std::shared_ptr<const muq::Utilities::AnyAlgebra>   algebra);
 
       /// Default destructor
       virtual ~WorkGraphPiece();

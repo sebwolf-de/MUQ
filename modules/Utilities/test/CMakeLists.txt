@@ -26,3 +26,11 @@ CreateTestGroup(
     MultiIndices/MultiIndexSetTests.cpp
     MultiIndices/MultiIndexLimiterTests.cpp
 )
+
+CreateTestGroup(
+    UTILITIES_CORE
+
+    RandomGeneratorTest.cpp
+    AnyCastTest.cpp
+    StringUtilitiesTest.cpp
+)
