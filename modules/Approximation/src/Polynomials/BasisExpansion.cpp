@@ -5,30 +5,57 @@
 using namespace muq::Approximation;
 using namespace muq::Utilities;
 
-BasisExpansion::BasisExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn) :
-                              BasisExpansion(basisCompsIn,
-                                             MultiIndexFactory::CreateTotalOrder(basisCompsIn.size(),0))
+BasisExpansion::BasisExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
+                               bool                                                    coeffInput) :
+                                 BasisExpansion(basisCompsIn,
+                                                MultiIndexFactory::CreateTotalOrder(basisCompsIn.size(),0))
 {
 }
 
 BasisExpansion::BasisExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
-                               std::shared_ptr<muq::Utilities::MultiIndexSet>          multisIn) :
-                               BasisExpansion(basisCompsIn,
-                                              multisIn,
-                                              Eigen::MatrixXd::Zero(1,multisIn->Size()))
+                               std::shared_ptr<muq::Utilities::MultiIndexSet>          multisIn,
+                               bool                                                    coeffInput) :
+                                 BasisExpansion(basisCompsIn,
+                                                multisIn,
+                                                Eigen::MatrixXd::Zero(1,multisIn->Size()))
 {
 };
 
 BasisExpansion::BasisExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
                                std::shared_ptr<muq::Utilities::MultiIndexSet>          multisIn,
-                               Eigen::MatrixXd                                  const& coeffsIn) :
-                               basisComps(basisCompsIn),
-                               multis(multisIn),
-                               coeffs(coeffsIn)
+                               Eigen::MatrixXd                                  const& coeffsIn,
+                               bool                                                    coeffInput) :
+                                 ModPiece(GetInputSizes(multisIn, coeffsIn, coeffInput), GetOutputSizes(multisIn, coeffsIn)),
+                                 basisComps(basisCompsIn),
+                                 multis(multisIn),
+                                 coeffs(coeffsIn)
 {
   assert(basisComps.size() == multis->GetMultiLength());
   assert(multis->Size() == coeffs.cols());
 }
+
+Eigen::VectorXi BasisExpansion::GetInputSizes(std::shared_ptr<muq::Utilities::MultiIndexSet> multisIn,
+                                              Eigen::MatrixXd                         const& coeffsIn,
+                                              bool                                           coeffInput)
+{
+  Eigen::VectorXi output;
+  if(coeffInput){
+    output.resize(2);
+    output(0) = multisIn->GetMultiLength();
+    output(1) = coeffsIn.cols()*coeffsIn.rows();
+  }else{
+    output.resize(1);
+    output(0) = multisIn->GetMultiLength();
+  }
+  return output;
+}
+
+Eigen::VectorXi BasisExpansion::GetOutputSizes(std::shared_ptr<muq::Utilities::MultiIndexSet> multisIn,
+                                               Eigen::MatrixXd                         const& coeffsIn)
+{
+  return coeffsIn.rows() * Eigen::VectorXi::Ones(1);
+}
+
 
 Eigen::VectorXd BasisExpansion::GetAllTerms(Eigen::VectorXd const& x) const{
 
@@ -165,43 +192,36 @@ std::vector<Eigen::MatrixXd> BasisExpansion::GetHessians(Eigen::VectorXd const& 
 
 }
 
-Eigen::VectorXd const& BasisExpansion::ProcessInputs(muq::Modeling::ref_vector<boost::any> const& inputs)
+void BasisExpansion::ProcessCoeffs(Eigen::VectorXd const& newCoeffs)
 {
-    // If there are two inputs, then the second input will reset the coefficients
-  if(inputs.size()>1){
-      Eigen::MatrixXd const& newCoeffs = *boost::any_cast<Eigen::MatrixXd>(&inputs.at(1).get());
-      assert(newCoeffs.rows() == coeffs.rows());
-      assert(newCoeffs.cols() == coeffs.cols());
+  assert(newCoeffs.size() == coeffs.rows()*coeffs.cols());
 
-      coeffs = newCoeffs;
-  }else if(inputs.size()==0){
-    throw std::logic_error("Could not evaluate BasisExpansion because no input point was provided.  BasisExpansion::EvaluateImpl requires at least 1 input.");
-  }
+  Eigen::Map<const Eigen::MatrixXd> coeffMap(newCoeffs.data(), coeffs.rows(), coeffs.cols());
 
-  // Extract the point where we want to evaluate the expansion
-
-  Eigen::VectorXd const& x = *boost::any_cast<Eigen::VectorXd>(&inputs.at(0).get());
-  return x;
+  coeffs = coeffMap;
 }
 
 
-void BasisExpansion::EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) {
+void BasisExpansion::EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) {
 
-  Eigen::VectorXd const& x = ProcessInputs(inputs);
+  Eigen::VectorXd const& x = inputs.at(0);
+  if(inputs.size()>1)
+    ProcessCoeffs(inputs.at(1));
 
   // Compute the output
   outputs.resize(1);
   outputs.at(0) = (coeffs*GetAllTerms(x)).eval();
-
 }
 
-void BasisExpansion::JacobianImpl(unsigned int const                           wrtIn,
-                                  unsigned int const                           wrtOut,
-                                  muq::Modeling::ref_vector<boost::any> const& inputs)
+void BasisExpansion::JacobianImpl(unsigned int const                           wrtOut,
+                                  unsigned int const                           wrtIn,
+                                  muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs)
 {
   assert(wrtOut==0);
 
-  Eigen::VectorXd const& x = ProcessInputs(inputs);
+  Eigen::VectorXd const& x = inputs.at(0);
+  if(inputs.size()>1)
+    ProcessCoeffs(inputs.at(1));
 
   if(wrtIn==0){
     jacobian = Eigen::MatrixXd(coeffs*GetAllDerivs(x));

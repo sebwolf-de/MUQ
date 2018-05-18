@@ -47,7 +47,7 @@ TEST_F(WorkPieceTests, Unfixed) {
   // make sure the outputs are what we expect
   EXPECT_EQ(outputs.size(), 1);
   EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
-  
+
   // evaluate with two inputs and zero outputs
   outputs = test->Evaluate(a, b);
 
@@ -346,7 +346,7 @@ TEST_F(WorkPieceTests, SomeFixedOutputTypesFixedInputNumber) {
   // evaluate the WorkPiece
   obj->flag = false;
   outputs = test->Evaluate(s, a, obj);
-  
+
   // make sure we get 2 outputs
   EXPECT_EQ(outputs.size(), 2);
   EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
@@ -413,7 +413,7 @@ TEST_F(WorkPieceTests, FixedInputTypesFixedOutputNum) {
   // evaluate the WorkPiece
   obj->flag = false;
   outputs = test->Evaluate(s, a, obj);
-  
+
   // make sure we get 1 output
   EXPECT_EQ(outputs.size(), 2);
   EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
@@ -446,7 +446,7 @@ TEST_F(WorkPieceTests, FixedOutputTypesFixedInputNum) {
   // evaluate the WorkPiece
   obj->flag = false;
   outputs = test->Evaluate(s, a, obj);
-  
+
   // make sure we get 1 output
   EXPECT_EQ(outputs.size(), 2);
   EXPECT_TRUE(boost::any_cast<std::string>(outputs[0]).compare(s)==0);
@@ -688,15 +688,15 @@ TEST_F(WorkPieceTests, SomeFixedInOuts) {
   // make sure the number of inputs matches what we expect
   EXPECT_EQ(test->numInputs, 3);
   EXPECT_EQ(test->numOutputs, -1);
-  
+
   test = std::make_shared<FixedInOutMod>(inTypes, outTypes, 2);
-  
+
   // make sure the number of inputs matches what we expect
   EXPECT_EQ(test->numInputs, -1);
   EXPECT_EQ(test->numOutputs, 2);
-  
+
   test = std::make_shared<FixedInOutMod>(inTypes, 3, outTypes, 2);
-  
+
   // make sure the number of inputs matches what we expect
   EXPECT_EQ(test->numInputs, 3);
   EXPECT_EQ(test->numOutputs, 2);

@@ -12,112 +12,120 @@ namespace muq {
 
       /// Are we specifying the mean, covariance matrix, or precision matrix
       enum Mode {
-	/// We are specifying the mean
-	Mean,
 
-	/// We are specifying the covariance
-	Covariance,
+        /// We are specifying the covariance
+        Covariance,
 
-	/// We are specifying the precision
-	Precision
+        /// We are specifying the precision
+	      Precision
       };
 
-      /// Construct a Gaussian with scaled identity covariance/precision
-      /**
-	 @param[in] obj Either the mean, covariance, or the precision (depending on the second paameter)
-	 @param[in] mode Are we specifying mean, covariance, or precision (defaults to mean)
-       */
-      Gaussian(boost::any const& obj = 0.0, Gaussian::Mode const mode = Gaussian::Mode::Mean);
+      enum ExtraInputs {
+        None           = 1 << 0,
+        Mean           = 1 << 1,
+        DiagCovariance = 1 << 2,
+        DiagPrecision  = 1 << 3,
+        FullCovariance = 1 << 4,
+        FullPrecision  = 1 << 5,
+      };
+      typedef uint8_t InputMask;
+
+      Gaussian(unsigned int dim,
+               InputMask    extraInputs = ExtraInputs::None);
 
       /// Construct a Gaussian with scaled identity covariance/precision
       /**
-	 @param[in] mean The mean
-	 @param[in] obj Either the covariance or the precision (depending on the second paameter)
-	 @param[in] mode Are we specifying mean, covariance, or precision (defaults to covariance)
-       */
-      Gaussian(boost::any const& mean, boost::any const& obj, Gaussian::Mode const mode = Gaussian::Mode::Covariance);
+	      @param[in] mu The mean
+      */
+      Gaussian(Eigen::VectorXd const& mu,
+               InputMask              extraInputs = ExtraInputs::None);
 
-      ~Gaussian();
-
-      /// Get the dimension of this Gaussian
+      /// Construct a Gaussian by specifying both the mean and covariance or precision matrix
       /**
-	 \return The dimension
-       */
+      @param[in] mu The mean vector
+      @param[in] obj A matrix holding either the covariance or precision
+      @param[in] mode A flag indicating whether the matrix should be treated as the covariance or precision
+      */
+      Gaussian(Eigen::VectorXd const& mu,
+               Eigen::MatrixXd const& obj,
+               Gaussian::Mode         mode = Gaussian::Mode::Covariance,
+               InputMask              extraInputs = ExtraInputs::None);
+
+
+      virtual ~Gaussian() = default;
+
       unsigned int Dimension() const;
 
       /// Get the covariance
       /**
-	 \return The covariance
-       */
-      boost::any GetCovariance() const;
+	     @return The covariance
+      */
+      Eigen::MatrixXd GetCovariance() const;
+      Eigen::MatrixXd GetPrecision() const;
+
+      /// Get the mean
+      /**
+        @return A vector holding the distribution mean.
+      */
+      Eigen::VectorXd const& GetMean() const{return mean;};
+
+      /// Set the mean value
+      /**
+        @param[in] newMu A vector containing the new mean.  Must be the same size as the current mean.
+      */
+      void SetMean(Eigen::VectorXd const& newMu);
 
       /// Set the covariance matrix
       /**
-	 @param[in] newcov The new covariance
-       */
-      void SetCovariance(boost::any const& newcov);
+        @param[in] newcov The new covariance
+      */
+      void SetCovariance(Eigen::MatrixXd const& newCov);
 
       /// Set the precision matrix
       /**
-	 @param[in] newprec The new precision
-       */
-      void SetPrecision(boost::any const& newprec);
+        @param[in] newprec The new precision
+      */
+      void SetPrecision(Eigen::MatrixXd const& newPrec);
 
     private:
 
-      /// Compute the distribution's scaling constant
-      /**
-	 \return Scaling constant
-       */
-      void ComputeScalingConstant();
 
-      static boost::any SaveCovPrec(boost::any const& in);
-
-      /// Reset the hyperparameters
-      /**
-	 @param[in] hyperparas A list of hyperparameters mean and/or covariance/precision
-       */
-      void ResetHyperparameters(ref_vector<boost::any> const& hyperparas);
-
-      /// Implement the log-density for a Gaussian distribution
-      /**
-	 Inputs:
-	 <ol>
-	 <li> The state \f$x\f$
-	 </ol>
-	 \return The log-density 
-       */
-      virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) override;
+      virtual double LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
       /// Sample the distribution
-      virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) override;
+      virtual Eigen::VectorXd SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
-      /// The muq::Utilities::AnyAlgebra
-      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>();
+
+      /// Compute the distribution's scaling constant
+      /**
+	      @return Scaling constant
+      */
+      void ComputeNormalization();
+
+      void ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params);
+
+      static Eigen::VectorXi GetExtraSizes(unsigned dim, InputMask extraInputs);
+
+      static Gaussian::Mode ModeFromExtras(InputMask extraInputs);
+      static void CheckInputTypes(InputMask extraInputs, Mode mode);
 
       /// Have we specified the covariance or the precision
       Gaussian::Mode mode;
 
-      /// The dimension 
-      const unsigned int dim;
+      /// What form do the extra inputs take? Just the mean, or the mean and covariance?
+      Gaussian::InputMask inputTypes;
 
-      /// The mean of the distribution
-      boost::optional<boost::any> mean;
+      // Space to store the mean of the distribution
+      Eigen::VectorXd mean;
 
-      /// The covariance 
-      boost::optional<boost::any> cov;
+      // Space to store either the covariance or precision matrix (depending on mode)
+      Eigen::MatrixXd covPrec;
 
-      /// The square root of the covariance
-      boost::optional<boost::any> covSqrt;
-
-      /// The precision
-      boost::optional<boost::any> prec;
-
-      /// The square root of the precision
-      boost::optional<boost::any> precSqrt;
+      // Space to tore the matrix square root of the covariance or precision
+      Eigen::LLT<Eigen::MatrixXd> sqrtCovPrec;
 
       /// The scaling constant for the density
-      double scalingConstant;
+      double logNormalization;
 
     };
   } // namespace Modeling

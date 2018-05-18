@@ -21,7 +21,7 @@ namespace muq{
         so the function \f$f\f$ is lower triangular. Combined with the fact that \f$\partial f_i / \partial x_i > 0 \f$,
         this means that \f$f\f$ will be invertible.
     */
-    class MonotoneExpansion : public muq::Modeling::WorkPiece{
+    class MonotoneExpansion : public muq::Modeling::ModPiece{
 
     public:
       //MonotoneExpansion(boost::property_tree::ptree & params);
@@ -61,7 +61,8 @@ namespace muq{
 
       /** Returns the log determinant of the Jacobian matrix (wrt x) at a particular point. */
       virtual double LogDeterminant(Eigen::VectorXd const& evalPt);
-      virtual double LogDeterminant(Eigen::VectorXd const& evalPt, Eigen::VectorXd const& coeffs);
+      virtual double LogDeterminant(Eigen::VectorXd const& evalPt,
+                                    Eigen::VectorXd const& coeffs);
 
       /** Returns the gradient of the Jacobian log determinant with respect to the coefficients. */
       virtual Eigen::VectorXd GradLogDeterminant(Eigen::VectorXd const& evalPt);
@@ -70,11 +71,11 @@ namespace muq{
 
     protected:
 
-      virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
+      virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) override;
 
-      virtual void JacobianImpl(unsigned int const                           wrtIn,
-                                unsigned int const                           wrtOut,
-                                muq::Modeling::ref_vector<boost::any> const& inputs) override;
+      virtual void JacobianImpl(unsigned int const                                wrtOut,
+                                unsigned int const                                wrtIn,
+                                muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) override;
 
       Eigen::MatrixXd JacobianWrtX(Eigen::VectorXd const& x) const;
 

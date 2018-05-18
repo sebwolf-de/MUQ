@@ -1,66 +1,41 @@
 #ifndef SAMPLINGPROBLEM_H_
 #define SAMPLINGPROBLEM_H_
 
-#include "MUQ/Modeling/Distributions/Distribution.h"
+#include "MUQ/Modeling/ModPiece.h"
+#include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
-    class SamplingProblem {
+
+    /** @brief Class for sampling problems based purely on a density function.
+    */
+    class SamplingProblem : public AbstractSamplingProblem{
     public:
 
       /**
-	 @param[in] target The target distribution
+	     @param[in] target The target distribution
        */
-      SamplingProblem(std::shared_ptr<muq::Modeling::Distribution> target);
+      SamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> targetIn);
 
-      /**
-	 @param[in] target The target distribution
-	 @param[in] bias A biasing distribution
-       */
-      SamplingProblem(std::shared_ptr<muq::Modeling::Distribution> target, std::shared_ptr<muq::Modeling::Distribution> bias);
+      virtual ~SamplingProblem() = default;
 
-      ~SamplingProblem();
 
-      /// Directly sample the target distribution
-      /**
-	 Assumes that muq::SamplingAlgorithms::SamplingProblem::target has a Sample method implemented.
-	 @param[in] inputs Inputs to the target distribution Sample method
-	 \return A sample from the target distribution
-       */
-      boost::any SampleTarget(muq::Modeling::ref_vector<boost::any> const& inputs) const;
+      virtual double LogDensity(std::shared_ptr<SamplingState> state) override;
 
-      /// Evaluate the log target distribution
-      /**
-	 Assumes that muq::SamplingAlgorithms::SamplingProblem::target has a LogDensity method implemented.
-	 @param[in] inputs Inputs to the target distribution LogDensity method
-	 \return The log density
-       */
-      double EvaluateLogTarget(muq::Modeling::ref_vector<boost::any> const& inputs) const;
+      virtual Eigen::VectorXd GradLogDensity(std::shared_ptr<SamplingState> state,
+                                             unsigned                       blockWrt) override;
 
-      /// Sample the biasing distribution
-      /**
-	 Assumes that muq::SamplingAlgorithms::SamplingProblem::bias has a Sample method implemented.
-	 @param[in] inputs Inputs to the biasing distribution Sample method
-	 \return A sample from the biasing distribution
-       */
-      boost::any SampleBiasingDistribution(muq::Modeling::ref_vector<boost::any> const& inputs) const;
 
-      /// Evaluate the log biasing distribution
-      /**
-	 Assumes that muq::SamplingAlgorithms::SamplingProblem::bias has a LogDensity method implemented.
-	 @param[in] inputs Inputs to the biasing distribution LogDensity method
-	 \return The log density
-       */
-      double EvaluateLogBiasingDistribution(muq::Modeling::ref_vector<boost::any> const& inputs) const;
+      std::shared_ptr<muq::Modeling::ModPiece> GetDistribution(){return target;};
 
     private:
 
       /// The target distribution (the prior in the inference case)
-      std::shared_ptr<muq::Modeling::Distribution> target;
+      std::shared_ptr<muq::Modeling::ModPiece> target;
 
-      /// An optional biasing distribution
-      boost::optional<std::shared_ptr<muq::Modeling::Distribution> > bias = boost::none;
-      
+      static unsigned GetNumBlocks(std::shared_ptr<muq::Modeling::ModPiece> target);
+      static std::vector<int> GetBlockSizes(std::shared_ptr<muq::Modeling::ModPiece> target);
+
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

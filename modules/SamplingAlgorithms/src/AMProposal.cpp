@@ -1,44 +1,66 @@
 #include "MUQ/SamplingAlgorithms/AMProposal.h"
+#include "MUQ/Utilities/AnyHelpers.h"
 
 namespace pt = boost::property_tree;
 using namespace muq::SamplingAlgorithms;
+using namespace muq::Utilities;
 
 REGISTER_MCMC_PROPOSAL(AMProposal)
-AMProposal::AMProposal(pt::ptree const& pt) : MHProposal(pt),
-                                              adaptSteps(pt.get<unsigned int>("MCMC.Proposal.AM.Steps", 1)),
-                                              adaptStart(pt.get<unsigned int>("MCMC.Proposal.AM.Start", 1)) {}
+AMProposal::AMProposal(pt::ptree const& pt , std::shared_ptr<AbstractSamplingProblem> prob) : MHProposal(pt, prob),
+                                              adaptSteps(pt.get<unsigned int>("AdaptSteps")),
+                                              adaptStart(pt.get<unsigned int>("AdaptStart")),
+                                              adaptScale(pt.get<double>("AdaptScale")) {}
 
 
 AMProposal::~AMProposal() {}
 
-void AMProposal::Adapt(unsigned int const t, std::shared_ptr<SamplingState> state) {
+void AMProposal::Adapt(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& states) {
+
   // always update the sample mean and covariance
-  Update(t, state);
+  Update(t, states);
 
   if( t%adaptSteps==0 && t>adaptStart ) {
-    // the new proposal covariance
-    boost::any propCov = algebra->Identity(cov.type(), algebra->Size(cov, 0), algebra->Size(cov, 1));
-    propCov = algebra->Add(algebra->Multiply(1.0, cov), algebra->Multiply(1.0e-10, propCov));
+
+    Eigen::MatrixXd adjustedCov = adaptScale * cov + 1e-10 * Eigen::MatrixXd::Identity(cov.rows(), cov.cols());
 
     // update the proposal covariance
-    proposal->SetCovariance(propCov);
+    proposal->SetCovariance(adjustedCov);
   }
 }
 
-void AMProposal::Update(unsigned int const t, std::shared_ptr<SamplingState> state) {
+void AMProposal::UpdateOne(unsigned int const numSamps, std::shared_ptr<SamplingState> state)
+{
   // first sample---we have no mean, just set it to the first sample
-  if( mean.type()==typeid(boost::none) ) { mean = state->state; return; }
-
-  // need to store the old mean
-  const boost::any oldMean = mean;
+  if( mean.size()==0 ){
+    mean = state->state.at(blockInd);
+    return;
+  }
 
   // update the mean
-  const double dum = 1.0/(1.0+(double)t);
-  mean = algebra->Add(algebra->Multiply((double)t*dum, mean), algebra->Multiply(dum, state->state));
+  Eigen::VectorXd oldMean = mean;
+  Eigen::VectorXd const& newState  = state->state.at(blockInd);
 
-  // second sample---we have a mean, but not cov
-  if( cov.type()==typeid(boost::none) ) { cov = algebra->OuterProduct(algebra->Subtract(state->state, oldMean), algebra->Subtract(state->state, mean)); return; }
+  mean = (oldMean*numSamps + newState)/(numSamps+1.0);
 
-  // update the cov
-  cov = algebra->Add(algebra->Multiply((double)t*dum, cov), algebra->Multiply(1.0/(double)t, algebra->OuterProduct(algebra->Subtract(state->state, oldMean), algebra->Subtract(state->state, mean))));
+  // If we haven't compute the covariance before...
+  if( cov.rows()==0 ){
+
+    cov = Eigen::MatrixXd::Zero(oldMean.size(),oldMean.size());
+
+    //compute covariance from scratch, from the definition
+    cov.selfadjointView<Eigen::Lower>().rankUpdate(oldMean - mean, 1.0);
+    cov.selfadjointView<Eigen::Lower>().rankUpdate(newState - mean, 1.0);
+
+  }else{
+    cov *= (numSamps - 1.0) / numSamps;
+    //note that the asymmetric form fixes the fact that the old mean was wrong
+    cov += (1.0 / static_cast<double>(numSamps)) * (newState - oldMean) * (newState - mean).transpose();
+  }
+}
+
+void AMProposal::Update(unsigned int const numSamps, std::vector<std::shared_ptr<SamplingState>> const& states) {
+
+  for(int i=0; i<states.size(); ++i)
+    UpdateOne(numSamps+i,states.at(i));
+
 }

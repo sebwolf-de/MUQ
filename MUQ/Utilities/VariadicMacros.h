@@ -37,15 +37,33 @@ to concatenate a,b,c,d into a vector [a,b,c,d].
     template<typename... Args>                                         \
     inline argument_type<void(outputType)>::type functionName(Args const&... args) {     \
         std::vector< argument_type<void(inputType)>::type> vec;                                    \
-	return functionName(vec, args...);                             \
+	      return functionName(vec, args...);                             \
     }                                                                  \
-    template<typename... Args>                                                                                               \
-    inline argument_type<void(outputType)>::type functionName(std::vector<argument_type<void(inputType)>::type>& bounds, argument_type<void(inputType)>::type const& ith, Args const&... args) {     \
-        bounds.push_back(ith);                                                                                               \
-	return functionName(bounds, args...);                                                                              \
+    template<typename NextType, typename... Args>                                                                                               \
+    inline argument_type<void(outputType)>::type functionName(std::vector<argument_type<void(inputType)>::type>& bounds, NextType const& ith, Args const&... args) {     \
+        static_assert(std::is_same<argument_type<void(inputType)>::type, NextType>::value, "In "#functionName", cannot cast input to "#inputType"."); \
+        bounds.push_back((argument_type<void(inputType)>::type&)ith);                                                                                               \
+	      return functionName(bounds, args...);                                                                              \
     }                                                                                                                        \
     inline argument_type<void(outputType)>::type functionName(std::vector<argument_type<void(inputType)>::type>& bounds, argument_type<void(inputType)>::type const& last) {                         \
         bounds.push_back(last);                                                                                              \
+        return functionName(bounds);                                                                                        \
+    }
+
+#define VARIADIC_TO_REFVECTOR(functionName, inputType, outputType) \
+    template<typename... Args>                                         \
+    inline argument_type<void(outputType)>::type functionName(Args const&... args) {     \
+        ref_vector< argument_type<void(inputType)>::type> vec;                                    \
+	      return functionName(vec, args...);                             \
+    }                                                                  \
+    template<typename NextType, typename... Args>                                                                                               \
+    inline argument_type<void(outputType)>::type functionName(ref_vector<argument_type<void(inputType)>::type>& bounds, NextType const& ith, Args const&... args) {     \
+        static_assert(std::is_same<argument_type<void(inputType)>::type, NextType>::value, "In "#functionName", cannot cast input to "#inputType"."); \
+        bounds.push_back(std::cref((argument_type<void(inputType)>::type&)ith));                                                                                               \
+	      return functionName(bounds, args...);                                                                              \
+    }                                                                                                                        \
+    inline argument_type<void(outputType)>::type functionName(ref_vector<argument_type<void(inputType)>::type>& bounds, argument_type<void(inputType)>::type const& last) {                         \
+        bounds.push_back(std::cref(last));                                                                                              \
         return functionName(bounds);                                                                                        \
     }
 

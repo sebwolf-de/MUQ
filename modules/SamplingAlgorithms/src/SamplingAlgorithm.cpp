@@ -23,6 +23,7 @@ void SamplingAlgorithm::EvaluateImpl(ref_vector<boost::any> const& inputs) {
 
   // get the kernel that generates the next sample
   std::shared_ptr<TransitionKernel> kernel = ConstructKernel(pt, problem);
+  assert(kernel);
 
   // get the number of samples
   const unsigned int T = pt.get<unsigned int>("SamplingAlgorithm.NumSamples");
@@ -33,38 +34,29 @@ void SamplingAlgorithm::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   std::vector<std::shared_ptr<SamplingState> >& samples = boost::any_cast< std::vector<std::shared_ptr<SamplingState>>& >(outputs.at(0));
   samples.reserve(T+1);
 
-  // copy the inputs---these are the inputs to the distributions (e.g., target, biasing, and/or propsal)
-  ref_vector<boost::any> kernelInputs(inputs.begin()+(correlated?3:2), inputs.end());
-
   // if the samples are correlated, we need a starting sample
-  boost::any currentState;
+  std::shared_ptr<SamplingState> currentState;
   if( correlated ) {
-    samples.push_back(std::make_shared<SamplingState>(inputs.at(2), 1.0));
-    currentState = *(samples.end()-1);
-
-    kernelInputs.insert(kernelInputs.begin(), std::cref(currentState));
-    // begin the kernel adaptation
+    currentState = std::make_shared<SamplingState>(inputs.at(2), 1.0);
+    samples.push_back(currentState);
     kernel->PostStep(1, samples.at(0));
   }
 
   for(unsigned int t = samples.size(); t<T; ++t) { // loop through each sample
 
     // get the next sample
-    const std::vector<boost::any>& result = kernel->Evaluate(kernelInputs);
+    std::shared_ptr<SamplingState> result = kernel->Step(currentState);
+  //  const std::vector<boost::any>& result = kernel->Evaluate(kernelInputs);
 
     // save it if the next sample is valid
-    if( result.at(0).type()==typeid(std::shared_ptr<SamplingState>) ) {
-       currentState = result.at(0);
-       samples.push_back(boost::any_cast<std::shared_ptr<SamplingState> >(currentState));
+    if( currentState != result ) {
+       currentState = result;
+       samples.push_back(currentState);
      }
 
-     kernel->PostStep(t+1, samples.at(samples.size()-1));
-    // allow the kernel to adapt given the step
+     kernel->PostStep(t+1, currentState);
 
-    // Update the current sample in the correlated case
-    if( correlated ) {
-      kernelInputs[0] = std::cref(currentState);
-    }
+    // allow the kernel to adapt given the step
   }
 
   // normalize the sample weights

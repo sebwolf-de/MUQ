@@ -9,7 +9,8 @@ namespace muq {
     class AMProposal : public MHProposal {
     public:
 
-      AMProposal(boost::property_tree::ptree const& pt);
+      AMProposal(boost::property_tree::ptree const& pt,
+                 std::shared_ptr<AbstractSamplingProblem> prob);
 
       ~AMProposal();
 
@@ -19,8 +20,8 @@ namespace muq {
 	 @param[in] t The current step
 	 @param[in] state The current state
        */
-      virtual void Adapt(unsigned int const t, std::shared_ptr<SamplingState> state) override;
-      
+      virtual void Adapt(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& states) override;
+
     private:
 
       /// Update the covariance of the samples
@@ -29,13 +30,14 @@ namespace muq {
 	 @param[in] t The current step
 	 @param[in] state The current state
        */
-      void Update(unsigned int const t, std::shared_ptr<SamplingState> state);
+      void Update(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& states);
+      void UpdateOne(unsigned int const numSamps, std::shared_ptr<SamplingState> state);
 
       /// The current mean
-      boost::any mean = boost::none;
+      Eigen::VectorXd mean;
 
       /// The current covariance
-      boost::any cov = boost::none;
+      Eigen::MatrixXd cov;
 
       /// How frequently should we update the adaption?
       const unsigned int adaptSteps;
@@ -43,8 +45,11 @@ namespace muq {
       /// When should we start adapting?
       const unsigned int adaptStart;
 
+      // Multiplicative scaling of the sample covariance
+      const double adaptScale;
+
     };
-    
+
   } // namespace SamplingAlgorithms
 } // namespace muq
 

@@ -17,52 +17,52 @@ namespace muq {
     public:
       /// Required default constructor
       DependentPredicate();
-      
+
       /**
 	 @param[in] baseNode The input node --- we what to know which nodes are downstream of this node
 	 @param[in] graph The graph holding all the nodes
       */
       DependentPredicate(boost::graph_traits<Graph>::vertex_descriptor const& baseNode, std::shared_ptr<const Graph> graph);
-      
+
       /**
 	 @param[in] node Any node in the graph
 	 \return true: the node is downstream of the graph, false: the node is not downstream of the graph
       */
       bool operator()(const boost::graph_traits<Graph>::vertex_descriptor& node) const;
-      
+
     private:
       /// A vector of all the nodes downstream of the input node
       std::vector<boost::graph_traits<Graph>::vertex_descriptor> doesDepend;
-      
+
       /**
 	 @param[in] baseNode A node that depends on the input node (possible the input node itself)
 	 @param[in] graph The graph holding all the nodes
       */
       void DownstreamNodes(const boost::graph_traits<Graph>::vertex_descriptor& baseNode, std::shared_ptr<const Graph> graph);
     };
-        
-    /// Determine if the source of an edge is downstream of an input 
+
+    /// Determine if the source of an edge is downstream of an input
     class DependentEdgePredicate {
     public:
       /// Required default constructor
       DependentEdgePredicate();
-      
+
       /**
 	 @param[in] nodePred All the downstream nodes of a given input
 	 @param[in] graph The graph holding all of the nodes
       */
       DependentEdgePredicate(std::shared_ptr<DependentPredicate> nodePred, std::shared_ptr<const Graph> graph);
-      
+
       /**
 	 @param[in] edge An edge in the graph
 	 \return true: The source of the edge is a downstream node of the input, false: it is not a downstream node
       */
       bool operator()(const boost::graph_traits<Graph>::edge_descriptor& edge) const;
-      
+
     private:
       /// The nodes that are downstream of the input
       std::shared_ptr<DependentPredicate> nodePred;
-      
+
       /// The graph holding all the nodes
       std::shared_ptr<const Graph> graph;
     };
@@ -88,7 +88,7 @@ namespace muq {
 
       /// Default destructor
       virtual ~WorkGraphPiece();
-      
+
     private:
 
       /// Evaluate each muq::Modeling::WorkPiece in the graph
@@ -97,31 +97,31 @@ namespace muq {
        */
       virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 
-      /// Compute the Jacobian for this muq::Modeling::WorkGraphPiece using the chain rule
-      /**
-	 @param[in] wrtIn We are taking the Jacobian with respect to this input
-	 @param[in] wrtOut We are taking the Jacobian of this output
-	 @param[in] inputs Inputs to the muq::Modeling::WorkGraphPiece
-       */
-      virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override;
-
-      /// Compute the action of the Jacobian for this muq::Modeling::WorkGraphPiece using the chain rule
-      /**
-	 @param[in] wrtIn We are taking the Jacobian with respect to this input
-	 @param[in] wrtOut We are taking the Jacobian of this output
-	 @param[in] vec We are applying the Jacobian to this object
-	 @param[in] inputs Inputs to the muq::Modeling::WorkGraphPiece
-       */
-      virtual void JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override;
-
-      /// Compute the action of the Jacobian transpose for this muq::Modeling::WorkGraphPiece using the chain rule
-      /**
-	 @param[in] wrtIn We are taking the Jacobian with respect to this input
-	 @param[in] wrtOut We are taking the Jacobian of this output
-	 @param[in] vec We are applying the Jacobian transpose to this object
-	 @param[in] inputs Inputs to the muq::Modeling::WorkGraphPiece
-       */
-      virtual void JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override;
+   //    /// Compute the Jacobian for this muq::Modeling::WorkGraphPiece using the chain rule
+   //    /**
+	 // @param[in] wrtIn We are taking the Jacobian with respect to this input
+	 // @param[in] wrtOut We are taking the Jacobian of this output
+	 // @param[in] inputs Inputs to the muq::Modeling::WorkGraphPiece
+   //     */
+   //    virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override;
+   //
+   //    /// Compute the action of the Jacobian for this muq::Modeling::WorkGraphPiece using the chain rule
+   //    /**
+	 // @param[in] wrtIn We are taking the Jacobian with respect to this input
+	 // @param[in] wrtOut We are taking the Jacobian of this output
+	 // @param[in] vec We are applying the Jacobian to this object
+	 // @param[in] inputs Inputs to the muq::Modeling::WorkGraphPiece
+   //     */
+   //    virtual void JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override;
+   //
+   //    /// Compute the action of the Jacobian transpose for this muq::Modeling::WorkGraphPiece using the chain rule
+   //    /**
+	 // @param[in] wrtIn We are taking the Jacobian with respect to this input
+	 // @param[in] wrtOut We are taking the Jacobian of this output
+	 // @param[in] vec We are applying the Jacobian transpose to this object
+	 // @param[in] inputs Inputs to the muq::Modeling::WorkGraphPiece
+   //     */
+   //    virtual void JacobianTransposeActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) override;
 
       /// Get the required outputs for a node in one of the filtered graphs
       /**
@@ -171,7 +171,7 @@ namespace muq {
 	 Like muq::Modeling::WorkGraphPiece::runOrder, but specific to which input node is used (also in output->input order)
       */
       std::vector<std::deque<boost::graph_traits<Graph>::vertex_descriptor> > derivRunOrders;
-  
+
       /// The WorkGraph associated with this WorkGraphPiece
       std::shared_ptr<const Graph> graph;
 
@@ -188,7 +188,7 @@ namespace muq {
 
       /// An algebra to do arthmatic on boost::any types
       std::shared_ptr<const muq::Utilities::AnyAlgebra> algebra;
-      
+
     };
   } // namespace Modeling
 } // namespace muq

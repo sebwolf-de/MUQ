@@ -11,11 +11,11 @@ using namespace muq::Modeling;
 class ExampleDensity : public Distribution {
 public:
 
-  inline ExampleDensity() : Distribution() {}
+  inline ExampleDensity() : Distribution(1) {}
 
-  inline virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) override {
+  inline virtual double LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) override {
     // get the point where we are evaluating the log density
-    const double x = boost::any_cast<double const>(inputs[0]);
+    const double x = inputs.at(0)(0);
 
     return -x*x-std::sin(2.0*M_PI*x);
   }
@@ -25,11 +25,11 @@ private:
 
 class ExampleRV : public Distribution {
 public:
-    inline ExampleRV() : Distribution() {}
+    inline ExampleRV() : Distribution(1) {}
 
-    inline virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) override {
+    inline virtual Eigen::VectorXd SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) override {
         double outputVal = 0.1;
-        return boost::any(outputVal);
+        return outputVal*Eigen::VectorXd::Ones(1);
     }
 
 private:
@@ -40,49 +40,39 @@ TEST(Distribution, EvaluateDensity) {
   auto dens = std::make_shared<ExampleDensity>();
 
   // evaluate the density at a point
-  const double x = 2.5;
+  Eigen::VectorXd x(1);
+  x << 2.5;
 
   // evaluate the log density
   double logdens = dens->LogDensity(x);
 
   // make sure we get the density we implemented
-  EXPECT_DOUBLE_EQ(logdens, -x*x-std::sin(2.0*M_PI*x));
-
-  // evaluate the log density using evaluate
-  std::vector<boost::any> const& result = dens->Evaluate(Distribution::Mode::EvaluateLogDensity, x);
-  logdens = boost::any_cast<double const>(result[0]);
-  // make sure we get the density we implemented
-  EXPECT_DOUBLE_EQ(logdens, -x*x-std::sin(2.0*M_PI*x));
+  EXPECT_DOUBLE_EQ(logdens, -x(0)*x(0)-std::sin(2.0*M_PI*x(0)));
 
   std::shared_ptr<Density> densPiece = dens->AsDensity();
   ASSERT_TRUE(densPiece);
 
-  std::vector<boost::any> const& result2 = densPiece->Evaluate(x);
-  double logDens2 = boost::any_cast<double const>(result.at(0));
-  EXPECT_DOUBLE_EQ(logDens2, -x*x-std::sin(2.0*M_PI*x));
+  std::vector<Eigen::VectorXd> const& result = densPiece->Evaluate(x);
+  double logDens = result.at(0)(0);
+  EXPECT_DOUBLE_EQ(logDens, -x(0)*x(0)-std::sin(2.0*M_PI*x(0)));
 
   // Make sure we can't sample
   EXPECT_THROW(dens->Sample(x), muq::NotImplementedError);
-  EXPECT_THROW(dens->Evaluate(Distribution::Mode::SampleDistribution, x), muq::NotImplementedError);
 }
 
 TEST(Distribution, EvaluateSample) {
 
     auto rv = std::make_shared<ExampleRV>();
-    const double x  = 2.5;
+    Eigen::VectorXd x(1);
+    x << 2.5;
 
     // draw a sample
-    boost::any samp = rv->Sample(x);
-    EXPECT_DOUBLE_EQ(0.1, boost::any_cast<double>(samp));
+    Eigen::VectorXd samp = rv->Sample(x);
+    EXPECT_DOUBLE_EQ(0.1, samp(0));
 
-    samp = rv->Evaluate(Distribution::Mode::SampleDistribution, x)[0];
-    EXPECT_DOUBLE_EQ(0.1, boost::any_cast<double>(samp));
-
-    samp = rv->AsVariable()->Evaluate(x)[0];
-    EXPECT_DOUBLE_EQ(0.1, boost::any_cast<double>(samp));
+    samp = rv->AsVariable()->Evaluate(x).at(0);
+    EXPECT_DOUBLE_EQ(0.1, samp(0));
 
     // Make sure we can't evaluate the density
     EXPECT_THROW(rv->LogDensity(x), muq::NotImplementedError);
-    EXPECT_THROW(rv->Evaluate(Distribution::Mode::EvaluateLogDensity, x), muq::NotImplementedError);
-
 }

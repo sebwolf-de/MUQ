@@ -32,7 +32,7 @@ TEST_F(Approximation_BasisExpansion, Constructor1){
 
   // Evaluate with just the input
   Eigen::VectorXd evalPt = Eigen::VectorXd::Ones(numDims);
-  Eigen::VectorXd output = boost::any_cast<Eigen::VectorXd>(expansion.Evaluate(evalPt)[0]);
+  Eigen::VectorXd output = expansion.Evaluate(evalPt).at(0);
 
   EXPECT_EQ(1, output.size());
   EXPECT_DOUBLE_EQ(0.0, output(0));
@@ -47,7 +47,7 @@ TEST_F(Approximation_BasisExpansion, Constructor2){
 
   // Evaluate with just the input
   Eigen::VectorXd evalPt = Eigen::VectorXd::Ones(numDims);
-  Eigen::VectorXd output = boost::any_cast<Eigen::VectorXd>(expansion.Evaluate(evalPt)[0]);
+  Eigen::VectorXd output = expansion.Evaluate(evalPt).at(0);
 
   EXPECT_EQ(1, output.size());
   EXPECT_DOUBLE_EQ(0.0, output(0));
@@ -65,14 +65,15 @@ TEST_F(Approximation_BasisExpansion, Constructor3){
 
   // Evaluate with just the input
   Eigen::VectorXd evalPt = Eigen::VectorXd::Ones(numDims);
-  Eigen::VectorXd output = boost::any_cast<Eigen::VectorXd>(expansion.Evaluate(evalPt)[0]);
+  Eigen::VectorXd output = expansion.Evaluate(evalPt).at(0);
 
   EXPECT_EQ(numOut, output.size());
   for(int i=0; i<numOut; ++i)
     EXPECT_DOUBLE_EQ(0.0, output(i));
 
   coeffs = Eigen::MatrixXd::Ones(numOut, multis->Size());
-  output = boost::any_cast<Eigen::VectorXd>(expansion.Evaluate(evalPt, coeffs)[0]);
+  Eigen::VectorXd coeffVec = Eigen::Map<Eigen::VectorXd>(coeffs.data(), coeffs.rows()*coeffs.cols());
+  output = expansion.Evaluate(evalPt, coeffVec).at(0);
 
   EXPECT_EQ(numOut, output.size());
   for(int i=0; i<numOut; ++i)

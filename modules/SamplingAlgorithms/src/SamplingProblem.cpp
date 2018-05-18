@@ -1,30 +1,33 @@
 #include "MUQ/SamplingAlgorithms/SamplingProblem.h"
+#include "MUQ/SamplingAlgorithms/SamplingState.h"
 
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
-SamplingProblem::SamplingProblem(std::shared_ptr<Distribution> target) : target(target) {}
+SamplingProblem::SamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> targetIn) : AbstractSamplingProblem(targetIn->inputSizes),
+                                                                                      target(targetIn) {}
 
-SamplingProblem::SamplingProblem(std::shared_ptr<Distribution> target, std::shared_ptr<Distribution> bias) : target(target), bias(bias) {}
 
-SamplingProblem::~SamplingProblem() {}
 
-boost::any SamplingProblem::SampleTarget(ref_vector<boost::any> const& inputs) const {
+double SamplingProblem::LogDensity(std::shared_ptr<SamplingState> state) {
   assert(target);
-  return target->Sample(inputs);
+
+  return target->Evaluate(state->state).at(0)(0);
 }
 
-double SamplingProblem::EvaluateLogTarget(muq::Modeling::ref_vector<boost::any> const& inputs) const {
-  assert(target);
-  return target->LogDensity(inputs);
+Eigen::VectorXd SamplingProblem::GradLogDensity(std::shared_ptr<SamplingState> state,
+                                                unsigned                       blockWrt)
+{
+  return target->Gradient(0,blockWrt, state->state, Eigen::VectorXd::Ones(1).eval());
 }
 
-boost::any SamplingProblem::SampleBiasingDistribution(muq::Modeling::ref_vector<boost::any> const& inputs) const {
-  assert(bias);
-  return (*bias)->Sample(inputs);
-}
+std::vector<int> SamplingProblem::GetBlockSizes(std::shared_ptr<ModPiece> target)
+{
+  int numBlocks = target->inputSizes.size();
 
-double SamplingProblem::EvaluateLogBiasingDistribution(muq::Modeling::ref_vector<boost::any> const& inputs) const {
-  assert(bias);
-  return (*bias)->LogDensity(inputs);
+  std::vector<int> output(numBlocks);
+  for(int i=0; i<numBlocks; ++i)
+    output.at(i) = target->inputSizes(i);
+
+  return output;
 }

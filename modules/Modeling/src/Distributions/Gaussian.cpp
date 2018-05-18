@@ -5,168 +5,250 @@
 using namespace muq::Utilities;
 using namespace muq::Modeling;
 
-Gaussian::Gaussian(boost::any const& obj, Gaussian::Mode const mode) :
-  Distribution(),
-  mode(mode),
-  dim(algebra->Size(obj,0)),
-  mean(mode==Gaussian::Mode::Mean? obj : boost::none),
-  cov(mode==Gaussian::Mode::Covariance? SaveCovPrec(obj) : boost::none),
-  prec(mode==Gaussian::Mode::Precision? SaveCovPrec(obj) : boost::none) {
-  ComputeScalingConstant();
+Gaussian::Gaussian(unsigned int dim,
+                   InputMask    extraInputs) : Distribution(dim, GetExtraSizes(dim, extraInputs)),
+                                               mode(ModeFromExtras(extraInputs)),
+                                               inputTypes(extraInputs),
+                                               mean(Eigen::VectorXd::Zero(dim)),
+                                               covPrec(Eigen::VectorXd::Ones(dim))
+{}
+
+Gaussian::Gaussian(Eigen::VectorXd const& muIn,
+                   InputMask              extraInputs) : Distribution(muIn.size(), GetExtraSizes(muIn.size(), extraInputs)),
+                                                         mode(ModeFromExtras(extraInputs)),
+                                                         inputTypes(extraInputs),
+                                                         mean(muIn),
+                                                         covPrec(Eigen::VectorXd::Ones(muIn.size()))
+{}
+
+
+Gaussian::Gaussian(Eigen::VectorXd const& muIn,
+                   Eigen::MatrixXd const& obj,
+                   Gaussian::Mode         modeIn,
+                   InputMask              extraInputs) : Distribution(muIn.size(), GetExtraSizes(muIn.size(), extraInputs)),
+                                                         mode(modeIn),
+                                                         inputTypes(extraInputs),
+                                                         mean(muIn),
+                                                         covPrec(obj)
+{
+  CheckInputTypes(extraInputs, mode);
+  assert(mean.rows()==covPrec.rows());
+  if(covPrec.cols()>1)
+    assert(mean.rows()==covPrec.cols());
 }
 
-Gaussian::Gaussian(boost::any const& mean, boost::any const& obj, Gaussian::Mode const mode) :
-  Distribution(),
-  mode(mode),
-  dim(algebra->Size(obj,0)),
-  mean(mean),
-  cov(mode==Gaussian::Mode::Covariance? SaveCovPrec(obj) : boost::none),
-  prec(mode==Gaussian::Mode::Precision? SaveCovPrec(obj) : boost::none) {
-  ComputeScalingConstant();
+void Gaussian::CheckInputTypes(InputMask extraInputs, Mode mode)
+{
+  if( (((extraInputs & ExtraInputs::DiagCovariance)>0) || ((extraInputs & ExtraInputs::FullCovariance)>0)) && (mode == Mode::Precision))
+    throw std::logic_error("Extra arguments passed to Gaussian constructor do not match the covariance mode.");
+  if( (((extraInputs & ExtraInputs::DiagPrecision)>0) || ((extraInputs & ExtraInputs::FullPrecision)>0)) && (mode == Mode::Covariance))
+    throw std::logic_error("Extra arguments passed to Gaussian constructor do not match the covariance mode.");
 }
 
-Gaussian::~Gaussian() {}
+Gaussian::Mode Gaussian::ModeFromExtras(InputMask extraInputs)
+{
+  if( ((extraInputs & ExtraInputs::DiagCovariance)>0) || ((extraInputs & ExtraInputs::FullCovariance)>0)){
+    return Gaussian::Mode::Covariance;
+  }else{
+    return Gaussian::Mode::Precision;
+  }
+}
 
-void Gaussian::ComputeScalingConstant() {
-  scalingConstant = dim*std::log(2.0*M_PI);
+Eigen::VectorXi Gaussian::GetExtraSizes(unsigned dim, InputMask extraInputs)
+{
+  Eigen::VectorXi output(2);
+  int numExtras = 0;
+
+  if((extraInputs & ExtraInputs::Mean)>0){
+    output(0) = dim;
+    numExtras++;
+  }
+
+  if( ((extraInputs & ExtraInputs::DiagCovariance)>0) || ((extraInputs & ExtraInputs::DiagPrecision)>0)){
+    output(numExtras) = dim;
+    numExtras++;
+  }
+
+
+  if( ((extraInputs & ExtraInputs::FullCovariance)>0) || ((extraInputs & ExtraInputs::FullPrecision)>0)){
+    assert(numExtras<2);
+    output(numExtras) = dim*dim;
+    numExtras++;
+  }
+
+  return output.head(numExtras);
+}
+
+
+Eigen::MatrixXd Gaussian::GetCovariance() const
+{
+  if(mode==Mode::Covariance){
+    if(covPrec.cols()==1){
+      return covPrec.col(0).asDiagonal();
+    }else{
+      return covPrec;
+    }
+  }else{
+    if(covPrec.cols()==1){
+      return covPrec.col(0).array().inverse().matrix().asDiagonal();
+    }else{
+      return covPrec.selfadjointView<Eigen::Lower>().llt().solve(Eigen::MatrixXd::Identity(mean.rows(),mean.rows()));
+    }
+  }
+}
+
+Eigen::MatrixXd Gaussian::GetPrecision() const
+{
+  if(mode==Mode::Precision){
+    if(covPrec.cols()==1){
+      return covPrec.col(0).asDiagonal();
+    }else{
+      return covPrec;
+    }
+  }else{
+    if(covPrec.cols()==1){
+      return covPrec.col(0).array().inverse().matrix().asDiagonal();
+    }else{
+      return covPrec.selfadjointView<Eigen::Lower>().llt().solve(Eigen::MatrixXd::Identity(mean.rows(),mean.rows()));
+    }
+  }
+}
+
+
+void Gaussian::ComputeNormalization() {
+  logNormalization = -0.5*Dimension()*std::log(2.0*M_PI);
 
   if( mode==Gaussian::Mode::Covariance ) {
-    scalingConstant += algebra->LogDeterminate(*cov);
-  } else if( mode==Gaussian::Mode::Precision ) {
-    scalingConstant -= algebra->LogDeterminate(*prec);
-  }
-}
-
-boost::any Gaussian::SaveCovPrec(boost::any const& in) {
-  // for Eigen matrices, we can pre compute the cholesky
-  if( in.type()==typeid(Eigen::MatrixXd) ) {
-    Eigen::LLT<Eigen::MatrixXd> chol;
-    chol.compute(boost::any_cast<Eigen::MatrixXd const&>(in));
-    
-    return chol;
-  }
-
-  return in;
-}
-
-void Gaussian::ResetHyperparameters(ref_vector<boost::any> const& hyperparas) {
-  // reset the hyper parameters
-  for( auto hp : hyperparas ) {
-    // get the hyperparameter
-    const std::pair<boost::any, Gaussian::Mode>& hyperpara = boost::any_cast<std::pair<boost::any, Gaussian::Mode> >(hp);
-    
-    switch( hyperpara.second ) {
-    case Gaussian::Mode::Mean: {
-      // reset the mean
-      mean = hyperpara.first;
-      break;
+    if(covPrec.cols()==1){
+      logNormalization -= 0.5 * covPrec.array().log().sum();
+    }else{
+      logNormalization -= std::log(sqrtCovPrec.matrixL().determinant());
     }
+  } else if( mode==Gaussian::Mode::Precision ) {
+    if(covPrec.cols()==1){
+      logNormalization += 0.5 * covPrec.array().log().sum();
+    }else{
+      logNormalization += std::log(sqrtCovPrec.matrixL().determinant());
+    }
+  }
+}
+
+void Gaussian::ResetHyperparameters(ref_vector<Eigen::VectorXd> const& inputs)
+{
+  unsigned currInd = 0;
+
+  if((inputTypes & ExtraInputs::Mean)>0){
+    assert(inputs.at(currInd).get().size() == mean.size());
+    mean = inputs.at(currInd);
+    currInd++;
+  }
+
+  if(((inputTypes & ExtraInputs::DiagCovariance)>0) || ((inputTypes & ExtraInputs::DiagPrecision)>0)){
+    assert(inputs.at(currInd).get().size() == covPrec.rows());
+    covPrec = inputs.at(currInd).get();
+  }else if(((inputTypes & ExtraInputs::FullCovariance)>0) || ((inputTypes & ExtraInputs::FullPrecision)>0)){
+    assert(inputs.at(currInd).get().size() == covPrec.rows()*covPrec.cols());
+    Eigen::Map<const Eigen::MatrixXd> mat(inputs.at(currInd).get().data(), covPrec.rows(), covPrec.cols());
+    covPrec = mat;
+    sqrtCovPrec = covPrec.selfadjointView<Eigen::Lower>().llt();
+  }
+}
+
+double Gaussian::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) {
+
+  ResetHyperparameters(ref_vector<Eigen::VectorXd>(inputs.begin()+1, inputs.end()));
+
+  Eigen::VectorXd delta = inputs.at(0).get() - mean;
+
+  switch( mode ) {
     case Gaussian::Mode::Covariance: {
-      SetCovariance(hyperpara.first);
-      break;
+      if(covPrec.cols()==1){
+        return logNormalization - 0.5 * delta.dot( (covPrec.col(0).array().inverse() * delta.array()).matrix());
+      }else{
+        return logNormalization - 0.5 * delta.dot( sqrtCovPrec.solve(delta));
+      }
     }
     case Gaussian::Mode::Precision: {
-      SetPrecision(hyperpara.first);
-      break;
+      if(covPrec.cols()==1){
+        return logNormalization - 0.5 * delta.dot( (covPrec.col(0).array() * delta.array()).matrix());
+      }else{
+        return logNormalization - 0.5 * delta.dot( sqrtCovPrec.matrixL() * delta );
+      }
     }
     default: {
-      // something is wrong
       assert(false);
-      break;
-    }
+      return -std::numeric_limits<double>::infinity();
     }
   }
 }
 
-double Gaussian::LogDensityImpl(ref_vector<boost::any> const& inputs) {
-  ResetHyperparameters(ref_vector<boost::any>(inputs.begin()+1, inputs.end()));
+Eigen::VectorXd Gaussian::SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) {
 
-  boost::any delta = inputs[0].get();
-  if( mean ) { delta = algebra->Subtract(*mean, delta); }
+  ResetHyperparameters(ref_vector<Eigen::VectorXd>(inputs.begin(), inputs.end()));
 
-  switch( mode ) {
-  case Gaussian::Mode::Covariance: {
-    return -0.5*(scalingConstant+algebra->InnerProduct(delta, algebra->ApplyInverse(*cov, delta)));
-  }
-  case Gaussian::Mode::Precision: {
-    return -0.5*(scalingConstant+algebra->InnerProduct(delta, algebra->Apply(*prec, delta)));
-  }
-  case Gaussian::Mode::Mean: {
-    return -0.5*(scalingConstant+algebra->InnerProduct(delta, delta));
-  }
-  default: {
-    assert(false);
-    return 0.0;
-  }
-  }
-}
-
-boost::any Gaussian::SampleImpl(ref_vector<boost::any> const& inputs) {
-  ResetHyperparameters(ref_vector<boost::any>(inputs.begin(), inputs.end()));
-    
-  // make sure the dimension is nonzero
-  assert(dim>0);
-
-  boost::any stdnrm;
-  if( dim==1 ) {
-    stdnrm = (double)RandomGenerator::GetNormal();
-  } else {
-    stdnrm = (Eigen::VectorXd)RandomGenerator::GetNormal(dim);
-  }
+  Eigen::VectorXd z = RandomGenerator::GetNormal(mean.rows());
 
   switch( mode ) {
   case Gaussian::Mode::Covariance: {
-    if( !covSqrt ) { covSqrt = algebra->SquareRoot(*cov); }
-    return mean? algebra->Add(algebra->Apply(*covSqrt, stdnrm), *mean) : algebra->Apply(*covSqrt, stdnrm);
+    if(covPrec.cols()==1){
+      return mean + covPrec.col(0).array().sqrt().matrix().asDiagonal() * z;
+    }else{
+      return mean + sqrtCovPrec.matrixL() * z;
+    }
   }
   case Gaussian::Mode::Precision: {
-    if( !precSqrt ) { precSqrt = algebra->SquareRoot(*prec); }
-
-    return mean? algebra->Add(algebra->ApplyInverse(*precSqrt, stdnrm), *mean) : algebra->ApplyInverse(*precSqrt, stdnrm);
-  }
-  case Gaussian::Mode::Mean: {
-    return algebra->Add(stdnrm, *mean);
+    if(covPrec.cols()==1){
+      return mean + covPrec.col(0).array().inverse().sqrt().matrix().asDiagonal() * z;
+    }else{
+      return mean + sqrtCovPrec.matrixL().solve( z );
+    }
   }
   default: {
     assert(false);
-    return boost::none;
+    return Eigen::VectorXd();
   }
   }
 }
 
 unsigned int Gaussian::Dimension() const {
-  return dim;
+  return mean.rows();
 }
 
-boost::any Gaussian::GetCovariance() const {
-  assert(cov);
-  return *cov;
+void Gaussian::SetMean(Eigen::VectorXd const& newMu)
+{
+  assert(newMu.rows() == mean.rows());
+
+  mean = newMu;
 }
 
-void Gaussian::SetCovariance(boost::any const& newcov) {
-  // reset the mode
+void Gaussian::SetCovariance(Eigen::MatrixXd const& newCov) {
+
   mode = Gaussian::Mode::Covariance;
-  
-  // reset the covaraince and the precision
-  prec = boost::none;
-  precSqrt = boost::none;
-  cov = SaveCovPrec(newcov);
-  covSqrt = boost::none;
-  
+
+  assert(newCov.rows() == mean.rows());
+
+  if(newCov.cols()>1)
+    assert(newCov.cols() == mean.rows());
+
+  covPrec = newCov;
+  sqrtCovPrec = covPrec.selfadjointView<Eigen::Lower>().llt();
+
   // recompute the scaling constant
-  ComputeScalingConstant();
+  ComputeNormalization();
 }
 
-void Gaussian::SetPrecision(boost::any const& newprec) {
-  // reset the mode
+void Gaussian::SetPrecision(Eigen::MatrixXd const& newPrec) {
+
   mode = Gaussian::Mode::Precision;
-  
-  // reset the covaraince and the precision
-  prec = SaveCovPrec(newprec);
-  precSqrt = boost::none;
-  cov = boost::none;
-  covSqrt = boost::none;
-  
+
+  assert(newPrec.rows() == mean.rows());
+
+  if(newPrec.cols()>1)
+    assert(newPrec.cols() == mean.rows());
+
+  covPrec = newPrec;
+  sqrtCovPrec = covPrec.selfadjointView<Eigen::Lower>().llt();
+
   // recompute the scaling constant
-  ComputeScalingConstant();
+  ComputeNormalization();
 }

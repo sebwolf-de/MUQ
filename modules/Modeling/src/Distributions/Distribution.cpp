@@ -6,10 +6,6 @@
 
 using namespace muq::Modeling;
 
-Distribution::~Distribution() {}
-
-Distribution::Distribution() : WorkPiece() {}
-
 std::shared_ptr<Density> Distribution::AsDensity()
 {
   return std::make_shared<Density>(shared_from_this());
@@ -20,86 +16,59 @@ std::shared_ptr<RandomVariable> Distribution::AsVariable()
   return std::make_shared<RandomVariable>(shared_from_this());
 }
 
-void Distribution::EvaluateImpl(ref_vector<boost::any> const& inputs) {
+ref_vector<const Eigen::VectorXd> Distribution::ToRefVector(std::vector<Eigen::VectorXd> const& vec) const {
 
-  // get the mode
-  const Distribution::Mode mode = boost::any_cast<Distribution::Mode const>(inputs[0]);
+  ref_vector<const Eigen::VectorXd> refs;
+  refs.reserve(vec.size());
 
-  // the output is either the log-density or a sample
-  outputs.resize(1);
+  // populate the input vector
+  for(int i=0; i<vec.size(); ++i)
+    refs.push_back(std::cref(vec.at(i)));
 
-  switch( mode ) { // are we evaluting the log density or sampling?
-  case Distribution::Mode::EvaluateLogDensity: { // if we are evaluating the log density ...
-    // ... store the log density
-    outputs[0] = LogDensity(ref_vector<boost::any>(inputs.begin()+1, inputs.end()));
-    break;
-  }
-  case Distribution::Mode::SampleDistribution: { // if we are sampling the distribution
-    // .. store the sample
-    outputs[0] = Sample(ref_vector<boost::any>(inputs.begin()+1, inputs.end()));
-    break;
-  }
-  default: {
-    // something went wrong ...
-    assert(false);
-  }
-  }
+  return refs;
 }
 
-double Distribution::LogDensity(ref_vector<boost::any> const& inputs) {
-  // the first input is always whether we are evaluting the log-density or sampling; we either have n-1 inputs or they are unknown
-  assert(numInputs-1==inputs.size() || numInputs<0);
-
+double Distribution::LogDensity(ref_vector<Eigen::VectorXd> const& inputs) {
   return LogDensityImpl(inputs);
 }
 
-// default behavior of log-density is to return infinity
-double Distribution::LogDensityImpl(ref_vector<boost::any> const& inputs) {
 
-  throw muq::NotImplementedError("LogDensityImpl was not implemented for class " + std::string(typeid(*this).name()) );
-  return -std::numeric_limits<double>::infinity();
-}
-
-std::vector<std::string> Distribution::AddModeInput(std::vector<std::string> const& types) {
-  // copy the old types
-  std::vector<std::string> new_types(types);
-
-  // the first input is the mode
-  new_types.insert(new_types.begin(), typeid(Distribution::Mode).name());
-
-  // return the new types
-  return new_types;
-}
-
-std::map<unsigned int, std::string> Distribution::AddModeInput(std::map<unsigned int, std::string> const& types) {
-  // the first input is the mode
-  std::map<unsigned int, std::string> new_types;
-  new_types[0] = typeid(Distribution::Mode).name();
-
-  // store all the other types
-  for( auto it : types ) {
-    new_types[it.first+1] = it.second;
-  }
-
-  return new_types;
-}
-
-boost::any Distribution::Sample(ref_vector<boost::any> const& inputs) {
-  // the first input is always whether we are evaluting the log-density or sampling; we either have n-1 inputs or they are unknown
-  assert(numInputs-1==inputs.size() || numInputs<0);
-
+Eigen::VectorXd Distribution::Sample(ref_vector<Eigen::VectorXd> const& inputs) {
   return SampleImpl(inputs);
 }
 
-boost::any Distribution::Sample() {
-  // the first input is always whether we are evaluting the log-density or sampling; we either have 1 input or they are unknown
-  assert(numInputs==1 || numInputs<0);
-
-  return Sample(ref_vector<boost::any>());
+Eigen::VectorXd Distribution::Sample() {
+  return Sample(ref_vector<Eigen::VectorXd>());
 }
 
-boost::any Distribution::SampleImpl(ref_vector<boost::any> const& inputs) {
+Eigen::VectorXd Distribution::GradLogDensity(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs)
+{
+  assert(wrt<inputs.size());
+  return GradLogDensityImpl(wrt, inputs);
+}
 
-  throw muq::NotImplementedError("SampleImpl was not implemented for class " + std::string(typeid(*this).name()) );
-  return boost::none;
+Eigen::VectorXd Distribution::GradLogDensityImpl(unsigned int                       wrt,
+                                                 ref_vector<Eigen::VectorXd> const& inputs)
+{
+  // Default to finite difference
+  ref_vector<Eigen::VectorXd> newInputs = inputs;
+  Eigen::VectorXd newIn = newInputs.at(wrt).get();
+  newInputs.at(wrt) = std::cref(newIn);
+
+  const double f0 = LogDensity(newInputs);
+
+  const int dim = inputs.at(wrt).get().size();
+
+  Eigen::VectorXd output(dim);
+  for(int i=0; i<dim; ++i){
+
+    double eps = std::max(1e-8, 1e-10*std::abs(inputs.at(wrt).get()(i)));
+    newIn(i) += eps;
+
+    double newF = LogDensity(newInputs);
+    output(i) = (newF-f0)/eps;
+    newIn(i) = inputs.at(wrt).get()(i);
+  }
+
+  return output;
 }

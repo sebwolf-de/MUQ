@@ -15,8 +15,8 @@ MonotoneExpansion::MonotoneExpansion(std::shared_ptr<BasisExpansion> monotonePar
 }
 
 MonotoneExpansion::MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>> const& generalPartsIn,
-                                     std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn) : WorkPiece(std::vector<std::string>({typeid(Eigen::VectorXd).name(), typeid(Eigen::VectorXd).name()}),
-                                                                                                                      std::vector<std::string>({typeid(Eigen::VectorXd).name()})),
+                                     std::vector<std::shared_ptr<BasisExpansion>> const& monotonePartsIn) : ModPiece(monotonePartsIn.size()*Eigen::VectorXi::Ones(1),
+                                                                                                                     monotonePartsIn.size()*Eigen::VectorXi::Ones(1)),
                                                                                                             generalParts(generalPartsIn),
                                                                                                             monotoneParts(monotonePartsIn)
 {
@@ -143,7 +143,7 @@ Eigen::VectorXd MonotoneExpansion::EvaluateForward(Eigen::VectorXd const& x) con
 
   // Fill in the general parts
   for(int i=0; i<generalParts.size(); ++i)
-    refPt(i) += boost::any_cast<Eigen::VectorXd>(generalParts.at(i)->Evaluate(x).at(0))(0);
+    refPt(i) += generalParts.at(i)->Evaluate(x).at(0)(0);
 
   // Now add the monotone part
   Eigen::VectorXd quadEvals(quadPts.size());
@@ -153,12 +153,12 @@ Eigen::VectorXd MonotoneExpansion::EvaluateForward(Eigen::VectorXd const& x) con
     Eigen::VectorXd evalPt = x.head(i+1);
     evalPt(i) = x(i) * quadPts(0);
 
-    double polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
+    double polyEval = monotoneParts.at(i)->Evaluate(evalPt).at(0)(0);
 
     quadEvals(0) = polyEval*polyEval;
     for(int k=1; k<quadPts.size(); ++k){
       evalPt(i) = x(i) * quadPts(k);
-      polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
+      polyEval = monotoneParts.at(i)->Evaluate(evalPt).at(0)(0);
       quadEvals(k) = polyEval*polyEval;
     }
     refPt(i) += quadEvals.dot(quadWeights)*x(i);
@@ -166,19 +166,16 @@ Eigen::VectorXd MonotoneExpansion::EvaluateForward(Eigen::VectorXd const& x) con
 
   return refPt;
 }
-void MonotoneExpansion::EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs)
+void MonotoneExpansion::EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs)
 {
 
   // Update the coefficients if need be
   if(inputs.size()>1){
-    Eigen::VectorXd const& coeffs = *boost::any_cast<Eigen::VectorXd>(&inputs.at(1).get());
-    SetCoeffs(coeffs);
+    SetCoeffs(inputs.at(1).get());
   }
 
-  Eigen::VectorXd const& x = *boost::any_cast<Eigen::VectorXd>(&inputs.at(0).get());
-
   outputs.resize(1);
-  outputs.at(0) = EvaluateForward(x);
+  outputs.at(0) = EvaluateForward(inputs.at(0).get());
 }
 
 
@@ -191,7 +188,7 @@ Eigen::MatrixXd MonotoneExpansion::JacobianWrtX(Eigen::VectorXd const& x) const{
 
   // Add all of the general parts
   for(int i=0; i<generalParts.size(); ++i){
-    Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(0,0,x));
+    Eigen::MatrixXd partialJac = generalParts.at(i)->Jacobian(0,0,x);
     jac.block(i,0,1,i) += partialJac.block(0,0,1,i);
   }
 
@@ -201,8 +198,8 @@ Eigen::MatrixXd MonotoneExpansion::JacobianWrtX(Eigen::VectorXd const& x) const{
 
     for(int k=0; k<quadPts.size(); ++k){
       evalPt(i) = x(i) * quadPts(k);
-      polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
-      polyGrad = boost::any_cast<Eigen::MatrixXd>(monotoneParts.at(i)->Jacobian(0,0,evalPt));
+      polyEval = monotoneParts.at(i)->Evaluate(evalPt).at(0)(0);
+      polyGrad = monotoneParts.at(i)->Jacobian(0,0,evalPt);
       jac.block(i,0,1,i) += 2.0 * x(i) * quadWeights(k) * polyEval * polyGrad.block(0,0,1,i);
       jac(i,i) += quadWeights(k) * (polyEval * polyEval + 2.0*x(i)*polyGrad(i)*polyEval*quadPts(k));
     }
@@ -212,17 +209,15 @@ Eigen::MatrixXd MonotoneExpansion::JacobianWrtX(Eigen::VectorXd const& x) const{
 }
 
 
-void MonotoneExpansion::JacobianImpl(unsigned int const                           wrtIn,
-                                     unsigned int const                           wrtOut,
-                                     muq::Modeling::ref_vector<boost::any> const& inputs)
+void MonotoneExpansion::JacobianImpl(unsigned int const                                wrtIn,
+                                     unsigned int const                                wrtOut,
+                                     muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs)
 {
-  assert(wrtIn<2);
-  if(inputs.size()>1){
-    Eigen::VectorXd const& coeffs = *boost::any_cast<Eigen::VectorXd>(&inputs.at(1).get());
-    SetCoeffs(coeffs);
+  if(inputSizes.size()>1){
+    SetCoeffs(inputs.at(1).get());
   }
 
-  Eigen::VectorXd const& x = *boost::any_cast<Eigen::VectorXd>(&inputs.at(0).get());
+  Eigen::VectorXd const& x = inputs.at(0);
   assert(x.size()==monotoneParts.size());
 
   Eigen::MatrixXd jac;
@@ -241,7 +236,7 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
     // Fill in the general portion of the jacobian
     unsigned currCoeff = 0;
     for(int i=0; i<generalParts.size(); ++i){
-      Eigen::MatrixXd partialJac = boost::any_cast<Eigen::MatrixXd>(generalParts.at(i)->Jacobian(1,0,x));
+      Eigen::MatrixXd partialJac = generalParts.at(i)->Jacobian(0,1,x);
       jac.block(i, currCoeff, 1, generalParts.at(i)->NumTerms()) += partialJac;
       currCoeff += generalParts.at(i)->NumTerms();
     }
@@ -254,8 +249,8 @@ void MonotoneExpansion::JacobianImpl(unsigned int const                         
 
       for(int k=0; k<quadPts.size(); ++k){
         evalPt(i) = x(i) * quadPts(k);
-        polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
-        polyGrad = boost::any_cast<Eigen::MatrixXd>(monotoneParts.at(i)->Jacobian(1,0,evalPt));
+        polyEval = monotoneParts.at(i)->Evaluate(evalPt).at(0)(0);
+        polyGrad = monotoneParts.at(i)->Jacobian(0,1,evalPt);
         jac.block(i,currCoeff,1,monotoneParts.at(i)->NumTerms()) += 2.0 * x(i) * quadWeights(k) * polyEval * polyGrad;
       }
 
@@ -282,9 +277,7 @@ double MonotoneExpansion::LogDeterminant(Eigen::VectorXd const& evalPt,
 }
 double MonotoneExpansion::LogDeterminant(Eigen::VectorXd const& evalPt)
 {
-  Eigen::MatrixXd jacobian = boost::any_cast<Eigen::MatrixXd>(Jacobian(0,0,evalPt));
-
-  return jacobian.diagonal().array().log().sum();
+  return Jacobian(0,0,evalPt).diagonal().array().log().sum();
 }
 
 /** Returns the gradient of the Jacobian log determinant with respect to the coefficients. */
@@ -317,10 +310,10 @@ Eigen::VectorXd MonotoneExpansion::GradLogDeterminant(Eigen::VectorXd const& x)
 
     for(int k=0; k<quadPts.size(); ++k){
       evalPt(i) = x(i) * quadPts(k);
-      polyEval = boost::any_cast<Eigen::VectorXd>(monotoneParts.at(i)->Evaluate(evalPt).at(0))(0);
-      polyGradX = boost::any_cast<Eigen::MatrixXd>(monotoneParts.at(i)->Jacobian(0,0,evalPt));
-      polyGradC = boost::any_cast<Eigen::MatrixXd>(monotoneParts.at(i)->Jacobian(1,0,evalPt));
-      polyD2 = monotoneParts.at(i)->SecondDerivative(0, 0, 1, evalPt);
+      polyEval  = monotoneParts.at(i)->Evaluate(evalPt).at(0)(0);
+      polyGradX = monotoneParts.at(i)->Jacobian(0,0,evalPt);
+      polyGradC = monotoneParts.at(i)->Jacobian(0,1,evalPt);
+      polyD2    = monotoneParts.at(i)->SecondDerivative(0, 0, 1, evalPt);
 
       part1 += quadWeights(k) * (polyEval * polyEval + 2.0*x(i)*polyGradX(i)*polyEval*quadPts(k));
       part2 += 2.0 * quadWeights(k) * (polyEval * polyGradC + x(i) * quadPts(k) * (polyEval*polyD2.row(i) + polyGradX(i)*polyGradC)).transpose();

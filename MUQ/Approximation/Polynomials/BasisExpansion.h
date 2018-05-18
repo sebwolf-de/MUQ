@@ -1,7 +1,7 @@
 #ifndef BASISEXPANSION_H
 #define BASISEXPANSION_H
 
-#include "MUQ/Modeling/WorkPiece.h"
+#include "MUQ/Modeling/ModPiece.h"
 
 #include "MUQ/Approximation/Polynomials/IndexedScalarBasis.h"
 
@@ -56,7 +56,7 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
                  @endcode
         @seealso muq::Utilities::MultiIndexSet, muq::Utilities::IndexScalarBasis, muq::Modeling::WorkPiece
     */
-    class BasisExpansion : public muq::Modeling::WorkPiece{
+    class BasisExpansion : public muq::Modeling::ModPiece{
 
       friend class MonotoneExpansion;
 
@@ -65,18 +65,21 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
       /** Construct expansion by specifying basis components (i.e., the family for each \f$\phi_i\f$).
           Initializes the expansion to a single constant (i.e., \f$\alpha=0\f$) term with coefficient \f$0\f$.
       */
-      BasisExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn);
+      BasisExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
+                     bool                                                    coeffInput=false);
 
       /** Construct the expansion by specifying both the basis families and multi-indices.
           Sets all coefficients in the expansion to zero.
       */
       BasisExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
-                     std::shared_ptr<muq::Utilities::MultiIndexSet>          multisIn);
+                     std::shared_ptr<muq::Utilities::MultiIndexSet>          multisIn,
+                     bool                                                    coeffInput=false);
 
       /** Construct the expansion by specifying all ingredients: the basis family, multi-indices, and coefficients. */
       BasisExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
                      std::shared_ptr<muq::Utilities::MultiIndexSet>          multisIn,
-                     Eigen::MatrixXd                                  const& coeffsIn);
+                     Eigen::MatrixXd                                  const& coeffsIn,
+                     bool                                                    coeffInput=false);
 
       virtual ~BasisExpansion() = default;
 
@@ -107,13 +110,20 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
 
     protected:
 
-      virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
+      static Eigen::VectorXi GetInputSizes(std::shared_ptr<muq::Utilities::MultiIndexSet> multisIn,
+                                           Eigen::MatrixXd                         const& coeffsIn,
+                                           bool                                           coeffInput);
+
+      static Eigen::VectorXi GetOutputSizes(std::shared_ptr<muq::Utilities::MultiIndexSet> multisIn,
+                                            Eigen::MatrixXd                         const& coeffsIn);
+
+      virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) override;
 
       virtual void JacobianImpl(unsigned int const                           wrtIn,
                                 unsigned int const                           wrtOut,
-                                muq::Modeling::ref_vector<boost::any> const& inputs) override;
+                                muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) override;
 
-      Eigen::VectorXd const& ProcessInputs(muq::Modeling::ref_vector<boost::any> const& inputs);
+      void ProcessCoeffs(Eigen::VectorXd const& newCoeffs);
 
       /** Evaluates all the terms in the expansion, but does not multiply by coefficients. */
       Eigen::VectorXd GetAllTerms(Eigen::VectorXd const& x) const;

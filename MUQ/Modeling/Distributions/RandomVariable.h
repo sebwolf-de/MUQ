@@ -2,59 +2,26 @@
 #define RANDOMVARIABLE_H
 
 #include "MUQ/Modeling/Distributions/Distribution.h"
+#include "MUQ/Modeling/ModPiece.h"
 
 namespace muq{
   namespace Modeling{
 
-    class RandomVariable : public WorkPiece{
+    class RandomVariable : public Distribution, public ModPiece{
 
     public:
       RandomVariable(std::shared_ptr<Distribution> distIn);
 
       virtual ~RandomVariable() = default;
 
-      boost::any Sample(ref_vector<boost::any> const& inputs);
-      boost::any Sample(std::vector<boost::any> const& inputs){return Sample(ToRefVector(inputs));};
-
-      boost::any Sample();
-
-
     protected:
       std::shared_ptr<Distribution> dist;
 
-      boost::any input0;
+      virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
-      virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
-
-      virtual void JacobianImpl(unsigned int           const  wrtIn,
-                                unsigned int           const  wrtOut,
-                                ref_vector<boost::any> const& inputs) override;
-
-      virtual void JacobianActionImpl(unsigned int           const  wrtIn,
-                                      unsigned int           const  wrtOut,
-                                      boost::any             const& vec,
-                                      ref_vector<boost::any> const& inputs) override;
-
-      virtual void JacobianTransposeActionImpl(unsigned int           const  wrtIn,
-                                               unsigned int           const  wrtOut,
-                                               boost::any             const& vec,
-                                               ref_vector<boost::any> const& inputs) override;
-
-    private:
-
-      template<typename ith, typename... Args>
-      inline double Sample(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
-        const int inputNum = inputs.size();
-        assert(numInputs<0 || inputNum<numInputs);
-        assert(CheckInputType(inputNum, typeid(in).name()));
-
-        const boost::any in_any(in);
-        inputs.push_back(std::cref(in_any));
-        return Sample(inputs, args...);
-      }
-
-
-      ref_vector<boost::any> CreateInputs(ref_vector<boost::any> const& oldInputs);
+      virtual double LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
+      virtual Eigen::VectorXd GradLogDensityImpl(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs) override;
+      virtual Eigen::VectorXd SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
     }; // class RandomVariable
 

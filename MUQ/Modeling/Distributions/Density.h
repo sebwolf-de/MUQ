@@ -2,65 +2,43 @@
 #define DENSITY_H
 
 #include "MUQ/Modeling/Distributions/Distribution.h"
+#include "MUQ/Modeling/ModPiece.h"
 
 namespace muq{
   namespace Modeling{
 
-    class Density : public WorkPiece{
+    class Density : public Distribution, public ModPiece{
 
     public:
       Density(std::shared_ptr<Distribution> distIn);
 
       virtual ~Density() = default;
 
-      virtual double LogDensity(ref_vector<boost::any> const& inputs);
-      virtual double LogDensity(std::vector<boost::any> const& inputs){return LogDensity(ToRefVector(inputs));};
-
-      template<typename... Args>
-	    inline double LogDensity(Args... args) {
-	      ref_vector<boost::any> inputs;
-	      inputs.reserve( (numInputs<0) ? 0 : numInputs-1);
-	      return LogDensity(inputs, args...);
-      }
-
-
     protected:
       std::shared_ptr<Distribution> dist;
 
-      boost::any input0;
+      virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
-      virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
+      virtual double LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
-      virtual void JacobianImpl(unsigned int           const  wrtIn,
-                                unsigned int           const  wrtOut,
-                                ref_vector<boost::any> const& inputs) override;
+      virtual Eigen::VectorXd GradLogDensityImpl(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs) override;
+      virtual Eigen::VectorXd SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
-      virtual void JacobianActionImpl(unsigned int           const  wrtIn,
-                                      unsigned int           const  wrtOut,
-                                      boost::any             const& vec,
-                                      ref_vector<boost::any> const& inputs) override;
+      static Eigen::VectorXi GetInputSizes(std::shared_ptr<Distribution> distIn);
 
-      virtual void JacobianTransposeActionImpl(unsigned int           const  wrtIn,
-                                               unsigned int           const  wrtOut,
-                                               boost::any             const& vec,
-                                               ref_vector<boost::any> const& inputs) override;
+      void GradientImpl(unsigned int                const  outputDimWrt,
+                        unsigned int                const  inputDimWrt,
+                        ref_vector<Eigen::VectorXd> const& input,
+                        Eigen::VectorXd             const& sensitivity) override;
 
-    private:
+      void JacobianImpl(unsigned int                const  outputDimWrt,
+                        unsigned int                const  inputDimWrt,
+                        ref_vector<Eigen::VectorXd> const& input) override;
 
-      template<typename ith, typename... Args>
-      inline double LogDensity(ref_vector<boost::any>& inputs, ith const& in, Args... args) {
-        const int inputNum = inputs.size();
-        assert(numInputs<0 || inputNum<numInputs);
-        assert(CheckInputType(inputNum, typeid(in).name()));
-
-        const boost::any in_any(in);
-        inputs.push_back(std::cref(in_any));
-        return LogDensity(inputs, args...);
-      }
-
-
-      ref_vector<boost::any> CreateInputs(ref_vector<boost::any> const& oldInputs);
-
+      void ApplyJacobianImpl(unsigned int                const  outputDimWrt,
+                             unsigned int                const  inputDimWrt,
+                             ref_vector<Eigen::VectorXd> const& input,
+                             Eigen::VectorXd             const& vec) override;
     }; // class Density
 
   } // namespace Modeling

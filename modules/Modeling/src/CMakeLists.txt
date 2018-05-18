@@ -27,6 +27,8 @@ CreateCompileGroup(
     WorkGraphNode.cpp
     WorkGraphEdge.cpp
 
+    ModPiece.cpp
+
     WorkGraphPiece.cpp
     LinearSDE.cpp
 
@@ -53,15 +55,14 @@ CreateCompileGroup(
     Distributions/RandomVariable.cpp
 )
 
-CreateCompileGroup(
-    MODELING_SUNDIALS_MODELS
-    "ODE integrators using Sundials"
-    muqModeling
-    "MODELING_CORE"
-    "EIGEN3;BOOST;SUNDIALS"
-    ""
-    ODEData.cpp
-    ODEBase.cpp
-    ODE.cpp
-    RootfindingIVP.cpp
-)
+#CreateCompileGroup(
+#    MODELING_SUNDIALS_MODELS
+#    "ODE integrators using Sundials"
+#    muqModeling
+#    "MODELING_CORE"
+#    "EIGEN3;BOOST;SUNDIALS"
+#    ""
+#    ODEData.cpp
+#    ODE.cpp
+#    RootfindingIVP.cpp
+#)

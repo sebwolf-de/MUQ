@@ -2,10 +2,10 @@ CreateTestGroup(
     MODELING_CORE
 
     WorkPieceTests.cpp
-    WorkPieceDerivativesTests.cpp
+    #WorkPieceDerivativesTests.cpp
     WorkGraphTests.cpp
     WorkGraphPieceTests.cpp
-
+    ModPieceTests.cpp
     ConstantPieceTests.cpp
     IdentityPieceTests.cpp
 

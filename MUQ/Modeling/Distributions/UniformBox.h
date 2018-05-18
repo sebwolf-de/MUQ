@@ -11,9 +11,9 @@
 namespace muq {
   namespace Modeling {
 
-    /** @class UniformBox 
+    /** @class UniformBox
         @ingroup Distributions
-        @brief Defines a normalized uniform distribution over a bounded rectangular domain. 
+        @brief Defines a normalized uniform distribution over a bounded rectangular domain.
 @details This class defines a uniform distribution between coordinate-aligned lower and upper bounds.  Let \f$\theta \f$ denote the input random variable with components \f$\theta_i\f$ for \f$i\in \{1,2,\ldots, D\}\f$, let \f$L_i \f$ denote the lower bound for component \f$i\f$, and let \f$U_i\f$ denote the upper bound on \f$\theta_i \f$.  Then, this class implements \f[ \pi(\theta) = \prod \pi_i(\theta_i), \f] where \f[ \pi_i(\theta_i) = U\left[ L_i, U_i \right] = \left\{ \begin{array}{ll}\frac{1}{U_i-L_i} & L_i\leq x_i \leq U_i \\ 0 & \text{Otherwise} \end{array}\right. . \f]
 This class can be initialized in three ways: with a matrix containing L_i and U_i, using std::pair<double,double> to collect the lower and upper bounds, and directly with a linear vector of doubles with entries that alternate between lower and upper bounds.  The following code snippets are all equivalent approaches for constructing the uniform distribution.
 
@@ -80,7 +80,7 @@ auto dist = std::make_shared<UniformBox>(bounds);
 auto dist = std::make_shared<UniformBox>(0.0, 1.0, 0.5, 0.75, 1.0, 2.0, 4.0, 10.0);
 @endcode
     */
-      
+
     class UniformBox : public Distribution {
     public:
 
@@ -103,9 +103,9 @@ auto dist = std::make_shared<UniformBox>(0.0, 1.0, 0.5, 0.75, 1.0, 2.0, 4.0, 10.
 
       template<typename... Args>
       inline UniformBox(double lb1, double ub1, Args... args) : UniformBox(CreateBoundsDouble(lb1, ub1, args...)) {}
-      
+
       inline UniformBox(std::vector<double> const& bounds) : UniformBox(CreateBoundsDouble(bounds)) {}
-      
+
     private:
 
       /// Evaluate the log-density
@@ -116,12 +116,12 @@ auto dist = std::make_shared<UniformBox>(0.0, 1.0, 0.5, 0.75, 1.0, 2.0, 4.0, 10.
 	 </ol>
 	 \return The log-density (either 1 or negative infinity)
        */
-      virtual double LogDensityImpl(ref_vector<boost::any> const& inputs) override;
+      virtual double LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
       /// Sample the distribution
-      virtual boost::any SampleImpl(ref_vector<boost::any> const& inputs) override;
+      virtual Eigen::VectorXd SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
-      
+
       //static Eigen::MatrixXd CreateBounds(std::vector<double>& bounds);
 
       static Eigen::MatrixXd CreateBoundsPairs(std::vector<std::pair<double,double>> const& bounds);
@@ -132,8 +132,8 @@ auto dist = std::make_shared<UniformBox>(0.0, 1.0, 0.5, 0.75, 1.0, 2.0, 4.0, 10.
 
           //static Eigen::MatrixXd CreateBounds(std::vector<std::pair<double,double>>& bounds);
           //STATIC_VARIADIC_TO_VECTOR_PART2(CreateBounds, double, (Eigen::MatrixXd))
-      
-      
+
+
       /// A matrix describing the bounding box.
       /**
 	 A matrix that discribes the bounding box.  The first row contains the lower bounds and the second row corresponds to the upper bound.  Each column corresponds to a different inpu dimension.
@@ -142,11 +142,11 @@ auto dist = std::make_shared<UniformBox>(0.0, 1.0, 0.5, 0.75, 1.0, 2.0, 4.0, 10.
 
       // Use the values stored in bounds to compute the volume
       static double ComputeVolume(Eigen::MatrixXd const& boundsIn);
-      
-      // The volume of the region enclosed by the bounds 
+
+      // The volume of the region enclosed by the bounds
       const double volume;
 
-      
+
       /// The muq::Utilities::AnyAlgebra
       std::shared_ptr<muq::Utilities::AnyAlgebra> algebra;
     };
