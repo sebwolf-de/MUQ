@@ -1,9 +1,7 @@
 #ifndef WORKGRAPH_H_
 #define WORKGRAPH_H_
 
-#include "MUQ/Modeling/WorkGraphPiece.h"
 #include "MUQ/Modeling/NodeNameFinder.h"
-#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/filtered_graph.hpp>
@@ -16,10 +14,13 @@ namespace muq {
     class WorkGraphPiece;
     class WorkPiece;
     class ConstantPiece;
+    class ModGraphPiece;
 
     /// A graph of connected muq::Modeling::WorkPiece's
     class WorkGraph {
     public:
+      friend class WorkGraphPiece;
+      friend class ModGraphPiece;
 
       WorkGraph();
 
@@ -76,11 +77,17 @@ namespace muq {
       /// Create a muq::Modeling::WorkPiece whose output matches a given node
       /**
 	 @param[in] node The name of the output node
-	 @param[in] algebra Algebra to preform basic operations between different types (defaults to base class, which has common types)
 	 \return A muq::Utilities::WorkPiece whose outputs are the same as the output node
        */
-      std::shared_ptr<WorkGraphPiece> CreateWorkPiece(std::string const& node,
-                                                      std::shared_ptr<const muq::Utilities::AnyAlgebra> algebra = std::make_shared<muq::Utilities::AnyAlgebra>()) const;
+      std::shared_ptr<WorkGraphPiece> CreateWorkPiece(std::string const& node) const;
+
+      /// Create a muq::Modeling::ModPiece whose output matches a given node
+      /**
+         @param[in] node The name of the output node
+         @return A muq::Utilities::WorkPiece whose outputs are the same as the output node
+      */
+      std::shared_ptr<ModGraphPiece> CreateModPiece(std::string const& node) const;
+
 
       /// Check to see if a node is constant?
       /**
@@ -96,6 +103,38 @@ namespace muq {
 	 @param[in] node The name of the node
        */
       std::vector<boost::any> const& GetConstantOutputs(std::string const& node) const;
+
+      /** Returns the work piece at a particular node in the graph. */
+      std::shared_ptr<WorkPiece> GetPiece(std::string const& name);
+
+      /** Print the nodes and edges of this graph to std::cout. */
+      void Print(std::ostream& fout=std::cout) const;
+
+
+      /** Fix the value of a particular node to a constant value and remove any input edges from that node.  After binding a
+       *  node or edge,
+       * if DependentCut is called, any group of constant nodes will be grouped into a single node.  This is a useful
+       * feature when offline
+       * computations are required for a model.
+       *  @param[in] nodeName The node to bind
+       *  @param[in] x The value that "nodeName" will be fixed at.  Note that x must be the same size of the existing output
+       * of "nodeName"
+       */
+      void BindNode(std::string             const& nodeName,
+                    std::vector<boost::any> const& x);
+
+      /** Like BindNode, but only for an edge.  This function actually creates a new node in the system and fixes the value
+       *  of that node.
+       * The new node name is constructed using @code nodeName+"_FixedInput"+std::to_string(inputDim) @endcode  As a naming
+       * example,
+       * if nodeName is "x" and inputDim is 2, this function will create a new node with name "x_FixedInput2"
+       *  @param[in] nodeName The name of the existing node whose input we wish to set
+       *  @param[in] inputDim The input of "nodeName" to fix
+       *  @param[in] x The value the input should be set to
+       */
+      void BindEdge(std::string const& nodeName,
+                    unsigned int       inputDim,
+                    boost::any  const& x);
 
     private:
 
@@ -147,6 +186,12 @@ namespace muq {
       */
       boost::graph_traits<Graph>::vertex_iterator GetNodeIterator(std::string const& name) const;
 
+      template<typename T>
+      std::shared_ptr<WorkPiece> GetPiece(T x)
+      {
+        return (graph)[x]->piece;
+      }
+
       /// Find the inputs to the graph
       /**
 	 \return The inputs to the graph, each input is the vertex and the input dimension that has not be set
@@ -160,7 +205,7 @@ namespace muq {
       std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > GraphOutputs() const;
 
       /// The directed graph that represents this muq::Modeling::Core::WorkGraph
-      std::shared_ptr<Graph> graph;
+      Graph graph;
     };
   } // namespace Modeling
 } // namespace muq

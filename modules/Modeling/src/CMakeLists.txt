@@ -28,11 +28,12 @@ CreateCompileGroup(
     WorkGraphEdge.cpp
 
     ModPiece.cpp
-
+    ModGraphPiece.cpp
     WorkGraphPiece.cpp
     LinearSDE.cpp
 
     ConstantPiece.cpp
+    ConstantVector.cpp
     IdentityPiece.cpp
 
     LinearSDE.cpp

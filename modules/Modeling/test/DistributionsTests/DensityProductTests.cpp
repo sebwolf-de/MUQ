@@ -2,6 +2,7 @@
 #include "MUQ/Modeling/Distributions/Gaussian.h"
 #include "MUQ/Modeling/Distributions/UniformBox.h"
 #include "MUQ/Modeling/WorkGraph.h"
+#include "MUQ/Modeling/WorkGraphPiece.h"
 
 #include "MUQ/Utilities/AnyHelpers.h"
 

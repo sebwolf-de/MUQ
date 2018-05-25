@@ -218,7 +218,7 @@ unsigned int WorkPiece::CreateID() {
   return ++workPieceId;
 }
 
-std::vector<boost::any> WorkPiece::Evaluate() {
+std::vector<boost::any> const& WorkPiece::Evaluate() {
   // make sure we have the correct number of inputs
   assert(numInputs<=0);
 
@@ -241,7 +241,7 @@ std::vector<boost::any> WorkPiece::Evaluate() {
   return outputs;
 }
 
-std::vector<boost::any> WorkPiece::Evaluate(ref_vector<boost::any> const& ins) {
+std::vector<boost::any> const& WorkPiece::Evaluate(ref_vector<boost::any> const& ins) {
   // make sure we have the correct number of inputs
   if((numInputs>=0) && (ins.size()!=numInputs))
     throw muq::WrongSizeError("In WorkPiece::Evaluate: Expected " + std::to_string(numInputs) + " inputs, but " + std::to_string(ins.size()) + " were given.");
@@ -265,7 +265,7 @@ std::vector<boost::any> WorkPiece::Evaluate(ref_vector<boost::any> const& ins) {
   return outputs;
 }
 
-std::vector<boost::any> WorkPiece::Evaluate(std::vector<boost::any> const& ins) {
+std::vector<boost::any> const& WorkPiece::Evaluate(std::vector<boost::any> const& ins) {
   // make sure we have the correct number of inputs
   assert(numInputs<0 || ins.size()==numInputs);
 
@@ -564,18 +564,8 @@ double WorkPiece::GetRunTime(const std::string& method) const
 
   if (method.compare("Evaluate") == 0) {
     return (numEvalCalls == 0) ? -1.0 : toMilli *static_cast<double>(evalTime) / static_cast<double>(numEvalCalls);
-  } else if (method.compare("Gradient") == 0) {
-    return (numGradCalls == 0) ? -1.0 : toMilli *static_cast<double>(gradTime) / static_cast<double>(numGradCalls);
-  } else if (method.compare("Jacobian") == 0) {
-    return (numJacCalls == 0) ? -1.0 : toMilli *static_cast<double>(jacTime) / static_cast<double>(numJacCalls);
-  } else if (method.compare("JacobianAction") == 0) {
-    return (numJacActCalls ==
-            0) ? -1.0 : toMilli *static_cast<double>(jacActTime) / static_cast<double>(numJacActCalls);
-  } else if (method.compare("Hessian") == 0) {
-    return (numHessCalls == 0) ? -1.0 : toMilli *static_cast<double>(hessTime) / static_cast<double>(numHessCalls);
-  } else {
-    assert(method.compare("Evaluate") == 0 || method.compare("Gradient") == 0 || method.compare(
-             "Jacobian") == 0 || method.compare("JacobianAction") == 0 || method.compare("Hessian") == 0);
+  }else{
+    assert(method.compare("Evaluate") == 0);
     return -999.0;
   }
 }
@@ -583,33 +573,15 @@ double WorkPiece::GetRunTime(const std::string& method) const
 void WorkPiece::ResetCallTime()
 {
   numEvalCalls   = 0;
-  numGradCalls   = 0;
-  numJacCalls    = 0;
-  numJacActCalls = 0;
-  numHessCalls   = 0;
-
   evalTime   = 0;
-  gradTime   = 0;
-  jacTime    = 0;
-  jacActTime = 0;
-  hessTime   = 0;
 }
 
 unsigned long int WorkPiece::GetNumCalls(const std::string& method) const
 {
   if (method.compare("Evaluate") == 0) {
     return numEvalCalls;
-  } else if (method.compare("Gradient") == 0) {
-    return numGradCalls;
-  } else if (method.compare("Jacobian") == 0) {
-    return numJacCalls;
-  } else if (method.compare("JacobianAction") == 0) {
-    return numJacActCalls;
-  } else if (method.compare("Hessian") == 0) {
-    return numHessCalls;
   } else {
-    assert(method.compare("Evaluate") == 0 || method.compare("Gradient") == 0 || method.compare(
-             "Jacobian") == 0 || method.compare("JacobianAction") == 0 || method.compare("Hessian") == 0);
+    assert(method.compare("Evaluate") == 0);
     return -999;
   }
 }
@@ -747,23 +719,6 @@ void WorkPiece::Clear() {
     // clear the output
     outputs.clear();
   }
-}
-
-void WorkPiece::ClearDerivatives() {
-  // make sure we actually want to clear the derivatives
-  if( !clearDerivatives ) { return; }
-
-  // clear the jacobian
-  if( jacobian ) { DestroyAny(*jacobian); }
-  jacobian = boost::none;
-
-  // clear the jacobian action
-  if( jacobianAction ) { DestroyAny(*jacobianAction); }
-  jacobianAction = boost::none;
-
-  // clear the jacobian transpose action
-  if( jacobianTransposeAction ) { DestroyAny(*jacobianTransposeAction); }
-  jacobianTransposeAction = boost::none;
 }
 
 bool WorkPiece::CheckInputType(unsigned int const inputNum, std::string const& type) const {

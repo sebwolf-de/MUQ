@@ -217,7 +217,7 @@ namespace muq {
 	 @param[in] ins A vector of inputs
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
-      std::vector<boost::any> Evaluate(std::vector<boost::any> const& ins);
+      std::vector<boost::any> const& Evaluate(std::vector<boost::any> const& ins);
 
       /// Evaluate this muq::Modeling::WorkPiece using references to the inputs
       /**
@@ -227,13 +227,13 @@ namespace muq {
 	 @param[in] ins A vector of references to the inputs
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
-      std::vector<boost::any> Evaluate(ref_vector<boost::any> const& ins);
+      std::vector<boost::any> const& Evaluate(ref_vector<boost::any> const& ins);
 
       /// Evaluate this muq::Modeling::WorkPiece in the case that there are no inputs
       /**
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
-      std::vector<boost::any> Evaluate();
+      std::vector<boost::any> const& Evaluate();
 
       /// Evalaute this muq::Modeling::WorkPiece using multiple arguments
       /**
@@ -242,7 +242,7 @@ namespace muq {
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
       template<typename... Args>
-	std::vector<boost::any> Evaluate(Args... args) {
+	std::vector<boost::any> const& Evaluate(Args... args) {
 	// clear the outputs
 	Clear();
 
@@ -480,7 +480,7 @@ namespace muq {
        * "JacobianAction", or "Hessian"
        *   @return The average wall clock time in milli-seconds.
        */
-      double GetRunTime(const std::string& method) const;
+      virtual double GetRunTime(const std::string& method="Evaluate") const;
 
       /** @brief get the number of times one of the implemented methods has been called.
        *   @details This function returns the number of times the EvaluateImpl, GradientImpl, JacobianImpl,
@@ -489,12 +489,12 @@ namespace muq {
        * "JacobianAction", or "Hessian"
        *   @return An integer with the number of calls.
        */
-      unsigned long int GetNumCalls(const std::string& method) const;
+      virtual unsigned long int GetNumCalls(const std::string& method = "Evaluate") const;
 
       /** @brief Resets the number of call and times.
        *   @details Sets the number of calls to each implemented function to zero and the recorded wall clock times to zero.
        */
-      void ResetCallTime();
+      virtual void ResetCallTime();
 
 
       /// The number of inputs
@@ -538,32 +538,11 @@ namespace muq {
        */
       bool clearOutputs = true;
 
-      /// Clear derivatives every time Jacobian, JacobianAction, or JacobianActionTranspose is called
-      bool clearDerivatives = true;
-
       /// The outputs
       /**
 	 The outputs of this muq::Modeling::WorkPiece are filled by WorkPiece::EvaluateImpl().  If the number of outputs is specified (i.e., WorkPiece::numOutputs is not -1) then WorkPiece::Evaluate() checks to make sure the size of this vector is equal to WorkPiece::numOutputs after calling WorkPiece::EvaluateImpl().  If the output types are specified (i.e., WorkPiece::outputTypes is not an empty vector) then WorkPiece::Evaluate() checks that the output types match WorkPiece::outputTypes after calling WorkPiece::EvaluateImpl().
       */
       std::vector<boost::any> outputs = std::vector<boost::any>(0);
-
-      /// The Jacobian
-      /**
-	 The Jacobian, which is filled by WorkPiece::JacobianImpl().
-       */
-      boost::optional<boost::any> jacobian;
-
-      /// The action of the Jacobian
-      /**
-	 The action of the Jacobian, which is filled by WorkPiece::JacobianActionImpl().
-       */
-      boost::optional<boost::any> jacobianAction;
-
-      /// The action of the Jacobian transpose
-      /**
-	 The action of the Jacobian transpose, which is filled by WorkPiece::JacobianTransposeActionImpl().
-       */
-      boost::optional<boost::any> jacobianTransposeAction;
 
       /// The input types
       /**
@@ -591,18 +570,10 @@ namespace muq {
       // The following variables keep track of how many times the Implemented functions, i.e. EvaluateImpl, GradientImpl,
       // etc... are called.
       unsigned long int numEvalCalls   = 0;
-      unsigned long int numGradCalls   = 0;
-      unsigned long int numJacCalls    = 0;
-      unsigned long int numJacActCalls = 0;
-      unsigned long int numHessCalls   = 0;
 
       // these variables keep track of the total wall-clock time spent in each of the Implemented functions.  They are in
       // units of milliseconds
       double evalTime   = 0;
-      double gradTime   = 0;
-      double jacTime    = 0;
-      double jacActTime = 0;
-      double hessTime   = 0;
 
       /// A unique ID number assigned by the constructor
       const unsigned int id;
@@ -631,7 +602,7 @@ namespace muq {
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
       template<typename ith, typename... Args>
-	std::vector<boost::any> EvaluateRecursive(ref_vector<boost::any> &inputs, ith const& in, Args... args) {
+	std::vector<boost::any> const& EvaluateRecursive(ref_vector<boost::any> &inputs, ith const& in, Args... args) {
 	const int inputNum = inputs.size();
 
 	// we have not yet put all of the inputs into the map, the ith should be less than the total number
@@ -655,7 +626,7 @@ namespace muq {
 	 \return The outputs of this muq::Modeling::WorkPiece
       */
       template<typename last>
-	std::vector<boost::any> EvaluateRecursive(ref_vector<boost::any> &inputs, last const& in) {
+	std::vector<boost::any> const& EvaluateRecursive(ref_vector<boost::any> &inputs, last const& in) {
 
 	const int inputNum = inputs.size();
 
@@ -861,9 +832,6 @@ namespace muq {
 
       /// Clear muq::Modeling::WorkPiece::outputs when muq::Modeling::Evaluate is called
       void Clear();
-
-      /// Clear muq::Modeling::WorkPiece::outputs and muq::Modeling::WorkPiece::jacobian, muq::Modeling::WorkPiece::jacobianAction, and muq::Modeling::WorkPiece::jacobianTransposeAction when muq::Modeling::Jacobian, muq::Modeling::JacobianAction, or muq::Modeling::JacobianTransposeAction() is called
-      void ClearDerivatives();
 
       /// Destroy a boost any
       /**

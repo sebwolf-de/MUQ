@@ -5,6 +5,7 @@ CreateTestGroup(
     #WorkPieceDerivativesTests.cpp
     WorkGraphTests.cpp
     WorkGraphPieceTests.cpp
+    ModGraphPieceTests.cpp
     ModPieceTests.cpp
     ConstantPieceTests.cpp
     IdentityPieceTests.cpp

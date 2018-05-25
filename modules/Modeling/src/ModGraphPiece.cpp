@@ -1,70 +1,39 @@
-#include "MUQ/Modeling/WorkGraphPiece.h"
+#include "MUQ/Modeling/ModGraphPiece.h"
 
 #include "MUQ/Modeling/WorkGraph.h"
+#include "MUQ/Utilities/AnyHelpers.h"
 
 #include <boost/range/adaptor/reversed.hpp>
-
 #include <boost/graph/topological_sort.hpp>
 
 #include <Eigen/Core>
 
 using namespace muq::Modeling;
-
-DependentPredicate::DependentPredicate() {}
-
-DependentPredicate::DependentPredicate(boost::graph_traits<Graph>::vertex_descriptor const& baseNode, Graph const& graph) {
-  DownstreamNodes(baseNode, graph);
-}
-
-bool DependentPredicate::operator()(const boost::graph_traits<Graph>::vertex_descriptor& node) const {
-  // is the node in the vector of depends?
-  return std::find(doesDepend.begin(), doesDepend.end(), node)!=doesDepend.end();
-}
-
-void DependentPredicate::DownstreamNodes(const boost::graph_traits<Graph>::vertex_descriptor& baseNode, Graph const& graph) {
-
-  // add this node to the list of downstream nodes
-  doesDepend.push_back(baseNode);
-
-  // loop through its dependencies
-  boost::graph_traits<Graph>::out_edge_iterator e, e_end;
-  boost::tie(e, e_end) = boost::out_edges(baseNode, graph);
-  for( ; e!=e_end; ++e ) {
-    // recursivley add its dependendcies to the downstream node list
-    DownstreamNodes(boost::target(*e, graph), graph);
-  }
-}
-
-DependentEdgePredicate::DependentEdgePredicate() {}
-
-DependentEdgePredicate::DependentEdgePredicate(DependentPredicate nodePred, Graph const& graph) : nodePred(nodePred), graph(&graph) {}
-
-bool DependentEdgePredicate::operator()(const boost::graph_traits<Graph>::edge_descriptor& edge) const {
-
-  // check to see if the source is a downstream node
-  return nodePred(source(edge, *graph));
-}
+using namespace muq::Utilities;
 
 
-WorkGraphPiece::WorkGraphPiece(std::shared_ptr<WorkGraph> wgraph,
-                               std::vector<std::shared_ptr<ConstantPiece> > const& constantPieces,
-                               std::vector<std::string> const& inputNames,
-                               std::map<unsigned int, std::string> const& inTypes,
-                               std::shared_ptr<WorkPiece> outputPiece) : WorkPiece(inTypes, constantPieces.size(), outputPiece->OutputTypes(), outputPiece->numOutputs), wgraph(wgraph), outputID(outputPiece->ID()), constantPieces(constantPieces) {
+
+ModGraphPiece::ModGraphPiece(std::shared_ptr<WorkGraph>                           graph,
+                             std::vector<std::shared_ptr<ConstantVector> > const& constantPiecesIn,
+                             std::vector<std::string>                      const& inputNames,
+                             std::shared_ptr<ModPiece>                            outputPiece) : ModPiece(ConstructInputSizes(constantPiecesIn),
+                                                                                                          outputPiece->outputSizes),
+                                                                                                 wgraph(graph),
+                                                                                                 outputID(outputPiece->ID()),
+                                                                                                 constantPieces(constantPiecesIn) {
 
   // build the run order
+  assert(graph);
   boost::topological_sort(wgraph->graph, std::front_inserter(runOrder));
 
-  // make sure we know the number of inputs
-  assert(numInputs>=0);
-
   // each input only needs to loop over its downstream nodes when computing derivatives
-  derivRunOrders.resize(numInputs);
-  filtered_graphs.resize(numInputs);
+  adjointRunOrders.resize(inputSizes.size());
+  filtered_graphs.resize(inputSizes.size());
 
   // compute a run order for each of the inputs so we only have to loop over their downstream nodes
   assert(numInputs==inputNames.size());
   for( unsigned int i=0; i<numInputs; ++i ) { // loop through the inputs
+
     // get iterators to the begining and end of the graph
     boost::graph_traits<Graph>::vertex_iterator v, v_end;
     boost::tie(v, v_end) = vertices(wgraph->graph);
@@ -77,19 +46,27 @@ WorkGraphPiece::WorkGraphPiece(std::shared_ptr<WorkGraph> wgraph,
     filtered_graphs[i] = std::make_shared<boost::filtered_graph<Graph, DependentEdgePredicate, DependentPredicate> >(wgraph->graph, eFilt, nFilt);
 
     // build specialized run order for each input dimension
-    boost::topological_sort(*filtered_graphs[i], std::back_inserter(derivRunOrders[i]));
+    boost::topological_sort(*filtered_graphs[i], std::back_inserter(adjointRunOrders[i]));
   }
 }
 
-WorkGraphPiece::~WorkGraphPiece() {}
+Eigen::VectorXi ModGraphPiece::ConstructInputSizes(std::vector<std::shared_ptr<ConstantVector> > const& constantPiecesIn)
+{
+  Eigen::VectorXi sizes(constantPiecesIn.size());
+  for(int i=0; i<constantPiecesIn.size(); ++i){
+    sizes(i)  = constantPiecesIn.at(i)->outputSizes(0);
+    assert(constantPiecesIn.at(i)->outputSizes.size()==1);
+  }
+  return sizes;
+}
 
-void WorkGraphPiece::EvaluateImpl(ref_vector<boost::any> const& inputs) {
+void ModGraphPiece::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
 
   // set the inputs
   SetInputs(inputs);
 
   // fill the map from the WorkPiece ID to its outputs
-  OutputMap();
+  FillOutputMap();
 
   // store the result in the output vector
   outputs.resize(valMap[outputID].size());
@@ -98,70 +75,80 @@ void WorkGraphPiece::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   }
 }
 
-// void WorkGraphPiece::JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) {
-//   // set the inputs
-//   SetInputs(inputs);
-//
-//   // fill the map from the WorkPiece ID to its outputs
-//   OutputMap();
-//
-//   // a map from the WorkPiece ID a map from the output number to the jacobian of that output wrt the specified input
-//   std::map<unsigned int, std::map<unsigned int, boost::any> > jacMap;
-//
-//   // loop through each downstream node
-//   for( auto node : boost::adaptors::reverse(derivRunOrders[wrtIn]) ) {
-//     // the ID of the current node
-//     const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
-//
-//     // get the outputs of this node that depend on the specified input
-//     const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > & requiredOutNodes = RequiredOutputs(node, wrtIn, wrtOut);
-//     // remove duplicates
-//     std::vector<unsigned int> requiredOuts;
-//     requiredOuts.reserve(requiredOutNodes.size());
-//     for( auto out : requiredOutNodes ) {
-//       auto it = std::find(requiredOuts.begin(), requiredOuts.end(), std::get<1>(out));
-//       if( it==requiredOuts.end() ) {
-// 	requiredOuts.push_back(std::get<1>(out));
-//       }
-//     }
-//
-//     // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
-//     const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
-//
-//     // the inputs to this WorkPiece
-//     const ref_vector<boost::any>& ins = Inputs(node);
-//
-//     // compute the jacobian of each required output wrt each input
-//     for( auto out : requiredOuts ) {
-//       if( requiredIns.size()==0 ) {
-// 	// if there are no inputs, it is the input so set the Jacobian to the identity
-// 	jacMap[nodeID][out] = algebra->Identity(valMap[nodeID][out].get().type(), algebra->Size(valMap[nodeID][out]), algebra->Size(valMap[nodeID][out]));
-//       } else {
-// 	// initize the jacobian to nothing
-// 	jacMap[nodeID][out] = boost::none;
-//
-// 	for( auto in : requiredIns ) {
-// 	  // compute the Jacobian with respect to each required input
-// 	  graph->operator[](node)->piece->Jacobian(std::get<2>(in), out, ins);
-//
-// 	  // use chain rule to get the jacobian wrt to the required input
-// 	  const boost::any tempJac = algebra->Multiply(*(graph->operator[](node)->piece->jacobian), jacMap[std::get<0>(in)][std::get<1>(in)]);
-// 	  jacMap[nodeID][out] = algebra->Add(jacMap[nodeID][out], tempJac);
-// 	}
-//       }
-//     }
-//   }
-//
-//   // set the Jacobian for this WorkPiece
-//   jacobian = jacMap[outputID][wrtOut];
-// }
+void ModGraphPiece::JacobianImpl(unsigned int                const  wrtOut,
+                                 unsigned int                const  wrtIn,
+                                 ref_vector<Eigen::VectorXd> const& inputs) {
+
+  // set the inputs
+  SetInputs(inputs);
+
+  // fill the map from the WorkPiece ID to its outputs
+  FillOutputMap();
+
+  // a map from the WorkPiece ID to a vector holding the cumulative jacobians of that output wrt the specified input
+  std::map<unsigned int, std::vector<Eigen::MatrixXd> > jacMap;
+
+  // loop through each downstream node
+  for( auto node : boost::adaptors::reverse(adjointRunOrders[wrtIn]) ) {
+
+    std::shared_ptr<ModPiece> nodePiece = std::dynamic_pointer_cast<ModPiece>(filtered_graphs[wrtIn]->operator[](node)->piece);
+    assert(nodePiece);
+
+    // the ID of the current node
+    const unsigned int nodeID = nodePiece->ID();
+
+    // Initialize the jacobian map for this node
+    jacMap[nodeID] = std::vector<Eigen::MatrixXd>(nodePiece->outputSizes.size());
+
+    // get the outputs of this node that impact the specified output node
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > & requiredOutNodes = RequiredOutputs(node, wrtIn, wrtOut);
+
+    // remove duplicates
+    std::vector<unsigned int> requiredOuts;
+    requiredOuts.reserve(requiredOutNodes.size());
+    for( auto out : requiredOutNodes ) {
+      auto it = std::find(requiredOuts.begin(), requiredOuts.end(), std::get<1>(out));
+      if( it==requiredOuts.end() ) {
+	       requiredOuts.push_back(std::get<1>(out));
+      }
+    }
+
+    // Initialize the jacobians that will be stored
+    for(int i=0; i<requiredOuts.size(); ++i)
+      jacMap[nodeID].at(requiredOuts.at(i)) = Eigen::MatrixXd::Zero(nodePiece->outputSizes(requiredOuts.at(i)), inputSizes(wrtIn));
+
+    // get the inputs for this node --- the input WorkPiece ID, the output number, and the input number
+    const std::vector<std::tuple<unsigned int, unsigned int, unsigned int> >& requiredIns = RequiredInputs(node, wrtIn);
+
+    // if there are no inputs, it is an input node, so set the Jacobian to the identity
+    if(requiredIns.size()==0){
+      jacMap[nodeID][0] = Eigen::MatrixXd::Identity(nodePiece->outputSizes(0), nodePiece->outputSizes(0));
+      assert(jacMap[nodeID].size()==1);
+    }else{
+
+      // the inputs to this WorkPiece
+      const ref_vector<Eigen::VectorXd>& ins = GetNodeInputs(node);
+
+      // compute the jacobian of each required output wrt each input
+      for( auto out : requiredOuts ) {
+        // To compute the Jacobian of out, we need to add the add the combination from each input
+  	    for( auto in : requiredIns )
+  	      jacMap[nodeID][out] += nodePiece->Jacobian(out, std::get<2>(in), ins) * jacMap[std::get<0>(in)][std::get<1>(in)];
+      }
+    }
+
+  } // loop over run order
+
+  // set the Jacobian for this WorkPiece
+  jacobian = jacMap[outputID][wrtOut];
+}
 //
 // void WorkGraphPiece::JacobianActionImpl(unsigned int const wrtIn, unsigned int const wrtOut, boost::any const& vec, ref_vector<boost::any> const& inputs) {
 //   // set the inputs
 //   SetInputs(inputs);
 //
 //   // fill the map from the WorkPiece ID to its outputs
-//   OutputMap();
+//   FillOutputMap();
 //
 //   // a map from the WorkPiece ID a map from the output number to the action of the jacobian of that output wrt the specified input
 //   std::map<unsigned int, std::map<unsigned int, boost::any> > jacActionMap;
@@ -218,7 +205,7 @@ void WorkGraphPiece::EvaluateImpl(ref_vector<boost::any> const& inputs) {
 //   SetInputs(inputs);
 //
 //   // fill the map from the WorkPiece ID to its outputs
-//   OutputMap();
+//   FillOutputMap();
 //
 //   // a map from the WorkPiece ID a map from the output number to the action of the jacobian of that output wrt the specified input
 //   std::map<unsigned int, std::map<unsigned int, boost::any> > jacTransActionMap;
@@ -275,15 +262,15 @@ void WorkGraphPiece::EvaluateImpl(ref_vector<boost::any> const& inputs) {
 //   }
 // }
 
-void WorkGraphPiece::SetInputs(ref_vector<boost::any> const& inputs) {
+void ModGraphPiece::SetInputs(ref_vector<Eigen::VectorXd> const& inputs) {
   // get the inputs and set them to the ConstantPiece nodes
   assert(inputs.size()==constantPieces.size());
   for( unsigned int i=0; i<inputs.size(); ++i ) {
-    constantPieces[i]->SetOutputs(inputs[i]);
+    constantPieces[i]->SetValue(inputs.at(i));
   }
 }
 
-std::map<unsigned int, std::vector<std::pair<unsigned int, unsigned int> > > WorkGraphPiece::InputNodes(boost::graph_traits<Graph>::vertex_descriptor const& node) const {
+std::map<unsigned int, std::vector<std::pair<unsigned int, unsigned int> > > ModGraphPiece::InputNodes(boost::graph_traits<Graph>::vertex_descriptor const& node) const {
   // the map of input nodes
   std::map<unsigned int, std::vector<std::pair<unsigned int, unsigned int> > > inMap;
 
@@ -291,7 +278,7 @@ std::map<unsigned int, std::vector<std::pair<unsigned int, unsigned int> > > Wor
   boost::graph_traits<Graph>::in_edge_iterator e, e_end;
   for( tie(e, e_end)=boost::in_edges(node, wgraph->graph); e!=e_end; ++e ) {
     // get the WorkPiece id number, the output that it supplies, and the input that receives it
-    const unsigned int id = wgraph->GetPiece(boost::source(*e, wgraph->graph))->ID();
+    const unsigned int id = wgraph->graph[boost::source(*e, wgraph->graph)]->piece->ID();
     const unsigned int inNum = wgraph->graph[*e]->inputDim;
     const unsigned int outNum = wgraph->graph[*e]->outputDim;
 
@@ -310,36 +297,60 @@ std::map<unsigned int, std::vector<std::pair<unsigned int, unsigned int> > > Wor
   return inMap;
 }
 
-void WorkGraphPiece::OutputMap() {
-  // clear the map from the WorkPiece ID to its outputs
+void ModGraphPiece::FillOutputMap() {
+  // clear the map
   valMap.clear();
 
   // loop over the run order
   for( auto it : runOrder ) {
     // the inputs to this WorkPiece
-    const ref_vector<boost::any>& ins = Inputs(it);
+    const ref_vector<Eigen::VectorXd>& ins = GetNodeInputs(it);
 
-    // evaluate the current map and store the value
-    std::vector<boost::any> const& output = wgraph->GetPiece(it)->Evaluate(ins);
-    valMap[wgraph->GetPiece(it)->ID()] = ToRefVector(output);
+    // evaluate the current map and store a vector of references to its output
+    auto wPiece = wgraph->GetPiece(it);
+    auto currPiece = std::dynamic_pointer_cast<ModPiece>(wPiece);
+
+    if(!currPiece){
+
+      // If it can't be cast to a ModPiece, check to see if the output can be cast to an Eigen vector
+      ref_vector<Eigen::VectorXd> output;
+
+      std::vector<boost::any> anyIns(ins.size());
+      for(int i=0; i<ins.size(); ++i)
+        anyIns.at(i) = boost::any(ins.at(i));
+
+      std::vector<boost::any> const& anyOut = wPiece->Evaluate(anyIns);
+
+
+      for(int i=0; i<anyOut.size(); ++i){
+        Eigen::VectorXd const& temp = AnyConstCast(anyOut.at(i));
+        output.push_back(std::cref(temp));
+      }
+
+      valMap[wgraph->GetPiece(it)->ID()] = output;
+
+    }else{
+      assert(currPiece);
+      valMap[wgraph->GetPiece(it)->ID()] = ToRefVector(currPiece->Evaluate(ins));
+    }
   }
 }
 
-ref_vector<boost::any> WorkGraphPiece::Inputs(boost::graph_traits<Graph>::vertex_descriptor node) const {
+ref_vector<Eigen::VectorXd> ModGraphPiece::GetNodeInputs(boost::graph_traits<Graph>::vertex_descriptor node) const {
+
   // how many inputs does this node require?
   const int numIns = wgraph->GetPiece(node)->numInputs;
 
   // get the inputs for this node
   const std::map<unsigned int, std::vector<std::pair<unsigned int, unsigned int> > >& inMap = InputNodes(node);
 
-  boost::any empty = boost::none;
-  ref_vector<boost::any> ins(numIns, std::cref(empty));
+  Eigen::VectorXd empty;
+  ref_vector<Eigen::VectorXd> ins(numIns, std::cref(empty));
 
   // loop through the edges again, now we know which outputs supply which inputs
   for( auto edge : inMap ) {
     // loop over the input/output pairs supplied by this input
     for( auto in_out : edge.second ) {
-      // use at instead of operator[] because this is a const function
       ins[in_out.first] = valMap.at(edge.first)[in_out.second];
     }
   }
@@ -347,7 +358,7 @@ ref_vector<boost::any> WorkGraphPiece::Inputs(boost::graph_traits<Graph>::vertex
   return ins;
 }
 
-std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > WorkGraphPiece::RequiredOutputs(boost::graph_traits<FilteredGraph>::vertex_descriptor const& node, unsigned int const wrtIn, unsigned int const wrtOut) const {
+std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > ModGraphPiece::RequiredOutputs(boost::graph_traits<FilteredGraph>::vertex_descriptor const& node, unsigned int const wrtIn, unsigned int const wrtOut) const {
   // the ID of the current node
   const unsigned int nodeID = filtered_graphs[wrtIn]->operator[](node)->piece->ID();
 
@@ -379,7 +390,7 @@ std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > WorkGraphPiec
   return requiredOuts;
 }
 
-std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > WorkGraphPiece::RequiredInputs(boost::graph_traits<FilteredGraph>::vertex_descriptor const& node, unsigned int const wrtIn) const {
+std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > ModGraphPiece::RequiredInputs(boost::graph_traits<FilteredGraph>::vertex_descriptor const& node, unsigned int const wrtIn) const {
   // how many inputs does this node require?
   const int numIns = filtered_graphs[wrtIn]->operator[](node)->piece->numInputs;
 

@@ -4,8 +4,6 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/filtered_graph.hpp>
 
-#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
-
 #include "MUQ/Modeling/WorkPiece.h"
 #include "MUQ/Modeling/ConstantPiece.h"
 #include "MUQ/Modeling/NodeNameFinder.h"
@@ -23,7 +21,7 @@ namespace muq {
 	 @param[in] baseNode The input node --- we what to know which nodes are downstream of this node
 	 @param[in] graph The graph holding all the nodes
       */
-      DependentPredicate(boost::graph_traits<Graph>::vertex_descriptor const& baseNode, std::shared_ptr<const Graph> graph);
+      DependentPredicate(boost::graph_traits<Graph>::vertex_descriptor const& baseNode, Graph const& graph);
 
       /**
 	 @param[in] node Any node in the graph
@@ -39,7 +37,7 @@ namespace muq {
 	 @param[in] baseNode A node that depends on the input node (possible the input node itself)
 	 @param[in] graph The graph holding all the nodes
       */
-      void DownstreamNodes(const boost::graph_traits<Graph>::vertex_descriptor& baseNode, std::shared_ptr<const Graph> graph);
+      void DownstreamNodes(const boost::graph_traits<Graph>::vertex_descriptor& baseNode, Graph const& graph);
     };
 
     /// Determine if the source of an edge is downstream of an input
@@ -52,7 +50,7 @@ namespace muq {
 	 @param[in] nodePred All the downstream nodes of a given input
 	 @param[in] graph The graph holding all of the nodes
       */
-      DependentEdgePredicate(std::shared_ptr<DependentPredicate> nodePred, std::shared_ptr<const Graph> graph);
+      DependentEdgePredicate(DependentPredicate nodePred, Graph const& graph);
 
       /**
 	 @param[in] edge An edge in the graph
@@ -62,10 +60,10 @@ namespace muq {
 
     private:
       /// The nodes that are downstream of the input
-      std::shared_ptr<DependentPredicate> nodePred;
+      DependentPredicate nodePred;
 
       /// The graph holding all the nodes
-      std::shared_ptr<const Graph> graph;
+      const Graph* graph;
     };
 
     /// A filtered graph that only has nodes downstream of a specified input
@@ -85,12 +83,11 @@ namespace muq {
 	 @param[in] outputNode The muq::Modeling::WorkPiece that we ultimately want to evaluate
 	 @param[in] algebra Algebra to preform basic operations between different types (defaults to base class, which has common types)
        */
-      WorkGraphPiece(std::shared_ptr<const Graph>                        graph,
+      WorkGraphPiece(std::shared_ptr<WorkGraph>                          wgraph,
                      std::vector<std::shared_ptr<ConstantPiece> > const& constantPieces,
                      std::vector<std::string>                     const& inputNames,
                      std::map<unsigned int, std::string>          const& inTypes,
-                     std::shared_ptr<WorkPiece>                          outputNode,
-                     std::shared_ptr<const muq::Utilities::AnyAlgebra>   algebra);
+                     std::shared_ptr<WorkPiece>                          outputNode);
 
       /// Default destructor
       virtual ~WorkGraphPiece();
@@ -179,21 +176,19 @@ namespace muq {
       std::vector<std::deque<boost::graph_traits<Graph>::vertex_descriptor> > derivRunOrders;
 
       /// The WorkGraph associated with this WorkGraphPiece
-      std::shared_ptr<const Graph> graph;
+      //std::shared_ptr<const Graph> graph;
+      std::shared_ptr<WorkGraph> wgraph;
 
       std::vector<std::shared_ptr<FilteredGraph> > filtered_graphs;
 
       /// A the map from each node's muq::Modeling::WorkPiece::ID to its outputs
-      std::map<unsigned int, ref_vector<boost::any> > valMap;
+      std::unordered_map<unsigned int, ref_vector<boost::any> > valMap;
 
       /// The ID of the WorkPiece corresponding to the output node
       unsigned int outputID;
 
       /// The muq::Modeling::ConstantPiece's that store the inputs
       std::vector<std::shared_ptr<ConstantPiece> > constantPieces;
-
-      /// An algebra to do arthmatic on boost::any types
-      std::shared_ptr<const muq::Utilities::AnyAlgebra> algebra;
 
     };
   } // namespace Modeling
