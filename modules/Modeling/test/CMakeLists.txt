@@ -30,6 +30,7 @@ CreateTestGroup(
     MODELING_DISTRIBUTIONS
 
     DistributionsTests/DistributionTests.cpp
+    DistributionsTests/InverseGammaTests.cpp
     DistributionsTests/UniformDistributionTests.cpp
     DistributionsTests/GaussianDistributionTests.cpp
     DistributionsTests/DensityProductTests.cpp

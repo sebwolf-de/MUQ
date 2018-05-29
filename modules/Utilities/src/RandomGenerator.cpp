@@ -51,9 +51,7 @@ double RandomGenerator::GetUniform()
 
 double RandomGenerator::GetGamma(double const alpha, double const beta)
 {
-  static std::gamma_distribution<> Gamma_RNG(alpha, beta);
-
-  Gamma_RNG.reset();
+  std::gamma_distribution<> Gamma_RNG(alpha, beta);
   return Gamma_RNG(GetGenerator());
 }
 
@@ -182,7 +180,7 @@ RandomGenerator::GeneratorType& RandomGenerator::GetGenerator()
   static SeedGenerator seedGen;
   static RandomGenerator::GeneratorType BaseGenerator(seedGen.seed_seq);
 #endif
-  
+
   return BaseGenerator;
 }
 

@@ -52,6 +52,7 @@ CreateCompileGroup(
     Distributions/Distribution.cpp
     Distributions/UniformBox.cpp
     Distributions/Gaussian.cpp
+    Distributions/InverseGamma.cpp
     Distributions/DensityProduct.cpp
     Distributions/Density.cpp
     Distributions/RandomVariable.cpp

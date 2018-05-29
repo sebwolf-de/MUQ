@@ -96,7 +96,7 @@ TEST(UtilitiesRandomGenerator, SeedTempSet)
   before[2] = RandomGenerator::GetNormal();
   before[3] = RandomGenerator::GetNormal();
   before[4] = RandomGenerator::GetUniform();
-  
+
   {
 	  RandomGeneratorTemporarySetSeed(5001);
 	    during[0] = RandomGenerator::GetNormal();
@@ -120,7 +120,7 @@ TEST(UtilitiesRandomGenerator, SeedTempSet)
   EXPECT_EQ(before[2], after[2]);
   EXPECT_NE(before[3], after[4]); //check that order matters when we interleave these
   EXPECT_NE(before[4], after[3]);
-	
+
     EXPECT_NE(before[0], during[0]);
   EXPECT_NE(before[1], during[1]);
   EXPECT_NE(before[2], during[2]);
@@ -128,11 +128,21 @@ TEST(UtilitiesRandomGenerator, SeedTempSet)
   EXPECT_NE(before[4], during[4]);
 }
 
+TEST(UtilitiesRandomGenerator, Gamma)
+{
+  const double alpha = 1.5;
+  const double beta = 0.5;
+  Eigen::VectorXd samps  = RandomGenerator::GetGamma(alpha, beta, 1e4);
+
+  double mu = samps.mean();
+  EXPECT_NEAR(alpha*beta, mu, 1e-2);
+}
+
 
 TEST(UtilitiesRandomGenerator, StoreRng)
 {
 	auto storedRng = RandomGenerator::CopyGenerator();
-	  
+
 
   // generate 3 normal samples
   double before[5];
@@ -144,7 +154,7 @@ TEST(UtilitiesRandomGenerator, StoreRng)
   before[2] = RandomGenerator::GetNormal();
   before[3] = RandomGenerator::GetNormal();
   before[4] = RandomGenerator::GetUniform();
-  
+
   {
 	    during[0] = RandomGenerator::GetNormal();
   during[1] = RandomGenerator::GetNormal();
@@ -167,7 +177,7 @@ TEST(UtilitiesRandomGenerator, StoreRng)
   EXPECT_EQ(before[2], after[2]);
   EXPECT_NE(before[3], after[4]); //check that order matters when we interleave these
   EXPECT_NE(before[4], after[3]);
-	
+
     EXPECT_NE(before[0], during[0]);
   EXPECT_NE(before[1], during[1]);
   EXPECT_NE(before[2], during[2]);
