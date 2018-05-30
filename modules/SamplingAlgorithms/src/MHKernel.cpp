@@ -56,7 +56,7 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   // Aceptance probability
   const double forwardPropDens = proposal->LogDensity(prevState, prop);
   const double backPropDens = proposal->LogDensity(prop, prevState);
-  const double alpha = std::exp(propTarget + forwardPropDens - currentTarget - backPropDens);
+  const double alpha = std::exp(propTarget - forwardPropDens - currentTarget + backPropDens);
 
   // accept/reject
   if( RandomGenerator::GetUniform()<alpha ) {
