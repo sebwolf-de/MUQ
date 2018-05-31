@@ -67,6 +67,7 @@ namespace muq {
        */
       void Visualize(std::string const& filename) const;
 
+
       /// Create a new graph cutting any of the nodes that do not affect the output node
       /**
 	 @param[in] nameOut The output node we care about
@@ -106,6 +107,10 @@ namespace muq {
 
       /** Returns the work piece at a particular node in the graph. */
       std::shared_ptr<WorkPiece> GetPiece(std::string const& name);
+
+      /** Given a WorkPiece, return the name of the node containing that piece. */
+      std::string GetName(std::shared_ptr<WorkPiece> piece) const;
+
 
       /** Print the nodes and edges of this graph to std::cout. */
       void Print(std::ostream& fout=std::cout) const;
@@ -153,6 +158,8 @@ namespace muq {
        */
       bool Constant(boost::graph_traits<Graph>::vertex_descriptor const& node) const;
 
+      std::shared_ptr<WorkPiece> GetPiece(boost::graph_traits<Graph>::vertex_descriptor it);
+
       /// Recursively go upstream from a node, copying nodes
       /**
 	 Copies the upstream nodes into a new graph.  If a node is constant it evaluates it and lumps all of the upstream nodes from that node into a muq::Modeling::ConstantParameters
@@ -185,12 +192,7 @@ namespace muq {
 	 \return An iterator to that node (returns the "end" iterator if that node does not exist
       */
       boost::graph_traits<Graph>::vertex_iterator GetNodeIterator(std::string const& name) const;
-
-      template<typename T>
-      std::shared_ptr<WorkPiece> GetPiece(T x)
-      {
-        return (graph)[x]->piece;
-      }
+      boost::graph_traits<Graph>::vertex_iterator GetNodeIterator(std::shared_ptr<WorkPiece> piece) const;
 
       /// Find the inputs to the graph
       /**

@@ -1,5 +1,4 @@
 #include "MUQ/SamplingAlgorithms/MHProposal.h"
-#include "MUQ/Modeling/Distributions/RandomVariable.h"
 
 #include "MUQ/Utilities/AnyHelpers.h"
 
@@ -18,14 +17,8 @@ MHProposal::MHProposal(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProb
   const Eigen::VectorXd cov = pt.get("ProposalVariance", 1.0)*Eigen::VectorXd::Ones(problemDim);
 
   // created a Gaussian with scaled identity covariance
-  if( cov.size()==1 ) {
-    proposal = std::make_shared<muq::Modeling::Gaussian>(cov(0), Gaussian::Mode::Covariance);
-  } else {
-    proposal = std::make_shared<muq::Modeling::Gaussian>(cov, Gaussian::Mode::Covariance);
-  }
+  proposal = std::make_shared<muq::Modeling::Gaussian>(Eigen::VectorXd::Zero(problemDim), cov);
 }
-
-MHProposal::~MHProposal() {}
 
 std::shared_ptr<SamplingState> MHProposal::Sample(std::shared_ptr<SamplingState> currentState) {
 
@@ -33,9 +26,7 @@ std::shared_ptr<SamplingState> MHProposal::Sample(std::shared_ptr<SamplingState>
   std::vector<Eigen::VectorXd> props = currentState->state;
   Eigen::VectorXd const& xc = currentState->state.at(blockInd);
 
-  boost::any anyProp = proposal->AsVariable()->Sample();
-  Eigen::VectorXd const& prop = AnyConstCast(anyProp);
-
+  Eigen::VectorXd prop = proposal->Sample();
   props.at(blockInd) = xc + prop;
 
   // store the new state in the output

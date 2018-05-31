@@ -13,7 +13,7 @@ namespace muq {
 
       MHProposal(boost::property_tree::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> prob);
 
-      ~MHProposal();
+      virtual ~MHProposal() = default;
 
     protected:
 

@@ -22,7 +22,7 @@ namespace muq {
       MCMCProposal(boost::property_tree::ptree       const& pt,
                    std::shared_ptr<AbstractSamplingProblem> prob);
 
-      ~MCMCProposal();
+      virtual ~MCMCProposal() = default;
 
       /// Static constructor for the transition kernel
       /**

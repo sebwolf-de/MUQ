@@ -7,7 +7,8 @@ using namespace muq::Utilities;
 SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree&             pt,
                                  std::shared_ptr<AbstractSamplingProblem> problem)
 {
-  numSamps = pt.get<unsigned>("NumSamples");
+  numSamps = pt.get<unsigned int>("NumSamples");
+  burnIn = pt.get("BurnIn",0);
 
   std::string kernelString = pt.get<std::string>("KernelList");
 
@@ -46,19 +47,24 @@ SampleCollection const& SingleChainMCMC::RunImpl(std::vector<Eigen::VectorXd> co
 
       // Add the new states to the SampleCollection
       for(int i=0; i<newStates.size(); ++i){
+        sampNum++;
+
         if(newStates.at(i)!=prevState){
           prevState = newStates.at(i);
-          samples.Add(newStates.at(i));
+
+          if(sampNum>=burnIn)
+            samples.Add(newStates.at(i));
+
         }else{
           prevState->weight += 1;
+          if(sampNum==burnIn)
+            samples.Add(prevState);
         }
       }
 
       kernels.at(blockInd)->PostStep(sampNum, newStates);
-
-      // Increment the sample number
-      sampNum += newStates.size();
     }
   }
+
   return samples;
 }

@@ -47,6 +47,31 @@ TEST(WorkGraphTests, UnfixedInOut) {
   graph->Visualize("modules/Modeling/test/WorkGraphVisualizations/UnfixedInOut.pdf");
 }
 
+TEST(WorkGraphTests, NodeLookup)
+{
+  // create and empty graph
+  auto graph = std::make_shared<WorkGraph>();
+  auto piece1 = std::make_shared<FixedInOutMod>(2, 3);
+  auto piece2 = std::make_shared<FixedInOutMod>(2, 3);
+  graph->AddNode(piece1, "Node 1");
+  graph->AddNode(piece2, "Node 2");
+  graph->AddNode(piece2, "Node 3");
+
+  std::string nodeName = graph->GetName(piece1);
+  EXPECT_EQ("Node 1", nodeName);
+
+  nodeName = graph->GetName(piece2);
+  EXPECT_EQ("Node 2", nodeName);
+
+  auto foundPiece = graph->GetPiece("Node 1");
+  EXPECT_TRUE(foundPiece == piece1);
+
+  foundPiece = graph->GetPiece("Node 2");
+  EXPECT_TRUE(foundPiece == piece2);
+
+  foundPiece = graph->GetPiece("Node 3");
+  EXPECT_TRUE(foundPiece == piece2);
+}
 TEST(WorkGraphTests, FixedInOutNum) {
   // create test WorkPieces
   auto test0 = std::make_shared<FixedInOutMod>(2, 3);

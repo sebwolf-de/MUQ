@@ -41,6 +41,9 @@ namespace muq{
 
       virtual ~Density() = default;
 
+      // Return the distribution this density is built from
+      virtual std::shared_ptr<Distribution> GetDistribution(){ return dist;};
+
     protected:
       std::shared_ptr<Distribution> dist;
 

@@ -37,6 +37,10 @@ namespace muq {
       /// Default destructor
       virtual ~ModGraphPiece() = default;
 
+      std::shared_ptr<WorkGraph> GetGraph(){return wgraph;};
+
+      std::vector<std::shared_ptr<ConstantVector> > GetConstantPieces(){return constantPieces;};
+
     private:
 
       static Eigen::VectorXi ConstructInputSizes(std::vector<std::shared_ptr<ConstantVector> > const& constantPiecesIn);

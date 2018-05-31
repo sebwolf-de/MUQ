@@ -36,6 +36,9 @@ CreateCompileGroup(
     ConstantVector.cpp
     IdentityPiece.cpp
 
+    IdentityOperator.cpp
+    ReplicateOperator.cpp
+    
     LinearSDE.cpp
 
     Flann/FlannCache.cpp

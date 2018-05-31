@@ -146,6 +146,18 @@ boost::graph_traits<Graph>::vertex_iterator WorkGraph::GetNodeIterator(std::stri
 
   return res;
 }
+boost::graph_traits<Graph>::vertex_iterator WorkGraph::GetNodeIterator(std::shared_ptr<WorkPiece> piece) const {
+
+  // get iterators to the begining and end of the graph
+  boost::graph_traits<Graph>::vertex_iterator v, v_end;
+  boost::tie(v, v_end) = vertices(graph);
+
+  // return the iterator with this name (it is end if that node does not exist)
+  auto res = std::find_if(v, v_end, [this,piece](boost::graph_traits<Graph>::vertex_descriptor vertex)->bool { return piece==this->graph[vertex]->piece; } );
+
+  return res;
+
+}
 
 std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > WorkGraph::GraphOutputs() const {
   // create an empty vector to hold outputs
@@ -530,7 +542,11 @@ void WorkGraph::Print(std::ostream& fout) const
 
 std::shared_ptr<WorkPiece> WorkGraph::GetPiece(std::string const& name)
 {
-  return GetPiece(*GetNodeIterator(name));
+  return graph[*GetNodeIterator(name)]->piece;
+}
+std::shared_ptr<WorkPiece> WorkGraph::GetPiece(boost::graph_traits<Graph>::vertex_descriptor it)
+{
+  return graph[it]->piece;
 }
 
 struct TrueOp {
@@ -540,6 +556,11 @@ struct TrueOp {
     return true;
   }
 };
+
+std::string WorkGraph::GetName(std::shared_ptr<WorkPiece> piece) const
+{
+  return graph[*GetNodeIterator(piece)]->name;
+}
 
 void WorkGraph::BindNode(std::string             const& nodeName,
                          std::vector<boost::any> const& x)
