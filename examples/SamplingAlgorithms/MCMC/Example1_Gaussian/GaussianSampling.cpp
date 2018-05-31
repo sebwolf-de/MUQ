@@ -95,13 +95,13 @@ $$
 ## Implementation
 To sample the Gaussian target, the code needs to do four things:
 
-1. Define the target density and set up sampling problem
+1. Define the target density and set up a sampling problem.
 
-2. Construct the RWM algorithm
+2. Construct the RWM algorithm.
 
-3. Run the MCMC algorithm
+3. Run the MCMC algorithm.
 
-4. Analyze the results
+4. Analyze the results.
 
 ### Include statements
 Include the necessary header files from MUQ and elsewhere.  Notice our use of the

@@ -6,14 +6,12 @@ The problem is to sample a Gaussian distribution where the variance of
 the Gaussian is a random variable endowed with an inverse Gamma distribution.
 Thus, there are two "blocks" of interest: the Gaussian random variable and the
 variance hyperparameter.  We will sample the joint distribution of both parameters
-by constructing a Metropolis-Within-Gibbs sampler.  In this
-setting, the Metropolis-Hastings rule is used in one block while the
-other block is fixed.
+by constructing a Metropolis-Within-Gibbs sampler.
 
 ### Problem Formulation
-Let $x$ denote the Gaussian random variable of interest, and $\sigma^2$ its prior
-variance.  Notice that the joint density $\pi(x,\sigma)$ can be expanded in two
-ways:
+Let $x$ denote the Gaussian random variable and $\sigma^2$ its
+variance, which follows an Inverse Gamma distribution.  Notice that the joint
+density $\pi(x,\sigma)$ can be expanded in two ways:
 $$
 \pi(x,\sigma^2) = \pi(x | \sigma^2)\pi(\sigma^2)
 $$
@@ -21,13 +19,13 @@ and
 $$
 \pi(x,\sigma^2) = \pi(\sigma^2 | x)\pi(x).
 $$
-This will be useful below.
+We will use this to simplify the Metropolis-Hastings acceptance ratios below.
 
 
-Now consider a two stage Metropolis-Hastings algorithm.  In the first stage,
-we take a step in $x$ for a fixed value of $\sigma^2$.  In the second stage,
-we take a step in $\sigma^2$ for a fixed value of $x$.  The algorithm would look
-something like this:
+Now consider a two stage Metropolis-Hastings algorithm.  In the first stage
+we take a step in $x$ with a fixed value of $\sigma^2$ and in the second stage
+we take a step in $\sigma^2$ with a fixed value of $x$.  Using the Metropolis-Hastings
+rule for each stage, the algorithm is given by
 
 1. Update $x$
 
@@ -56,14 +54,29 @@ something like this:
 The extra complexity of this two stage approach is warranted when one or both of the block proposals
 $q(\sigma^\prime | \sigma^{(k-1)}, x^{(k)})$ and $q(x^\prime | x^{(k-1)}, \sigma^{(k-1)})$
 can be chosen to match the condtiional target densities $\pi(\sigma^\prime | x^{(k)})$
-and $\pi(x^\prime | \sigma^{(k-1)})$.  For example, when $\pi(x | \sigma^2)$ is Gaussian
-and $\pi(\sigma^2)$ is Inverse Gamma, then $\pi(\sigma^2 | x)$ can be sampled
-directly, allowing us to choose $q(\sigma^\prime | \sigma^{(k-1)}, x^{(k)}) = \pi(\sigma^\prime | x^{(k)})$,
-guaranteeing an acceptance probability of one for the $\sigma^2$ update.  Notice
-that in this example, $\pi(x^\prime | \sigma^{(k-1)})$ is Gaussian and can also
-be sampled directly.  However, for illustrative purposes, we will mix a random
+and $\pi(x^\prime | \sigma^{(k-1)})$.  When $\pi(x | \sigma^2)$ is Gaussian
+and $\pi(\sigma^2)$ is Inverse Gamma, as is the case in this example, the conditional target distribution $\pi(\sigma^2 | x)$ can be sampled
+directly, allowing us to choose $q(\sigma^\prime | \sigma^{(k-1)}, x^{(k)}) = \pi(\sigma^\prime | x^{(k)})$.
+This guarantees an acceptance probability of one for the $\sigma^2$ update.  Notice
+that in this example, $\pi(x^\prime | \sigma^{(k-1)})$ is Gaussian and could also
+be sampled directly.  For illustrative purposes however, we will mix a random
 walk proposal on $x$ with an independent Inverse Gamma proposal on $\sigma^2$.
 
+*/
+
+/***
+## Implementation
+To sample the Gaussian target, the code needs to do four things:
+
+1. Define the joint Gaussian-Inverse Gamma target density with two inputs and set up a sampling problem.
+
+2. Construct the blockwise Metropolis-Hastings algorithm with a mix of random walk and Inverse Gamma proposals.
+
+3. Run the MCMC algorithm.
+
+4. Analyze the results.
+
+### Include statements
 */
 #include "MUQ/Modeling/Distributions/Gaussian.h"
 #include "MUQ/Modeling/Distributions/InverseGamma.h"
@@ -88,8 +101,45 @@ using namespace muq::Utilities;
 
 int main(){
 
+  /***
+  ### 1. Define the joint Gaussian-Inverse Gamma target density
+  Here we need to construct the joint density $\pi(x | \sigma^2)\pi(\sigma^2)$.
+  Combining models model components in MUQ is accomplished by creating a
+  WorkGraph, adding components the graph as nodes, and then adding edges to
+  connect the components and construct the more complicated model.  Once constructed,
+  our graph should look like:
+
+  <center>
+    <img src="DocFiles/GraphImage.png" alt="Model Graph" style="width: 400px;"/>
+  </center>
+
+  Dashed nodes in the image correspond to model inputs and nodes with solid borders
+  represent model components represented through a child of the ModPiece class.
+  The following code creates each of the components and then adds them on to the
+  graph.  Notice that when the ModPiece's are added to the graph, a node name is
+  specified.  Later, we will use these names to identify structure in the graph
+  that can be exploited to generate the Inverse Gamma proposal.  Note that the
+  node names used below correspond to the names used in the figure above.
+  */
   auto varPiece = std::make_shared<IdentityOperator>(1);
 
+  /***
+  In previous examples, the only input to the Gaussian density was the parameter
+  $x$ itself.  Here however, the variance is also an input.  The Gaussian class
+  provides an enum for defining this type of extra input.  Avaialable options are
+
+  - `Gaussian::Mean` The mean should be included as an input
+  - `Gaussian::DiagCovariance` The covariance diagonal is an input
+  - `Gaussian::DiagPrecision` The precision diagonal is an input
+  - `Gaussian::FullCovariance` The full covariance is an input (unraveled as a vector)
+  - `Gaussian::FullPrecision` The full precision is an input (unraveled as a vector)
+
+  The `|` operator can be used to combine options.  For example, if both the mean and
+  diagonal covariance will be inputs, then we could pass `Gaussian::Mean | Gaussian::DiagCovariance`
+  to the Gaussian constructor.
+
+  In our case, only the diagonal covariance will be an input, so we can simply use `Gaussian::DiagCovariance`.
+  */
   Eigen::VectorXd mu(2);
   mu << 1.0, 2.0;
 
@@ -98,13 +148,26 @@ int main(){
   std::cout << "Gaussian piece has " << gaussDens->inputSizes.size()
             << " inputs with sizes " << gaussDens->inputSizes.transpose() << std::endl;
 
+  /***
+  Here we construct the Inverse Gamma distribution $\pi(\sigma^2)$
+  */
   const double alpha = 2.5;
   const double beta = 1.0;
 
-
   auto varDens = std::make_shared<InverseGamma>(alpha,beta)->AsDensity();
+
+  /***
+  To define the product $\pi(x|\sigma^2)\pi(\sigma^2)$, we will use the DensityProduct class.
+  */
   auto prodDens = std::make_shared<DensityProduct>(2);
 
+/***
+The Gaussian density used here is two dimensional with the same variance in each
+dimension.  The Gaussian ModPiece thus requires a two dimensional vector to define
+the diagonal covariance.  To support that, we need to replicate the 1D vector
+returned by the "varPiece" IdentityOperator.   The ReplicateOperator class
+provides this functionality.
+*/
   auto replOp = std::make_shared<ReplicateOperator>(1,2);
 
   auto graph = std::make_shared<WorkGraph>();
@@ -122,13 +185,48 @@ int main(){
   graph->AddEdge("Gaussian Density", 0, "Joint Density", 0);
   graph->AddEdge("Variance Density", 0, "Joint Density", 1);
 
-  graph->Visualize("DensityGraph.pdf");
+  /***
+  #### Visualize the graph
+  To check to make sure we constructed the graph correctly, we will employ the
+  WorkGraph::Visualize function.  This function generates an image in the folder
+  where the executable was run.  The result will look like the image below.  Looking
+  at this image closely, we see that, with the exception of the "Replicate Variance"
+  node, the structure matches what we expect.
+  */
+  graph->Visualize("DensityGraph.png");
+  /***
+  <center>
+    <img src="DocFiles/DensityGraph.png" alt="MUQ-Generated Graph" style="width: 600px;"/>
+  </center>
+  */
 
 
+  /***
+  #### Construct the joint density model and sampling problem
+  Here we wrap the graph into a single ModPiece that can be used to construct the
+  sampling problem.
+  */
   auto jointDens = graph->CreateModPiece("Joint Density");
 
   auto problem = std::make_shared<SamplingProblem>(jointDens);
 
+/***
+### 2. Construct the blockwise Metropolis-Hastings algorithm
+The entire two-block MCMC algorithm described above can be specified using the
+same boost property tree approach used to specify a single chain algorithm.  The
+only difference is the number of kernels specified in the "KernelList" ptree
+entry.   Here, two other ptree blocks are specified "Kernel1" and "Kernel2".
+
+"Kernel1" specifies the transition kernel used to update the Gaussian variable
+$x$.  Here, it is the same random walk Metropolis (RWM) algorithm used in the
+first MCMC example.
+
+"Kernel2" specifies the transition kernel used to udpate the variance $\sigma^2$.
+It could also employ a random walk proposal, but here we use to Inverse Gamma
+proposal, which requires knowledge about both $\pi(x | \sigma^2)$ and $\pi(\sigma^2)$.
+To pass this information to the proposal, we specify which nodes in the WorkGraph
+correspond to the Gaussian and Inverse Gamma densities.
+*/
   pt::ptree pt;
   pt.put("NumSamples", 1e5); // number of MCMC steps
   pt.put("BurnIn", 1e4);
@@ -141,9 +239,6 @@ int main(){
 
   pt.put("Kernel2.Method","MHKernel");  // Name of the transition kernel class
   pt.put("Kernel2.Proposal", "GammaProposal"); // Name of block defining the proposal distribution
-
-  pt.put("Kernel2.GaussProposal.Method", "MHProposal");
-  pt.put("Kernel2.GaussProposal.ProposalVariance", 0.25);
 
   pt.put("Kernel2.GammaProposal.Method", "InverseGammaProposal");
   pt.put("Kernel2.GammaProposal.InverseGammaNode", "Variance Density");
@@ -165,10 +260,14 @@ int main(){
   as a vector of weighted SamplingState's.
   */
   std::vector<Eigen::VectorXd> startPt(2);
-  startPt.at(0) = mu;
-  startPt.at(1) = Eigen::VectorXd::Ones(1);
+  startPt.at(0) = mu; // Start the Gaussian block at the mean
+  startPt.at(1) = Eigen::VectorXd::Ones(1); // Set the starting value of the variance to 1
 
   SampleCollection const& samps = mcmc->Run(startPt);
+
+  /***
+  ### 4. Analyze the results
+  */
 
   Eigen::VectorXd sampMean = samps.Mean();
   std::cout << "Sample Mean = \n" << sampMean.transpose() << std::endl;
