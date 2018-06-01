@@ -6,6 +6,7 @@
 
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/WorkGraphPiece.h"
+#include "MUQ/Modeling/ModGraphPiece.h"
 #include "MUQ/Modeling/ConstantVector.h"
 #include "MUQ/Modeling/NodeNameFinder.h"
 

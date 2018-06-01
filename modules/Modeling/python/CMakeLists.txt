@@ -19,5 +19,8 @@ CreateCompileGroup(
     "MODELING_CORE"
     "PYTHON"
     ""
-    WorkPiecePython.cpp
+    Module.cpp
+    WorkPieceWrapper.cpp
+    ModPieceWrapper.cpp
+    DistributionWrapper.cpp
 )
