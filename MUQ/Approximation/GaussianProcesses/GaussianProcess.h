@@ -7,6 +7,8 @@
 
 #include <Eigen/Core>
 
+#include "MUQ/Modeling/Distributions/Gaussian.h"
+
 #include <set>
 
 //#include <nlopt.h>
@@ -119,13 +121,13 @@ namespace muq
 	}
     };
 
-    
+
     class LinearMean : public MeanFunctionBase
     {
 
     public:
         LinearMean(double slope, double intercept) : LinearMean(slope*Eigen::MatrixXd::Ones(1,1), intercept*Eigen::VectorXd::Ones(1)){};
-        
+
         LinearMean(Eigen::MatrixXd const& slopesIn,
                    Eigen::VectorXd const& interceptsIn) : MeanFunctionBase(slopesIn.cols(),slopesIn.rows()),
                                                           slopes(slopesIn),
@@ -144,9 +146,9 @@ namespace muq
     private:
         Eigen::MatrixXd slopes;
         Eigen::VectorXd intercepts;
-        
+
     };
-    
+
 
     /** @class LinearTransformMean
         @ingroup MeanFunctions
@@ -225,7 +227,7 @@ namespace muq
 	return SumMean(mu1, mu2);
     }
 
-    
+
 
 
     /** @class GaussianProcess
@@ -256,8 +258,14 @@ namespace muq
 
         virtual GaussianProcess& Condition(std::shared_ptr<ObservationInformation> obs);
 
+        /** Construct a Gaussian distribution (finite dimensional) by evaluating
+            the mean function and kernel of this Gaussian process at the provided
+            locations.
+        */
+        std::shared_ptr<muq::Modeling::Gaussian> Discretize(Eigen::MatrixXd const& pts);
+
         virtual void Optimize();
-        
+
         // Evaluate the mean and covariance
         virtual std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Predict(Eigen::MatrixXd const& newLocs,
                                                                     CovarianceType         covType);
@@ -270,16 +278,16 @@ namespace muq
 
         virtual double LogLikelihood(Eigen::MatrixXd const& xs,
                                      Eigen::MatrixXd const& vals);
-        
+
         // Evaluates the log marginal likelihood needed when fitting hyperparameters
         virtual double MarginalLogLikelihood();
         virtual double MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
                                              bool                        computeGrad=true);
 
-        
+
       	std::shared_ptr<MeanFunctionBase> Mean(){return mean;};
         std::shared_ptr<KernelBase>       Kernel(){return covKernel;};
-        
+
     protected:
 
         Eigen::MatrixXd BuildCrossCov(Eigen::MatrixXd const& newLocs);
