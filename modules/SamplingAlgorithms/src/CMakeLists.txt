@@ -26,6 +26,7 @@ CreateCompileGroup(
 
     SamplingState.cpp
     SampleCollection.cpp
+    MarkovChain.cpp
 
     TransitionKernel.cpp
     #MCKernel.cpp
@@ -37,6 +38,6 @@ CreateCompileGroup(
     MHProposal.cpp
     AMProposal.cpp
     InverseGammaProposal.cpp
-    
+
     SamplingProblem.cpp
 )
