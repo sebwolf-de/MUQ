@@ -58,6 +58,9 @@ namespace muq {
 
       unsigned int Dimension() const;
 
+      virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x);
+      virtual Eigen::MatrixXd ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x);
+
       /// Get the covariance
       /**
 	     @return The covariance
