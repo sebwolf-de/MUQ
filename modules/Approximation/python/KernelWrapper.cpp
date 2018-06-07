@@ -1,10 +1,10 @@
 #include "AllClassWrappers.h"
 
-#include "CoregionalKernel.h"
-#include "KernelBase.h"
-#include "MaternKernel.h"
-#include "PeriodicKernel.h"
-#include "ProductKernel.h"
+#include "MUQ/Approximation/GaussianProcesses/CoregionalKernel.h"
+#include "MUQ/Approximation/GaussianProcesses/KernelBase.h"
+#include "MUQ/Approximation/GaussianProcesses/MaternKernel.h"
+#include "MUQ/Approximation/GaussianProcesses/PeriodicKernel.h"
+#include "MUQ/Approximation/GaussianProcesses/ProductKernel.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

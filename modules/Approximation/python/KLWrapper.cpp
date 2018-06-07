@@ -1,7 +1,6 @@
 #include "AllClassWrappers.h"
 
-#include ".h"
-#include "KarhunenLoeveFactory.h"
+#include "MUQ/Approximation/GaussianProcesses/KarhunenLoeveExpansion.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

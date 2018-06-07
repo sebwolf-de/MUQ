@@ -1,9 +1,9 @@
 #include "AllClassWrappers.h"
 
-#include "MultiIndex.h"
-#include "MultiIndexFactory.h"
-#include "MultiIndexLimiter.h"
-#include "MultiIndexSet.h"
+#include "MUQ/Utilities/MultiIndices/MultiIndex.h"
+#include "MUQ/Utilities/MultiIndices/MultiIndexFactory.h"
+#include "MUQ/Utilities/MultiIndices/MultiIndexLimiter.h"
+#include "MUQ/Utilities/MultiIndices/MultiIndexSet.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

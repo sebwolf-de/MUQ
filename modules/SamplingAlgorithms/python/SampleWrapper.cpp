@@ -1,11 +1,10 @@
 #include "AllClassWrappers.h"
 
-#include "AbstractSamplingProblem.h"
-#include "ImportanceSampling.h"
-#include "SampleCollection.h"
-#include "SamplingAlgorithm.h"
-#include "SamplingProblem.h"
-#include "SamplingState.h"
+#include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
+#include "MUQ/SamplingAlgorithms/SampleCollection.h"
+#include "MUQ/SamplingAlgorithms/SamplingAlgorithm.h"
+#include "MUQ/SamplingAlgorithms/SamplingProblem.h"
+#include "MUQ/SamplingAlgorithms/SamplingState.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -37,10 +36,40 @@ void muq::SamplingAlgorithms::PythonBindings::SampleWrapper(py::module &m)
     .def("RunImpl", &SamplingAlgorithms::RunImpl);
     */
     
-  py::class_<SamplingProblem, std::shared_ptr<SamplingProblem>> sampProb(m, "SamplingProblem");
-  SamplingProblem
-    .def("LogDensity", &SamplingProblems::LogDensity)
-    .def("GradLogDensity", &SamplingProblems::GradLogDensity)
-    .def("GetNumBlocks", &SamplingProblems::GeNumBlocks)
-    .def("GetBlockSizes", &SamplingProblems::GetBlockSizes);
+  py::class_<SamplingProblem, AbstractSamplingProblem, std::shared_ptr<SamplingProblem>> sampProb(m, "SamplingProblem");
+  sampProb
+    .def("LogDensity", &SamplingProblem::LogDensity)
+    .def("GradLogDensity", &SamplingProblem::GradLogDensity)
+    .def("GetDistribution", &SamplingProblem::GetDistribution);
+    
+  py::class_<SamplingStateIdentity, std::shared_ptr<SamplingStateIdentity>> ssID(m, "SamplingStateIdentity");
+  ssID
+    .def_readonly("blockInd", &SamplingStateIdentity::blockInd);
+    
+  py::class_<SamplingStatePartialMoment, std::shared_ptr<SamplingStatePartialMoment>> ssParMom(m, "SamplingStatePartialMoment");
+  ssParMom
+    .def_readonly("blockInd", &SamplingStatePartialMoment::blockInd)
+    .def_readonly("momentPower", &SamplingStatePartialMoment::momentPower);
+    //.def_readonly("mu", &SamplingStatePartialMoment::mu);
+    
+  py::class_<SampleCollection, std::shared_ptr<SampleCollection>> sampColl(m, "SampleCollection");
+  sampColl
+    .def("Add", &SampleCollection::Add)
+    .def("size", &SampleCollection::size)
+    .def("CentralMoment", &SampleCollection::CentralMoment)
+    .def("Mean", &SampleCollection::Mean)
+    .def("Variance", &SampleCollection::Variance)
+    .def("Covariance", &SampleCollection::Covariance)
+    .def("ESS", &SampleCollection::ESS);
+    
+  py::class_<SamplingState, std::shared_ptr<SamplingState>> sampState(m, "SamplingState");
+  sampState
+    .def(py::init<Eigen::VectorXd const&>())
+    .def(py::init<Eigen::VectorXd const&, double>())
+    .def(py::init<std::vector<Eigen::VectorXd> const&>())
+    .def(py::init<std::vector<Eigen::VectorXd> const&, double>())
+    .def_readonly("weight", &SamplingState::weight)
+    .def("HasMeta", &SamplingState::HasMeta)
+    .def("TotalDim", &SamplingState::TotalDim);
+  
 }

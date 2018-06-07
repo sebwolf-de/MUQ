@@ -1,11 +1,11 @@
 #include "AllClassWrappers.h"
 
-#include "Attributes.h"
-#include "BlockDataset.h"
-#include "H5Object.h"
-#include "HDF5File.h"
-#include "HDF5Types.h"
-#include "Pathtools.h"
+#include "MUQ/Utilities/HDF5/Attributes.h"
+#include "MUQ/Utilities/HDF5/BlockDataset.h"
+#include "MUQ/Utilities/HDF5/H5Object.h"
+#include "MUQ/Utilities/HDF5/HDF5File.h"
+#include "MUQ/Utilities/HDF5/HDF5Types.h"
+#include "MUQ/Utilities/HDF5/Pathtools.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

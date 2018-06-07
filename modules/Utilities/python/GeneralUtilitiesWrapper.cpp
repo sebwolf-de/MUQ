@@ -1,8 +1,8 @@
 #include "AllClassWrappers.h"
 
-#include "RandomGenerator.h"
-#include "StringUtilities.h"
-#include "WaitBar.h"
+#include "MUQ/Utilities/RandomGenerator.h"
+#include "MUQ/Utilities/StringUtilities.h"
+#include "MUQ/Utilities/WaitBar.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

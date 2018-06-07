@@ -1,8 +1,8 @@
 #include "AllClassWrappers.h"
 
-#include "GaussianProcess.h"
-#include "ObservationInformation.h"
-#include "StateSpaceGP.h"
+#include "MUQ/Approximation/GaussianProcesses/GaussianProcess.h"
+#include "MUQ/Approximation/GaussianProcesses/ObservationInformation.h"
+#include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
