@@ -21,6 +21,7 @@ void muq::SamplingAlgorithms::PythonBindings::ProposalWrapper(py::module &m)
 {
   py::class_<AMProposal, MHProposal, std::shared_ptr<AMProposal>> amPro(m, "AMProposal");
   amPro
+    .def(py::init<boost::property_tree::ptree const&, std::shared_ptr<AbstractSamplingProblem>>())
     .def("Adapt", &AMProposal::Adapt);
     
   py::class_<MCMCProposal, std::shared_ptr<MCMCProposal>> mcmcPro(m, "MCMCProposal");
