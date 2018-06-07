@@ -33,10 +33,12 @@ CreateCompileGroup(
     MHKernel.cpp
     #MCMCKernel.cpp
 
+    MCMCFactory.cpp
+
     MCMCProposal.cpp
     MHProposal.cpp
     AMProposal.cpp
     InverseGammaProposal.cpp
-    
+
     SamplingProblem.cpp
 )

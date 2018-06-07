@@ -90,6 +90,7 @@ To sample the Gaussian target, the code needs to do four things:
 
 #include "MUQ/SamplingAlgorithms/SamplingProblem.h"
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
+#include "MUQ/SamplingAlgorithms/MCMCFactory.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -245,12 +246,11 @@ correspond to the Gaussian and Inverse Gamma densities.
   pt.put("Kernel2.GammaProposal.GaussianNode", "Gaussian Density");
 
   /***
-  Once the algorithm parameters are specified, we can pass them to the SingleChainMCMC
-  constructor to create an instance of the MCMC algorithm we defined in the
+  Once the algorithm parameters are specified, we can pass them to the CreateSingleChain
+  function of the MCMCFactory class to create an instance of the MCMC algorithm we defined in the
   property tree.
   */
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt,problem);
-
+  auto mcmc = MCMCFactory::CreateSingleChain(pt, problem);
 
   /***
   ### 3. Run the MCMC algorithm

@@ -11,8 +11,10 @@ using namespace muq::SamplingAlgorithms;
 
 REGISTER_TRANSITION_KERNEL(MHKernel)
 
-MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : TransitionKernel(pt, problem)
-{
+MHKernel::MHKernel(pt::ptree const& pt,
+                   std::shared_ptr<AbstractSamplingProblem> problem) :
+                   TransitionKernel(pt, problem) {
+
   // Extract the proposal parts from the ptree
   std::string proposalName = pt.get<std::string>("Proposal");
 
@@ -24,7 +26,10 @@ MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem>
   assert(proposal);
 }
 
-
+MHKernel::MHKernel(pt::ptree const& pt,
+                   std::shared_ptr<AbstractSamplingProblem> problem,
+                   std::shared_ptr<MCMCProposal> proposalIn) :
+                   TransitionKernel(pt, problem), proposal(proposalIn) {}
 
 MHKernel::~MHKernel() {}
 

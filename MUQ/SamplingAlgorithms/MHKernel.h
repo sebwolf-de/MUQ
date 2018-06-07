@@ -14,7 +14,12 @@ namespace muq {
     class MHKernel : public TransitionKernel {
     public:
 
-      MHKernel(boost::property_tree::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem);
+      MHKernel(boost::property_tree::ptree const& pt,
+               std::shared_ptr<AbstractSamplingProblem> problem);
+
+      MHKernel(boost::property_tree::ptree const& pt,
+               std::shared_ptr<AbstractSamplingProblem> problem,
+               std::shared_ptr<MCMCProposal> proposalIn);
 
       ~MHKernel();
 
