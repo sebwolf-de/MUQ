@@ -38,7 +38,7 @@ std::shared_ptr<SamplingState> CrankNicolsonProposal::Sample(std::shared_ptr<Sam
   // the mean of the proposal is the current point
   std::vector<Eigen::VectorXd> props = currentState->state;
 
-  props.at(blockInd) = priorMu + sqrt(1.0-beta*beta)*currentState->state.at(blockInd) + beta*propPart->Sample();
+  props.at(blockInd) = priorMu + sqrt(1.0-beta*beta)*(currentState->state.at(blockInd)-priorMu) + beta*propPart->Sample();
 
   // store the new state in the output
   return std::make_shared<SamplingState>(props, 1.0);
@@ -47,7 +47,7 @@ std::shared_ptr<SamplingState> CrankNicolsonProposal::Sample(std::shared_ptr<Sam
 double CrankNicolsonProposal::LogDensity(std::shared_ptr<SamplingState> currState,
                                          std::shared_ptr<SamplingState> propState)
 {
-  Eigen::VectorXd diff = (propState->state.at(blockInd) - priorMu - sqrt(1.0-beta*beta)*currState->state.at(blockInd))/beta;
+  Eigen::VectorXd diff = (propState->state.at(blockInd) - priorMu - sqrt(1.0-beta*beta)*(currState->state.at(blockInd)-priorMu))/beta;
 
   return propPart->LogDensity(diff);
 }

@@ -32,7 +32,7 @@ TEST(MCMC, CrankNicolson) {
   pt.put("Kernel1.Method","MHKernel");
   pt.put("Kernel1.Proposal", "MyProposal"); // the proposal
   pt.put("Kernel1.MyProposal.Method", "CrankNicolsonProposal");
-  pt.put("Kernel1.MyProposal.Beta", 0.9);
+  pt.put("Kernel1.MyProposal.Beta", 0.8);
   pt.put("Kernel1.MyProposal.PriorNode", "Prior"); // The node in the WorkGraph containing the prior density
 
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
