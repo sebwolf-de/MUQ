@@ -8,7 +8,8 @@ using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
 SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree&             pt,
-                                 std::shared_ptr<AbstractSamplingProblem> problem) : SamplingAlgorithm(std::make_shared<MarkovChain>())
+                                 std::shared_ptr<AbstractSamplingProblem> problem) : SamplingAlgorithm(std::make_shared<MarkovChain>()),
+                                                                                     printLevel(pt.get("PrintLevel",3))
 {
   numSamps = pt.get<unsigned int>("NumSamples");
   burnIn = pt.get("BurnIn",0);
@@ -30,6 +31,17 @@ SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree&             pt,
 
 }
 
+void SingleChainMCMC::PrintStatus(std::string prefix, unsigned int currInd) const
+{
+  std::cout << prefix << int(std::floor(double((currInd - 1) * 100) / double(numSamps))) << "% Complete" << std::endl;
+  if(printLevel>1){
+    for(int blockInd=0; blockInd<kernels.size(); ++blockInd){
+      std::cout << prefix << "  Block " << blockInd << ":\n";
+      kernels.at(blockInd)->PrintStatus(prefix + "    ");
+    }
+  }
+}
+
 std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::VectorXd> const& x0)
 {
   unsigned sampNum = 0;
@@ -38,9 +50,25 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
   samples->Add(prevState);
 
+  // What is the next iteration that we want to print at
+  const unsigned int printIncr = std::floor(numSamps / double(10));
+  unsigned int nextPrintInd = printIncr;
+
   // Run until we've received the desired number of samples
+  if(printLevel>0)
+    std::cout << "Starting single chain MCMC sampler..." << std::endl;
+
+  auto startTime = std::chrono::high_resolution_clock::now();
   while(sampNum < numSamps)
   {
+    // Should we print
+    if(sampNum > nextPrintInd){
+      if(printLevel>0){
+        PrintStatus("  ", sampNum);
+      }
+      nextPrintInd += printIncr;
+    }
+
     // Loop through each parameter block
     for(int blockInd=0; blockInd<kernels.size(); ++blockInd){
 
@@ -68,6 +96,15 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
       kernels.at(blockInd)->PostStep(sampNum, newStates);
     }
   }
+
+  auto endTime = std::chrono::high_resolution_clock::now();
+  double runTime = std::chrono::duration<double>(endTime - startTime).count();
+
+  if(printLevel>0){
+    PrintStatus("  ", numSamps+1);
+    std::cout << "Completed in " << runTime << " seconds." << std::endl;
+  }
+
 
   return samples;
 }

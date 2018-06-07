@@ -26,7 +26,8 @@ TEST(MCMC, CrankNicolson) {
   // parameters for the sampler
   pt::ptree pt;
   pt.put("NumSamples", N); // number of Monte Carlo samples
-  pt.put("BurnIn", 1e3);
+  pt.put("BurnIn", 1e4);
+  pt.put("PrintLevel",0);
   pt.put("KernelList", "Kernel1"); // the transition kernel
   pt.put("Kernel1.Method","MHKernel");
   pt.put("Kernel1.Proposal", "MyProposal"); // the proposal
@@ -93,10 +94,7 @@ TEST(MCMC, CrankNicolson) {
   Eigen::VectorXd sampMean = samps->Mean();
   Eigen::MatrixXd sampCov = samps->Covariance();
 
-  Eigen::VectorXd ess = samps->ESS();
-  Eigen::VectorXd mcStd = postCov.diagonal().array().sqrt() / ess.array().sqrt();
-
-  EXPECT_NEAR(postMean(0), sampMean(0), 4.0*mcStd(0));
-  EXPECT_NEAR(postMean(1), sampMean(1), 4.0*mcStd(1));
+  EXPECT_NEAR(postMean(0), sampMean(0), 1e-2);
+  EXPECT_NEAR(postMean(1), sampMean(1), 1e-2);
 
 }

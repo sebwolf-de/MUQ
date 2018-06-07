@@ -27,6 +27,7 @@ TEST(MCMC, MHKernel_MHProposal) {
   // parameters for the sampler
   pt::ptree pt;
   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.PrintLevel",0);
   pt.put("MyMCMC.KernelList", "Kernel1"); // the transition kernel
   pt.put("MyMCMC.Kernel1.Method","MHKernel");
   pt.put("MyMCMC.Kernel1.Proposal", "MyProposal"); // the proposal
@@ -80,6 +81,7 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   // parameters for the sampler
   pt::ptree pt;
   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.PrintLevel",0);
   pt.put("MyMCMC.KernelList", "Kernel1,Kernel2"); // the transition kernel
 
   // MH Kernel for first block
@@ -168,6 +170,7 @@ TEST(MCMC, MHKernel_AMProposal) {
   // parameters for the sampler
   pt::ptree pt;
   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.PrintLevel",0);
   pt.put("MyMCMC.KernelList", "Kernel1"); // the transition kernel
   pt.put("MyMCMC.Kernel1.Method","MHKernel");
   pt.put("MyMCMC.Kernel1.Proposal", "MyProposal"); // the proposal
