@@ -248,11 +248,15 @@ namespace muq
                         KernelBase&       kernelIn) : GaussianProcess(meanIn.Clone(), kernelIn.Clone()){};
 
         GaussianProcess(std::shared_ptr<MeanFunctionBase> meanIn,
-            			std::shared_ptr<KernelBase>       covKernelIn);
+                        std::shared_ptr<KernelBase>       covKernelIn);
+
+        virtual GaussianProcess& Condition(Eigen::Ref<const Eigen::MatrixXd> const& loc,
+                                           Eigen::Ref<const Eigen::MatrixXd> const& vals)
+        {return Condition(loc,vals,0.0);};
 
         virtual GaussianProcess& Condition(Eigen::Ref<const Eigen::MatrixXd> const& loc,
                                            Eigen::Ref<const Eigen::MatrixXd> const& vals,
-                                           double                                   obsVar=0.0);
+                                           double                                   obsVar);
 
         virtual GaussianProcess& Condition(std::shared_ptr<ObservationInformation> obs);
 
@@ -273,6 +277,7 @@ namespace muq
         
         // Evaluates the log marginal likelihood needed when fitting hyperparameters
         virtual double MarginalLogLikelihood();
+        virtual double MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad);
         virtual double MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
                                              bool                        computeGrad=true);
 
