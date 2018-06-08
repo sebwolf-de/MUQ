@@ -26,6 +26,7 @@ CreateCompileGroup(
 
     SamplingState.cpp
     SampleCollection.cpp
+    MarkovChain.cpp
 
     TransitionKernel.cpp
     #MCKernel.cpp
