@@ -14,6 +14,7 @@ PYBIND11_PLUGIN(pymuqModeling) {
     WorkPieceWrapper(m);
     ModPieceWrapper(m);
     DistributionWrapper(m);
-    
+    CwiseUnaryOperatorsWrapper(m);
+
     return m.ptr();
 }

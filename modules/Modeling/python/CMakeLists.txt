@@ -23,4 +23,5 @@ CreateCompileGroup(
     WorkPieceWrapper.cpp
     ModPieceWrapper.cpp
     DistributionWrapper.cpp
+    CwiseUnaryOperatorsWrapper.cpp
 )
