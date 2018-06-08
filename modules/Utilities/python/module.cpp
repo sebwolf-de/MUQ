@@ -12,9 +12,8 @@ PYBIND11_PLUGIN(pymuqUtilities) {
     py::module m("pymuqUtilities", 
                  "Python bindings for the muqUtilities library.");
 
-    KernelWrapper(m);
-    LinearAlgebraWrapper(m);
-    MultiIndicesWrapper(m);
+    //LinearAlgebraWrapper(m);
+    //MultiIndicesWrapper(m);
     GeneralUtilitiesWrapper(m);
     
     return m.ptr();

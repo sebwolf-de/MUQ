@@ -38,18 +38,24 @@ public:
 
   /** Get a standard Gaussian distribution sample. */
   static double          GetNormal();
-  static Eigen::MatrixXd GetNormal(int rows, int cols=1);
+  static Eigen::MatrixXd GetNormal(int rows){return GetNormal(rows,1);};
+  static Eigen::MatrixXd GetNormal(int rows, int cols);
 
   /** Get a uniformly distributed real sample in [0,1). */
   static double          GetUniform();
-  static Eigen::MatrixXd GetUniform(int rows, int cols=1);
+  static Eigen::MatrixXd GetUniform(int rows){return GetUniform(rows,1);};
+  static Eigen::MatrixXd GetUniform(int rows, int cols);
 
   static double          GetGamma(double const alpha, double const beta);
-  static Eigen::MatrixXd GetGamma(double const alpha, double const beta, int rows, int cols=1);
+  static Eigen::MatrixXd GetGamma(double const alpha, double const beta, int rows){return GetGamma(alpha, beta, rows, 1);};
+  static Eigen::MatrixXd GetGamma(double const alpha, double const beta, int rows, int cols);
 
   /** Get a random integer, distributed uniformly, between the bounds. */
   static int             GetUniformInt(int lb, int ub);
-  static Eigen::MatrixXi GetUniformInt(int lb, int ub, int rows, int cols=1, bool unique=true);
+  static Eigen::MatrixXi GetUniformInt(int lb, int ub, int rows){return GetUniformInt(lb, ub, rows, 1, true);};
+  static Eigen::MatrixXi GetUniformInt(int lb, int ub, int rows, bool unique){return GetUniformInt(lb, ub, rows, 1, unique);};
+  static Eigen::MatrixXi GetUniformInt(int lb, int ub, int rows, int cols){return GetUniformInt(lb, ub, rows, cols, true);};
+  static Eigen::MatrixXi GetUniformInt(int lb, int ub, int rows, int cols, bool unique);
 
   /// Set the seed for the random number generator. This is a fairly low quality way to do this, but is fine for testing.
   static void SetSeed(int seedval);
