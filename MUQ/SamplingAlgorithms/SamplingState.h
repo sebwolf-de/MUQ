@@ -20,7 +20,7 @@ namespace muq {
       SamplingState(Eigen::VectorXd const& stateIn, double weight = 1.0);
       SamplingState(std::vector<Eigen::VectorXd> const& stateIn, double weight = 1.0);
 
-      ~SamplingState();
+      virtual ~SamplingState() = default;
 
       /// The state variables
       const std::vector<Eigen::VectorXd> state;

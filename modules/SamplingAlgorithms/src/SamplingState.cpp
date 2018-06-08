@@ -8,8 +8,6 @@ using namespace muq::Utilities;
 SamplingState::SamplingState(Eigen::VectorXd const& stateIn, double weight) : state({stateIn}), weight(weight) {}
 SamplingState::SamplingState(std::vector<Eigen::VectorXd> const& stateIn, double const weight) : state(stateIn), weight(weight) {}
 
-SamplingState::~SamplingState() {}
-
 bool SamplingState::HasMeta(std::string const& metaKey)
 {
   auto iter = meta.find(metaKey);

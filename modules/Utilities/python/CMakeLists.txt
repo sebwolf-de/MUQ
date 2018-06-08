@@ -16,7 +16,7 @@ CreateCompileGroup(
   UTILITIES_CORE_PYTHON
     "Python wrappers for the basic building blocks of the Utilities library."
     "pymuqUtilities"
-    "Utilities_CORE"
+    "UTILITIES_CORE"
     "PYTHON"
     ""
     Module.cpp
