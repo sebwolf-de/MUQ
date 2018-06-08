@@ -1,7 +1,5 @@
 #include "AllClassWrappers.h"
 
-//#include "MUQ/SamplingAlgorithms/ISKernel.h"
-//#include "MUQ/SamplingAlgorithms/MCKernel.h"
 #include "MUQ/SamplingAlgorithms/MHKernel.h"
 #include "MUQ/SamplingAlgorithms/TransitionKernel.h"
 

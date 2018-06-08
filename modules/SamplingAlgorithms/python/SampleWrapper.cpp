@@ -2,7 +2,6 @@
 
 #include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
 #include "MUQ/SamplingAlgorithms/SampleCollection.h"
-#include "MUQ/SamplingAlgorithms/SamplingAlgorithm.h"
 #include "MUQ/SamplingAlgorithms/SamplingProblem.h"
 #include "MUQ/SamplingAlgorithms/SamplingState.h"
 
