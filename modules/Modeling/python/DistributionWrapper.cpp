@@ -85,5 +85,5 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
     ig
       .def(py::init<double,double>())
       .def_readonly("alpha", &InverseGamma::alpha)
-      .def_readonly("alpha", &InverseGamma::beta);
+      .def_readonly("beta", &InverseGamma::beta);
 }
