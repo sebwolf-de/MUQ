@@ -108,7 +108,6 @@ Eigen::MatrixXd SampleCollection::Covariance(int blockInd) const
 
   }else{
 
-
     const int blockSize = samples.at(0)->state.at(blockInd).size();
 
     samps.resize(blockSize, numSamps);
@@ -124,33 +123,85 @@ Eigen::MatrixXd SampleCollection::Covariance(int blockInd) const
   return cov;
 }
 
-// std::pair<double,Eigen::VectorXd> SampleCollection::RecursiveSum(std::vector<const std::shared_ptr<SamplingState>>::iterator       start,
-//                                                                  std::vector<const std::shared_ptr<SamplingState>>::iterator       end,
-//                                                                  std::function<Eigen::VectorXd(boost::any)> f)
-// {
-//   int numSamps = std::distance(start,end);
-//   const int maxSamps = 20;
-//
-//   // If the number of samples is small enough, we can safely add them up directly
-//   if(numSamps<maxSamps){
-//
-//     Eigen::VectorXd sum = (*start)->weight * f(**start);
-//     double weightSum = (*start)->weight;
-//
-//     for(auto it=start+1; it!=end; ++it){
-//         sum += (*it)->weight * f(**it);
-//         weightSum += (*it)->weight;
-//     }
-//     return std::make_pair(weightSum, sum);
-//
-//   // Otherwise, it's more numerically stable to add things pairwise
-//   }else{
-//     int halfDist = std::floor(0.5*numSamps);
-//     double weight1, weight2;
-//     Eigen::VectorXd sum1, sum2;
-//     std::tie(weight1,sum1) = RecursiveSum(start, start+halfDist);
-//     std::tie(weight2,sum2) = RecursiveSum(start+halfDist, end);
-//
-//     return std::make_pair(weight1+weight2, (sum1+sum2).eval());
-//   }
-// }
+std::pair<double,double> SampleCollection::RecursiveWeightSum(std::vector<const std::shared_ptr<SamplingState>>::iterator start,
+                                                              std::vector<const std::shared_ptr<SamplingState>>::iterator end)
+{
+  int numSamps = std::distance(start,end);
+  const int maxSamps = 20;
+
+  // If the number of samples is small enough, we can safely add them up directly
+  if(numSamps<maxSamps){
+
+    double weightSquareSum = (*start)->weight * (*start)->weight;
+    double weightSum = (*start)->weight;
+
+    for(auto it=start+1; it!=end; ++it){
+        weightSquareSum += (*it)->weight * (*it)->weight;
+        weightSum += (*it)->weight;
+    }
+    return std::make_pair(weightSum, weightSquareSum);
+
+  }else{
+    int halfDist = std::floor(0.5*numSamps);
+    double weight1, weight2, squaredSum1, squaredSum2;
+    std::tie(weight1,squaredSum1) = RecursiveWeightSum(start, start+halfDist);
+    std::tie(weight2,squaredSum2) = RecursiveWeightSum(start+halfDist, end);
+
+    return std::make_pair(weight1+weight2, squaredSum1+squaredSum2);
+  }
+}
+
+
+Eigen::VectorXd SampleCollection::ESS(int blockDim) const
+{
+  if(samples.size()==0)
+    return Eigen::VectorXd();
+
+  double weightSum = 0.0;
+  double squaredSum = 0.0;
+  std::tie(weightSum, squaredSum) = RecursiveWeightSum(samples.begin(), samples.end());
+
+  int blockSize;
+  if(blockDim<0){
+    blockSize = samples.at(0)->TotalDim();
+  }else{
+    blockSize = samples.at(0)->state.at(blockDim).size();
+  }
+  return (weightSum*weightSum / squaredSum) * Eigen::VectorXd::Ones(blockSize);
+}
+
+Eigen::MatrixXd SampleCollection::AsMatrix(int blockDim) const
+{
+  if(samples.size()==0)
+    return Eigen::MatrixXd();
+
+  if(blockDim<0){
+
+    Eigen::MatrixXd output(samples.at(0)->TotalDim(), samples.size());
+    for(int i=0; i<samples.size(); ++i){
+      int startInd = 0;
+
+      for(int block=0; block<samples.at(0)->state.size(); ++block){
+        int blockSize = samples.at(0)->state.at(block).size();
+        output.col(i).segment(startInd, blockSize) = samples.at(i)->state.at(block);
+        startInd += blockSize;
+      }
+    }
+
+    return output;
+
+  }else{
+    Eigen::MatrixXd output(samples.at(0)->state.at(blockDim).size(), samples.size());
+    for(int i=0; i<samples.size(); ++i)
+      output.col(i) = samples.at(0)->state.at(blockDim);
+    return output;
+  }
+}
+
+Eigen::VectorXd SampleCollection::Weights() const
+{
+  Eigen::VectorXd output(samples.size());
+  for(int i=0; i<samples.size(); ++i)
+    output(i) = samples.at(i)->weight;
+  return output;
+}

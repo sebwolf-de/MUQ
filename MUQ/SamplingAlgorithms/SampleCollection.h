@@ -44,17 +44,17 @@ namespace muq{
 
       void Add(std::shared_ptr<SamplingState> newSamp);
 
-      std::shared_ptr<SamplingState> at(unsigned i);
-      const std::shared_ptr<SamplingState> at(unsigned i) const;
+      virtual std::shared_ptr<SamplingState> at(unsigned i);
+      virtual const std::shared_ptr<SamplingState> at(unsigned i) const;
 
-      unsigned size() const{return samples.size();};
+      virtual unsigned size() const{return samples.size();};
 
       //  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order
-      Eigen::VectorXd CentralMoment(unsigned order, int blockDim=-1) const;
+      virtual Eigen::VectorXd CentralMoment(unsigned order, int blockDim=-1) const;
 
-      Eigen::VectorXd Mean(int blockDim=-1) const;
-      Eigen::VectorXd Variance(int blockDim=-1) const{return CentralMoment(2,blockDim);};
-      Eigen::MatrixXd Covariance(int blockDim=-1) const;
+      virtual Eigen::VectorXd Mean(int blockDim=-1) const;
+      virtual Eigen::VectorXd Variance(int blockDim=-1) const{return CentralMoment(2,blockDim);};
+      virtual Eigen::MatrixXd Covariance(int blockDim=-1) const;
 
       /** @brief Returns the effective sample size of the samples
           @details For almost all random variables of interest, the central limit
@@ -65,9 +65,9 @@ namespace muq{
                    as the number of samples \f$N\f$ increases.  Here, \f$mu\f$ is
                    the true mean of the random variable, \f$\sigma^2\f$ is the true
                    variance of the random variable.  This assumes that each \f$\theta^{(i)}\f$
-                   is an independent sample.
+                   is an independent sample with unity weight.
 
-                   When the samples are not independent,
+                   When the samples are not independent or the weights are not unity,
                    the variance of the estimator will generally be larger.   The
                    "effective sample size" (ESS) describes how many independent
                    samples would have been needed to obtain the same estimator
@@ -75,19 +75,37 @@ namespace muq{
                    Carlo estimator based on \f$N\f$ correlated samples.  The ESS
                    is then given by the ratio of the esimator variances:
                    \f[ ESS = N \frac{\mathbb{V}[\hat{\mu}-\mu]}{\mathbb{V}[\tilde{\mu}-\mu]}. \f]
-                   This function returns an approximation of this ESS using one
-                   of two approaches:
-                   - If the samples are correlated (i.e., the come from an MCMC algorithm)
-      */
-      Eigen::VectorXd ESS(bool correlated=false) const;
 
-    private:
+                   In SampleCollection, the samples are assumed independent, but
+                   not equally weighted, which is typically the case with importance
+                   sampling.  In this setting, the ESS is estimated using
+                   \f[
+                      ESS = \frac{\left(\sum_{i=1}^N w_i}\right)^2}{\sum_{i=1}^N w_i^2}.
+                   \f]
+
+                   Note that children of this class may compute the ESS with different
+                   approaches.  For example, the MarkovChain class computes the
+                   ESS using the approach of "Monte Carlo errors with less error" by
+                   Ulli Wolff.
+      */
+      virtual Eigen::VectorXd ESS(int blockDim=-1) const;
+
+      virtual Eigen::MatrixXd AsMatrix(int blockDim=-1) const;
+
+      virtual Eigen::VectorXd Weights() const;
+
+    protected:
 
       std::vector<std::shared_ptr<SamplingState>> samples;
 
+      /** Returns the sum of the weights and the sum of the squared weights. */
+      static std::pair<double,double> RecursiveWeightSum(std::vector<const std::shared_ptr<SamplingState>>::iterator start,
+                                                         std::vector<const std::shared_ptr<SamplingState>>::iterator end);
+
+
       template<typename FuncType>
-      static std::pair<double,Eigen::VectorXd> RecursiveSum(std::vector<const std::shared_ptr<SamplingState>>::iterator                         start,
-                                                            std::vector<const std::shared_ptr<SamplingState>>::iterator                         end,
+      static std::pair<double,Eigen::VectorXd> RecursiveSum(std::vector<const std::shared_ptr<SamplingState>>::iterator start,
+                                                            std::vector<const std::shared_ptr<SamplingState>>::iterator end,
                                                             FuncType& f)
       {
         int numSamps = std::distance(start,end);

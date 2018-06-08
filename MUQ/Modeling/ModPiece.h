@@ -105,6 +105,17 @@ namespace muq{
                                                  ref_vector<Eigen::VectorXd> const& input,
                                                  Eigen::VectorXd             const& vec);
 
+    inline Eigen::VectorXd const& ApplyJacobian(unsigned int outWrt, unsigned int inWrt, Eigen::VectorXd const& last, Eigen::VectorXd const& sens) {     \
+      ref_vector<Eigen::VectorXd> vec;
+      vec.push_back(std::cref(last));                                                                                               \
+      return ApplyJacobian(outWrt, inWrt, vec, sens);                                                                              \
+    }
+    template<typename... Args>
+    inline Eigen::VectorXd  const& ApplyJacobian(unsigned int wrtOut, unsigned int wrtIn, Args const&... args) {
+      ref_vector<Eigen::VectorXd> vec;
+      return ApplyJacobianRecurse(wrtOut, wrtIn, vec, args...);
+    }
+
     // virtual Eigen::VectorXd ApplyHessian(int                         const  outputDimWrt,
     //                                      int                         const  inputDimWrt1,
     //                                      int                         const  inputDimWrt2,
@@ -224,6 +235,20 @@ namespace muq{
     inline Eigen::MatrixXd const& Jacobian(unsigned int outWrt, unsigned int inWrt, ref_vector<Eigen::VectorXd>& vec, Eigen::VectorXd const& last) {
       vec.push_back(std::cref(last));
       return Jacobian(outWrt, inWrt, vec);
+    }
+
+    template<typename NextType, typename... Args>                                                                                               \
+    inline Eigen::VectorXd const& ApplyJacobianRecurse(unsigned int outWrt, unsigned int inWrt, ref_vector<Eigen::VectorXd>& vec, NextType const& ith, Args const&... args) {     \
+        static_assert(std::is_same<Eigen::VectorXd, NextType>::value, "In ModPiece::Gradient, cannot cast input to Eigen::VectorXd."); \
+        vec.push_back(std::cref((NextType&)ith));                                                                                               \
+        return ApplyJacobianRecurse(outWrt, inWrt, vec, args...);                                                                              \
+    }
+
+    template<typename NextType>                                                                                               \
+    inline Eigen::VectorXd const& ApplyJacobianRecurse(unsigned int outWrt, unsigned int inWrt, ref_vector<Eigen::VectorXd>& vec, NextType const& last, Eigen::VectorXd const& sens) {     \
+        static_assert(std::is_same<Eigen::VectorXd, NextType>::value, "In ModPiece::Gradient, cannot cast input to Eigen::VectorXd."); \
+        vec.push_back(std::cref((NextType&)last));                                                                                               \
+        return ApplyJacobian(outWrt, inWrt, vec, sens);                                                                              \
     }
 
     template<typename... Args>                                                                                               \
