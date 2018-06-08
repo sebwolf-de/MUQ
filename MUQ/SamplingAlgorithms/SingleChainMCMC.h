@@ -4,6 +4,7 @@
 #include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
 #include "MUQ/SamplingAlgorithms/SamplingAlgorithm.h"
 #include "MUQ/SamplingAlgorithms/TransitionKernel.h"
+#include "MUQ/SamplingAlgorithms/ThinScheduler.h"
 
 #include <vector>
 
@@ -28,9 +29,11 @@ namespace muq{
 
     protected:
 
+      std::shared_ptr<SaveSchedulerBase> scheduler;
+
       unsigned int numSamps;
       unsigned int burnIn;
-      
+
       // A vector of transition kernels: One for each block
       std::vector<std::shared_ptr<TransitionKernel>> kernels;
 

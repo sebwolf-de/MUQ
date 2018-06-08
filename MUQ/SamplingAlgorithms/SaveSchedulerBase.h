@@ -2,14 +2,14 @@
 #define SAVESCHEDULERBASE_H_
 
 namespace muq {
-  namespace Utilities {
+  namespace SamplingAlgorithms {
 
     class SaveSchedulerBase {
 
     public:
       SaveSchedulerBase() {};
 
-      bool ShouldSave(int step);
+      virtual bool ShouldSave(int step) = 0;
 
     };
 

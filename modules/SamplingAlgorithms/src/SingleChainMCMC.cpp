@@ -17,6 +17,8 @@ SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree&             pt,
   unsigned int numBlocks = kernelNames.size();
   kernels.resize(numBlocks);
 
+  scheduler = std::make_shared<ThinScheduler>(pt);
+
   // Add the block id to a child tree and construct a kernel for each block
   for(int i=0; i<kernels.size(); ++i){
     boost::property_tree::ptree subTree = pt.get_child(kernelNames.at(i));
@@ -52,12 +54,12 @@ SampleCollection const& SingleChainMCMC::RunImpl(std::vector<Eigen::VectorXd> co
         if(newStates.at(i)!=prevState){
           prevState = newStates.at(i);
 
-          if(sampNum>=burnIn)
+          if((sampNum>=burnIn)&&(scheduler->ShouldSave(sampNum)))
             samples.Add(newStates.at(i));
 
         }else{
           prevState->weight += 1;
-          if(sampNum==burnIn)
+          if((sampNum==burnIn)&&(scheduler->ShouldSave(sampNum)))
             samples.Add(prevState);
         }
       }

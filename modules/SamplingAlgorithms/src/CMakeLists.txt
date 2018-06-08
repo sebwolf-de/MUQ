@@ -35,6 +35,8 @@ CreateCompileGroup(
 
     MCMCFactory.cpp
 
+    ThinScheduler.cpp
+
     MCMCProposal.cpp
     MHProposal.cpp
     AMProposal.cpp
