@@ -3,6 +3,8 @@
 
 #include "MUQ/SamplingAlgorithms/SamplingState.h"
 
+#include <memory>
+
 #include <vector>
 #include <Eigen/Core>
 
