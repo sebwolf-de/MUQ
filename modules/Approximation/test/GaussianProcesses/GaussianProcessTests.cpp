@@ -34,7 +34,7 @@ TEST(Approximation_GP, HyperFit1d)
     trainData += sqrt(1e-4)*RandomGenerator::GetNormal(maxTrain).transpose();
 
     const unsigned dim = 1;
-    auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10} ) * PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});
+    auto kernel = SquaredExpKernel(dim, 2.0, 0.35, {0.1,10}, {0, 100} ) * PeriodicKernel(dim, 1.0, 0.75, 0.25, {0.5,5.0}, {0.5,5.0}, {0.25,0.5}) + WhiteNoiseKernel(dim, 1e-3, {1e-8,100});
 
     // Create the GP
     ZeroMean mean(dim, 1);
@@ -91,7 +91,7 @@ TEST(Approximation_GP, HyperFit2d)
     std::vector<unsigned> inds1{0};
     std::vector<unsigned> inds2{1};
     const unsigned dim = 2;
-    auto kernel = SquaredExpKernel(dim, inds1, 2.0, 0.35, {0.1,10} )*SquaredExpKernel(dim, inds2, 2.0, 0.35, {0.1,10} );
+    auto kernel = SquaredExpKernel(dim, inds1, 2.0, 0.35, {0.1,10} , {0.0, 100})*SquaredExpKernel(dim, inds2, 2.0, 0.35, {0.1,10}, {0.0, 100.0} );
 
     // Create the GP
     ZeroMean mean(dim, 1);

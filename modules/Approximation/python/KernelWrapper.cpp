@@ -64,7 +64,9 @@ void muq::Approximation::PythonBindings::KernelWrapper(py::module &m)
       .def_readonly("coDim", &KernelBase::coDim)
       .def_readonly("numParams", &KernelBase::numParams)
       .def("FillPosDerivBlock", &KernelBase::FillPosDerivBlock)
-      .def("FillBlock", &KernelBase::FillBlock);
+      .def("FillBlock", &KernelBase::FillBlock)
+      .def("__mul__", [](std::shared_ptr<KernelBase> a, std::shared_ptr<KernelBase> b) {return a * b;}, py::is_operator())
+      .def("__add__", [](std::shared_ptr<KernelBase> a, std::shared_ptr<KernelBase> b) {return a + b;}, py::is_operator());
 
     // ConcatenateKernel class
     py::class_<ConcatenateKernel, KernelBase, std::shared_ptr<ConcatenateKernel>>
@@ -131,11 +133,10 @@ void muq::Approximation::PythonBindings::KernelWrapper(py::module &m)
                std::shared_ptr<MaternKernel>>
       matKern(m, "MaternKernel");
     matKern
-      .def(py::init<unsigned, std::vector<unsigned>, double, double, double,
-                    Eigen::Vector2d, Eigen::Vector2d>())
-      .def(py::init<unsigned, double, double, double, Eigen::Vector2d,
-                    Eigen::Vector2d>())
-      //.def("FillBlockImpl", &MaternKernel::FillBlockImpl)
+      .def(py::init<unsigned, std::vector<unsigned>, double, double, double>())
+      .def(py::init<unsigned, std::vector<unsigned>, double, double, double,Eigen::Vector2d, Eigen::Vector2d>())
+      .def(py::init<unsigned, double, double, double>())
+      .def(py::init<unsigned, double, double, double, Eigen::Vector2d,Eigen::Vector2d>())
       .def("GetStateSpace", &MaternKernel::GetStateSpace);
 
     // KernelImpl<PeriodicKernel> class
@@ -155,10 +156,10 @@ void muq::Approximation::PythonBindings::KernelWrapper(py::module &m)
                std::shared_ptr<PeriodicKernel>>
       periodKern(m, "PeriodicKernel");
     periodKern
-      .def(py::init<unsigned, std::vector<unsigned>, double, double, double,
-                    Eigen::Vector2d, Eigen::Vector2d, Eigen::Vector2d>())
-      .def(py::init<unsigned, double, double, double,
-                    Eigen::Vector2d, Eigen::Vector2d, Eigen::Vector2d>())
+      .def(py::init<unsigned, std::vector<unsigned>, double, double, double>())
+      .def(py::init<unsigned, std::vector<unsigned>, double, double, double, Eigen::Vector2d, Eigen::Vector2d, Eigen::Vector2d>())
+      .def(py::init<unsigned, double, double, double>())
+      .def(py::init<unsigned, double, double, double,Eigen::Vector2d, Eigen::Vector2d, Eigen::Vector2d>())
       //.def("FillBlockImpl", &PeriodicKernel::FillBlockImpl)
       .def("GetStateSpace", &PeriodicKernel::GetStateSpace);
 
@@ -190,10 +191,10 @@ void muq::Approximation::PythonBindings::KernelWrapper(py::module &m)
                std::shared_ptr<SquaredExpKernel>>
       sqExpKern(m, "SquaredExpKernel");
     sqExpKern
-      .def(py::init<unsigned, std::vector<unsigned>, double, double,
-                    Eigen::Vector2d, Eigen::Vector2d>())
-      .def(py::init<unsigned, double, double, Eigen::Vector2d,
-                    Eigen::Vector2d>());
+      .def(py::init<unsigned, std::vector<unsigned>, double, double>())
+      .def(py::init<unsigned, std::vector<unsigned>, double, double, Eigen::Vector2d, Eigen::Vector2d>())
+      .def(py::init<unsigned, double, double, Eigen::Vector2d, Eigen::Vector2d>())
+      .def(py::init<unsigned, double, double>());
       //.def("FillBlockImpl", &SquaredExpKernel::FillBlockImpl);
 
     // SumKernel class
@@ -223,6 +224,7 @@ void muq::Approximation::PythonBindings::KernelWrapper(py::module &m)
                std::shared_ptr<WhiteNoiseKernel>>
       whiteNoiseKern(m, "WhiteNoiseKernel");
     whiteNoiseKern
+      .def(py::init<unsigned, const double>())
       .def(py::init<unsigned, const double, const Eigen::Vector2d >());
       //.def("FillBlockImpl", &WhiteNoiseKernel::FillBlockImpl);
 }

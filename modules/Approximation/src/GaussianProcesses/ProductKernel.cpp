@@ -170,3 +170,9 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
     auto newSDE = std::make_shared<muq::Modeling::LinearSDE>(newF, newL, Q, sdeOptions);
     return std::make_tuple(newSDE, newH, Pinf);
 }
+
+
+std::shared_ptr<ProductKernel> muq::Approximation::operator*(std::shared_ptr<KernelBase> k1, std::shared_ptr<KernelBase> k2)
+{
+  return std::make_shared<ProductKernel>(k1,k2);
+}
