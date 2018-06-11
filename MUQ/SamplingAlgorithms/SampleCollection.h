@@ -99,13 +99,13 @@ namespace muq{
       std::vector<std::shared_ptr<SamplingState>> samples;
 
       /** Returns the sum of the weights and the sum of the squared weights. */
-      static std::pair<double,double> RecursiveWeightSum(std::vector<const std::shared_ptr<SamplingState>>::iterator start,
-                                                         std::vector<const std::shared_ptr<SamplingState>>::iterator end);
+      static std::pair<double,double> RecursiveWeightSum(std::vector<std::shared_ptr<SamplingState>>::const_iterator start,
+                                                         std::vector<std::shared_ptr<SamplingState>>::const_iterator end);
 
 
       template<typename FuncType>
-      static std::pair<double,Eigen::VectorXd> RecursiveSum(std::vector<const std::shared_ptr<SamplingState>>::iterator start,
-                                                            std::vector<const std::shared_ptr<SamplingState>>::iterator end,
+      static std::pair<double,Eigen::VectorXd> RecursiveSum(std::vector<std::shared_ptr<SamplingState>>::const_iterator                         start,
+                                                            std::vector<std::shared_ptr<SamplingState>>::const_iterator                         end,
                                                             FuncType& f)
       {
         int numSamps = std::distance(start,end);

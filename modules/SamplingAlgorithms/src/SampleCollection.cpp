@@ -123,8 +123,8 @@ Eigen::MatrixXd SampleCollection::Covariance(int blockInd) const
   return cov;
 }
 
-std::pair<double,double> SampleCollection::RecursiveWeightSum(std::vector<const std::shared_ptr<SamplingState>>::iterator start,
-                                                              std::vector<const std::shared_ptr<SamplingState>>::iterator end)
+std::pair<double,double> SampleCollection::RecursiveWeightSum(std::vector<std::shared_ptr<SamplingState>>::const_iterator start,
+                                                              std::vector<std::shared_ptr<SamplingState>>::const_iterator end)
 {
   int numSamps = std::distance(start,end);
   const int maxSamps = 20;
