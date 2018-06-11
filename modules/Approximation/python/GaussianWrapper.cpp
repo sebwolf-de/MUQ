@@ -21,15 +21,15 @@ namespace py = pybind11;
 
 void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
 {
-  // GaussianProcess class  
-  py::class_<GaussianProcess, std::shared_ptr<GaussianProcess>> 
+  // GaussianProcess class
+  py::class_<GaussianProcess, std::shared_ptr<GaussianProcess>>
     gaussProc(m, "GaussianProcess");
   gaussProc
     .def(py::init<MeanFunctionBase&, KernelBase&>())
     .def(py::init<std::shared_ptr<MeanFunctionBase>, std::shared_ptr<KernelBase>>())
     .def("Condition", (GaussianProcess& (GaussianProcess::*)
                        (Eigen::Ref<const Eigen::MatrixXd> const&,
-                        Eigen::Ref<const Eigen::MatrixXd> const&)) 
+                        Eigen::Ref<const Eigen::MatrixXd> const&))
                         &GaussianProcess::Condition)
     .def("Condition", (GaussianProcess& (GaussianProcess::*)
                        (Eigen::Ref<const Eigen::MatrixXd> const&,
@@ -51,9 +51,9 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
       (Eigen::Ref<Eigen::VectorXd>, bool)) &GaussianProcess::MarginalLogLikelihood)
     .def("Mean", &GaussianProcess::Mean)
     .def("Kernel", &GaussianProcess::Kernel);
-    
-  // MeanFunctionBase class 
-  py::class_<MeanFunctionBase, std::enable_shared_from_this<MeanFunctionBase>,
+
+  // MeanFunctionBase class
+  py::class_<MeanFunctionBase,
              std::shared_ptr<MeanFunctionBase>>
     meanFuncBase(m, "MeanFunctionBase");
   meanFuncBase
@@ -63,16 +63,16 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
     .def("GetPtr", &MeanFunctionBase::GetPtr)
     .def_readonly("inputDim", &MeanFunctionBase::inputDim)
     .def_readonly("coDim", &MeanFunctionBase::coDim);
-  
-  // ZeroMean class 
-  py::class_<ZeroMean, MeanFunctionBase, std::shared_ptr<ZeroMean>> 
+
+  // ZeroMean class
+  py::class_<ZeroMean, MeanFunctionBase, std::shared_ptr<ZeroMean>>
     zeroMean(m, "ZeroMean");
   zeroMean
     .def(py::init<unsigned, unsigned>())
     .def("Clone", &ZeroMean::Clone)
     .def("Evaluate", &ZeroMean::Evaluate);
-    
-  // LinearMean class 
+
+  // LinearMean class
   py::class_<LinearMean, MeanFunctionBase, std::shared_ptr<LinearMean>>
     linMean(m, "LinearMean");
   linMean
@@ -80,26 +80,26 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
     .def(py::init<Eigen::MatrixXd const&, Eigen::VectorXd const&>())
     .def("Clone", &LinearMean::Clone)
     .def("Evaluate", &LinearMean::Evaluate);
-    
-  /*// LinearTransformMean class 
-  py::class_<LinearTransformMean< >, MeanFunctionBase, 
+
+  /*// LinearTransformMean class
+  py::class_<LinearTransformMean< >, MeanFunctionBase,
              std::shared_ptr<LinearTransformMean< >>>
     linTransMean(m, "LinearTransformMean");
   linTransMean
     .def(py::init<LinearOperator const&, MeanType const&>())
     .def("Clone", &LinearTransformMean< >::Clone)
     .def("Evaluate", &LinearTransformMean< >::Evaluate);*/
-  
-  /*// SumMean class 
+
+  /*// SumMean class
   py::class_<SumMean, MeanFunctionBase, std::shared_ptr<SumMean>>
     sumMean(m, "SumMean");
   sumMean
     .def(py::init<MeanType1 const&, MeanType2 const&>())
     .def("Clone", &SumMean::Clone)
     .def("Evaluate", &SumMean::Evaluate);*/
-  
-  // ObservationInformation class 
-  py::class_<ObservationInformation, std::shared_ptr<ObservationInformation>> 
+
+  // ObservationInformation class
+  py::class_<ObservationInformation, std::shared_ptr<ObservationInformation>>
     obsInfo(m, "ObservationInformation");
   obsInfo
     .def(py::init<std::shared_ptr<muq::Utilities::LinearOperator>,
@@ -107,10 +107,10 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
                            Eigen::Ref<const Eigen::VectorXd> const&,
                            Eigen::Ref<const Eigen::MatrixXd> const&>())
     .def("FillCrossCov", &ObservationInformation::FillCrossCov);
-  
-  // DerivativeObservation class 
-  py::class_<DerivativeObservation, ObservationInformation, 
-             std::shared_ptr<DerivativeObservation>> 
+
+  // DerivativeObservation class
+  py::class_<DerivativeObservation, ObservationInformation,
+             std::shared_ptr<DerivativeObservation>>
     derivObs(m, "DerivativeObservation");
   derivObs
     .def(py::init<std::shared_ptr<muq::Utilities::LinearOperator>,
@@ -119,9 +119,9 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
                           Eigen::Ref<const Eigen::MatrixXd> const&,
                           std::vector<int>>())
     .def("FillCrossCov", &DerivativeObservation::FillCrossCov);
-    
-  //StateSpaceGP class 
-  py::class_<StateSpaceGP, GaussianProcess, std::shared_ptr<StateSpaceGP>> 
+
+  //StateSpaceGP class
+  py::class_<StateSpaceGP, GaussianProcess, std::shared_ptr<StateSpaceGP>>
     stateSpace(m, "StateSpaceGP");
   stateSpace
     .def(py::init<MeanFunctionBase&, KernelBase&>())
