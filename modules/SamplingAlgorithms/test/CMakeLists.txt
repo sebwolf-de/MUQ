@@ -3,7 +3,8 @@ CreateTestGroup(
 
     SamplingProblemTests.cpp
     SampleCollectionTests.cpp
-
+    MarkovChainTests.cpp
+    
     #MonteCarloTests.cpp
     #ImportanceSamplingTests.cpp
     MCMCTests.cpp

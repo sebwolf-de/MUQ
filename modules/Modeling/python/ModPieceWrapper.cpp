@@ -42,20 +42,20 @@ void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
 
 
 
-    py::class_<ConstantVector, ModPiece, std::shared_ptr<ConstantVector>> cv(m, "ConstantVector");
+    py::class_<ConstantVector, ModPiece, WorkPiece, std::shared_ptr<ConstantVector>> cv(m, "ConstantVector");
     cv
         .def(py::init<Eigen::VectorXd const&>())
         .def("SetValue",  &ConstantVector::SetValue);
 
-    py::class_<IdentityOperator, ModPiece, std::shared_ptr<IdentityOperator>> io(m, "IdentityOperator");
+    py::class_<IdentityOperator, ModPiece, WorkPiece, std::shared_ptr<IdentityOperator>> io(m, "IdentityOperator");
     io
         .def(py::init<unsigned int>());
 
-    py::class_<ReplicateOperator, ModPiece, std::shared_ptr<ReplicateOperator>> ro(m, "ReplicateOperator");
+    py::class_<ReplicateOperator, ModPiece, WorkPiece, std::shared_ptr<ReplicateOperator>> ro(m, "ReplicateOperator");
     ro
       .def(py::init<unsigned int, unsigned int>());
 
-    py::class_<ModGraphPiece, ModPiece, std::shared_ptr<ModGraphPiece>> mgp(m, "ModGraphPiece");
+    py::class_<ModGraphPiece, ModPiece, WorkPiece, std::shared_ptr<ModGraphPiece>> mgp(m, "ModGraphPiece");
     mgp
       .def("GetGraph", &ModGraphPiece::GetGraph)
       .def("GetConstantPieces", &ModGraphPiece::GetConstantPieces);
