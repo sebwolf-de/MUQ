@@ -61,9 +61,12 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
             samples->Add(newStates.at(i));
 
         }else{
-          prevState->weight += 1;
-          if((sampNum==burnIn)&&(scheduler->ShouldSave(sampNum)))
+
+          if((sampNum==burnIn)&&(scheduler->ShouldSave(sampNum))){
+            prevState->weight += 1;
             samples->Add(prevState);
+          }
+
         }
       }
 
