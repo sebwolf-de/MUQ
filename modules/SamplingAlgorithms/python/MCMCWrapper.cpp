@@ -23,7 +23,7 @@ void muq::SamplingAlgorithms::PythonBindings::MCMCWrapper(py::module &m)
     .def("Run", (SampleCollection const&  (SamplingAlgorithm::*)()) &SamplingAlgorithm::Run)
     .def("Run", (SampleCollection const&  (SamplingAlgorithm::*)(Eigen::VectorXd const&)) &SamplingAlgorithm::Run)
     .def("Run", (SampleCollection const&  (SamplingAlgorithm::*)(std::vector<Eigen::VectorXd> const&)) &SamplingAlgorithm::Run);
-  
+
   py::class_<SingleChainMCMC, SamplingAlgorithm, std::shared_ptr<SingleChainMCMC>> singleMCMC(m, "SingleChainMCMC");
   singleMCMC
     .def("Kernels", &SingleChainMCMC::Kernels)
