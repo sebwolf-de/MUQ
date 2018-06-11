@@ -231,6 +231,7 @@ correspond to the Gaussian and Inverse Gamma densities.
   pt::ptree pt;
   pt.put("NumSamples", 1e5); // number of MCMC steps
   pt.put("BurnIn", 1e4);
+  pt.put("PrintLevel",3);
   pt.put("KernelList", "Kernel1,Kernel2"); // Name of block that defines the transition kernel
 
   pt.put("Kernel1.Method","MHKernel");  // Name of the transition kernel class

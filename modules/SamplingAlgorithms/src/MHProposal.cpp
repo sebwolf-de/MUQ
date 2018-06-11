@@ -44,6 +44,6 @@ std::shared_ptr<SamplingState> MHProposal::Sample(std::shared_ptr<SamplingState>
 double MHProposal::LogDensity(std::shared_ptr<SamplingState> currState,
                               std::shared_ptr<SamplingState> propState) {
 
-  Eigen::VectorXd diff = currState->state.at(blockInd)-propState->state.at(blockInd);
+  Eigen::VectorXd diff = propState->state.at(blockInd)-currState->state.at(blockInd);
   return proposal->LogDensity(diff);//, std::pair<boost::any, Gaussian::Mode>(conditioned->state.at(blockInd), Gaussian::Mode::Mean));
 }

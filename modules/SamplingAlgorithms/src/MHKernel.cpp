@@ -4,6 +4,8 @@
 #include "MUQ/Utilities/AnyHelpers.h"
 #include "MUQ/Utilities/RandomGenerator.h"
 
+#include <iomanip>
+
 namespace pt = boost::property_tree;
 using namespace muq::Utilities;
 using namespace muq::Modeling;
@@ -30,8 +32,6 @@ MHKernel::MHKernel(pt::ptree const& pt,
                    std::shared_ptr<AbstractSamplingProblem> problem,
                    std::shared_ptr<MCMCProposal> proposalIn) :
                    TransitionKernel(pt, problem), proposal(proposalIn) {}
-
-MHKernel::~MHKernel() {}
 
 void MHKernel::PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state){
   proposal->Adapt(t,state);
@@ -64,9 +64,20 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   const double alpha = std::exp(propTarget - forwardPropDens - currentTarget + backPropDens);
 
   // accept/reject
+  numCalls++;
   if( RandomGenerator::GetUniform()<alpha ) {
+    numAccepts++;
     return std::vector<std::shared_ptr<SamplingState>>(1,prop);
   } else {
     return std::vector<std::shared_ptr<SamplingState>>(1,prevState);
   }
+}
+
+void MHKernel::PrintStatus(const std::string prefix) const
+{
+  std::stringstream msg;
+  msg << std::setprecision(2);
+  msg << prefix << "Acceptance Rate = "  << 100.0*double(numAccepts)/double(numCalls) << "%";
+
+  std::cout << msg.str() << std::endl;
 }

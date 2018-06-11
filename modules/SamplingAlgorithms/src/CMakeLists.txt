@@ -42,6 +42,7 @@ CreateCompileGroup(
     MHProposal.cpp
     AMProposal.cpp
     InverseGammaProposal.cpp
+    CrankNicolsonProposal.cpp
 
     SamplingProblem.cpp
 )

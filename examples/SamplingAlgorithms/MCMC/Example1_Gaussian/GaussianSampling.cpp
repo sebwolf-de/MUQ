@@ -184,11 +184,13 @@ At the base level, we specify the number of steps in the chain with the entry "N
   // parameters for the sampler
   pt::ptree pt;
   pt.put("NumSamples", 1e4); // number of MCMC steps
+  pt.put("BurnIn", 1e3);
+  pt.put("PrintLevel",3);
   pt.put("KernelList", "Kernel1"); // Name of block that defines the transition kernel
   pt.put("Kernel1.Method","MHKernel");  // Name of the transition kernel class
   pt.put("Kernel1.Proposal", "MyProposal"); // Name of block defining the proposal distribution
   pt.put("Kernel1.MyProposal.Method", "MHProposal"); // Name of proposal class
-  pt.put("Kernel1.MyProposal.ProposalVariance", 0.5); // Variance of the isotropic MH proposal
+  pt.put("Kernel1.MyProposal.ProposalVariance", 2.5); // Variance of the isotropic MH proposal
 
   /***
   Once the algorithm parameters are specified, we can pass them to the CreateSingleChain
@@ -223,7 +225,7 @@ At the base level, we specify the number of steps in the chain with the entry "N
   values, i.e., $\mathbb{E}_x[(x_i-\mu_i)^3]$ for each $i$.
   */
   Eigen::VectorXd sampMean = samps->Mean();
-  std::cout << "Sample Mean = \n" << sampMean.transpose() << std::endl;
+  std::cout << "\nSample Mean = \n" << sampMean.transpose() << std::endl;
 
   Eigen::VectorXd sampVar = samps->Variance();
   std::cout << "\nSample Variance = \n" << sampVar.transpose() << std::endl;

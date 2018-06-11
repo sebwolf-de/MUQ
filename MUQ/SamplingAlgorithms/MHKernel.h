@@ -21,7 +21,7 @@ namespace muq {
                std::shared_ptr<AbstractSamplingProblem> problem,
                std::shared_ptr<MCMCProposal> proposalIn);
 
-      ~MHKernel();
+      virtual ~MHKernel() = default;
 
       virtual std::shared_ptr<MCMCProposal> Proposal(){return proposal;};
 
@@ -29,8 +29,16 @@ namespace muq {
 
       virtual std::vector<std::shared_ptr<SamplingState>> Step(unsigned int const t, std::shared_ptr<SamplingState> prevState) override;
 
+      virtual void PrintStatus(std::string prefix) const override;
+
+
+      virtual double AcceptanceRate() const{return double(numAccepts)/double(numCalls);};
+
     protected:
       std::shared_ptr<MCMCProposal> proposal;
+
+      unsigned int numCalls = 0;
+      unsigned int numAccepts = 0;
 
     };
   } // namespace SamplingAlgorithms

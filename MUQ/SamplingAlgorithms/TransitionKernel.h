@@ -21,7 +21,7 @@ namespace muq {
 
       TransitionKernel(boost::property_tree::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem);
 
-      ~TransitionKernel();
+      virtual ~TransitionKernel() = default;
 
       /// Static constructor for the transition kernel
       /**
@@ -46,6 +46,9 @@ namespace muq {
       virtual void PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) {};
 
       virtual std::vector<std::shared_ptr<SamplingState>> Step(unsigned int const t, std::shared_ptr<SamplingState> prevState) = 0;
+
+      virtual void PrintStatus() const {PrintStatus("");};
+      virtual void PrintStatus(std::string prefix) const {};
 
       // What block of the state does this kernel work on?
       const int blockInd = 0;

@@ -29,10 +29,15 @@ namespace muq{
 
     protected:
 
+
       std::shared_ptr<SaveSchedulerBase> scheduler;
+
+      void PrintStatus(unsigned int currInd) const{PrintStatus("",currInd);};
+      void PrintStatus(std::string prefix, unsigned int currInd) const;
 
       unsigned int numSamps;
       unsigned int burnIn;
+      unsigned int printLevel;
 
       // A vector of transition kernels: One for each block
       std::vector<std::shared_ptr<TransitionKernel>> kernels;

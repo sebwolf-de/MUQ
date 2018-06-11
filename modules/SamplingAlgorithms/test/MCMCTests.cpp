@@ -22,11 +22,13 @@ using namespace muq::Utilities;
 
 TEST(MCMC, MHKernel_ThinScheduler) {
 
-  const unsigned int N = 1e4;
+  const unsigned int N = 1e5;
 
   // parameters for the sampler
   pt::ptree pt;
   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.BurnIn", 0);
+  pt.put("MyMCMC.PrintLevel",0);
   pt.put("MyMCMC.ThinIncrement", 10); // How often to save the sample
   pt.put("MyMCMC.KernelList", "Kernel1"); // the transition kernel
   pt.put("MyMCMC.Kernel1.Method","MHKernel");
@@ -50,12 +52,12 @@ TEST(MCMC, MHKernel_ThinScheduler) {
 
   std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
 
-  EXPECT_EQ(int(std::floor(pt.get<double>("MyMCMC.NumSamples")/pt.get<double>("MyMCMC.ThinIncrement"))), samps->size());
+  EXPECT_EQ(int(std::floor(pt.get<double>("MyMCMC.NumSamples")/pt.get<double>("MyMCMC.ThinIncrement")))+1, samps->size());
 
   //boost::any anyMean = samps.Mean();
   Eigen::VectorXd mean = samps->Mean();
-  EXPECT_NEAR(mu(0), mean(0), 1e-1);
-  EXPECT_NEAR(mu(1), mean(1), 1e-1);
+  EXPECT_NEAR(mu(0), mean(0), 5e-2);
+  EXPECT_NEAR(mu(1), mean(1), 5e-2);
 
   Eigen::MatrixXd cov = samps->Covariance();
   EXPECT_NEAR(1.0, cov(0,0), 1e-1);
@@ -72,6 +74,7 @@ TEST(MCMC, MHKernel_MHProposal) {
   // parameters for the sampler
   pt::ptree pt;
   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.PrintLevel",0);
   pt.put("MyMCMC.KernelList", "Kernel1"); // the transition kernel
   pt.put("MyMCMC.Kernel1.Method","MHKernel");
   pt.put("MyMCMC.Kernel1.Proposal", "MyProposal"); // the proposal
@@ -125,6 +128,7 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   // parameters for the sampler
   pt::ptree pt;
   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.PrintLevel",0);
   pt.put("MyMCMC.KernelList", "Kernel1,Kernel2"); // the transition kernel
 
   // MH Kernel for first block
@@ -213,6 +217,7 @@ TEST(MCMC, MHKernel_AMProposal) {
   // parameters for the sampler
   pt::ptree pt;
   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.PrintLevel",0);
   pt.put("MyMCMC.KernelList", "Kernel1"); // the transition kernel
   pt.put("MyMCMC.Kernel1.Method","MHKernel");
   pt.put("MyMCMC.Kernel1.Proposal", "MyProposal"); // the proposal
