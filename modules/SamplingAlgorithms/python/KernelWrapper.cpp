@@ -14,16 +14,11 @@
 #include <functional>
 #include <vector>
 
-using namespace muq::SamplingAlgorithms::PythonBindings;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 namespace py = pybind11;
 
-
-void muq::SamplingAlgorithms::PythonBindings::KernelWrapper(py::module &m)
-{
-
-
+void PythonBindings::KernelWrapper(py::module &m) {
   py::class_<TransitionKernel, std::shared_ptr<TransitionKernel>> transKern(m, "TransitionKernel");
   transKern
     .def_static("Construct", [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem)->std::shared_ptr<TransitionKernel>{return TransitionKernel::Construct(ConvertDictToPtree(d), problem);})

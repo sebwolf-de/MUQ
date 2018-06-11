@@ -5,8 +5,8 @@ using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
 SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree              pt,
-                                 std::shared_ptr<AbstractSamplingProblem> problem)
-{
+                                 std::shared_ptr<AbstractSamplingProblem> problem) {
+
   numSamps = pt.get<unsigned int>("NumSamples");
   burnIn = pt.get("BurnIn",0);
 
@@ -18,10 +18,9 @@ SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree              pt,
   kernels.resize(numBlocks);
 
   // Add the block id to a child tree and construct a kernel for each block
-  for(int i=0; i<kernels.size(); ++i){
+  for(int i=0; i<kernels.size(); ++i) {
     boost::property_tree::ptree subTree = pt.get_child(kernelNames.at(i));
     subTree.put("BlockIndex",i);
-
     kernels.at(i) = TransitionKernel::Construct(subTree, problem);
   }
 

@@ -14,13 +14,11 @@
 #include <functional>
 #include <vector>
 
-using namespace muq::SamplingAlgorithms::PythonBindings;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 namespace py = pybind11;
 
-void muq::SamplingAlgorithms::PythonBindings::MCMCWrapper(py::module &m)
-{
+void PythonBindings::MCMCWrapper(py::module &m) {
   py::class_<SamplingAlgorithm, std::shared_ptr<SamplingAlgorithm>> sampAlg(m, "SamplingAlgorithm");
   sampAlg
     .def("Run", (SampleCollection const&  (SamplingAlgorithm::*)()) &SamplingAlgorithm::Run)

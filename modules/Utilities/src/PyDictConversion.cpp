@@ -12,7 +12,7 @@ void muq::Utilities::AddDictToPtree(pybind11::dict dict, std::string basePath, b
 
     // Recursively add dictionaries
     if(pybind11::isinstance<pybind11::dict>(dict.attr("get")(key))){
-      AddDictToPtree(dict.attr("get")(key), key + ".", pt);
+      AddDictToPtree(dict.attr("get")(key), basePath + key + ".", pt);
 
     // Convert lists in the comma-separated strings
     }else if(pybind11::isinstance<pybind11::list>(dict.attr("get")(key))){
@@ -29,8 +29,8 @@ void muq::Utilities::AddDictToPtree(pybind11::dict dict, std::string basePath, b
 }
 
 
-boost::property_tree::ptree muq::Utilities::ConvertDictToPtree(pybind11::dict dict)
-{
+boost::property_tree::ptree muq::Utilities::ConvertDictToPtree(pybind11::dict dict) {
+
   boost::property_tree::ptree pt;
 
   AddDictToPtree(dict, "", pt);

@@ -14,10 +14,10 @@
 #include <functional>
 #include <vector>
 
-using namespace muq::SamplingAlgorithms::PythonBindings;
+using namespace muq::SamplingAlgorithms;
 namespace py = pybind11;
 
-void muq::SamplingAlgorithms::PythonBindings::SampleWrapper(py::module &m)
+void PythonBindings::SampleWrapper(py::module &m)
 {
   py::class_<AbstractSamplingProblem, std::shared_ptr<AbstractSamplingProblem>> absSamp(m, "AbstractSamplingProblem");
   absSamp
@@ -48,10 +48,10 @@ void muq::SamplingAlgorithms::PythonBindings::SampleWrapper(py::module &m)
   py::class_<SampleCollection, std::shared_ptr<SampleCollection>> sampColl(m, "SampleCollection");
   sampColl
     .def("size", &SampleCollection::size)
-    .def("CentralMoment", &SampleCollection::CentralMoment)
-    .def("Mean", &SampleCollection::Mean)
-    .def("Variance", &SampleCollection::Variance)
-    .def("Covariance", &SampleCollection::Covariance);
+    .def("CentralMoment", &SampleCollection::CentralMoment, py::arg("order"), py::arg("blockDim") = -1)
+    .def("Mean", &SampleCollection::Mean, py::arg("blockDim") = -1)
+    .def("Variance", &SampleCollection::Variance, py::arg("blockDim") = -1)
+    .def("Covariance", &SampleCollection::Covariance, py::arg("blockDim") = -1);
 //    .def("ESS", &SampleCollection::ESS);
 
   py::class_<SamplingState, std::shared_ptr<SamplingState>> sampState(m, "SamplingState");
