@@ -16,6 +16,7 @@
 #include <vector>
 
 using namespace muq::Approximation::PythonBindings;
+using namespace muq::Approximation;
 namespace py = pybind11;
 
 void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
@@ -56,7 +57,7 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
              std::shared_ptr<MeanFunctionBase>>
     meanFuncBase(m, "MeanFunctionBase");
   meanFuncBase
-    .def(py::init<unsigned, unsigned>())
+    //.def(py::init<unsigned, unsigned>())
     .def("Evaluate", &MeanFunctionBase::Evaluate)
     .def("Clone", &MeanFunctionBase::Clone)
     .def("GetPtr", &MeanFunctionBase::GetPtr)
@@ -125,9 +126,6 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
   stateSpace
     .def(py::init<MeanFunctionBase&, KernelBase&>())
     .def(py::init<MeanFunctionBase&, KernelBase&, boost::property_tree::ptree>())
-    
-    //.def("__init__", [](MHKernel &instance, py::dict d, std::shared_ptr<AbstractSamplingProblem> problem) {new (&instance) MHKernel(ConvertDictToPtree(d), problem);})
-                  
     .def(py::init<std::shared_ptr<MeanFunctionBase>, std::shared_ptr<KernelBase>>())
     .def(py::init<std::shared_ptr<MeanFunctionBase>, std::shared_ptr<KernelBase>,
                   boost::property_tree::ptree>())
@@ -140,6 +138,6 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
     .def("GetObs", &StateSpaceGP::GetObs)
     .def("SetObs", &StateSpaceGP::SetObs)
     .def("GetCov", &StateSpaceGP::GetCov)
-    .def_readonly("stateDim", &StateSpaceGP::stateDim)
-    .def("Concatenate", &StateSpaceGP::Concatenate);
+    .def_readonly("stateDim", &StateSpaceGP::stateDim);
+    //.def("Concatenate", &StateSpaceGP::Concatenate);
 }

@@ -12,6 +12,7 @@
 #include <vector>
 
 using namespace muq::Approximation::PythonBindings;
+using namespace muq::Approximation;
 namespace py = pybind11;
 
 void muq::Approximation::PythonBindings::KLWrapper(py::module &m)

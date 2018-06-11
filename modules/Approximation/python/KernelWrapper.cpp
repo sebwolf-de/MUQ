@@ -24,6 +24,7 @@
 #include <vector>
 
 using namespace muq::Approximation::PythonBindings;
+using namespace muq::Approximation;
 namespace py = pybind11;
 
 void muq::Approximation::PythonBindings::KernelWrapper(py::module &m)
@@ -33,8 +34,8 @@ void muq::Approximation::PythonBindings::KernelWrapper(py::module &m)
                std::enable_shared_from_this<muq::Approximation::KernelBase>,
                std::shared_ptr<KernelBase>> kernBase(m, "KernelBase");
     kernBase
-      .def(py::init<unsigned, unsigned, unsigned>())
-      .def(py::init<unsigned, std::vector<unsigned>, unsigned, unsigned>())
+      //.def(py::init<unsigned, unsigned, unsigned>())
+      //.def(py::init<unsigned, std::vector<unsigned>, unsigned, unsigned>())
       .def("GetSeperableComponents", &KernelBase::GetSeperableComponents)
       .def("Evaluate", &KernelBase::Evaluate)
       .def("BuildCovariance", (Eigen::MatrixXd (KernelBase::*)
@@ -76,9 +77,21 @@ void muq::Approximation::PythonBindings::KernelWrapper(py::module &m)
       .def("Clone", &ConcatenateKernel::Clone)
       .def("FillBlock", &ConcatenateKernel::FillBlock)
       .def("FillPosDerivBlock", &ConcatenateKernel::FillPosDerivBlock);
-    
+  
+    // KernelImpl<ConstantKernel> class
+    py::class_<KernelImpl<ConstantKernel>, KernelBase, 
+               std::shared_ptr<KernelImpl<ConstantKernel>>> 
+      kernImplConst(m, "KernelImpl");
+    kernImplConst
+      .def(py::init<unsigned, unsigned, unsigned>())
+      .def(py::init<unsigned, std::vector<unsigned>, unsigned, unsigned>())
+      .def("Clone", &KernelImpl<ConstantKernel>::Clone)
+      .def("FillBlock", &KernelImpl<ConstantKernel>::FillBlock)
+      .def("FillPosDerivBlock", &KernelImpl<ConstantKernel>::FillPosDerivBlock)
+      .def("FillPosDerivBlockImpl", &KernelImpl<ConstantKernel>::FillPosDerivBlockImpl);
+
     // ConstantKernel class
-    py::class_<ConstantKernel, KernelBase, std::shared_ptr<ConstantKernel>>
+    py::class_<ConstantKernel, KernelImpl<ConstantKernel>, std::shared_ptr<ConstantKernel>>
       constKern(m, "ConstantKernel");
     constKern
       .def(py::init<unsigned, const double>())
@@ -91,7 +104,6 @@ void muq::Approximation::PythonBindings::KernelWrapper(py::module &m)
       .def(py::init<unsigned, std::vector<unsigned>, Eigen::MatrixXd const&>())
       .def(py::init<unsigned, std::vector<unsigned>, Eigen::MatrixXd const&, 
                     const Eigen::Vector2d>());
-      //.def("FillBlockImpl", &ConstantKernel::FillBlockImpl);
     
     // CoregionalKernel class
     py::class_<CoregionalKernel, KernelBase, std::shared_ptr<CoregionalKernel>> 
