@@ -57,7 +57,7 @@ public:
     
     const int stateDim;
 
-    static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<StateSpaceGP>> const& gps);
+    //static std::shared_ptr<StateSpaceGP> Concatenate(std::vector<std::shared_ptr<StateSpaceGP>> const& gps);
     
 private:
 
