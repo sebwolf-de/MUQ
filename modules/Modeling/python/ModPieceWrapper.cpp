@@ -39,9 +39,6 @@ void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
       .def("JacobianByFD", (Eigen::MatrixXd (ModPiece::*)(unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&)) &ModPiece::JacobianByFD)
       .def("ApplyJacobianByFD", (Eigen::VectorXd (ModPiece::*)(unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&)) &ModPiece::ApplyJacobianByFD);
 
-
-
-
     py::class_<ConstantVector, ModPiece, std::shared_ptr<ConstantVector>> cv(m, "ConstantVector");
     cv
         .def(py::init<Eigen::VectorXd const&>())

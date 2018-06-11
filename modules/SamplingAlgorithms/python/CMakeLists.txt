@@ -13,15 +13,15 @@
 # )
 
 CreateCompileGroup(
-    MODELING_CORE_PYTHON
-    "Python wrappers for the basic building blocks of the Modeling library."
-    pymuqModeling
-    "MODELING_CORE"
+    SAMPLINGALGORITHMS_CORE_PYTHON
+    "Python wrappers for the basic building blocks of the SamplingAlgorithms library."
+    pymuqSamplingAlgorithms
+    "SAMPLING_ALGORITHM"
     "PYTHON"
     ""
     Module.cpp
-    WorkPieceWrapper.cpp
-    ModPieceWrapper.cpp
-    DistributionWrapper.cpp
-    CwiseUnaryOperatorsWrapper.cpp
+    KernelWrapper.cpp
+    ProposalWrapper.cpp
+    SampleWrapper.cpp
+    MCMCWrapper.cpp
 )

@@ -13,15 +13,15 @@
 # )
 
 CreateCompileGroup(
-    MODELING_CORE_PYTHON
-    "Python wrappers for the basic building blocks of the Modeling library."
-    pymuqModeling
-    "MODELING_CORE"
+  UTILITIES_CORE_PYTHON
+    "Python wrappers for the basic building blocks of the Utilities library."
+    "pymuqUtilities"
+    "UTILITIES_CORE"
     "PYTHON"
     ""
     Module.cpp
-    WorkPieceWrapper.cpp
-    ModPieceWrapper.cpp
-    DistributionWrapper.cpp
-    CwiseUnaryOperatorsWrapper.cpp
+    #KernelWrapper.cpp
+    #LinearAlgebraWrapper.cpp
+    #MultiIndicesWrapper.cpp
+    GeneralUtilitiesWrapper.cpp
 )
