@@ -277,9 +277,9 @@ namespace muq
         
         // Evaluates the log marginal likelihood needed when fitting hyperparameters
         virtual double MarginalLogLikelihood();
-        virtual double MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad);
+        virtual double MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad){return MarginalLogLikelihood(grad, true);};
         virtual double MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
-                                             bool                        computeGrad=true);
+                                             bool                        computeGrad);
 
         std::shared_ptr<MeanFunctionBase> Mean(){return mean;};
         std::shared_ptr<KernelBase>       Kernel(){return covKernel;};
