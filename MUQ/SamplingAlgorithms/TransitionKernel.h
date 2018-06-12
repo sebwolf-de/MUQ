@@ -35,7 +35,7 @@ namespace muq {
       static std::shared_ptr<TransitionKernelMap> GetTransitionKernelMap();
 
 
-      virtual void PreStep(unsigned t, std::shared_ptr<SamplingState> state) {};
+      virtual void PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {};
 
       /// Allow the kernel to adapt given a new state
       /**

@@ -199,26 +199,7 @@ Eigen::VectorXd Gaussian::SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) 
 
   Eigen::VectorXd z = RandomGenerator::GetNormal(mean.rows());
 
-  switch( mode ) {
-  case Gaussian::Mode::Covariance: {
-    if(covPrec.cols()==1){
-      return mean + covPrec.col(0).array().sqrt().matrix().asDiagonal() * z;
-    }else{
-      return mean + sqrtCovPrec.matrixL() * z;
-    }
-  }
-  case Gaussian::Mode::Precision: {
-    if(covPrec.cols()==1){
-      return mean + covPrec.col(0).array().inverse().sqrt().matrix().asDiagonal() * z;
-    }else{
-      return mean + sqrtCovPrec.matrixL().solve( z );
-    }
-  }
-  default: {
-    assert(false);
-    return Eigen::VectorXd();
-  }
-  }
+  return mean + ApplyCovSqrt(z);
 }
 
 unsigned int Gaussian::Dimension() const {
@@ -262,4 +243,37 @@ void Gaussian::SetPrecision(Eigen::MatrixXd const& newPrec) {
 
   // recompute the scaling constant
   ComputeNormalization();
+}
+
+Eigen::MatrixXd Gaussian::ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x)
+{
+  if(mode==Gaussian::Mode::Covariance){
+    if(covPrec.cols()==1){
+      return covPrec.col(0).array().sqrt().matrix().asDiagonal()*x;
+    }else{
+      return sqrtCovPrec.matrixL()*x;
+    }
+  }else{
+    if(covPrec.cols()==1){
+      return covPrec.col(0).array().inverse().sqrt().matrix().asDiagonal() * x;
+    }else{
+      return sqrtCovPrec.matrixL().solve(x);
+    }
+  }
+}
+Eigen::MatrixXd Gaussian::ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x)
+{
+  if(mode==Gaussian::Mode::Precision){
+    if(covPrec.cols()==1){
+      return covPrec.col(0).array().sqrt().matrix().asDiagonal()*x;
+    }else{
+      return sqrtCovPrec.matrixL()*x;
+    }
+  }else{
+    if(covPrec.cols()==1){
+      return covPrec.col(0).array().inverse().sqrt().matrix().asDiagonal() * x;
+    }else{
+      return sqrtCovPrec.matrixL().solve(x);
+    }
+  }
 }
