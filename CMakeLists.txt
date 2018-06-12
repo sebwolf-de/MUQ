@@ -1,16 +1,16 @@
-cmake_minimum_required (VERSION 2.8.12) 
+cmake_minimum_required (VERSION 2.8.12)
 
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/finds)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/checks)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/builds)
-  
+
 INCLUDE(CheckCXXSourceCompiles)
 INCLUDE(CheckCXXSourceRuns)
 INCLUDE(CheckFunctionExists)
 
 # define the project name
-project(MUQ_PRIVATE) 
+project(MUQ_PRIVATE)
 set(${CMAKE_PROJECT_NAME}_MAJOR_VERSION 1)
 set(${CMAKE_PROJECT_NAME}_MINOR_VERSION 0)
 set(${CMAKE_PROJECT_NAME}_PATCH_VERSION 0)
@@ -64,19 +64,18 @@ INCLUDE(UpdateCompileGroups)
 INCLUDE(SetupCompileTargets)
 INCLUDE(SetupTestTargets)
 
-# Create the list of libraries we just built
-INCLUDE(BuiltLibrarySetup)
-
 ###############################################################
 # INSTALLATION INFORMATION
 ###############################################################
 get_directory_property(MUQ_COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
 message(STATUS "Storing MUQ_COMPILE_DEFINITIONS = ${MUQ_COMPILE_DEFINITIONS}")
+message(STATUS "MUQ_LIBRARIES = ${MUQ_LIBRARIES}")
 
 set(MUQ_EXPORT_LIBRARIES "")
-FOREACH(BUILT_LIB ${MUQ_BUILT_LIBRARIES})
-	list(APPEND MUQ_EXPORT_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/${BUILT_LIB})
+FOREACH(BUILT_LIB ${MUQ_LIBRARIES})
+	list(APPEND MUQ_EXPORT_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${BUILT_LIB}${CMAKE_SHARED_LIBRARY_SUFFIX})
 ENDFOREACH()
+message(STATUS "MUQ_EXPORT_LIBRARIES = ${MUQ_EXPORT_LIBRARIES}")
 
 export(PACKAGE ${CMAKE_PROJECT_NAME})
 
@@ -85,22 +84,22 @@ configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}/${CMAKE_PROJECT_N
 configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake" @ONLY)
 
 # Install the MUQConfig.cmake file
-install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake" 
+install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake"
         DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/${CMAKE_PROJECT_NAME}"
 	    COMPONENT dev)
-  
+
 # Install the export set for use with the install-tree
 install(EXPORT ${CMAKE_PROJECT_NAME}Depends
         DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/${CMAKE_PROJECT_NAME}"
 	    COMPONENT dev)
-  
+
 # install all the MUQ headers -- may be better off installing for each package individually
 install(DIRECTORY MUQ
         DESTINATION "${CMAKE_INSTALL_PREFIX}/include"
 	    FILES_MATCHING PATTERN "*.h")
-  
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR}) 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR}) 
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})
 
 ###############################################
 # Write summary to terminal
@@ -120,18 +119,18 @@ MESSAGE("${MUQ_LOG_SUMMARY}")
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
 	message(STATUS "To build documentation, run 'make doc'")
-	
+
 	option(MUQDOC_INCLUDE_ANALYTICS OFF)
 	if(MUQDOC_INCLUDE_ANALYTICS)
 		message(STATUS "Will include google analytics header information in doxygen output.")
 		set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/analytics_header.html)
 	endif()
-	  
+
   message(STATUS "Extracting parameter values from cpp files.  Results are stored in ${CMAKE_BINARY_DIR}/ExtractedParameters.dox")
   message(STATUS "python ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}")
   execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}
                   OUTPUT_FILE "${CMAKE_BINARY_DIR}/ParameterDescriptions.dox")
-    
+
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/muq.doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile @ONLY)
     #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/ParameterDescriptions.dox.in ${CMAKE_CURRENT_BINARY_DIR}/ParameterDescriptions.dox @ONLY)
     add_custom_target(doc
@@ -139,7 +138,6 @@ if(DOXYGEN_FOUND)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen" VERBATIM
     )
-    
-    
-endif(DOXYGEN_FOUND)
 
+
+endif(DOXYGEN_FOUND)

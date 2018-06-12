@@ -7,6 +7,8 @@ include_directories(${MUQ_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS ${MUQ_CXX_FLAGS})
 set(CMAKE_CXX_COMPILER ${MUQ_CXX_COMPILER})
 
+message("${MUQ_INCLUDE_DIRS}")
+message("${MUQ_LIBRARIES}")
 
 add_executable(GaussianSampling GaussianSampling.cpp)
 target_link_libraries(GaussianSampling ${MUQ_LIBRARIES} ${MUQ_LINK_LIBRARIES})
