@@ -2,9 +2,7 @@
 
 using namespace muq::Utilities;
 
-
-void muq::Utilities::AddDictToPtree(pybind11::dict dict, std::string basePath, boost::property_tree::ptree &pt)
-{
+void muq::Utilities::AddDictToPtree(pybind11::dict dict, std::string basePath, boost::property_tree::ptree &pt) {
   pybind11::object keys = pybind11::list(dict.attr("keys")());
   std::vector<std::string> keysCpp = keys.cast<std::vector<std::string>>();
 
@@ -27,7 +25,6 @@ void muq::Utilities::AddDictToPtree(pybind11::dict dict, std::string basePath, b
     }
   }
 }
-
 
 boost::property_tree::ptree muq::Utilities::ConvertDictToPtree(pybind11::dict dict) {
 

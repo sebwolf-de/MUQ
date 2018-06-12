@@ -16,15 +16,40 @@
 #include <functional>
 #include <vector>
 
-using namespace muq::Modeling::PythonBindings;
+//using namespace muq::Modeling::PythonBindings;
+using namespace muq::Modeling;
 namespace py = pybind11;
 
+class PyModPiece : public ModPiece {
+public:
+  /* Inherit the constructors */
+  using ModPiece::ModPiece;
+
+  /* Trampoline (need one for each virtual function) */
+  void EvaluateImpl(ref_vector<Eigen::VectorXd> const& input) override {
+    std::cout << "BLAH!" << std::endl;
+    PYBIND11_OVERLOAD_PURE(
+      void,          /* Return type */
+      ModPiece,      /* Parent class */
+      EvaluateImpl,  /* Name of function in C++ (must match Python name) */
+      input          /* Argument(s) */
+    );
+    std::cout << "BLAH! BLAH!" << std::endl;
+  }
+};
+
+class Publicist : public ModPiece {
+public:
+    using ModPiece::EvaluateImpl;
+};
 
 void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
 {
     // Define some functions from the WorkPiece base class
-    py::class_<ModPiece,  WorkPiece, std::shared_ptr<ModPiece>> mp(m, "ModPiece");
+    py::class_<ModPiece, PyModPiece, WorkPiece, std::shared_ptr<ModPiece>> mp(m, "ModPiece");
     mp
+      .def(py::init<Eigen::VectorXi const&, Eigen::VectorXi const&>())
+      .def("EvaluateImpl", (void (ModPiece::*)(ref_vector<Eigen::VectorXd> const&)) &Publicist::EvaluateImpl)
       .def("Evaluate", (std::vector<Eigen::VectorXd> const& (ModPiece::*)(std::vector<Eigen::VectorXd> const&)) &ModPiece::Evaluate)
       .def("Evaluate", (std::vector<Eigen::VectorXd> const& (ModPiece::*)()) &ModPiece::Evaluate)
       .def_readonly("inputSizes", &ModPiece::inputSizes)
