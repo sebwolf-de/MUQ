@@ -28,7 +28,7 @@ FILE(APPEND ${_log_summary}
 "#  Compiler flags used for this build:
 #        CMAKE_CXX_FLAGS:        ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}
 "
-)	
+)
 endif()
 FILE(APPEND ${_log_summary}
 "#
@@ -69,9 +69,9 @@ macro (PrintRequired name pad)
             FILE(APPEND ${_log_summary} "#                                Libraries:\n")
 
             foreach(libName ${${name}_LIBRARIES})
-                FILE(APPEND ${_log_summary} 
+                FILE(APPEND ${_log_summary}
                             "#                                  ${libName}\n")
-            endforeach(libName) 
+            endforeach(libName)
         endif()
     endif()
     FILE(APPEND ${_log_summary} "#\n")
@@ -93,13 +93,13 @@ FILE(APPEND ${_log_summary} "#\n")
 macro(PrintOptional name pad)
 	IF(DEFINED ${name}_FOUND)
 		if(${name}_FOUND AND ${name}_TEST_FAIL)
-		FILE(APPEND ${_log_summary} 
+		FILE(APPEND ${_log_summary}
 "#        ${name}${pad}-----------> OFF -- Failed compilation test.\n")
 	elseif(NOT ${name}_FOUND)
-		FILE(APPEND ${_log_summary} 
+		FILE(APPEND ${_log_summary}
 "#        ${name}${pad}-----------> OFF -- Could not find library.\n")
 	else()
-		FILE(APPEND ${_log_summary} 
+		FILE(APPEND ${_log_summary}
 "#        ${name}${pad}------------> ON.\n"
 "#                                Include Directory:\n"
 "#                                  ${${name}_INCLUDE_DIR}\n")
@@ -107,14 +107,14 @@ macro(PrintOptional name pad)
 IF(DEFINED ${name}_LIBRARIES)
 FILE(APPEND ${_log_summary} "#                                Libraries:\n")
 
-		foreach(libName ${${name}_LIBRARIES}) 
-    		FILE(APPEND ${_log_summary} 
-"#                                  ${libName}\n") 
-		endforeach(libName) 
+		foreach(libName ${${name}_LIBRARIES})
+    		FILE(APPEND ${_log_summary}
+"#                                  ${libName}\n")
+		endforeach(libName)
 endif()
 
 	endif()
-	
+
 	else()
 		FILE(APPEND ${_log_summary} "#        ${name}:${pad}-----------> OFF.\n")
 	endif()
@@ -125,9 +125,9 @@ endmacro(PrintOptional)
 FILE(APPEND ${_log_summary} "#  Optional dependencies:\n")
 PrintOptional(GTEST " ----")
 FILE(APPEND ${_log_summary} "#\n")
-  
+
 FILE(APPEND ${_log_summary}
-"#  Optional tools:   
+"#  Optional tools:
 #        MPI: -----------------> ${MUQ_USE_OPENMPI}
 #
 "
@@ -138,5 +138,10 @@ foreach(target ${MUQ_TARGETS})
     string(REPLACE "muq" "" moduleName ${target})
     FILE(APPEND ${_log_summary} "#        ${moduleName}:\n")
 endforeach()
+
+FILE(APPEND ${_log_summary} "#\n#  MUQ Libraries: \n")
+FILE(APPEND ${_log_summary} "#        ${MUQ_LIBRARIES}\n")
+
+
 
 FILE(APPEND ${_log_summary} "#############################################\n\n")
