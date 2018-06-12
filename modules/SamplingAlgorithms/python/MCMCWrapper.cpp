@@ -14,19 +14,17 @@
 #include <functional>
 #include <vector>
 
-using namespace muq::SamplingAlgorithms::PythonBindings;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 namespace py = pybind11;
 
-void muq::SamplingAlgorithms::PythonBindings::MCMCWrapper(py::module &m)
-{
+void PythonBindings::MCMCWrapper(py::module &m) {
   py::class_<SamplingAlgorithm, std::shared_ptr<SamplingAlgorithm>> sampAlg(m, "SamplingAlgorithm");
   sampAlg
     .def("Run", (SampleCollection const&  (SamplingAlgorithm::*)()) &SamplingAlgorithm::Run)
     .def("Run", (SampleCollection const&  (SamplingAlgorithm::*)(Eigen::VectorXd const&)) &SamplingAlgorithm::Run)
     .def("Run", (SampleCollection const&  (SamplingAlgorithm::*)(std::vector<Eigen::VectorXd> const&)) &SamplingAlgorithm::Run);
-  
+
   py::class_<SingleChainMCMC, SamplingAlgorithm, std::shared_ptr<SingleChainMCMC>> singleMCMC(m, "SingleChainMCMC");
   singleMCMC
     .def("__init__", [](SingleChainMCMC &instance, py::dict d, std::shared_ptr<AbstractSamplingProblem> problem) {new (&instance) SingleChainMCMC(ConvertDictToPtree(d), problem);})

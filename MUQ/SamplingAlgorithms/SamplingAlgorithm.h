@@ -9,7 +9,7 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
-    class SamplingAlgorithm{//} : public muq::Modeling::WorkPiece {
+    class SamplingAlgorithm {//} : public muq::Modeling::WorkPiece {
     public:
 
       SamplingAlgorithm(){};

@@ -5,14 +5,13 @@
 
 namespace muq{
   namespace SamplingAlgorithms{
-
     namespace PythonBindings{
 
       void KernelWrapper(pybind11::module &m);
       void ProposalWrapper(pybind11::module &m);
       void SampleWrapper(pybind11::module &m);
       void MCMCWrapper(pybind11::module &m);
-      
+
     }
   }
 }
