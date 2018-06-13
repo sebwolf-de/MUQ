@@ -21,9 +21,10 @@ namespace py = pybind11;
 void PythonBindings::MCMCWrapper(py::module &m) {
   py::class_<SamplingAlgorithm, std::shared_ptr<SamplingAlgorithm>> sampAlg(m, "SamplingAlgorithm");
   sampAlg
-    .def("Run", (SampleCollection const&  (SamplingAlgorithm::*)()) &SamplingAlgorithm::Run)
-    .def("Run", (SampleCollection const&  (SamplingAlgorithm::*)(Eigen::VectorXd const&)) &SamplingAlgorithm::Run)
-    .def("Run", (SampleCollection const&  (SamplingAlgorithm::*)(std::vector<Eigen::VectorXd> const&)) &SamplingAlgorithm::Run);
+    .def("Run", (std::shared_ptr<SampleCollection>  (SamplingAlgorithm::*)()) &SamplingAlgorithm::Run)
+    .def("Run", (std::shared_ptr<SampleCollection>  (SamplingAlgorithm::*)(Eigen::VectorXd const&)) &SamplingAlgorithm::Run)
+    .def("Run", (std::shared_ptr<SampleCollection>  (SamplingAlgorithm::*)(std::vector<Eigen::VectorXd> const&)) &SamplingAlgorithm::Run)
+    .def("GetSamples", &SamplingAlgorithm::GetSamples);
 
   py::class_<SingleChainMCMC, SamplingAlgorithm, std::shared_ptr<SingleChainMCMC>> singleMCMC(m, "SingleChainMCMC");
   singleMCMC

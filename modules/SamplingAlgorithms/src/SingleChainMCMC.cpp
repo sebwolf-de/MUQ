@@ -7,7 +7,7 @@
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
-SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree&             pt,
+SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree              pt,
                                  std::shared_ptr<AbstractSamplingProblem> problem) : SamplingAlgorithm(std::make_shared<MarkovChain>())
 {
   numSamps = pt.get<unsigned int>("NumSamples");
