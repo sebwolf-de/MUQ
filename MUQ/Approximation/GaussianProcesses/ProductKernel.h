@@ -150,9 +150,10 @@ ProductKernel operator*(KernelType1 const& k1, KernelType2 const& k2)
   return ProductKernel(k1.Clone(), k2.Clone());
 }
 
+std::shared_ptr<ProductKernel> operator*(std::shared_ptr<KernelBase> k1, std::shared_ptr<KernelBase> k2);
 
-}
-}
+} // namespace Approximation
+}// namespace muq
 
 
 #endif
