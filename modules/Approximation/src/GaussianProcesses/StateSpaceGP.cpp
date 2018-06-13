@@ -1,6 +1,6 @@
 #include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
-#include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/ProductOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/BlockDiagonalOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/ProductOperator.h"
 #include "MUQ/Utilities/RandomGenerator.h"
 #include "MUQ/Inference/Filtering/KalmanFilter.h"
 #include "MUQ/Inference/Filtering/KalmanSmoother.h"
@@ -23,7 +23,7 @@ StateSpaceGP::StateSpaceGP(std::shared_ptr<MeanFunctionBase> meanIn,
 };
     
 
-StateSpaceGP::StateSpaceGP(std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> ssInfo,
+StateSpaceGP::StateSpaceGP(std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> ssInfo,
                            std::shared_ptr<MeanFunctionBase> meanIn,
                            std::shared_ptr<KernelBase>       covKernelIn) : GaussianProcess(meanIn, covKernelIn), stateDim(std::get<2>(ssInfo).rows()),
                                                                             sde(std::get<0>(ssInfo)),
@@ -300,7 +300,7 @@ double StateSpaceGP::MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad,
 
 
 
-void StateSpaceGP::SetObs(std::shared_ptr<muq::Utilities::LinearOperator> newObs)
+void StateSpaceGP::SetObs(std::shared_ptr<muq::Modeling::LinearOperator> newObs)
 {
 
     if(newObs->cols() != obsOp->cols())
@@ -319,7 +319,7 @@ void StateSpaceGP::SetObs(std::shared_ptr<muq::Utilities::LinearOperator> newObs
 //     auto sde = LinearSDE::Concatenate(sdes);
     
 //     // Build a concatenated observation operator
-//     std::vector<std::shared_ptr<muq::Utilities::LinearOperator>> obsOps(gps.size());
+//     std::vector<std::shared_ptr<muq::Modeling::LinearOperator>> obsOps(gps.size());
 //     for(int i=0; i<gps.size(); ++i)
 //         obsOps.at(i) = gps.at(i)->GetObs();
     

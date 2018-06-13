@@ -6,11 +6,10 @@
 
 #include "MUQ/Modeling/WorkPiece.h"
 #include "MUQ/Modeling/WorkGraphPiece.h"
-#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+#include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
 
 #include "WorkPieceTestClasses.h"
 
-using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 TEST(WorkGraphPiece, FixedInOutNum) {

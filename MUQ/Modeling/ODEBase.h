@@ -3,7 +3,7 @@
 
 #include "boost/property_tree/ptree.hpp"
 
-#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+#include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
 
 #include "MUQ/Modeling/WorkPiece.h"
 #include "MUQ/Modeling/ODEData.h"

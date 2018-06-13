@@ -2,8 +2,8 @@
 #define LINEARSDE_H
 
 
-#include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/EigenLinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/EigenLinearOperator.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <random>
@@ -29,15 +29,15 @@ where \f$f(t)\f$ is the solution in \f$\mathbb{R}^M\f$, \f$F\f$ is an \f$M\times
         LinearSDE(Eigen::Matrix<Derived1,Eigen::Dynamic, Eigen::Dynamic>   const& Fin,
                   Eigen::Matrix<Derived2,Eigen::Dynamic, Eigen::Dynamic>   const& Lin,
                   Eigen::MatrixXd                                          const& Qin,
-                  boost::property_tree::ptree options) : LinearSDE(muq::Utilities::LinearOperator::Create(Fin),
-                                                                   muq::Utilities::LinearOperator::Create(Lin),
+                  boost::property_tree::ptree options) : LinearSDE(muq::Modeling::LinearOperator::Create(Fin),
+                                                                   muq::Modeling::LinearOperator::Create(Lin),
                                                                    Qin,
                                                                    options)
         {};
         
         
-        LinearSDE(std::shared_ptr<muq::Utilities::LinearOperator>    Fin,
-                  std::shared_ptr<muq::Utilities::LinearOperator>    Lin,
+        LinearSDE(std::shared_ptr<muq::Modeling::LinearOperator>    Fin,
+                  std::shared_ptr<muq::Modeling::LinearOperator>    Lin,
                   Eigen::MatrixXd                             const& Qin,
                   boost::property_tree::ptree                        options);
 
@@ -86,8 +86,8 @@ Q = \left[\begin{array}{cccc} Q_1 & 0 & \cdots & \\ 0 & Q_2 & 0 \\ \vdots & & \d
         const int stateDim;
 
 
-        std::shared_ptr<muq::Utilities::LinearOperator> GetF() const{return F;};
-        std::shared_ptr<muq::Utilities::LinearOperator> GetL() const{return L;};
+        std::shared_ptr<muq::Modeling::LinearOperator> GetF() const{return F;};
+        std::shared_ptr<muq::Modeling::LinearOperator> GetL() const{return L;};
         Eigen::MatrixXd const& GetQ() const{return Q;};
         
         
@@ -95,8 +95,8 @@ Q = \left[\begin{array}{cccc} Q_1 & 0 & \cdots & \\ 0 & Q_2 & 0 \\ \vdots & & \d
 
         void ExtractOptions(boost::property_tree::ptree options);
         
-        std::shared_ptr<muq::Utilities::LinearOperator> F;
-        std::shared_ptr<muq::Utilities::LinearOperator> L;
+        std::shared_ptr<muq::Modeling::LinearOperator> F;
+        std::shared_ptr<muq::Modeling::LinearOperator> L;
 
         Eigen::MatrixXd Q;
         Eigen::MatrixXd sqrtQ;

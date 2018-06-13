@@ -1,7 +1,7 @@
 #ifndef GAUSSIAN_H_
 #define GAUSSIAN_H_
 
-#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+#include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
 
 #include "MUQ/Modeling/Distributions/Distribution.h"
 

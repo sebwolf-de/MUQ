@@ -86,7 +86,7 @@ std::vector<std::shared_ptr<KernelBase>> ProductKernel::GetSeperableComponents()
 
 
 
-std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> ProductKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
+std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> ProductKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
 {
 		auto periodicCast1 = std::dynamic_pointer_cast<PeriodicKernel>(kernel1);
 		auto periodicCast2 = std::dynamic_pointer_cast<PeriodicKernel>(kernel2);
@@ -110,7 +110,7 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
 
 
 // See "Explicit Link Between Periodic
-std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> ProductKernel::GetProductStateSpace(std::shared_ptr<PeriodicKernel> const& kernel1,
+std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> ProductKernel::GetProductStateSpace(std::shared_ptr<PeriodicKernel> const& kernel1,
                                                                                                                                              	              std::shared_ptr<KernelBase>     const& kernel2,
                                                                                                                                                             boost::property_tree::ptree sdeOptions) const
 {
@@ -118,10 +118,10 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
     auto periodicGP = kernel1->GetStateSpace(sdeOptions);
     auto periodicSDE = std::get<0>(periodicGP);
 
-    auto periodicF = std::dynamic_pointer_cast<muq::Utilities::BlockDiagonalOperator>(periodicSDE->GetF());
+    auto periodicF = std::dynamic_pointer_cast<muq::Modeling::BlockDiagonalOperator>(periodicSDE->GetF());
     assert(periodicF);
 
-    auto periodicL = std::dynamic_pointer_cast<muq::Utilities::BlockDiagonalOperator>(periodicSDE->GetL());
+    auto periodicL = std::dynamic_pointer_cast<muq::Modeling::BlockDiagonalOperator>(periodicSDE->GetL());
     assert(periodicL);
 
     auto otherGP = kernel2->GetStateSpace(sdeOptions);
@@ -131,26 +131,26 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
     auto otherH = std::get<1>(otherGP);
 
     /// Construct the new F operator
-    std::vector<std::shared_ptr<muq::Utilities::LinearOperator>> newBlocks( periodicF->GetBlocks().size() );
+    std::vector<std::shared_ptr<muq::Modeling::LinearOperator>> newBlocks( periodicF->GetBlocks().size() );
     for(int i=0; i<newBlocks.size(); ++i)
-        newBlocks.at(i) = muq::Utilities::KroneckerSum(otherF, periodicF->GetBlock(i) );
+        newBlocks.at(i) = muq::Modeling::KroneckerSum(otherF, periodicF->GetBlock(i) );
 
-    auto newF = std::make_shared<muq::Utilities::BlockDiagonalOperator>(newBlocks);
+    auto newF = std::make_shared<muq::Modeling::BlockDiagonalOperator>(newBlocks);
 
     /// Construct the new L operator
     for(int i=0; i<newBlocks.size(); ++i)
-        newBlocks.at(i) = std::make_shared<muq::Utilities::KroneckerProductOperator>(otherL, periodicL->GetBlock(i) );
+        newBlocks.at(i) = std::make_shared<muq::Modeling::KroneckerProductOperator>(otherL, periodicL->GetBlock(i) );
 
-    auto newL = std::make_shared<muq::Utilities::BlockDiagonalOperator>(newBlocks);
+    auto newL = std::make_shared<muq::Modeling::BlockDiagonalOperator>(newBlocks);
 
     /// Construct the new H operator
     Eigen::MatrixXd Hblock(1,2);
     Hblock << 1.0, 0.0;
 
     for(int i=0; i<newBlocks.size(); ++i)
-        newBlocks.at(i) = std::make_shared<muq::Utilities::KroneckerProductOperator>(otherH, muq::Utilities::LinearOperator::Create(Hblock) );
+        newBlocks.at(i) = std::make_shared<muq::Modeling::KroneckerProductOperator>(otherH, muq::Modeling::LinearOperator::Create(Hblock) );
 
-    auto newH = std::make_shared<muq::Utilities::BlockRowOperator>(newBlocks);
+    auto newH = std::make_shared<muq::Modeling::BlockRowOperator>(newBlocks);
 
     // Construct Pinf
     Eigen::MatrixXd periodicP = std::get<2>(periodicGP);
@@ -158,13 +158,13 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
 
     Eigen::MatrixXd Pinf = Eigen::MatrixXd::Zero(periodicP.rows()*otherP.rows(), periodicP.cols()*otherP.cols());
     for(int i=0; i<newBlocks.size(); ++i)
-        Pinf.block(2*i*otherP.rows(), 2*i*otherP.rows(), 2*otherP.rows(), 2*otherP.cols()) = muq::Utilities::KroneckerProduct(otherP, periodicP.block(2*i,2*i,2,2));
+        Pinf.block(2*i*otherP.rows(), 2*i*otherP.rows(), 2*otherP.rows(), 2*otherP.cols()) = muq::Modeling::KroneckerProduct(otherP, periodicP.block(2*i,2*i,2,2));
 
     // Construct Q
     Eigen::MatrixXd const& otherQ = otherSDE->GetQ();
     Eigen::MatrixXd Q = Eigen::MatrixXd::Zero(otherQ.rows()*periodicP.rows(), otherQ.cols()*periodicP.cols());
     for(int i=0; i<newBlocks.size(); ++i)
-        Q.block(2*i*otherQ.rows(), 2*i*otherQ.rows(), 2*otherQ.rows(), 2*otherQ.cols()) = muq::Utilities::KroneckerProduct(otherQ, periodicP.block(2*i,2*i,2,2));
+        Q.block(2*i*otherQ.rows(), 2*i*otherQ.rows(), 2*otherQ.rows(), 2*otherQ.cols()) = muq::Modeling::KroneckerProduct(otherQ, periodicP.block(2*i,2*i,2,2));
 
     // Construct the new statespace GP
     auto newSDE = std::make_shared<muq::Modeling::LinearSDE>(newF, newL, Q, sdeOptions);

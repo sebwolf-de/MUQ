@@ -7,7 +7,7 @@
 #include "MUQ/Utilities/RandomGenerator.h"
 #include "MUQ/Utilities/Exceptions.h"
 
-#include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/BlockDiagonalOperator.h"
 
 using namespace muq::Modeling;
 using namespace muq::Utilities;

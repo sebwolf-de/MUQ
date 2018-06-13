@@ -1,14 +1,14 @@
 #include "gtest/gtest.h"
 
 #include "MUQ/Inference/Filtering/KalmanFilter.h"
-#include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/EigenLinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/EigenLinearOperator.h"
 #include "MUQ/Utilities/Exceptions.h"
 
 #include <Eigen/Dense>
 
 using namespace muq::Inference;
-using namespace muq::Utilities;
+using namespace muq::Modeling;
 
 
 class Inference_KalmanFilter : public ::testing::Test
@@ -34,12 +34,12 @@ protected:
         // Now compute the true posterior
         Eigen::VectorXd y = data - Hmat*prior.first;
         Eigen::MatrixXd S = obsVar*Eigen::MatrixXd::Identity(obsDim, obsDim) + Hmat*prior.second*Hmat.transpose();
-        
+
         Eigen::MatrixXd K = S.llt().solve(Hmat*prior.second).transpose();
         truePost.first = prior.first + K*y;
         truePost.second = prior.second - K*Hmat*prior.second;
         truePost.second = 0.5*(truePost.second + truePost.second.transpose()).eval();
-        
+
     };
 
     virtual void TearDown(){
@@ -55,7 +55,7 @@ protected:
     const int stateDim = 4;
     const int obsDim = 2;
     const double obsVar = 1e-4;
-    
+
     std::pair<Eigen::VectorXd, Eigen::MatrixXd> prior;
     std::pair<Eigen::VectorXd, Eigen::MatrixXd> post;
     std::shared_ptr<LinearOperator> H;

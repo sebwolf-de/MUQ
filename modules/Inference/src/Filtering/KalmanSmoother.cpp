@@ -2,14 +2,14 @@
 
 #include <Eigen/Dense>
 
-using namespace muq::Utilities;
+using namespace muq::Modeling;
 using namespace muq::Inference;
 
 
 
 Eigen::MatrixXd KalmanSmoother::ComputeC(Eigen::MatrixXd                          const& currDist_t_cov,
                                          Eigen::MatrixXd                          const& nextDist_t_cov,
-                                         std::shared_ptr<muq::Utilities::LinearOperator> F)
+                                         std::shared_ptr<muq::Modeling::LinearOperator> F)
 {
     return  nextDist_t_cov.llt().solve( F->Apply(currDist_t_cov) ).transpose();
 }

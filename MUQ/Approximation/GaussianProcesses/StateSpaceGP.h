@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/LinearOperator.h"
 #include "MUQ/Modeling/LinearSDE.h"
 
 #include "MUQ/Approximation/GaussianProcesses/GaussianProcess.h"
@@ -47,9 +47,9 @@ public:
     
     std::shared_ptr<muq::Modeling::LinearSDE> GetSDE(){return sde;};
     
-    std::shared_ptr<muq::Utilities::LinearOperator> GetObs(){return obsOp;};
+    std::shared_ptr<muq::Modeling::LinearOperator> GetObs(){return obsOp;};
 
-    void SetObs(std::shared_ptr<muq::Utilities::LinearOperator> newObs);
+    void SetObs(std::shared_ptr<muq::Modeling::LinearOperator> newObs);
 
     Eigen::MatrixXd GetCov(){return L.triangularView<Eigen::Lower>()*L.transpose();};
 
@@ -61,7 +61,7 @@ public:
     
 private:
 
-    StateSpaceGP(std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> ssInfo,
+    StateSpaceGP(std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> ssInfo,
                  std::shared_ptr<MeanFunctionBase> meanIn,
                  std::shared_ptr<KernelBase>       covKernelIn);
 
@@ -76,7 +76,7 @@ private:
     std::shared_ptr<muq::Modeling::LinearSDE> sde;
 
     // Observation operator
-    std::shared_ptr<muq::Utilities::LinearOperator> obsOp;
+    std::shared_ptr<muq::Modeling::LinearOperator> obsOp;
     
     // Cholesky factor of the stationary covariance matrix (used to initialize SDE integration)
     Eigen::MatrixXd L;

@@ -3,6 +3,7 @@
 
 #include "MUQ/Approximation/GaussianProcesses/KernelBase.h"
 
+#include "MUQ/Modeling/LinearAlgebra/BlockRowOperator.h"
 
 namespace muq
 {
@@ -69,10 +70,10 @@ public:
       block += temp;
     }
 
-    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions=boost::property_tree::ptree()) const override
+    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions=boost::property_tree::ptree()) const override
     {
         std::vector<std::shared_ptr<muq::Modeling::LinearSDE>> sdes(2);
-        std::vector<std::shared_ptr<muq::Utilities::LinearOperator>> linOps(2);
+        std::vector<std::shared_ptr<muq::Modeling::LinearOperator>> linOps(2);
         Eigen::MatrixXd pinf1, pinf2;
 
         // Get the statespace information from each component
@@ -83,7 +84,7 @@ public:
         auto newSDE = muq::Modeling::LinearSDE::Concatenate(sdes,sdeOptions);
 
         // Concatenate the linear operators
-        auto newObsOp = std::make_shared<muq::Utilities::BlockRowOperator>(linOps);
+        auto newObsOp = std::make_shared<muq::Modeling::BlockRowOperator>(linOps);
 
         // Set up the combined stationary covariance
         Eigen::MatrixXd newPinf = Eigen::MatrixXd::Zero(pinf1.rows() + pinf2.rows(), pinf1.cols() + pinf2.cols());

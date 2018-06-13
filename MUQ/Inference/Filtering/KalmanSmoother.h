@@ -45,7 +45,7 @@ namespace Inference
 
         static Eigen::MatrixXd ComputeC( Eigen::MatrixXd                          const& currDist_t_cov,
                                          Eigen::MatrixXd                          const& nextDist_t_cov,
-                                         std::shared_ptr<muq::Utilities::LinearOperator> F);
+                                         std::shared_ptr<muq::Modeling::LinearOperator> F);
 
         
         static Eigen::MatrixXd ComputeC( Eigen::MatrixXd const& currDist_t_cov,
