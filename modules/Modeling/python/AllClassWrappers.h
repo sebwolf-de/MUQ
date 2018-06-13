@@ -5,7 +5,6 @@
 
 namespace muq{
   namespace Modeling{
-
     namespace PythonBindings{
 
       void WorkPieceWrapper(pybind11::module &m);

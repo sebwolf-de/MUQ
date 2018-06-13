@@ -27,6 +27,8 @@ CreateCompileGroup(
     WorkGraphNode.cpp
     WorkGraphEdge.cpp
 
+    PyModPiece.cpp
+
     ModPiece.cpp
     ModGraphPiece.cpp
     WorkGraphPiece.cpp

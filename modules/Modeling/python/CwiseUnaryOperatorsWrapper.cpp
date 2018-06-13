@@ -8,7 +8,7 @@
 using namespace muq::Modeling;
 namespace py = pybind11;
 
-void PythonBindings::CwiseUnaryOperatorsWrapper(py::module &m) {
+void muq::Modeling::PythonBindings::CwiseUnaryOperatorsWrapper(py::module &m) {
   py::class_<ExpOperator, ModPiece, std::shared_ptr<ExpOperator>>(m, "ExpOperator").def(py::init<unsigned int>());
   py::class_<CosOperator, ModPiece, std::shared_ptr<CosOperator>>(m, "CosOperator").def(py::init<unsigned int>());
   py::class_<SinOperator, ModPiece, std::shared_ptr<SinOperator>>(m, "SinOperator").def(py::init<unsigned int>());
