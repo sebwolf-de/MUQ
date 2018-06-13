@@ -1,22 +1,40 @@
-#include "MUQ/Modeling/ModPiece.h"
-
-#include <pybind11/pybind11.h>
+#include "MUQ/Modeling/PyModPiece.h"
 
 using namespace muq::Modeling;
-namespace py = pybind11;
 
-class PyModPiece : public ModPiece {
-public:
-  /* Inherit the constructors */
-  using ModPiece::ModPiece;
+PyModPiece::PyModPiece(Eigen::VectorXi const& inputSizes,
+                       Eigen::VectorXi const& outputSizes)
+                       : ModPiece(inputSizes, outputSizes) {}
 
-  /* Trampoline (need one for each virtual function) */
-  void EvaluateImpl(ref_vector<Eigen::VectorXd> const& input) override {
-    PYBIND11_OVERLOAD_PURE(
-      void,          /* Return type */
-      ModPiece,      /* Parent class */
-      EvaluateImpl,  /* Name of function in C++ (must match Python name) */
-      input          /* Argument(s) */
-    );
-  }
-};
+void PyModPiece::EvaluateImpl(ref_vector<Eigen::VectorXd> const& input) {
+  EvaluateImpl(ToStdVec(input));
+}
+
+void PyModPiece::GradientImpl(unsigned int                const  outputDimWrt,
+                              unsigned int                const  inputDimWrt,
+                              ref_vector<Eigen::VectorXd> const& input,
+                              Eigen::VectorXd             const& sensitivity) {
+  GradientImpl(outputDimWrt, inputDimWrt, ToStdVec(input), sensitivity);
+}
+
+void PyModPiece::JacobianImpl(unsigned int                const  outputDimWrt,
+                              unsigned int                const  inputDimWrt,
+                              ref_vector<Eigen::VectorXd> const& input) {
+  JacobianImpl(outputDimWrt, inputDimWrt, ToStdVec(input));
+}
+
+void PyModPiece::ApplyJacobianImpl(unsigned int                const  outputDimWrt,
+                                   unsigned int                const  inputDimWrt,
+                                   ref_vector<Eigen::VectorXd> const& input,
+                                   Eigen::VectorXd             const& vec) {
+  ApplyJacobianImpl(outputDimWrt, inputDimWrt, ToStdVec(input), vec);
+}
+
+std::vector<Eigen::VectorXd> PyModPiece::ToStdVec(ref_vector<Eigen::VectorXd> const& input) {
+  std::vector<Eigen::VectorXd> newIns(input.size());
+
+  for (int i=0; i<input.size(); ++i)
+    newIns.at(i) = input.at(i).get();
+
+  return newIns;
+}
