@@ -27,8 +27,11 @@ class WhiteNoiseKernel : public KernelImpl<WhiteNoiseKernel>
 public:
 
     WhiteNoiseKernel(unsigned     dim,
+                     const double sigma2In) : WhiteNoiseKernel(dim, sigma2In, {0.0, std::numeric_limits<double>::infinity()}){}
+
+    WhiteNoiseKernel(unsigned     dim,
                      const double sigma2In,
-                     const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()}) : KernelImpl<WhiteNoiseKernel>(dim, 1, 1)
+                     const Eigen::Vector2d sigmaBounds) : KernelImpl<WhiteNoiseKernel>(dim, 1, 1)
     {
       paramBounds.resize(2,1);
       paramBounds(0) = sigmaBounds[0]; // lower bound on sigma2

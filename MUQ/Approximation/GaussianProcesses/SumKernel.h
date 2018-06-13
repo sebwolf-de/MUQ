@@ -24,18 +24,7 @@ class SumKernel : public KernelBase
 
 public:
     SumKernel(std::shared_ptr<KernelBase> kernel1In,
-              std::shared_ptr<KernelBase> kernel2In) : KernelBase(kernel1In->inputDim,
-                                    														  kernel1In->coDim,
-                                    														  kernel1In->numParams + kernel2In->numParams),
-	                                                     kernel1(kernel1In),
-	                                                     kernel2(kernel2In)
-    {
-      assert(kernel2->inputDim == kernel2->inputDim);
-	    assert(kernel1->coDim == kernel2->coDim);
-      cachedParams.resize(numParams);
-      cachedParams.head(kernel1->numParams) = kernel1->GetParams();
-      cachedParams.tail(kernel2->numParams) = kernel2->GetParams();
-    };
+              std::shared_ptr<KernelBase> kernel2In);
 
     virtual ~SumKernel(){};
 
@@ -44,16 +33,7 @@ public:
     virtual void FillBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
                            Eigen::Ref<const Eigen::VectorXd> const& x2,
                            Eigen::Ref<const Eigen::VectorXd> const& params,
-                           Eigen::Ref<Eigen::MatrixXd>              block) const override
-    {
-
-        kernel1->FillBlock(x1,x2, params.head(kernel1->numParams), block);
-
-	      Eigen::MatrixXd temp(coDim, coDim);
-        kernel2->FillBlock(x1,x2, params.tail(kernel2->numParams), temp);
-
-        block += temp;
-    }
+                           Eigen::Ref<Eigen::MatrixXd>              block) const override;
 
 
     virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
@@ -80,8 +60,6 @@ public:
         std::tie(sdes.at(0), linOps.at(0), pinf1) = kernel1->GetStateSpace(sdeOptions);
         std::tie(sdes.at(1), linOps.at(1), pinf2) = kernel2->GetStateSpace(sdeOptions);
 
-        // Concantenate the sdes
-        auto newSDE = muq::Modeling::LinearSDE::Concatenate(sdes,sdeOptions);
 
         // Concatenate the linear operators
         auto newObsOp = std::make_shared<muq::Modeling::BlockRowOperator>(linOps);
@@ -106,8 +84,11 @@ SumKernel operator+(KernelType1 const& k1, KernelType2 const& k2)
 {
   return SumKernel(k1.Clone(), k2.Clone());
 }
-}
-}
+
+std::shared_ptr<SumKernel> operator+(std::shared_ptr<KernelBase> k1, std::shared_ptr<KernelBase> k2);
+
+} // namespace Approximation
+} // namespace muq
 
 
 #endif

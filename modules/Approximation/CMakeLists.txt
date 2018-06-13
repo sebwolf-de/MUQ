@@ -3,4 +3,4 @@ add_subdirectory(test)
 
 if(MUQ_USE_PYTHON)
   add_subdirectory(python)
-endif()  
+endif()
