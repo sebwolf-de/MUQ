@@ -2,8 +2,8 @@
 
 #include "MUQ/Modeling/LinearSDE.h"
 
-#include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/BlockRowOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/BlockRowOperator.h"
 
 using namespace muq::Approximation;
 
