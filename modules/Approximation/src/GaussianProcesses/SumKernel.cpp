@@ -51,10 +51,10 @@ void SumKernel::FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
   block += temp;
 }
 
-std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> SumKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
+std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> SumKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
 {
     std::vector<std::shared_ptr<muq::Modeling::LinearSDE>> sdes(2);
-    std::vector<std::shared_ptr<muq::Utilities::LinearOperator>> linOps(2);
+    std::vector<std::shared_ptr<muq::Modeling::LinearOperator>> linOps(2);
     Eigen::MatrixXd pinf1, pinf2;
 
     // Get the statespace information from each component
@@ -65,7 +65,7 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
     auto newSDE = muq::Modeling::LinearSDE::Concatenate(sdes,sdeOptions);
 
     // Concatenate the linear operators
-    auto newObsOp = std::make_shared<muq::Utilities::BlockRowOperator>(linOps);
+    auto newObsOp = std::make_shared<muq::Modeling::BlockRowOperator>(linOps);
 
     // Set up the combined stationary covariance
     Eigen::MatrixXd newPinf = Eigen::MatrixXd::Zero(pinf1.rows() + pinf2.rows(), pinf1.cols() + pinf2.cols());

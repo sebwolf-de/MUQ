@@ -102,7 +102,7 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
   py::class_<ObservationInformation, std::shared_ptr<ObservationInformation>>
     obsInfo(m, "ObservationInformation");
   obsInfo
-    .def(py::init<std::shared_ptr<muq::Utilities::LinearOperator>,
+    .def(py::init<std::shared_ptr<muq::Modeling::LinearOperator>,
                            Eigen::Ref<const Eigen::VectorXd> const&,
                            Eigen::Ref<const Eigen::VectorXd> const&,
                            Eigen::Ref<const Eigen::MatrixXd> const&>())
@@ -113,7 +113,7 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
              std::shared_ptr<DerivativeObservation>>
     derivObs(m, "DerivativeObservation");
   derivObs
-    .def(py::init<std::shared_ptr<muq::Utilities::LinearOperator>,
+    .def(py::init<std::shared_ptr<muq::Modeling::LinearOperator>,
                           Eigen::Ref<const Eigen::VectorXd> const&,
                           Eigen::Ref<const Eigen::VectorXd> const&,
                           Eigen::Ref<const Eigen::MatrixXd> const&,
