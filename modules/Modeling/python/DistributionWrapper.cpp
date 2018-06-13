@@ -3,6 +3,7 @@
 #include "MUQ/Modeling/ModPiece.h"
 
 #include "MUQ/Modeling/Distributions/Density.h"
+#include "MUQ/Modeling/Distributions/DensityProduct.h"
 #include "MUQ/Modeling/Distributions/RandomVariable.h"
 #include "MUQ/Modeling/Distributions/Distribution.h"
 #include "MUQ/Modeling/Distributions/Gaussian.h"
@@ -19,6 +20,7 @@
 #include <vector>
 
 using namespace muq::Modeling::PythonBindings;
+using namespace muq::Modeling;
 namespace py = pybind11;
 
 
@@ -45,6 +47,10 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
     py::class_<Density, DensityBase, std::shared_ptr<Density>> dens(m, "Density");
     dens
       .def("GetDistribution", &Density::GetDistribution);
+
+    py::class_<DensityProduct, DensityBase, std::shared_ptr<DensityProduct>> densProd(m,"DensityProduct");
+    densProd
+      .def(py::init<int>());
 
     py::class_<RandomVariable, Distribution, ModPiece, std::shared_ptr<RandomVariable>> rv(m, "RandomVariable");
     rv

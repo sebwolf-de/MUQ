@@ -47,6 +47,7 @@ void PythonBindings::SampleWrapper(py::module &m)
 
   py::class_<SampleCollection, std::shared_ptr<SampleCollection>> sampColl(m, "SampleCollection");
   sampColl
+    .def("__getitem__", (const std::shared_ptr<SamplingState> (SampleCollection::*)(unsigned) const) &SampleCollection::at)
     .def("size", &SampleCollection::size)
     .def("CentralMoment", &SampleCollection::CentralMoment, py::arg("order"), py::arg("blockDim") = -1)
     .def("Mean", &SampleCollection::Mean, py::arg("blockDim") = -1)
@@ -61,6 +62,7 @@ void PythonBindings::SampleWrapper(py::module &m)
     .def(py::init<std::vector<Eigen::VectorXd> const&>())
     .def(py::init<std::vector<Eigen::VectorXd> const&, double>())
     .def_readonly("weight", &SamplingState::weight)
+    .def_readonly("state", &SamplingState::state)
     .def("HasMeta", &SamplingState::HasMeta)
     .def("TotalDim", &SamplingState::TotalDim);
 
