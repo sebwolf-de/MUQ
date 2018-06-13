@@ -11,6 +11,8 @@ CreateTestGroup(
     IdentityPieceTests.cpp
 
     FlannTest/FlannCacheTests.cpp
+
+    CwiseOperatorTests/UnaryOperatorTest.cpp
 )
 
 CreateTestGroup(

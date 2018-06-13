@@ -37,6 +37,7 @@ CreateCompileGroup(
     ConstantPiece.cpp
     ConstantVector.cpp
     IdentityPiece.cpp
+    ProductPiece.cpp
 
     IdentityOperator.cpp
     ReplicateOperator.cpp

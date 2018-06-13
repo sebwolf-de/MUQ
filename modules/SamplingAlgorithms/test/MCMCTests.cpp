@@ -56,7 +56,7 @@ TEST(MCMC, MHKernel_MHProposal) {
   std::shared_ptr<MHProposal> proposalMH = std::dynamic_pointer_cast<MHProposal>(proposalBase);
   EXPECT_TRUE(proposalMH);
 
-  SampleCollection const& samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
 
   //boost::any anyMean = samps.Mean();
   // Eigen::VectorXd const& mean = AnyCast(anyMean);
@@ -138,9 +138,9 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   std::shared_ptr<MHProposal> proposalMH = std::dynamic_pointer_cast<MHProposal>(proposalBase);
   EXPECT_TRUE(proposalMH);
 
-  SampleCollection const& samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
 
-  Eigen::VectorXd mean = samps.Mean();
+  Eigen::VectorXd mean = samps->Mean();
 
 
   EXPECT_NEAR(mu1(0), mean(0), 1e-1);
@@ -148,7 +148,7 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   EXPECT_NEAR(mu2(0), mean(2), 1e-1);
   EXPECT_NEAR(mu2(1), mean(3), 1e-1);
 
-  Eigen::MatrixXd cov = samps.Covariance();
+  Eigen::MatrixXd cov = samps->Covariance();
   for(int j=0; j<cov.cols(); ++j){
     for(int i=0; i<cov.rows(); ++i){
       if(i!=j)
@@ -199,16 +199,14 @@ TEST(MCMC, MHKernel_AMProposal) {
   std::shared_ptr<AMProposal> proposalAM = std::dynamic_pointer_cast<AMProposal>(proposalBase);
   EXPECT_TRUE(proposalAM);
 
-  SampleCollection const& samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
 
-  boost::any anyMean = samps.Mean();
-  Eigen::VectorXd const& mean = AnyCast(anyMean);
+  Eigen::VectorXd mean = samps->Mean();
 
   EXPECT_NEAR(mu(0), mean(0), 1e-1);
   EXPECT_NEAR(mu(1), mean(1), 1e-1);
 
-  boost::any anyCov = samps.Covariance();
-  Eigen::MatrixXd const& cov = AnyCast(anyCov);
+  Eigen::MatrixXd cov = samps->Covariance();
   EXPECT_NEAR(1.0, cov(0,0), 1e-1);
   EXPECT_NEAR(0.0, cov(0,1), 1e-1);
   EXPECT_NEAR(0.0, cov(1,0), 1e-1);

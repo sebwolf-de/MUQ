@@ -55,11 +55,11 @@ CreateCompileGroup(
     LinearAlgebra/DiagonalOperator.cpp
     LinearAlgebra/ProductOperator.cpp
 
-    LinearAlgebra/AnyAlgebra.cpp
-    LinearAlgebra/ScalarAlgebra.cpp
-    LinearAlgebra/EigenVectorAlgebra.cpp
-    LinearAlgebra/EigenMatrixAlgebra.cpp
-    LinearAlgebra/SundialsAlgebra.cpp
+    #LinearAlgebra/AnyAlgebra.cpp
+    #LinearAlgebra/ScalarAlgebra.cpp
+    #LinearAlgebra/EigenVectorAlgebra.cpp
+    #LinearAlgebra/EigenMatrixAlgebra.cpp
+    #LinearAlgebra/SundialsAlgebra.cpp
 )
 
 CreateCompileGroup(

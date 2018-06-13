@@ -1,12 +1,15 @@
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
+
+#include "MUQ/SamplingAlgorithms/MarkovChain.h"
+
 #include "MUQ/Utilities/StringUtilities.h"
 
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
-SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree              pt,
-                                 std::shared_ptr<AbstractSamplingProblem> problem) {
-
+SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree&             pt,
+                                 std::shared_ptr<AbstractSamplingProblem> problem) : SamplingAlgorithm(std::make_shared<MarkovChain>())
+{
   numSamps = pt.get<unsigned int>("NumSamples");
   burnIn = pt.get("BurnIn",0);
 
@@ -26,13 +29,13 @@ SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree              pt,
 
 }
 
-SampleCollection const& SingleChainMCMC::RunImpl(std::vector<Eigen::VectorXd> const& x0)
+std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::VectorXd> const& x0)
 {
   unsigned sampNum = 0;
   std::vector<std::shared_ptr<SamplingState>> newStates;
   std::shared_ptr<SamplingState> prevState = std::make_shared<SamplingState>(x0);
 
-  samples.Add(prevState);
+  samples->Add(prevState);
 
   // Run until we've received the desired number of samples
   while(sampNum < numSamps)
@@ -52,12 +55,12 @@ SampleCollection const& SingleChainMCMC::RunImpl(std::vector<Eigen::VectorXd> co
           prevState = newStates.at(i);
 
           if(sampNum>=burnIn)
-            samples.Add(newStates.at(i));
+            samples->Add(newStates.at(i));
 
         }else{
           prevState->weight += 1;
           if(sampNum==burnIn)
-            samples.Add(prevState);
+            samples->Add(prevState);
         }
       }
 
