@@ -43,10 +43,6 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
     py::class_<DensityBase, Distribution, ModPiece, std::shared_ptr<DensityBase>> densBase(m, "DensityBase");
     densBase
       .def(py::init<Eigen::VectorXi>());
-      
-    py::class_<DensityProduct, DensityBase, std::shared_ptr<DensityProduct>> densProd(m, "DensityProduct");
-    densProd
-      .def(py::init<int>());
 
     py::class_<Density, DensityBase, std::shared_ptr<Density>> dens(m, "Density");
     dens
