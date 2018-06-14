@@ -1,5 +1,5 @@
 /***
-# Example 2: Introduction to block MCMC sampling
+# MCMC Example 2: Introduction to block MCMC sampling
 ## Overview
 The goal of this example is to demonstrate MCMC sampling with block updates.
 The problem is to sample a Gaussian distribution where the variance of
@@ -83,7 +83,7 @@ To sample the Gaussian target, the code needs to do four things:
 #include "MUQ/Modeling/Distributions/Density.h"
 #include "MUQ/Modeling/Distributions/DensityProduct.h"
 
-#include "MUQ/Modeling/IdentityOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
 #include "MUQ/Modeling/ReplicateOperator.h"
 #include "MUQ/Modeling/WorkGraph.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
@@ -263,22 +263,22 @@ correspond to the Gaussian and Inverse Gamma densities.
   startPt.at(0) = mu; // Start the Gaussian block at the mean
   startPt.at(1) = Eigen::VectorXd::Ones(1); // Set the starting value of the variance to 1
 
-  SampleCollection const& samps = mcmc->Run(startPt);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(startPt);
 
   /***
   ### 4. Analyze the results
   */
 
-  Eigen::VectorXd sampMean = samps.Mean();
+  Eigen::VectorXd sampMean = samps->Mean();
   std::cout << "Sample Mean = \n" << sampMean.transpose() << std::endl;
 
-  Eigen::VectorXd sampVar = samps.Variance();
+  Eigen::VectorXd sampVar = samps->Variance();
   std::cout << "\nSample Variance = \n" << sampVar.transpose() << std::endl;
 
-  Eigen::MatrixXd sampCov = samps.Covariance();
+  Eigen::MatrixXd sampCov = samps->Covariance();
   std::cout << "\nSample Covariance = \n" << sampCov << std::endl;
 
-  Eigen::VectorXd sampMom3 = samps.CentralMoment(3);
+  Eigen::VectorXd sampMom3 = samps->CentralMoment(3);
   std::cout << "\nSample Third Moment = \n" << sampMom3 << std::endl << std::endl;
 
   return 0;

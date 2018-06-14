@@ -10,7 +10,7 @@ namespace Modeling{
     class IdentityOperator : public LinearOperator
     {
     public:
-        
+
         IdentityOperator(const int dimIn) : LinearOperator(dimIn, dimIn){};
 
         virtual Eigen::MatrixXd Apply(Eigen::Ref<const Eigen::MatrixXd> const& x){ return x; }
@@ -20,12 +20,12 @@ namespace Modeling{
         virtual Eigen::MatrixXd GetMatrix(){return Eigen::MatrixXd::Identity(nrows, ncols);};
 
     }; // class IdentityOperator
-        
+
 } // namespace Modeling
 } // namespace muq
 
 
-        
+
 
 
 

@@ -13,6 +13,8 @@ CreateTestGroup(
     MultiLogisticTest.cpp
     
     FlannTest/FlannCacheTests.cpp
+
+    CwiseOperatorTests/UnaryOperatorTest.cpp
 )
 
 CreateTestGroup(

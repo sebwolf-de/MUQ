@@ -16,7 +16,7 @@ CreateCompileGroup(
     INFERENCE_FILTERING
     "Inference components related to filtering, smoothing, and data assimilation."
     muqInference
-    "UTILITIES_LINEARALGEBRA"
+    "MODELING_LINEARALGEBRA"
     "EIGEN3"
     ""
     Filtering/KalmanFilter.cpp

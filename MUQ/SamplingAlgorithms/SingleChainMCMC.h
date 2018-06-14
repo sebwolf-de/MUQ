@@ -24,13 +24,13 @@ namespace muq{
 
       virtual std::vector<std::shared_ptr<TransitionKernel>>& Kernels(){return kernels;};
 
-      virtual SampleCollection const& RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
+      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
 
     protected:
 
       unsigned int numSamps;
       unsigned int burnIn;
-      
+
       // A vector of transition kernels: One for each block
       std::vector<std::shared_ptr<TransitionKernel>> kernels;
 

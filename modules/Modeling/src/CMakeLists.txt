@@ -37,10 +37,10 @@ CreateCompileGroup(
     ConstantPiece.cpp
     ConstantVector.cpp
     IdentityPiece.cpp
+    ProductPiece.cpp
 
     MultiLogisticLikelihood.cpp
 
-    IdentityOperator.cpp
     ReplicateOperator.cpp
 
     LinearSDE.cpp

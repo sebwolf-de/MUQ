@@ -21,7 +21,7 @@ StateSpaceGP::StateSpaceGP(std::shared_ptr<MeanFunctionBase> meanIn,
                                                                                      covKernelIn)
 {
 };
-    
+
 
 StateSpaceGP::StateSpaceGP(std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> ssInfo,
                            std::shared_ptr<MeanFunctionBase> meanIn,
@@ -49,12 +49,12 @@ Eigen::MatrixXd StateSpaceGP::Sample(Eigen::MatrixXd const& times)
 
     // Make space for the simulated GP
     Eigen::MatrixXd output(obsOp->rows(), times.size());
-        
+
     if(observations.size()==0){
 
         // Generate sample for initial condition
         Eigen::VectorXd x = L.triangularView<Eigen::Lower>()*RandomGenerator::GetNormal(L.rows());
-    
+
         output.col(0) = obsOp->Apply(x);
 
         // Step through the each time and integrate the SDE between times
@@ -63,12 +63,12 @@ Eigen::MatrixXd StateSpaceGP::Sample(Eigen::MatrixXd const& times)
             x = sde->EvolveState(x, times(i+1)-times(i));
             output.col(i+1) = obsOp->Apply(x);
         }
-        
+
     }else{
 
         throw muq::NotImplementedError("The Sample function of muq::Approximation::StateSpaceGP does not currently support Gaussian Processes that have been conditioned on data.");
     }
-    
+
     return output;
 }
 
@@ -100,7 +100,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
     if(observations.size()==0)
         return GaussianProcess::Predict(times, covType);
 
-    
+
     // Make sure the evaluations points are one dimensional
     if(times.rows() != 1)
         throw muq::WrongSizeError("In StateSpaceGP::Predict: The StateSpaceGP class only supports 1d fields, but newPts has " + std::to_string(times.rows()) + " dimensions (i.e., rows).");
@@ -127,8 +127,8 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
 
     int obsInd = 0;
     int evalInd = 0;
-    
-    
+
+
     // Is the first time an observation or an evaluation?
     if(observations.at(0)->loc(0) < times(0)){
         currTime = observations.at(0)->loc(0);
@@ -137,7 +137,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
         obsDists.at(0).first = Eigen::VectorXd::Zero(stateDim);
 
         auto H = std::make_shared<ProductOperator>(observations.at(0)->H, obsOp);
-        obsFilterDists.at(0) = KalmanFilter::Analyze(obsDists.at(0), 
+        obsFilterDists.at(0) = KalmanFilter::Analyze(obsDists.at(0),
                                                      H,
                                                      observations.at(0)->obs - mean->Evaluate(observations.at(0)->loc),
                                                      observations.at(0)->obsCov);
@@ -147,7 +147,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
         obsInd++;
     }else{
         currTime = times(0);
-        
+
         evalDists.at(0).second = L.triangularView<Eigen::Lower>()*L.transpose();
         evalDists.at(0).first = Eigen::VectorXd::Zero(stateDim);
 
@@ -167,15 +167,15 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
                 hasObs = true;
             }
         }
-        
+
         // Is this time an observation or an evaluation?
         if(hasObs){
 
             ComputeAQ(observations.at(obsInd)->loc(0) - currTime);
-            
+
             obsDists.at(obsInd).first = sdeA * currDist->first;
             obsDists.at(obsInd).second = sdeA * currDist->second * sdeA.transpose() + sdeQ; //= sde->EvolveDistribution(*currDist, observations.at(obsInd)->loc(0) - currTime);
-                    
+
             currTime = observations.at(obsInd)->loc(0);
 
             auto H = std::make_shared<ProductOperator>(observations.at(obsInd)->H, obsOp);
@@ -187,14 +187,14 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
             currDist = &obsFilterDists.at(obsInd);
 
             obsInd++;
-            
+
         }else{
 
             ComputeAQ(times(evalInd) - currTime);
-            
+
             evalDists.at(evalInd).first = sdeA * currDist->first;
             evalDists.at(evalInd).second = sdeA * currDist->second * sdeA.transpose() + sdeQ;
-            
+
             currTime = times(evalInd);
             currDist = &evalDists.at(evalInd);
 
@@ -214,11 +214,11 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
         if(times(evalInd) <= observations.at(observations.size()-1)->loc(0))
             break;
     }
-    
+
     if(evalInd>=0)
     {
         nextTime = observations.at(observations.size()-1)->loc(0);
-        
+
         std::pair<Eigen::VectorXd, Eigen::MatrixXd> filterDist = obsDists.at(observations.size()-1);
         std::pair<Eigen::VectorXd, Eigen::MatrixXd> smoothDist = obsFilterDists.at(observations.size()-1);
 
@@ -230,15 +230,15 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
                 if(observations.at(obsInd)->loc(0) > times(evalInd) )
                     hasObs = true;
             }
-            
+
             if( hasObs )
             {
                 // Update the value at the observation point if it's not the last observation
-                
+
                 ComputeAQ(nextTime - observations.at(obsInd)->loc(0));
                 smoothDist = KalmanSmoother::Analyze(obsFilterDists.at(obsInd), filterDist, smoothDist, sdeA);
                 filterDist.swap( obsDists.at(obsInd) );
-                
+
                 nextTime = observations.at(obsInd)->loc(0);
                 obsInd--;
 
@@ -255,7 +255,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
             }
         }
     }
-    
+
     //////////////////////////////////////////////////
     // GET MEAN AND COVARIANCE FROM SDE SOLUTION
     //////////////////////////////////////////////////
@@ -267,7 +267,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> StateSpaceGP::Predict(Eigen::MatrixX
         output.first.col(i) = mean->Evaluate(times.col(i)) + obsOp->Apply(evalDists.at(i).first);
 
     if(covType==GaussianProcess::BlockCov){
-        
+
         output.second.resize(coDim, coDim*times.cols());
 
         for(int i=0; i<times.cols(); ++i)
@@ -317,12 +317,12 @@ void StateSpaceGP::SetObs(std::shared_ptr<muq::Modeling::LinearOperator> newObs)
 //         sdes.at(i) = gps.at(i)->GetSDE();
 
 //     auto sde = LinearSDE::Concatenate(sdes);
-    
+
 //     // Build a concatenated observation operator
 //     std::vector<std::shared_ptr<muq::Modeling::LinearOperator>> obsOps(gps.size());
 //     for(int i=0; i<gps.size(); ++i)
 //         obsOps.at(i) = gps.at(i)->GetObs();
-    
+
 //     auto H = std::make_shared<BlockDiagonalOperator>(obsOps);
 
 //     // Build the concatenated covariance
@@ -333,8 +333,6 @@ void StateSpaceGP::SetObs(std::shared_ptr<muq::Modeling::LinearOperator> newObs)
 //         Q.block(currRow,currRow, gps.at(i)->stateDim, gps.at(i)->stateDim) = gps.at(i)->GetCov();
 //         currRow += gps.at(i)->stateDim;
 //     }
-  
+
 //     return std::make_shared<StateSpaceGP>(sde, H, Q);
 // }
-
-                 

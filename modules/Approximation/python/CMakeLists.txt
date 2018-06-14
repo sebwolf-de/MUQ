@@ -16,7 +16,7 @@ CreateCompileGroup(
     APPROXIMATION_CORE_PYTHON
     "Python wrappers for the basic building blocks of the Approximation library."
     "pymuqApproximation"
-    "Approximation_CORE;APPROXIMATION_GP;APPROXIMATION_GP_Kernels"
+    "APPROXIMATION_GP;APPROXIMATION_GP_Kernels"
     "PYTHON"
     ""
     Module.cpp

@@ -1,5 +1,5 @@
 /***
-# Example 1: Simple Gaussian Sampling
+# MCMC Example 1: Simple Gaussian Sampling
 ## Overview
 The goal of this example is to demonstrate the use of MUQ's MCMC stack by sampling
 a simple bivariate Gaussian density.  To keep things as simple as possible, we
@@ -206,7 +206,7 @@ At the base level, we specify the number of steps in the chain with the entry "N
   as a vector of weighted SamplingState's.
   */
   Eigen::VectorXd startPt = mu;
-  SampleCollection const& samps = mcmc->Run(startPt);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(startPt);
 
   /***
   ### 4. Analyze the results
@@ -223,16 +223,16 @@ At the base level, we specify the number of steps in the chain with the entry "N
   While the third moment is actually a tensor, here we only return the marginal
   values, i.e., $\mathbb{E}_x[(x_i-\mu_i)^3]$ for each $i$.
   */
-  Eigen::VectorXd sampMean = samps.Mean();
+  Eigen::VectorXd sampMean = samps->Mean();
   std::cout << "Sample Mean = \n" << sampMean.transpose() << std::endl;
 
-  Eigen::VectorXd sampVar = samps.Variance();
+  Eigen::VectorXd sampVar = samps->Variance();
   std::cout << "\nSample Variance = \n" << sampVar.transpose() << std::endl;
 
-  Eigen::MatrixXd sampCov = samps.Covariance();
+  Eigen::MatrixXd sampCov = samps->Covariance();
   std::cout << "\nSample Covariance = \n" << sampCov << std::endl;
 
-  Eigen::VectorXd sampMom3 = samps.CentralMoment(3);
+  Eigen::VectorXd sampMom3 = samps->CentralMoment(3);
   std::cout << "\nSample Third Moment = \n" << sampMom3 << std::endl << std::endl;
 
   return 0;

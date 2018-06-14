@@ -2,7 +2,7 @@
 
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/PyModPiece.h"
-#include "MUQ/Modeling/IdentityOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
 #include "MUQ/Modeling/ReplicateOperator.h"
 #include "MUQ/Modeling/ConstantVector.h"
 #include "MUQ/Modeling/WorkGraph.h"
