@@ -7,11 +7,11 @@
 
 #include "MUQ/Modeling/LinearSDE.h"
 
-#include "MUQ/Utilities/LinearAlgebra/KroneckerProductOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/BlockRowOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/SumOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/IdentityOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/KroneckerProductOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/BlockDiagonalOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/BlockRowOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/SumOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
 
 #include "MUQ/Utilities/Exceptions.h"
 
@@ -129,13 +129,13 @@ public:
 
     virtual std::vector<std::shared_ptr<KernelBase>> GetSeperableComponents() override;
 
-    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions=boost::property_tree::ptree()) const override;
+    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions=boost::property_tree::ptree()) const override;
 
 protected:
     std::shared_ptr<KernelBase> kernel1;
     std::shared_ptr<KernelBase> kernel2;
 
-    std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetProductStateSpace(std::shared_ptr<PeriodicKernel> const& kernel1,
+    std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> GetProductStateSpace(std::shared_ptr<PeriodicKernel> const& kernel1,
                                                                                                                                                  	              std::shared_ptr<KernelBase>     const& kernel2,
                                                                                                                                                                 boost::property_tree::ptree sdeOptions) const;
 
@@ -150,9 +150,10 @@ ProductKernel operator*(KernelType1 const& k1, KernelType2 const& k2)
   return ProductKernel(k1.Clone(), k2.Clone());
 }
 
+std::shared_ptr<ProductKernel> operator*(std::shared_ptr<KernelBase> k1, std::shared_ptr<KernelBase> k2);
 
-}
-}
+} // namespace Approximation
+}// namespace muq
 
 
 #endif

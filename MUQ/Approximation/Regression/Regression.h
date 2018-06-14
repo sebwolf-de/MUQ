@@ -3,7 +3,7 @@
 
 #include <Eigen/QR>
 
-#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+#include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
 
 #include "MUQ/Modeling/WorkPiece.h"
 

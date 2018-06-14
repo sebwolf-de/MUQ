@@ -23,23 +23,47 @@ class PeriodicKernel : public KernelImpl<PeriodicKernel>
 
 public:
 
+  PeriodicKernel(unsigned dim,
+                 std::vector<unsigned> dimInds,
+                 const double sigma2In,
+                 const double lengthIn,
+                 const double periodIn) : PeriodicKernel(dim,
+                                                         dimInds,
+                                                         sigma2In,
+                                                         lengthIn,
+                                                         periodIn,
+                                                         {0.0, std::numeric_limits<double>::infinity()},
+                                                         {1e-10, std::numeric_limits<double>::infinity()},
+                                                         {1e-10, std::numeric_limits<double>::infinity()}){};
+
      PeriodicKernel(unsigned dim,
             		    std::vector<unsigned> dimInds,
             		    const double sigma2In,
             		    const double lengthIn,
             		    const double periodIn,
-                    const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
-	                  const Eigen::Vector2d lengthBounds = {1e-10, std::numeric_limits<double>::infinity()},
-		                const Eigen::Vector2d periodBounds = {1e-10, std::numeric_limits<double>::infinity()});
+                    const Eigen::Vector2d sigmaBounds,
+	                  const Eigen::Vector2d lengthBounds,
+		                const Eigen::Vector2d periodBounds);
 
+
+  PeriodicKernel(unsigned dim,
+          		   const double sigma2In,
+          		   const double lengthIn,
+          		   const double periodIn) : PeriodicKernel(dim,
+                                                         sigma2In,
+                                                         lengthIn,
+                                                         periodIn,
+                                                         {0.0, std::numeric_limits<double>::infinity()},
+                                                         {1e-10, std::numeric_limits<double>::infinity()},
+                                                         {1e-10, std::numeric_limits<double>::infinity()}){};
 
     PeriodicKernel(unsigned dim,
             		   const double sigma2In,
             		   const double lengthIn,
             		   const double periodIn,
-                   const Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
-            	     const Eigen::Vector2d lengthBounds = {1e-10, std::numeric_limits<double>::infinity()},
-            	     const Eigen::Vector2d periodBounds = {1e-10, std::numeric_limits<double>::infinity()});
+                   const Eigen::Vector2d sigmaBounds,
+            	     const Eigen::Vector2d lengthBounds,
+            	     const Eigen::Vector2d periodBounds);
 
 
     virtual ~PeriodicKernel(){};
@@ -55,7 +79,7 @@ public:
     }
 
 
-    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions = boost::property_tree::ptree()) const override;
+    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions = boost::property_tree::ptree()) const override;
 
 private:
     const double pi = 4.0 * atan(1.0); //boost::math::constants::pi<double>();

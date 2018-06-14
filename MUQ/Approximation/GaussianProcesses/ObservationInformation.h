@@ -2,7 +2,7 @@
 #define OBSERVATIONINFORMATION_H
 
 #include "MUQ/Approximation/GaussianProcesses/KernelBase.h"
-#include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/LinearOperator.h"
 
 #include <Eigen/Core>
 
@@ -16,7 +16,7 @@ namespace Approximation{
     {
     public:
 
-        ObservationInformation(std::shared_ptr<muq::Utilities::LinearOperator> Hin,
+        ObservationInformation(std::shared_ptr<muq::Modeling::LinearOperator> Hin,
                                Eigen::Ref<const Eigen::VectorXd> const&        locIn,
                                Eigen::Ref<const Eigen::VectorXd> const&        obsIn,
                                Eigen::Ref<const Eigen::MatrixXd> const&        obsCovIn) : H(Hin), loc(locIn), obs(obsIn), obsCov(obsCovIn){};
@@ -28,7 +28,7 @@ namespace Approximation{
                                   Eigen::Ref<Eigen::MatrixXd>             covBlock);
 
         // The observation operator
-        std::shared_ptr<muq::Utilities::LinearOperator> H;
+        std::shared_ptr<muq::Modeling::LinearOperator> H;
 
         // The location of the observation
         Eigen::VectorXd loc;
@@ -46,7 +46,7 @@ namespace Approximation{
     {
     public:
 
-        DerivativeObservation(std::shared_ptr<muq::Utilities::LinearOperator> Hin,
+        DerivativeObservation(std::shared_ptr<muq::Modeling::LinearOperator> Hin,
                               Eigen::Ref<const Eigen::VectorXd> const&        locIn,
                               Eigen::Ref<const Eigen::VectorXd> const&        obsIn,
                               Eigen::Ref<const Eigen::MatrixXd> const&        obsCovIn,

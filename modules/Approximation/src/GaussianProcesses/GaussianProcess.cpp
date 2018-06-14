@@ -1,8 +1,9 @@
 #include "MUQ/Approximation/GaussianProcesses/GaussianProcess.h"
-#include "MUQ/Utilities/LinearAlgebra/IdentityOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
 #include "MUQ/Utilities/RandomGenerator.h"
 
 using namespace muq::Approximation;
+using namespace muq::Modeling;
 using namespace muq::Utilities;
 
 double muq::Approximation::nlopt_obj(unsigned n, const double *x, double *nlopt_grad, void *opt_info)
@@ -65,6 +66,19 @@ GaussianProcess& GaussianProcess::Condition(std::shared_ptr<ObservationInformati
 
     return *this;
 }
+
+std::shared_ptr<muq::Modeling::Gaussian> GaussianProcess::Discretize(Eigen::MatrixXd const& pts)
+{
+  Eigen::MatrixXd mean;
+  Eigen::MatrixXd cov;
+
+  std::tie(mean,cov) =  Predict(pts, GaussianProcess::FullCov);
+
+  Eigen::Map<Eigen::VectorXd> meanMap(mean.data(), mean.rows()*mean.cols());
+
+  return std::make_shared<muq::Modeling::Gaussian>(meanMap,cov);
+}
+
 
 void GaussianProcess::ProcessObservations()
 {

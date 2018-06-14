@@ -16,7 +16,7 @@ CreateCompileGroup(
     SAMPLINGALGORITHMS_CORE_PYTHON
     "Python wrappers for the basic building blocks of the SamplingAlgorithms library."
     pymuqSamplingAlgorithms
-    "SAMPLING_ALGORITHM;UTILITIES_PYTHONHELPERS_PYTHON"
+    "SAMPLING_ALGORITHM"
     "PYTHON"
     ""
     Module.cpp

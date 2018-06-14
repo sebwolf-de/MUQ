@@ -26,12 +26,23 @@ class SquaredExpKernel : public KernelImpl<SquaredExpKernel>
 
 public:
 
+  SquaredExpKernel(unsigned              dimIn,
+                   std::vector<unsigned> dimInds,
+                   double                sigma2In,
+                   double                lengthIn) : SquaredExpKernel(dimIn,
+                                                                      dimInds,
+                                                                      sigma2In,
+                                                                      lengthIn,
+                                                                      {0.0, std::numeric_limits<double>::infinity()},
+                                                                      {1e-10, std::numeric_limits<double>::infinity()})
+  {};
+
     SquaredExpKernel(unsigned              dimIn,
                      std::vector<unsigned> dimInds,
                      double                sigma2In,
                      double                lengthIn,
-                     Eigen::Vector2d       sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
-                     Eigen::Vector2d       lengthBounds = {1e-10, std::numeric_limits<double>::infinity()}) : KernelImpl<SquaredExpKernel>(dimIn, dimInds, 1, 2)
+                     Eigen::Vector2d       sigmaBounds,
+                     Eigen::Vector2d       lengthBounds) : KernelImpl<SquaredExpKernel>(dimIn, dimInds, 1, 2)
     {
       paramBounds.resize(2,2);
       paramBounds(0,0) = sigmaBounds(0);
@@ -46,9 +57,18 @@ public:
 
     SquaredExpKernel(unsigned        dimIn,
                      double          sigma2In,
+                     double          lengthIn) : SquaredExpKernel(dimIn,
+                                                                  sigma2In,
+                                                                  lengthIn,
+                                                                  {0.0, std::numeric_limits<double>::infinity()},
+                                                                  {1e-10, std::numeric_limits<double>::infinity()} )
+    {};
+
+    SquaredExpKernel(unsigned        dimIn,
+                     double          sigma2In,
                      double          lengthIn,
-                     Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
-                     Eigen::Vector2d lengthBounds = {1e-10, std::numeric_limits<double>::infinity()}) : KernelImpl<SquaredExpKernel>(dimIn, 1, 2)
+                     Eigen::Vector2d sigmaBounds,
+                     Eigen::Vector2d lengthBounds) : KernelImpl<SquaredExpKernel>(dimIn, 1, 2)
     {
       paramBounds.resize(2,2);
       paramBounds(0,0) = sigmaBounds(0);

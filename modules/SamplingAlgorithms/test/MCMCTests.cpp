@@ -20,6 +20,53 @@ using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
+TEST(MCMC, MHKernel_ThinScheduler) {
+
+  const unsigned int N = 1e5;
+
+  // parameters for the sampler
+  pt::ptree pt;
+  pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.BurnIn", 0);
+  pt.put("MyMCMC.PrintLevel",0);
+  pt.put("MyMCMC.ThinIncrement", 10); // How often to save the sample
+  pt.put("MyMCMC.KernelList", "Kernel1"); // the transition kernel
+  pt.put("MyMCMC.Kernel1.Method","MHKernel");
+  pt.put("MyMCMC.Kernel1.Proposal", "MyProposal"); // the proposal
+  pt.put("MyMCMC.Kernel1.MyProposal.Method", "MHProposal");
+  pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 0.5); // the variance of the isotropic MH proposal
+
+  // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
+  const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
+  auto dist = std::make_shared<Gaussian>(mu)->AsDensity(); // standard normal Gaussian
+
+  // create a sampling problem
+  auto problem = std::make_shared<SamplingProblem>(dist);
+
+  // starting point
+  const Eigen::VectorXd start = mu;
+
+  // evaluate
+  // create an instance of MCMC
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
+
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
+
+  EXPECT_EQ(int(std::floor(pt.get<double>("MyMCMC.NumSamples")/pt.get<double>("MyMCMC.ThinIncrement")))+1, samps->size());
+
+  //boost::any anyMean = samps.Mean();
+  Eigen::VectorXd mean = samps->Mean();
+  EXPECT_NEAR(mu(0), mean(0), 5e-2);
+  EXPECT_NEAR(mu(1), mean(1), 5e-2);
+
+  Eigen::MatrixXd cov = samps->Covariance();
+  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
+
+}
+
 TEST(MCMC, MHKernel_MHProposal) {
 
   const unsigned int N = 1e4;
@@ -27,6 +74,7 @@ TEST(MCMC, MHKernel_MHProposal) {
   // parameters for the sampler
   pt::ptree pt;
   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.PrintLevel",0);
   pt.put("MyMCMC.KernelList", "Kernel1"); // the transition kernel
   pt.put("MyMCMC.Kernel1.Method","MHKernel");
   pt.put("MyMCMC.Kernel1.Proposal", "MyProposal"); // the proposal
@@ -56,20 +104,20 @@ TEST(MCMC, MHKernel_MHProposal) {
   std::shared_ptr<MHProposal> proposalMH = std::dynamic_pointer_cast<MHProposal>(proposalBase);
   EXPECT_TRUE(proposalMH);
 
-  SampleCollection const& samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
+
+  EXPECT_EQ(pt.get<int>("MyMCMC.NumSamples"), samps->size());
 
   //boost::any anyMean = samps.Mean();
-  // Eigen::VectorXd const& mean = AnyCast(anyMean);
-  //
-  // EXPECT_NEAR(mu(0), mean(0), 1e-1);
-  // EXPECT_NEAR(mu(1), mean(1), 1e-1);
-  //
-  // boost::any anyCov = samps.Covariance();
-  // Eigen::MatrixXd const& cov = AnyCast(anyCov);
-  // EXPECT_NEAR(1.0, cov(0,0), 1e-1);
-  // EXPECT_NEAR(0.0, cov(0,1), 1e-1);
-  // EXPECT_NEAR(0.0, cov(1,0), 1e-1);
-  // EXPECT_NEAR(1.0, cov(1,1), 1e-1);
+  Eigen::VectorXd mean = samps->Mean();
+  EXPECT_NEAR(mu(0), mean(0), 1e-1);
+  EXPECT_NEAR(mu(1), mean(1), 1e-1);
+
+  Eigen::MatrixXd cov = samps->Covariance();
+  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
 }
 
 
@@ -80,6 +128,7 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   // parameters for the sampler
   pt::ptree pt;
   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.PrintLevel",0);
   pt.put("MyMCMC.KernelList", "Kernel1,Kernel2"); // the transition kernel
 
   // MH Kernel for first block
@@ -138,9 +187,9 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   std::shared_ptr<MHProposal> proposalMH = std::dynamic_pointer_cast<MHProposal>(proposalBase);
   EXPECT_TRUE(proposalMH);
 
-  SampleCollection const& samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
 
-  Eigen::VectorXd mean = samps.Mean();
+  Eigen::VectorXd mean = samps->Mean();
 
 
   EXPECT_NEAR(mu1(0), mean(0), 1e-1);
@@ -148,7 +197,7 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   EXPECT_NEAR(mu2(0), mean(2), 1e-1);
   EXPECT_NEAR(mu2(1), mean(3), 1e-1);
 
-  Eigen::MatrixXd cov = samps.Covariance();
+  Eigen::MatrixXd cov = samps->Covariance();
   for(int j=0; j<cov.cols(); ++j){
     for(int i=0; i<cov.rows(); ++i){
       if(i!=j)
@@ -168,6 +217,7 @@ TEST(MCMC, MHKernel_AMProposal) {
   // parameters for the sampler
   pt::ptree pt;
   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
+  pt.put("MyMCMC.PrintLevel",0);
   pt.put("MyMCMC.KernelList", "Kernel1"); // the transition kernel
   pt.put("MyMCMC.Kernel1.Method","MHKernel");
   pt.put("MyMCMC.Kernel1.Proposal", "MyProposal"); // the proposal
@@ -199,16 +249,14 @@ TEST(MCMC, MHKernel_AMProposal) {
   std::shared_ptr<AMProposal> proposalAM = std::dynamic_pointer_cast<AMProposal>(proposalBase);
   EXPECT_TRUE(proposalAM);
 
-  SampleCollection const& samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
 
-  boost::any anyMean = samps.Mean();
-  Eigen::VectorXd const& mean = AnyCast(anyMean);
+  Eigen::VectorXd mean = samps->Mean();
 
   EXPECT_NEAR(mu(0), mean(0), 1e-1);
   EXPECT_NEAR(mu(1), mean(1), 1e-1);
 
-  boost::any anyCov = samps.Covariance();
-  Eigen::MatrixXd const& cov = AnyCast(anyCov);
+  Eigen::MatrixXd cov = samps->Covariance();
   EXPECT_NEAR(1.0, cov(0,0), 1e-1);
   EXPECT_NEAR(0.0, cov(0,1), 1e-1);
   EXPECT_NEAR(0.0, cov(1,0), 1e-1);

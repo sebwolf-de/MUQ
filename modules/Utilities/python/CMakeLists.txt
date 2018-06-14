@@ -20,7 +20,6 @@ CreateCompileGroup(
     "PYTHON"
     ""
     Module.cpp
-    #KernelWrapper.cpp
     #LinearAlgebraWrapper.cpp
     MultiIndicesWrapper.cpp
     GeneralUtilitiesWrapper.cpp

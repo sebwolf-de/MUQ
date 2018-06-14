@@ -131,7 +131,7 @@ TEST(GaussianDistributionTests, SpecifyBoth) {
 TEST(GaussianDistributionTests, DiagonalCovPrec) {
   // the covariance or precision scale (variance in the cov. case and 1/variance in the prec. case)
   Eigen::VectorXd covDiag = 1e-2 * Eigen::VectorXd::Ones(2) + RandomGenerator::GetUniform(2);
-  Eigen::VectorXd precDiag = 1e-2 * Eigen::VectorXd::Ones(2) + RandomGenerator::GetUniform(2);
+  Eigen::VectorXd precDiag = covDiag.array().inverse();
 
   Eigen::VectorXd mu = Eigen::VectorXd::Zero(2);
   auto diagCov = std::make_shared<Gaussian>(mu, covDiag, Gaussian::Mode::Covariance);
@@ -144,8 +144,15 @@ TEST(GaussianDistributionTests, DiagonalCovPrec) {
   EXPECT_DOUBLE_EQ(diagPrec->LogDensity(x), -0.5*(2.0*std::log(2.0*M_PI)-precDiag.array().log().sum())-x.dot(precDiag.asDiagonal()*x)/2.0);
 
   const unsigned int N = 1.0e5;
+
+  RandomGenerator::SetSeed(5192012);
   Eigen::VectorXd meanCov = diagCov->Sample();
+  
+  RandomGenerator::SetSeed(5192012);
   Eigen::VectorXd meanPrec = diagCov->Sample();
+
+  EXPECT_NEAR(meanCov(0),meanPrec(0),1e-12);
+  EXPECT_NEAR(meanCov(1),meanPrec(1),1e-12);
 
   for( unsigned int i=0; i<N-1; ++i ) {
     meanCov += diagCov->Sample();

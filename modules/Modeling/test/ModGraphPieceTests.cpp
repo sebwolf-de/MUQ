@@ -6,11 +6,9 @@
 
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
-#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 
 #include "WorkPieceTestClasses.h"
 
-using namespace muq::Utilities;
 using namespace muq::Modeling;
 using namespace std;
 

@@ -1,7 +1,7 @@
 #ifndef GAUSSIAN_H_
 #define GAUSSIAN_H_
 
-#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
+#include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
 
 #include "MUQ/Modeling/Distributions/Distribution.h"
 
@@ -57,6 +57,9 @@ namespace muq {
       Mode GetMode() const{return mode;};
 
       unsigned int Dimension() const;
+
+      virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x);
+      virtual Eigen::MatrixXd ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x);
 
       /// Get the covariance
       /**

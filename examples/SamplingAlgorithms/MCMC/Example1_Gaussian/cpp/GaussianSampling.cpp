@@ -1,5 +1,5 @@
 /***
-# Example 1: Simple Gaussian Sampling
+# MCMC Example 1: Simple Gaussian Sampling
 ## Overview
 The goal of this example is to demonstrate the use of MUQ's MCMC stack by sampling
 a simple bivariate Gaussian density.  To keep things as simple as possible, we
@@ -114,6 +114,7 @@ chain, kernel, and proposal themselves.
 
 #include "MUQ/SamplingAlgorithms/SamplingProblem.h"
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
+#include "MUQ/SamplingAlgorithms/MCMCFactory.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -183,20 +184,20 @@ At the base level, we specify the number of steps in the chain with the entry "N
   // parameters for the sampler
   pt::ptree pt;
   pt.put("NumSamples", 1e4); // number of MCMC steps
+  pt.put("BurnIn", 1e3);
+  pt.put("PrintLevel",3);
   pt.put("KernelList", "Kernel1"); // Name of block that defines the transition kernel
   pt.put("Kernel1.Method","MHKernel");  // Name of the transition kernel class
   pt.put("Kernel1.Proposal", "MyProposal"); // Name of block defining the proposal distribution
   pt.put("Kernel1.MyProposal.Method", "MHProposal"); // Name of proposal class
-  pt.put("Kernel1.MyProposal.ProposalVariance", 0.5); // Variance of the isotropic MH proposal
-
+  pt.put("Kernel1.MyProposal.ProposalVariance", 2.5); // Variance of the isotropic MH proposal
 
   /***
-  Once the algorithm parameters are specified, we can pass them to the SingleChainMCMC
-  constructor to create an instance of the MCMC algorithm we defined in the
+  Once the algorithm parameters are specified, we can pass them to the CreateSingleChain
+  function of the MCMCFactory class to create an instance of the MCMC algorithm we defined in the
   property tree.
   */
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt,problem);
-
+  auto mcmc = MCMCFactory::CreateSingleChain(pt, problem);
 
   /***
   ### 3. Run the MCMC algorithm
@@ -206,7 +207,7 @@ At the base level, we specify the number of steps in the chain with the entry "N
   as a vector of weighted SamplingState's.
   */
   Eigen::VectorXd startPt = mu;
-  SampleCollection const& samps = mcmc->Run(startPt);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(startPt);
 
   /***
   ### 4. Analyze the results
@@ -223,16 +224,16 @@ At the base level, we specify the number of steps in the chain with the entry "N
   While the third moment is actually a tensor, here we only return the marginal
   values, i.e., $\mathbb{E}_x[(x_i-\mu_i)^3]$ for each $i$.
   */
-  Eigen::VectorXd sampMean = samps.Mean();
-  std::cout << "Sample Mean = \n" << sampMean.transpose() << std::endl;
+  Eigen::VectorXd sampMean = samps->Mean();
+  std::cout << "\nSample Mean = \n" << sampMean.transpose() << std::endl;
 
-  Eigen::VectorXd sampVar = samps.Variance();
+  Eigen::VectorXd sampVar = samps->Variance();
   std::cout << "\nSample Variance = \n" << sampVar.transpose() << std::endl;
 
-  Eigen::MatrixXd sampCov = samps.Covariance();
+  Eigen::MatrixXd sampCov = samps->Covariance();
   std::cout << "\nSample Covariance = \n" << sampCov << std::endl;
 
-  Eigen::VectorXd sampMom3 = samps.CentralMoment(3);
+  Eigen::VectorXd sampMom3 = samps->CentralMoment(3);
   std::cout << "\nSample Third Moment = \n" << sampMom3 << std::endl << std::endl;
 
   return 0;

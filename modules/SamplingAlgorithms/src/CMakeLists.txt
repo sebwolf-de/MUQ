@@ -26,6 +26,7 @@ CreateCompileGroup(
 
     SamplingState.cpp
     SampleCollection.cpp
+    MarkovChain.cpp
 
     TransitionKernel.cpp
     #MCKernel.cpp
@@ -33,10 +34,15 @@ CreateCompileGroup(
     MHKernel.cpp
     #MCMCKernel.cpp
 
+    MCMCFactory.cpp
+
+    ThinScheduler.cpp
+
     MCMCProposal.cpp
     MHProposal.cpp
     AMProposal.cpp
     InverseGammaProposal.cpp
+    CrankNicolsonProposal.cpp
 
     SamplingProblem.cpp
 )

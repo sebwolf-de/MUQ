@@ -20,6 +20,7 @@
 #include <vector>
 
 using namespace muq::Modeling::PythonBindings;
+using namespace muq::Modeling;
 namespace py = pybind11;
 
 
@@ -42,14 +43,14 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
     py::class_<DensityBase, Distribution, ModPiece, std::shared_ptr<DensityBase>> densBase(m, "DensityBase");
     densBase
       .def(py::init<Eigen::VectorXi>());
-      
-    py::class_<DensityProduct, DensityBase, std::shared_ptr<DensityProduct>> densProd(m, "DensityProduct");
-    densProd
-      .def(py::init<int>());
 
     py::class_<Density, DensityBase, std::shared_ptr<Density>> dens(m, "Density");
     dens
       .def("GetDistribution", &Density::GetDistribution);
+
+    py::class_<DensityProduct, DensityBase, std::shared_ptr<DensityProduct>> densProd(m,"DensityProduct");
+    densProd
+      .def(py::init<int>());
 
     py::class_<RandomVariable, Distribution, ModPiece, std::shared_ptr<RandomVariable>> rv(m, "RandomVariable");
     rv
@@ -96,5 +97,5 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
     ig
       .def(py::init<double,double>())
       .def_readonly("alpha", &InverseGamma::alpha)
-      .def_readonly("alpha", &InverseGamma::beta);
+      .def_readonly("beta", &InverseGamma::beta);
 }

@@ -5,13 +5,13 @@
 
 namespace muq{
   namespace Modeling{
-
     namespace PythonBindings{
 
       void WorkPieceWrapper(pybind11::module &m);
       void ModPieceWrapper(pybind11::module &m);
       void DistributionWrapper(pybind11::module &m);
       void CwiseUnaryOperatorsWrapper(pybind11::module &m);
+      void LinearOperatorWrapper(pybind11::module &m);
     }
   }
 }

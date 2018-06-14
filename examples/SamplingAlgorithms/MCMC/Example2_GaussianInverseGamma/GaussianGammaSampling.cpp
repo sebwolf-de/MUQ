@@ -1,5 +1,5 @@
 /***
-# Example 2: Introduction to block MCMC sampling
+# MCMC Example 2: Introduction to block MCMC sampling
 ## Overview
 The goal of this example is to demonstrate MCMC sampling with block updates.
 The problem is to sample a Gaussian distribution where the variance of
@@ -83,13 +83,14 @@ To sample the Gaussian target, the code needs to do four things:
 #include "MUQ/Modeling/Distributions/Density.h"
 #include "MUQ/Modeling/Distributions/DensityProduct.h"
 
-#include "MUQ/Modeling/IdentityOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
 #include "MUQ/Modeling/ReplicateOperator.h"
 #include "MUQ/Modeling/WorkGraph.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
 
 #include "MUQ/SamplingAlgorithms/SamplingProblem.h"
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
+#include "MUQ/SamplingAlgorithms/MCMCFactory.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -230,6 +231,7 @@ correspond to the Gaussian and Inverse Gamma densities.
   pt::ptree pt;
   pt.put("NumSamples", 1e5); // number of MCMC steps
   pt.put("BurnIn", 1e4);
+  pt.put("PrintLevel",3);
   pt.put("KernelList", "Kernel1,Kernel2"); // Name of block that defines the transition kernel
 
   pt.put("Kernel1.Method","MHKernel");  // Name of the transition kernel class
@@ -245,12 +247,11 @@ correspond to the Gaussian and Inverse Gamma densities.
   pt.put("Kernel2.GammaProposal.GaussianNode", "Gaussian Density");
 
   /***
-  Once the algorithm parameters are specified, we can pass them to the SingleChainMCMC
-  constructor to create an instance of the MCMC algorithm we defined in the
+  Once the algorithm parameters are specified, we can pass them to the CreateSingleChain
+  function of the MCMCFactory class to create an instance of the MCMC algorithm we defined in the
   property tree.
   */
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt,problem);
-
+  auto mcmc = MCMCFactory::CreateSingleChain(pt, problem);
 
   /***
   ### 3. Run the MCMC algorithm
@@ -263,22 +264,22 @@ correspond to the Gaussian and Inverse Gamma densities.
   startPt.at(0) = mu; // Start the Gaussian block at the mean
   startPt.at(1) = Eigen::VectorXd::Ones(1); // Set the starting value of the variance to 1
 
-  SampleCollection const& samps = mcmc->Run(startPt);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(startPt);
 
   /***
   ### 4. Analyze the results
   */
 
-  Eigen::VectorXd sampMean = samps.Mean();
+  Eigen::VectorXd sampMean = samps->Mean();
   std::cout << "Sample Mean = \n" << sampMean.transpose() << std::endl;
 
-  Eigen::VectorXd sampVar = samps.Variance();
+  Eigen::VectorXd sampVar = samps->Variance();
   std::cout << "\nSample Variance = \n" << sampVar.transpose() << std::endl;
 
-  Eigen::MatrixXd sampCov = samps.Covariance();
+  Eigen::MatrixXd sampCov = samps->Covariance();
   std::cout << "\nSample Covariance = \n" << sampCov << std::endl;
 
-  Eigen::VectorXd sampMom3 = samps.CentralMoment(3);
+  Eigen::VectorXd sampMom3 = samps->CentralMoment(3);
   std::cout << "\nSample Third Moment = \n" << sampMom3 << std::endl << std::endl;
 
   return 0;
