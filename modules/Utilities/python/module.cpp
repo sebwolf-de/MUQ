@@ -11,7 +11,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(pymuqUtilities, m) {
 
     //LinearAlgebraWrapper(m);
-    //MultiIndicesWrapper(m);
+    MultiIndicesWrapper(m);
     GeneralUtilitiesWrapper(m);
 
 }

@@ -22,5 +22,6 @@ CreateCompileGroup(
     Module.cpp
     KernelWrapper.cpp
     GaussianWrapper.cpp
+    PolynomialsWrapper.cpp
     KLWrapper.cpp
 )
