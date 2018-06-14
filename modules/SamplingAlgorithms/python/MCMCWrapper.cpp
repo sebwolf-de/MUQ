@@ -2,6 +2,7 @@
 
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 #include "MUQ/SamplingAlgorithms/SamplingAlgorithm.h"
+#include "MUQ/SamplingAlgorithms/MCMCFactory.h"
 
 #include "MUQ/Utilities/PyDictConversion.h"
 
@@ -31,4 +32,8 @@ void PythonBindings::MCMCWrapper(py::module &m) {
     .def("__init__", [](SingleChainMCMC &instance, py::dict d, std::shared_ptr<AbstractSamplingProblem> problem) {new (&instance) SingleChainMCMC(ConvertDictToPtree(d), problem);})
     .def("Kernels", &SingleChainMCMC::Kernels)
     .def("RunImpl", &SingleChainMCMC::RunImpl);
+
+  py::class_<MCMCFactory, std::shared_ptr<MCMCFactory>> fact(m, "MCMCFactory");
+  fact
+    .def_static("CreateSingleChain", &MCMCFactory::CreateSingleChain);
 }

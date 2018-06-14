@@ -13,7 +13,7 @@ namespace Modeling{
 
         IdentityOperator(const int dimIn) : LinearOperator(dimIn, dimIn){};
 
-        virtual Eigen::MatrixXd Apply(Eigen::Ref<const Eigen::MatrixXd> const& x){ return x; }
+        virtual Eigen::MatrixXd Apply(Eigen::Ref<const Eigen::MatrixXd> const& x){return x; }
 
         virtual Eigen::MatrixXd  ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd> const& x){return x;}
 
@@ -23,12 +23,5 @@ namespace Modeling{
 
 } // namespace Modeling
 } // namespace muq
-
-
-
-
-
-
-
 
 #endif // #ifndef IDENTITYOPERATOR_H

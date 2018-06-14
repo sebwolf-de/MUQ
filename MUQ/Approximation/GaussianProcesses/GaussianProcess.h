@@ -7,6 +7,8 @@
 
 #include <Eigen/Core>
 
+#include "MUQ/Modeling/Distributions/Gaussian.h"
+
 #include <set>
 
 //#include <nlopt.h>
@@ -79,23 +81,23 @@ namespace muq
     */
     class MeanFunctionBase : public std::enable_shared_from_this<MeanFunctionBase>
     {
-      
+
     public:
         MeanFunctionBase(unsigned dimIn,
                          unsigned coDimIn) : inputDim(dimIn), coDim(coDimIn){}
 
         virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const = 0;
-        
+
         virtual std::shared_ptr<MeanFunctionBase> Clone() const = 0;
-        
+
         virtual std::shared_ptr<MeanFunctionBase> GetPtr()
         {
             return shared_from_this();
         };
-        
+
         const unsigned inputDim;
         const unsigned coDim;
-        
+
     };
 
 
@@ -117,15 +119,15 @@ namespace muq
         {
           return Eigen::MatrixXd::Zero(coDim, xs.cols());
         }
-        
+
     };
-    
+
     class LinearMean : public MeanFunctionBase
     {
 
     public:
         LinearMean(double slope, double intercept) : LinearMean(slope*Eigen::MatrixXd::Ones(1,1), intercept*Eigen::VectorXd::Ones(1)){};
-        
+
         LinearMean(Eigen::MatrixXd const& slopesIn,
                    Eigen::VectorXd const& interceptsIn) : MeanFunctionBase(slopesIn.cols(),slopesIn.rows()),
                                                           slopes(slopesIn),
@@ -135,7 +137,7 @@ namespace muq
         {
           return std::make_shared<LinearMean>(*this);
         }
-        
+
         virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const override
         {
           return (slopes*xs).colwise() + intercepts;
@@ -144,9 +146,9 @@ namespace muq
     private:
         Eigen::MatrixXd slopes;
         Eigen::VectorXd intercepts;
-        
+
     };
-    
+
 
     /** @class LinearTransformMean
         @ingroup MeanFunctions
@@ -165,12 +167,12 @@ namespace muq
       {
         assert(A.cols() == otherMean->coDim);
       };
-      
+
       virtual std::shared_ptr<MeanFunctionBase> Clone() const override
       {
         return std::make_shared<LinearTransformMean>(*this);
       }
-      
+
       virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const override
       {
         return A * otherMean->Evaluate(xs);
@@ -179,7 +181,7 @@ namespace muq
     private:
       LinearOperator A;
       std::shared_ptr<MeanFunctionBase> otherMean;
-      
+
     };
 
 
@@ -199,8 +201,8 @@ namespace muq
       template<typename MeanType1, typename MeanType2>
       SumMean(MeanType1 const& mu1In,
               MeanType2 const& mu2In) :
-              MeanFunctionBase(mu1In.inputDim, mu1In.coDim), 
-              mu1(mu1In), 
+              MeanFunctionBase(mu1In.inputDim, mu1In.coDim),
+              mu1(mu1In),
               mu2(mu2In)
       {
         assert(mu1->inputDim == mu2->inputDim);
@@ -211,7 +213,7 @@ namespace muq
       {
         return std::make_shared<SumMean>(*this);
       }
-        
+
       virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const override
       {
         return mu1->Evaluate(xs) + mu2->Evaluate(xs);
@@ -219,7 +221,7 @@ namespace muq
 
     private:
       std::shared_ptr<MeanFunctionBase> mu1, mu2;
-      
+
     };
 
     template<typename MeanType1, typename MeanType2, typename = typename std::enable_if<std::is_base_of<MeanFunctionBase, MeanType1>::value, MeanType1>::type>
@@ -227,7 +229,9 @@ namespace muq
     {
       return SumMean(mu1, mu2);
     }
-    
+
+
+
     /** @class GaussianProcess
         @ingroup GaussianProcesses
     */
@@ -260,8 +264,14 @@ namespace muq
 
         virtual GaussianProcess& Condition(std::shared_ptr<ObservationInformation> obs);
 
+        /** Construct a Gaussian distribution (finite dimensional) by evaluating
+            the mean function and kernel of this Gaussian process at the provided
+            locations.
+        */
+        std::shared_ptr<muq::Modeling::Gaussian> Discretize(Eigen::MatrixXd const& pts);
+
         virtual void Optimize();
-        
+
         // Evaluate the mean and covariance
         virtual std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Predict(Eigen::MatrixXd const& newLocs,
                                                                     CovarianceType         covType);
@@ -274,7 +284,7 @@ namespace muq
 
         virtual double LogLikelihood(Eigen::MatrixXd const& xs,
                                      Eigen::MatrixXd const& vals);
-        
+
         // Evaluates the log marginal likelihood needed when fitting hyperparameters
         virtual double MarginalLogLikelihood();
         virtual double MarginalLogLikelihood(Eigen::Ref<Eigen::VectorXd> grad){return MarginalLogLikelihood(grad, true);};
@@ -283,7 +293,7 @@ namespace muq
 
         std::shared_ptr<MeanFunctionBase> Mean(){return mean;};
         std::shared_ptr<KernelBase>       Kernel(){return covKernel;};
-        
+
     protected:
 
         Eigen::MatrixXd BuildCrossCov(Eigen::MatrixXd const& newLocs);
@@ -308,11 +318,11 @@ namespace muq
 
         // Have new observations been added since the covariance was inverted?
         bool hasNewObs;
-        
+
         const double pi = 4.0 * atan(1.0); //boost::math::constants::pi<double>();
 
     };
-    
+
     // class GaussianProcess
 
     /** @ingroup GaussianProcesses

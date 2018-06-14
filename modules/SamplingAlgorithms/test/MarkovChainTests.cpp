@@ -106,11 +106,11 @@ TEST_F(MarkovChainTest, ESS)
   EXPECT_LT(ess(0), totalSteps);
   EXPECT_LT(ess(1), totalSteps);
 
-  int numWhite = 1e4;
+  int numWhite = 1e3;
   Eigen::VectorXd whiteNoise = RandomGenerator::GetNormal(numWhite);
   double singleEss = MarkovChain::SingleComponentESS(whiteNoise);
 
-  EXPECT_EQ(numWhite, singleEss);
+  EXPECT_NEAR(numWhite, singleEss, 100);
 }
 
 

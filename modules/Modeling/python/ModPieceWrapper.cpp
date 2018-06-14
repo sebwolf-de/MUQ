@@ -8,8 +8,6 @@
 #include "MUQ/Modeling/ReplicateOperator.h"
 #include "MUQ/Modeling/WorkGraph.h"
 
-#include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
@@ -103,10 +101,6 @@ void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
   cv
     .def(py::init<Eigen::VectorXd const&>())
     .def("SetValue",  &ConstantVector::SetValue);
-
-  py::class_<IdentityOperator, ModPiece, WorkPiece, std::shared_ptr<IdentityOperator>> io(m, "IdentityOperator");
-  io
-    .def(py::init<unsigned int>());
 
   py::class_<ReplicateOperator, ModPiece, WorkPiece, std::shared_ptr<ReplicateOperator>> ro(m, "ReplicateOperator");
   ro

@@ -37,8 +37,8 @@ Eigen::MatrixXd LinearOperator::GetMatrix()
 
 void LinearOperator::EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input)
 {
-  outputs.resize(0);
-  outputs.at(0) = Apply(input.at(0).get());
+  outputs.resize(1);
+  outputs.at(0) = Apply(input.at(0).get()).col(0);
 }
 
 void LinearOperator::GradientImpl(unsigned int                const  outputDimWrt,

@@ -9,16 +9,24 @@ using namespace muq::Utilities;
 
 REGISTER_MCMC_PROPOSAL(MHProposal)
 
-MHProposal::MHProposal(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> prob) : MCMCProposal(pt,prob) {
+MHProposal::MHProposal(pt::ptree const& pt,
+                       std::shared_ptr<AbstractSamplingProblem> prob) :
+                       MCMCProposal(pt,prob) {
 
   unsigned int problemDim = prob->blockSizes(blockInd);
 
   // compute the (diagonal) covariance for the proposal
-  const Eigen::VectorXd cov = pt.get("ProposalVariance", 1.0)*Eigen::VectorXd::Ones(problemDim);
+  const Eigen::VectorXd cov = pt.get("ProposalVariance", 1.0)*
+                              Eigen::VectorXd::Ones(problemDim);
 
   // created a Gaussian with scaled identity covariance
-  proposal = std::make_shared<muq::Modeling::Gaussian>(Eigen::VectorXd::Zero(problemDim), cov);
+  proposal = std::make_shared<Gaussian>(Eigen::VectorXd::Zero(problemDim), cov);
 }
+
+MHProposal::MHProposal(pt::ptree const& pt,
+                       std::shared_ptr<AbstractSamplingProblem> prob,
+                       std::shared_ptr<Gaussian> proposalIn) :
+                       MCMCProposal(pt,prob), proposal(proposalIn) {}
 
 std::shared_ptr<SamplingState> MHProposal::Sample(std::shared_ptr<SamplingState> currentState) {
 
@@ -36,6 +44,6 @@ std::shared_ptr<SamplingState> MHProposal::Sample(std::shared_ptr<SamplingState>
 double MHProposal::LogDensity(std::shared_ptr<SamplingState> currState,
                               std::shared_ptr<SamplingState> propState) {
 
-  Eigen::VectorXd diff = currState->state.at(blockInd)-propState->state.at(blockInd);
+  Eigen::VectorXd diff = propState->state.at(blockInd)-currState->state.at(blockInd);
   return proposal->LogDensity(diff);//, std::pair<boost::any, Gaussian::Mode>(conditioned->state.at(blockInd), Gaussian::Mode::Mean));
 }
