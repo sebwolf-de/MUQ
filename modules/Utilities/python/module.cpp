@@ -8,13 +8,10 @@ using namespace muq::Utilities::PythonBindings;
 namespace py = pybind11;
 
 
-PYBIND11_PLUGIN(pymuqUtilities) {
-    py::module m("pymuqUtilities", 
-                 "Python bindings for the muqUtilities library.");
+PYBIND11_MODULE(pymuqUtilities, m) {
 
     //LinearAlgebraWrapper(m);
     //MultiIndicesWrapper(m);
     GeneralUtilitiesWrapper(m);
-    
-    return m.ptr();
+
 }
