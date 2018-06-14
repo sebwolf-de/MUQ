@@ -51,12 +51,12 @@ CreateCompileGroup(
     MultiIndices/MultiIndexFactory.cpp
 )
 
-CreateCompileGroup(
-    UTILITIES_PYTHONHELPERS_PYTHON
-    "Classes and functions for python helper functions (not bindings)."
-    pymuqUtilities
-    ""
-    "PYTHON"
-    ""
-    PyDictConversion.cpp
-)
+#CreateCompileGroup(
+#    UTILITIES_PYTHONHELPERS_PYTHON
+#    "Classes and functions for python helper functions (not bindings)."
+#    pymuqUtilities
+#    ""
+#    "PYTHON"
+#    ""
+#    PyDictConversion.cpp
+#)
