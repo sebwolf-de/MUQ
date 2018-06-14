@@ -34,7 +34,7 @@ void muq::Utilities::PythonBindings::MultiIndicesWrapper(py::module &m)
     .def("GetLength", &MultiIndex::GetLength)
     .def("GetNzBegin", &MultiIndex::GetNzBegin)
     .def("GetNzEnd", &MultiIndex::GetNzEnd);
-    
+
   py::class_<MultiIndexFactory, std::shared_ptr<MultiIndexFactory>> multiIFac(m, "MultiIndexFactory");
   multiIFac
     .def_static("CreateTotalOrder", &MultiIndexFactory::CreateTotalOrder)
@@ -45,30 +45,30 @@ void muq::Utilities::PythonBindings::MultiIndicesWrapper(py::module &m)
     //.def_static("CreateFullTensor", (std::shared_ptr<MultiIndexSet> (MultiIndexFactory::*)(unsigned int const, unsigned int const,  std::shared_ptr<MultiIndexLimiter>)) &MultiIndexFactory::CreateFullTensor)
     //.def_static("CreateFullTensor", (std::shared_ptr<MultiIndexSet> (MultiIndexFactory::*)(const Eigen::RowVectorXi&, std::shared_ptr<MultiIndexLimiter>)) &MultiIndexFactory::CreateFullTensor)
     .def_static("CreateTriHyperbolic", &MultiIndexFactory::CreateTriHyperbolic);
-    
+
   py::class_<MultiIndexLimiter, std::shared_ptr<MultiIndexLimiter>> multiILim(m, "MultiIndexLimiter");
   multiILim
     .def("IsFeasible", &MultiIndexLimiter::IsFeasible);
-    
+
   py::class_<TotalOrderLimiter, MultiIndexLimiter, std::shared_ptr<TotalOrderLimiter>> totalOrd(m, "TotalOrderLimiter");
   totalOrd
     .def(py::init<unsigned int>());
-    
+
   py::class_<DimensionLimiter, MultiIndexLimiter, std::shared_ptr<DimensionLimiter>> dimLim(m, "DimensionLimiter");
   dimLim
     .def(py::init<unsigned int, unsigned int>())
     .def("IsFeasible", &DimensionLimiter::IsFeasible);
-    
+
   py::class_<MaxOrderLimiter, MultiIndexLimiter, std::shared_ptr<MaxOrderLimiter>> maxLim(m, "MaxOrderLimiter");
   maxLim
     .def(py::init<unsigned int>())
     .def(py::init<Eigen::VectorXi const&>())
     .def("IsFeasible", &MaxOrderLimiter::IsFeasible);
-    
+
   py::class_<NoLimiter, MultiIndexLimiter, std::shared_ptr<NoLimiter>> noLim(m, "NoLimiter");
   noLim
-    .def("IsFeasible", &NoLimiter::IsFeasible);  
-    
+    .def("IsFeasible", &NoLimiter::IsFeasible);
+
   py::class_<AndLimiter, MultiIndexLimiter, std::shared_ptr<AndLimiter>> andLim(m, "AndLimiter");
   andLim
     .def(py::init<std::shared_ptr<MultiIndexLimiter>, std::shared_ptr<MultiIndexLimiter>>())
@@ -78,12 +78,12 @@ void muq::Utilities::PythonBindings::MultiIndicesWrapper(py::module &m)
   orLim
     .def(py::init<std::shared_ptr<MultiIndexLimiter>, std::shared_ptr<MultiIndexLimiter>>())
     .def("IsFeasible", &OrLimiter::IsFeasible);
-    
+
   py::class_<XorLimiter, MultiIndexLimiter, std::shared_ptr<XorLimiter>> xorLim(m, "XorLimiter");
   xorLim
     .def(py::init<std::shared_ptr<MultiIndexLimiter>, std::shared_ptr<MultiIndexLimiter>>())
     .def("IsFeasible", &XorLimiter::IsFeasible);
-    
+
   py::class_<MultiIndexSet,std::shared_ptr<MultiIndexSet>> multiSet(m, "MultiIndexSet");
   multiSet
     .def(py::init<const unsigned , std::shared_ptr<MultiIndexLimiter>>())
@@ -97,14 +97,14 @@ void muq::Utilities::PythonBindings::MultiIndicesWrapper(py::module &m)
     .def("at", &MultiIndexSet::at)
     .def("Size", &MultiIndexSet::Size)
     .def("Union", &MultiIndexSet::Union)
-    //.def("Activate", &MultiIndexSet::Activate)
+    .def("Activate", (void (MultiIndexSet::*)(std::shared_ptr<MultiIndex>)) &MultiIndexSet::Activate)
     .def("AddActive", &MultiIndexSet::AddActive)
     .def("Expand", &MultiIndexSet::Expand)
     .def("ForciblyExpand", &MultiIndexSet::ForciblyExpand)
-    //.def("ForciblyActivate", &MultiIndexSet::ForciblyActivate)
+    .def("ForciblyActivate", (std::vector<unsigned> (MultiIndexSet::*)(std::shared_ptr<MultiIndex>)) &MultiIndexSet::ForciblyActivate)
     .def("GetAdmissibleForwardNeighbors", &MultiIndexSet::GetAdmissibleForwardNeighbors)
-    //.def("IsAdmissible", &MultiIndexSet::IsAdmissible)
-    .def("IsExpandable", &MultiIndexSet::IsExpandable);
-    //.def("IsActive", &MultiIndexSet::IsActive);
-  
+    .def("IsAdmissible", (bool (MultiIndexSet::*)(std::shared_ptr<MultiIndex>) const) &MultiIndexSet::IsAdmissible)
+    .def("IsExpandable", &MultiIndexSet::IsExpandable)
+    .def("IsActive", (bool (MultiIndexSet::*)(std::shared_ptr<MultiIndex>) const) &MultiIndexSet::IsActive);
+
 }
