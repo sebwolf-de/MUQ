@@ -16,7 +16,7 @@ namespace muq {
 
       virtual ~SamplingAlgorithm() = default;
 
-      std::shared_ptr<SampleCollection> GetSamples() const;
+      std::shared_ptr<SampleCollection> GetSamples() const{return samples;};
 
       virtual std::shared_ptr<SampleCollection> Run(){return Run(std::vector<Eigen::VectorXd>());};
       virtual std::shared_ptr<SampleCollection> Run(Eigen::VectorXd const& x0){return Run(std::vector<Eigen::VectorXd>(1,x0));};

@@ -23,7 +23,8 @@ void PythonBindings::MCMCWrapper(py::module &m) {
   sampAlg
     .def("Run", (std::shared_ptr<SampleCollection>  (SamplingAlgorithm::*)()) &SamplingAlgorithm::Run)
     .def("Run", (std::shared_ptr<SampleCollection>  (SamplingAlgorithm::*)(Eigen::VectorXd const&)) &SamplingAlgorithm::Run)
-    .def("Run", (std::shared_ptr<SampleCollection>  (SamplingAlgorithm::*)(std::vector<Eigen::VectorXd> const&)) &SamplingAlgorithm::Run);
+    .def("Run", (std::shared_ptr<SampleCollection>  (SamplingAlgorithm::*)(std::vector<Eigen::VectorXd> const&)) &SamplingAlgorithm::Run)
+    .def("GetSamples", &SamplingAlgorithm::GetSamples);
 
   py::class_<SingleChainMCMC, SamplingAlgorithm, std::shared_ptr<SingleChainMCMC>> singleMCMC(m, "SingleChainMCMC");
   singleMCMC

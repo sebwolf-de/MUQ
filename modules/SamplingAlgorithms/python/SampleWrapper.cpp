@@ -52,8 +52,11 @@ void PythonBindings::SampleWrapper(py::module &m)
     .def("CentralMoment", &SampleCollection::CentralMoment, py::arg("order"), py::arg("blockDim") = -1)
     .def("Mean", &SampleCollection::Mean, py::arg("blockDim") = -1)
     .def("Variance", &SampleCollection::Variance, py::arg("blockDim") = -1)
-    .def("Covariance", &SampleCollection::Covariance, py::arg("blockDim") = -1);
-//    .def("ESS", &SampleCollection::ESS);
+    .def("Covariance", &SampleCollection::Covariance, py::arg("blockDim") = -1)
+    .def("ESS", &SampleCollection::ESS)
+    .def("Add", &SampleCollection::Add)
+    .def("Weights", &SampleCollection::Weights)
+    .def("AsMatrix", &SampleCollection::AsMatrix, py::arg("blockDim")=-1);
 
   py::class_<SamplingState, std::shared_ptr<SamplingState>> sampState(m, "SamplingState");
   sampState
