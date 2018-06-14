@@ -1,12 +1,14 @@
 #include "AllClassWrappers.h"
 
-#include "MUQ/Modeling/ModPiece.h"
-#include "MUQ/Modeling/PyModPiece.h"
-#include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
-#include "MUQ/Modeling/ReplicateOperator.h"
 #include "MUQ/Modeling/ConstantVector.h"
-#include "MUQ/Modeling/WorkGraph.h"
+#include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
+#include "MUQ/Modeling/MultiLogisticLikelihood.h"
+#include "MUQ/Modeling/PyModPiece.h"
+#include "MUQ/Modeling/ReplicateOperator.h"
+#include "MUQ/Modeling/WorkGraph.h"
+
+#include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -114,4 +116,8 @@ void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
   mgp
     .def("GetGraph", &ModGraphPiece::GetGraph)
     .def("GetConstantPieces", &ModGraphPiece::GetConstantPieces);
+
+  py::class_<MultiLogisticLikelihood, ModPiece, WorkPiece, std::shared_ptr<MultiLogisticLikelihood>> mll(m, "MultiLogisticLikelihood");
+  mll
+    .def(py::init<unsigned int, Eigen::VectorXi>());
 }
