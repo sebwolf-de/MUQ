@@ -19,7 +19,7 @@ public:
 
   SparseLinearOperator(Eigen::SparseMatrix const& Ain) : LinearOperator(A.rows(), A.cols()), A(Ain){}
 
-  virtual ~DenseLinearOperator(){};
+  virtual ~SparseLinearOperator(){};
   
   /** Apply the linear operator to a vector */
   virtual Eigen::MatrixXd Apply(Eigen::Ref<Eigen::MatrixXd> const& x) override {return A*x;};
