@@ -10,7 +10,7 @@ namespace muq{
 
       //void HDF5Wrapper(pybind11::module &m);
       //void LinearAlgebraWrapper(pybind11::module &m);
-      //void MultiIndicesWrapper(pybind11::module &m);
+      void MultiIndicesWrapper(pybind11::module &m);
       void GeneralUtilitiesWrapper(pybind11::module &m);
       
     }

@@ -5,11 +5,11 @@
 
 namespace muq{
   namespace Approximation{
-
     namespace PythonBindings{
 
       void KernelWrapper(pybind11::module &m);
       void GaussianWrapper(pybind11::module &m);
+      void PolynomialsWrapper(pybind11::module &m);
       void KLWrapper(pybind11::module &m);
     
     }

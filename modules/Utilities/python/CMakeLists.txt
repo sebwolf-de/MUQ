@@ -22,6 +22,6 @@ CreateCompileGroup(
     Module.cpp
     #KernelWrapper.cpp
     #LinearAlgebraWrapper.cpp
-    #MultiIndicesWrapper.cpp
+    MultiIndicesWrapper.cpp
     GeneralUtilitiesWrapper.cpp
 )

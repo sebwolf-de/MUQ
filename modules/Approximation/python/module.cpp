@@ -7,13 +7,13 @@
 using namespace muq::Approximation::PythonBindings;
 namespace py = pybind11;
 
-
 PYBIND11_PLUGIN(pymuqApproximation) {
     py::module m("pymuqApproximation", 
                  "Python bindings for the muqApproximation library.");
 
     KernelWrapper(m);
     GaussianWrapper(m);
+    PolynomialsWrapper(m);
     KLWrapper(m);
     
     return m.ptr();
