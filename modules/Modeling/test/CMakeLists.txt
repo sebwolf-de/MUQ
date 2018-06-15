@@ -11,7 +11,7 @@ CreateTestGroup(
     IdentityPieceTests.cpp
 
     MultiLogisticTest.cpp
-    
+
     FlannTest/FlannCacheTests.cpp
 
     CwiseOperatorTests/UnaryOperatorTest.cpp
@@ -23,10 +23,10 @@ CreateTestGroup(
     LinearAlgebra/LinearOperatorTests.cpp
     LinearAlgebra/LyapunovSolverTests.cpp
 
-    LinearAlgebra/ScalarAlgebraTests.cpp
-    LinearAlgebra/EigenVectorAlgebraTests.cpp
-    LinearAlgebra/EigenMatrixAlgebraTests.cpp
-    LinearAlgebra/SundialsAlgebraTests.cpp
+    #LinearAlgebra/ScalarAlgebraTests.cpp
+    #LinearAlgebra/EigenVectorAlgebraTests.cpp
+    #LinearAlgebra/EigenMatrixAlgebraTests.cpp
+    #LinearAlgebra/SundialsAlgebraTests.cpp
 )
 
 CreateTestGroup(
