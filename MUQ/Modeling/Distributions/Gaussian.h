@@ -58,8 +58,11 @@ namespace muq {
 
       unsigned int Dimension() const;
 
-      virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x);
-      virtual Eigen::MatrixXd ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x);
+      virtual Eigen::MatrixXd ApplyCovariance(Eigen::Ref<const Eigen::MatrixXd> const& x) const;
+      virtual Eigen::MatrixXd ApplyPrecision(Eigen::Ref<const Eigen::MatrixXd> const& x) const;
+
+      virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const;
+      virtual Eigen::MatrixXd ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const;
 
       /// Get the covariance
       /**
@@ -92,6 +95,10 @@ namespace muq {
       */
       void SetPrecision(Eigen::MatrixXd const& newPrec);
 
+      /// Returns a new Gaussian distribution conditioned on a linear observation
+      std::shared_ptr<Gaussian> Condition(Eigen::MatrixXd const& obsMat,
+                                          Eigen::VectorXd const& data,
+                                          Eigen::MatrixXd const& obsCov) const;
     private:
 
 

@@ -267,3 +267,13 @@ void BasisExpansion::SetCoeffs(Eigen::MatrixXd const& allCoeffs){
   assert(coeffs.cols()==allCoeffs.cols());
   coeffs = allCoeffs;
 }
+
+Eigen::MatrixXd BasisExpansion::BuildVandermonde(Eigen::MatrixXd const& evalPts) const
+{
+  Eigen::MatrixXd vand(evalPts.cols(), NumTerms());
+
+  for(int i=0; i<evalPts.cols(); ++i)
+    vand.row(i) = GetAllTerms(evalPts.col(i)).transpose();
+
+  return vand;
+}

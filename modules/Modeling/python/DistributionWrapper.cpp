@@ -76,7 +76,8 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
       .def("GetMean", &Gaussian::GetMean)
       .def("SetMean", &Gaussian::SetMean)
       .def("SetCovariance", &Gaussian::SetCovariance)
-      .def("SetPrecision", &Gaussian::SetPrecision);
+      .def("SetPrecision", &Gaussian::SetPrecision)
+      .def("Condition", &Gaussian::Condition);
 
     py::enum_<Gaussian::Mode>(gauss, "Mode")
           .value("Covariance", Gaussian::Mode::Covariance)

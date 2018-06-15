@@ -171,26 +171,7 @@ double Gaussian::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) {
 
   Eigen::VectorXd delta = inputs.at(0).get() - mean;
 
-  switch( mode ) {
-    case Gaussian::Mode::Covariance: {
-      if(covPrec.cols()==1){
-        return logNormalization - 0.5 * delta.dot( (covPrec.col(0).array().inverse() * delta.array()).matrix());
-      }else{
-        return logNormalization - 0.5 * delta.dot( sqrtCovPrec.solve(delta));
-      }
-    }
-    case Gaussian::Mode::Precision: {
-      if(covPrec.cols()==1){
-        return logNormalization - 0.5 * delta.dot( (covPrec.col(0).array() * delta.array()).matrix());
-      }else{
-        return logNormalization - 0.5 * delta.dot( covPrec.selfadjointView<Eigen::Lower>() * delta );
-      }
-    }
-    default: {
-      assert(false);
-      return -std::numeric_limits<double>::infinity();
-    }
-  }
+  return logNormalization - 0.5 * delta.dot( ApplyPrecision(delta).col(0) );
 }
 
 Eigen::VectorXd Gaussian::SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) {
@@ -245,7 +226,7 @@ void Gaussian::SetPrecision(Eigen::MatrixXd const& newPrec) {
   ComputeNormalization();
 }
 
-Eigen::MatrixXd Gaussian::ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x)
+Eigen::MatrixXd Gaussian::ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const
 {
   if(mode==Gaussian::Mode::Covariance){
     if(covPrec.cols()==1){
@@ -261,7 +242,7 @@ Eigen::MatrixXd Gaussian::ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& 
     }
   }
 }
-Eigen::MatrixXd Gaussian::ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x)
+Eigen::MatrixXd Gaussian::ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const
 {
   if(mode==Gaussian::Mode::Precision){
     if(covPrec.cols()==1){
@@ -276,4 +257,66 @@ Eigen::MatrixXd Gaussian::ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const&
       return sqrtCovPrec.matrixL().solve(x);
     }
   }
+}
+
+Eigen::MatrixXd Gaussian::ApplyCovariance(Eigen::Ref<const Eigen::MatrixXd> const& x) const
+{
+  if(mode==Gaussian::Mode::Covariance){
+    if(covPrec.cols()==1){
+      return covPrec.col(0).matrix().asDiagonal()*x;
+    }else{
+      return covPrec.selfadjointView<Eigen::Lower>()*x;
+    }
+  }else{
+    if(covPrec.cols()==1){
+      return covPrec.col(0).array().inverse().matrix().asDiagonal() * x;
+    }else{
+      return sqrtCovPrec.solve(x);
+    }
+  }
+}
+Eigen::MatrixXd Gaussian::ApplyPrecision(Eigen::Ref<const Eigen::MatrixXd> const& x) const
+{
+  if(mode==Gaussian::Mode::Precision){
+    if(covPrec.cols()==1){
+      return covPrec.col(0).array().inverse().matrix().asDiagonal()*x;
+    }else{
+      return sqrtCovPrec.solve(x);
+    }
+  }else{
+    if(covPrec.cols()==1){
+      return covPrec.col(0).asDiagonal() * x;
+    }else{
+      return covPrec.selfadjointView<Eigen::Lower>()*x;
+    }
+  }
+}
+
+
+std::shared_ptr<Gaussian> Gaussian::Condition(Eigen::MatrixXd const& obsMat,
+                                              Eigen::VectorXd const& data,
+                                              Eigen::MatrixXd const& obsCov) const
+{
+  if(obsMat.cols() != Dimension())
+    throw muq::WrongSizeError("In Gaussian::Condition, the number of columns in the observation matrix (" + std::to_string(obsMat.cols()) + ") does match the distribution dimension (" + std::to_string(Dimension()) + ")");
+  if(obsMat.rows() != data.rows())
+    throw muq::WrongSizeError("In Gaussian::Condition, the number of rows in the observation matrix (" + std::to_string(obsMat.rows()) + ") does match the size of the data (" + std::to_string(data.rows()) + ")");
+  if(obsCov.rows() != data.rows())
+    throw muq::WrongSizeError("In Gaussian::Condition, the length of the data vector (" + std::to_string(data.rows()) + ") does match the size of the observation covariance (" + std::to_string(obsCov.rows()) + ")");
+  if((obsCov.rows() != obsCov.cols()) && (obsCov.cols()!=1))
+    throw muq::WrongSizeError("In Gaussian::Condition, the given observation covariance has size " + std::to_string(obsCov.rows()) + "x" + std::to_string(obsCov.cols()) + " but should be square.");
+
+
+  Eigen::MatrixXd S = obsMat*ApplyCovariance(obsMat.transpose());
+  if(obsCov.cols()==1){
+    S += obsCov.asDiagonal();
+  }else{
+    S += obsCov;
+  }
+  Eigen::MatrixXd K = ApplyCovariance(S.llt().solve(obsMat).transpose());
+
+  Eigen::VectorXd postMu = mean + K*(data - obsMat*mean);
+  Eigen::MatrixXd postCov = (Eigen::MatrixXd::Identity(Dimension(), Dimension()) - K*obsMat)*GetCovariance();
+  std::cout << postMu.size() << " and " << postCov.rows() << std::endl;
+  return std::make_shared<Gaussian>(postMu, postCov);
 }

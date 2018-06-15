@@ -50,7 +50,8 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
     .def("MarginalLogLikelihood", (double (GaussianProcess::*)
       (Eigen::Ref<Eigen::VectorXd>, bool)) &GaussianProcess::MarginalLogLikelihood)
     .def("Mean", &GaussianProcess::Mean)
-    .def("Kernel", &GaussianProcess::Kernel);
+    .def("Kernel", &GaussianProcess::Kernel)
+    .def("Discretize", &GaussianProcess::Discretize);
 
   // MeanFunctionBase class
   py::class_<MeanFunctionBase,

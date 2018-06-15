@@ -35,17 +35,6 @@ void muq::Utilities::PythonBindings::MultiIndicesWrapper(py::module &m)
     .def("GetNzBegin", &MultiIndex::GetNzBegin)
     .def("GetNzEnd", &MultiIndex::GetNzEnd);
 
-  py::class_<MultiIndexFactory, std::shared_ptr<MultiIndexFactory>> multiIFac(m, "MultiIndexFactory");
-  multiIFac
-    .def_static("CreateTotalOrder", &MultiIndexFactory::CreateTotalOrder)
-    .def_static("CreateTriTotalOrder", &MultiIndexFactory::CreateTriTotalOrder)
-    .def_static("CreateHyperbolic", &MultiIndexFactory::CreateHyperbolic)
-    .def_static("CreateTriHyperbolic", &MultiIndexFactory::CreateTriHyperbolic)
-    //.def("CentralMoment", &SampleCollection::CentralMoment, py::arg("order"), py::arg("blockDim") = -1)
-    //.def_static("CreateFullTensor", (std::shared_ptr<MultiIndexSet> (MultiIndexFactory::*)(unsigned int const, unsigned int const,  std::shared_ptr<MultiIndexLimiter>)) &MultiIndexFactory::CreateFullTensor)
-    //.def_static("CreateFullTensor", (std::shared_ptr<MultiIndexSet> (MultiIndexFactory::*)(const Eigen::RowVectorXi&, std::shared_ptr<MultiIndexLimiter>)) &MultiIndexFactory::CreateFullTensor)
-    .def_static("CreateTriHyperbolic", &MultiIndexFactory::CreateTriHyperbolic);
-
   py::class_<MultiIndexLimiter, std::shared_ptr<MultiIndexLimiter>> multiILim(m, "MultiIndexLimiter");
   multiILim
     .def("IsFeasible", &MultiIndexLimiter::IsFeasible);
@@ -83,6 +72,17 @@ void muq::Utilities::PythonBindings::MultiIndicesWrapper(py::module &m)
   xorLim
     .def(py::init<std::shared_ptr<MultiIndexLimiter>, std::shared_ptr<MultiIndexLimiter>>())
     .def("IsFeasible", &XorLimiter::IsFeasible);
+
+  py::class_<MultiIndexFactory, std::shared_ptr<MultiIndexFactory>> multiIFac(m, "MultiIndexFactory");
+  multiIFac
+    .def_static("CreateTotalOrder", &MultiIndexFactory::CreateTotalOrder, py::arg("length"), py::arg("maxOrder"), py::arg("minOrder")=0, py::arg("limiter")=std::make_shared<NoLimiter>())
+    .def_static("CreateTriTotalOrder", &MultiIndexFactory::CreateTriTotalOrder)
+    .def_static("CreateHyperbolic", &MultiIndexFactory::CreateHyperbolic)
+    .def_static("CreateTriHyperbolic", &MultiIndexFactory::CreateTriHyperbolic)
+    //.def("CentralMoment", &SampleCollection::CentralMoment, py::arg("order"), py::arg("blockDim") = -1)
+    //.def_static("CreateFullTensor", (std::shared_ptr<MultiIndexSet> (MultiIndexFactory::*)(unsigned int const, unsigned int const,  std::shared_ptr<MultiIndexLimiter>)) &MultiIndexFactory::CreateFullTensor)
+    //.def_static("CreateFullTensor", (std::shared_ptr<MultiIndexSet> (MultiIndexFactory::*)(const Eigen::RowVectorXi&, std::shared_ptr<MultiIndexLimiter>)) &MultiIndexFactory::CreateFullTensor)
+    .def_static("CreateTriHyperbolic", &MultiIndexFactory::CreateTriHyperbolic);
 
   py::class_<MultiIndexSet,std::shared_ptr<MultiIndexSet>> multiSet(m, "MultiIndexSet");
   multiSet

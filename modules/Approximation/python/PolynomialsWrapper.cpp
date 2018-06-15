@@ -41,7 +41,8 @@ void muq::Approximation::PythonBindings::PolynomialsWrapper(py::module &m)
     .def("SecondDerivative", (Eigen::MatrixXd (BasisExpansion::*)(unsigned, unsigned, unsigned, Eigen::VectorXd const&)) &BasisExpansion::SecondDerivative)
     .def("GetCoeffs", &BasisExpansion::GetCoeffs)
     .def("SetCoeffs", &BasisExpansion::SetCoeffs)
-    .def("Multis", &BasisExpansion::Multis);
+    .def("Multis", &BasisExpansion::Multis)
+    .def("BuildVandermonde", &BasisExpansion::BuildVandermonde);
 
   py::class_<IndexedScalarBasis, std::shared_ptr<IndexedScalarBasis>> iSB(m, "IndexedScalarBasis");
   iSB

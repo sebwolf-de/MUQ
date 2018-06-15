@@ -30,7 +30,7 @@ void muq::Approximation::PythonBindings::KernelWrapper(py::module &m)
 {
     // KernelBase class
     py::class_<KernelBase,
-               std::shared_ptr<KernelBase>> kernBase(m, "KernelBase");
+               std::shared_ptr<KernelBase>> kernBase(m, "CovarianceKernelBase");
     kernBase
       //.def(py::init<unsigned, unsigned, unsigned>())
       //.def(py::init<unsigned, std::vector<unsigned>, unsigned, unsigned>())
