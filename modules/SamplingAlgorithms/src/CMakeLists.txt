@@ -34,10 +34,15 @@ CreateCompileGroup(
     MHKernel.cpp
     #MCMCKernel.cpp
 
+    MCMCFactory.cpp
+
+    ThinScheduler.cpp
+
     MCMCProposal.cpp
     MHProposal.cpp
     AMProposal.cpp
     InverseGammaProposal.cpp
+    CrankNicolsonProposal.cpp
 
     SamplingProblem.cpp
 )

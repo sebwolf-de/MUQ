@@ -7,18 +7,6 @@ CreateTestGroup(
 )
 
 CreateTestGroup(
-    UTILITIES_LINEARALGEBRA
-
-    LinearAlgebra/LinearOperatorTests.cpp
-    LinearAlgebra/LyapunovSolverTests.cpp
-
-    #LinearAlgebra/ScalarAlgebraTests.cpp
-    #LinearAlgebra/EigenVectorAlgebraTests.cpp
-    #LinearAlgebra/EigenMatrixAlgebraTests.cpp
-    #LinearAlgebra/SundialsAlgebraTests.cpp
-)
-
-CreateTestGroup(
     UTILITIES_MULTIINDEX
 
     MultiIndices/MultiIndexTests.cpp

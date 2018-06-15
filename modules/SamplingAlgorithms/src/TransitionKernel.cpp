@@ -8,8 +8,6 @@ TransitionKernel::TransitionKernel(pt::ptree                 const& pt,
                                    std::shared_ptr<AbstractSamplingProblem> problem) : blockInd(pt.get("BlockIndex",0)),
                                                                                problem(problem)  {}
 
-TransitionKernel::~TransitionKernel() {}
-
 std::shared_ptr<TransitionKernel::TransitionKernelMap> TransitionKernel::GetTransitionKernelMap() {
   // define a static map from type to constructor
   static std::shared_ptr<TransitionKernelMap> map;

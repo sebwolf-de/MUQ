@@ -91,6 +91,12 @@ Eigen::MatrixXd outputVec2 = boost::any_cast<Eigen::MatrixXd>(output1);
       virtual unsigned NumTerms() const{return multis->Size();};
 
 
+      /** Constructs a Vandermonde matrix by evaluating the $M$ basis functions at
+          $N$ points stored in the evalPts matrix.  Each column of evalPts
+          contains a single point.  The returned matrix is size $N\times M$.
+      */
+      Eigen::MatrixXd BuildVandermonde(Eigen::MatrixXd const& evalPts) const;
+
       Eigen::MatrixXd SecondDerivative(unsigned                                     outputDim,
                                        unsigned                                     wrtDim1,
                                        unsigned                                     wrtDim2,

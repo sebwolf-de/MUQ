@@ -35,21 +35,45 @@ class MaternKernel : public KernelImpl<MaternKernel>
 
 public:
 
+  MaternKernel(unsigned              dimIn,
+               std::vector<unsigned> dimInds,
+               double                sigma2In,
+               double                lengthIn,
+               double                nuIn) : MaternKernel(dimIn,
+                                                          dimInds,
+                                                          sigma2In,
+                                                          lengthIn,
+                                                          nuIn,
+                                                          {0.0, std::numeric_limits<double>::infinity()},
+                                                          {1e-10, std::numeric_limits<double>::infinity()})
+  {};
+
     MaternKernel(unsigned              dimIn,
                  std::vector<unsigned> dimInds,
                  double                sigma2In,
                  double                lengthIn,
                  double                nuIn,
-                 Eigen::Vector2d       sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
-                 Eigen::Vector2d       lengthBounds = {1e-10, std::numeric_limits<double>::infinity()});
+                 Eigen::Vector2d       sigmaBounds,
+                 Eigen::Vector2d       lengthBounds);
 
 
     MaternKernel(unsigned        dimIn,
                  double          sigma2In,
                  double          lengthIn,
+                 double          nuIn) : MaternKernel(dimIn,
+                                                      sigma2In,
+                                                      lengthIn,
+                                                      nuIn,
+                                                      {0.0, std::numeric_limits<double>::infinity()},
+                                                      {1e-10, std::numeric_limits<double>::infinity()})
+    {};
+
+    MaternKernel(unsigned        dimIn,
+                 double          sigma2In,
+                 double          lengthIn,
                  double          nuIn,
-                 Eigen::Vector2d sigmaBounds = {0.0, std::numeric_limits<double>::infinity()},
-                 Eigen::Vector2d lengthBounds = {1e-10, std::numeric_limits<double>::infinity()});
+                 Eigen::Vector2d sigmaBounds,
+                 Eigen::Vector2d lengthBounds);
 
 
     virtual ~MaternKernel(){};
@@ -72,7 +96,7 @@ public:
       block(0,0) *= params(0)*exp(-sqrt(2.0*nu)*dist / params(1)) * scale;
     }
 
-    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions = boost::property_tree::ptree()) const override;
+    virtual std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> GetStateSpace(boost::property_tree::ptree sdeOptions = boost::property_tree::ptree()) const override;
 
 private:
 

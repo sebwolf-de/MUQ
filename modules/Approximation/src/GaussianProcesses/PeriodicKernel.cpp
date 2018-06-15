@@ -1,15 +1,15 @@
 #include "MUQ/Approximation/GaussianProcesses/PeriodicKernel.h"
 
-#include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/EigenLinearOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/BlockDiagonalOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/IdentityOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/EigenLinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/BlockDiagonalOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
 
 #include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
 
 
-#include "MUQ/Utilities/LinearAlgebra/CompanionMatrix.h"
-#include "MUQ/Utilities/LinearAlgebra/LyapunovSolver.h"
+#include "MUQ/Modeling/LinearAlgebra/CompanionMatrix.h"
+#include "MUQ/Modeling/LinearAlgebra/LyapunovSolver.h"
 
 #include "MUQ/Modeling/LinearSDE.h"
 
@@ -21,14 +21,14 @@
 #include <boost/property_tree/ptree.hpp>
 
 using namespace muq::Approximation;
-using namespace muq::Utilities;
+using namespace muq::Modeling;
 
 
 /** Implements the 2x2 block matrix in equation 28 of Solin and Sarkka */
-class PeriodicKernel_F_block : public muq::Utilities::LinearOperator
+class PeriodicKernel_F_block : public muq::Modeling::LinearOperator
 {
 public:
-    PeriodicKernel_F_block(const double wjIn) : muq::Utilities::LinearOperator(2,2), wj(wjIn){};
+    PeriodicKernel_F_block(const double wjIn) : muq::Modeling::LinearOperator(2,2), wj(wjIn){};
 
     virtual Eigen::MatrixXd Apply(Eigen::Ref<const Eigen::MatrixXd> const& x) override
     {
@@ -60,7 +60,7 @@ private:
 
 };
 
-std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> PeriodicKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
+std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> PeriodicKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
 {
 
   const double sigma2 = cachedParams(0);
@@ -112,7 +112,7 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
     Eigen::SparseMatrix<double> Hmat(1, 2*(numTerms+1));
     Hmat.setFromTriplets(Hcoeffs.begin(), Hcoeffs.end());
 
-    auto H = muq::Utilities::LinearOperator::Create(Hmat);
+    auto H = muq::Modeling::LinearOperator::Create(Hmat);
 
     // Create the SDE
     auto sde = std::make_shared<muq::Modeling::LinearSDE>(F,L,Q,sdeOptions);

@@ -1,7 +1,6 @@
 #ifndef UNIFORMBOX_H_
 #define UNIFORMBOX_H_
 
-#include "MUQ/Utilities/LinearAlgebra/AnyAlgebra.h"
 #include "MUQ/Utilities/VariadicMacros.h"
 #include "MUQ/Utilities/Exceptions.h"
 
@@ -146,9 +145,6 @@ auto dist = std::make_shared<UniformBox>(0.0, 1.0, 0.5, 0.75, 1.0, 2.0, 4.0, 10.
       // The volume of the region enclosed by the bounds
       const double volume;
 
-
-      /// The muq::Utilities::AnyAlgebra
-      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra;
     };
   } // namespace Modeling
 } // namespace muq

@@ -3,8 +3,8 @@
 #include "MUQ/Modeling/ModPiece.h"
 
 #include "MUQ/Modeling/Distributions/Density.h"
+#include "MUQ/Modeling/Distributions/DensityProduct.h"
 #include "MUQ/Modeling/Distributions/RandomVariable.h"
-
 #include "MUQ/Modeling/Distributions/Distribution.h"
 #include "MUQ/Modeling/Distributions/Gaussian.h"
 #include "MUQ/Modeling/Distributions/InverseGamma.h"
@@ -20,6 +20,7 @@
 #include <vector>
 
 using namespace muq::Modeling::PythonBindings;
+using namespace muq::Modeling;
 namespace py = pybind11;
 
 
@@ -47,6 +48,10 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
     dens
       .def("GetDistribution", &Density::GetDistribution);
 
+    py::class_<DensityProduct, DensityBase, std::shared_ptr<DensityProduct>> densProd(m,"DensityProduct");
+    densProd
+      .def(py::init<int>());
+
     py::class_<RandomVariable, Distribution, ModPiece, std::shared_ptr<RandomVariable>> rv(m, "RandomVariable");
     rv
       .def(py::init<std::shared_ptr<Distribution>>());
@@ -63,8 +68,16 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
       .def(py::init<Eigen::VectorXd const&, Gaussian::InputMask>())
       .def(py::init<Eigen::VectorXd const&, Eigen::MatrixXd const&>())
       .def(py::init<Eigen::VectorXd const&, Eigen::MatrixXd const&, Gaussian::Mode>())
-      .def(py::init<Eigen::VectorXd const&, Eigen::MatrixXd const&, Gaussian::Mode, Gaussian::InputMask>());
-
+      .def(py::init<Eigen::VectorXd const&, Eigen::MatrixXd const&, Gaussian::Mode, Gaussian::InputMask>())
+      .def("GetMode", &Gaussian::GetMode)
+      .def("Dimension", &Gaussian::Dimension)
+      .def("GetCovariance", &Gaussian::GetCovariance)
+      .def("GetPrecision", &Gaussian::GetPrecision)
+      .def("GetMean", &Gaussian::GetMean)
+      .def("SetMean", &Gaussian::SetMean)
+      .def("SetCovariance", &Gaussian::SetCovariance)
+      .def("SetPrecision", &Gaussian::SetPrecision)
+      .def("Condition", &Gaussian::Condition);
 
     py::enum_<Gaussian::Mode>(gauss, "Mode")
           .value("Covariance", Gaussian::Mode::Covariance)
@@ -85,5 +98,5 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
     ig
       .def(py::init<double,double>())
       .def_readonly("alpha", &InverseGamma::alpha)
-      .def_readonly("alpha", &InverseGamma::beta);
+      .def_readonly("beta", &InverseGamma::beta);
 }

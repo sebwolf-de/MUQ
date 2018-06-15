@@ -8,12 +8,12 @@ using namespace muq::Modeling::PythonBindings;
 namespace py = pybind11;
 
 
-PYBIND11_PLUGIN(pymuqModeling) {
-    py::module m("pymuqModeling", "Python bindings for the muqModeling library.");
+PYBIND11_MODULE(pymuqModeling, m) {
 
     WorkPieceWrapper(m);
     ModPieceWrapper(m);
     DistributionWrapper(m);
-    
-    return m.ptr();
+    CwiseUnaryOperatorsWrapper(m);
+    LinearOperatorWrapper(m);
+
 }

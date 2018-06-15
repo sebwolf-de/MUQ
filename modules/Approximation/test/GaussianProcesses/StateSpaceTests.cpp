@@ -46,7 +46,7 @@ TEST(Approximation_GP, StateSpace_DistributionIntegration)
     MaternKernel kernel(1, sigma2, length, nu);
 
     std::shared_ptr<muq::Modeling::LinearSDE> sde; // The underying SDE
-    std::shared_ptr<muq::Utilities::LinearOperator> H; // Observation matrix to go from SDE state to actual GP variable
+    std::shared_ptr<muq::Modeling::LinearOperator> H; // Observation matrix to go from SDE state to actual GP variable
     Eigen::MatrixXd pinf; // Steady state covariance matrix
 
     std::tie(sde, H, pinf) = kernel.GetStateSpace();
@@ -78,7 +78,7 @@ TEST(Approximation_GP, StateSpace_DistributionIntegration2)
     MaternKernel kernel(1, sigma2, length, nu);
 
     std::shared_ptr<muq::Modeling::LinearSDE> sde; // The underying SDE
-    std::shared_ptr<muq::Utilities::LinearOperator> H; // Observation matrix to go from SDE state to actual GP variable
+    std::shared_ptr<muq::Modeling::LinearOperator> H; // Observation matrix to go from SDE state to actual GP variable
     Eigen::MatrixXd pinf; // Steady state covariance matrix
 
     std::tie(sde, H, pinf) = kernel.GetStateSpace();

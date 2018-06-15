@@ -3,7 +3,6 @@
 
 #include "MUQ/Approximation/GaussianProcesses/ConcatenateKernel.h"
 #include "MUQ/Approximation/GaussianProcesses/ConstantKernel.h"
-#include "MUQ/Approximation/GaussianProcesses/CoregionalKernel.h"
 #include "MUQ/Approximation/GaussianProcesses/LinearTransformKernel.h"
 #include "MUQ/Approximation/GaussianProcesses/PeriodicKernel.h"
 #include "MUQ/Approximation/GaussianProcesses/ProductKernel.h"

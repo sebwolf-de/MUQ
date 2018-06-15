@@ -18,6 +18,7 @@ foreach(libName ${MUQ_TARGETS})
         string(REGEX MATCH "^pymuq" IsPythonWrapper ${libName})
 
         if(IsPythonWrapper)
+
             pybind11_add_module(${libName} SHARED NO_EXTRAS ${${libName}_SOURCES})
             list(APPEND MUQ_PYTHON_LIBRARIES ${libName})
 
@@ -40,7 +41,7 @@ foreach(libName ${MUQ_TARGETS})
             endif()
         endforeach()
 
-        list(APPEND MUQ_LIBRARIES ${libName})
+        #list(APPEND MUQ_LIBRARIES ${libName})
 
         install(TARGETS ${libName}
                 EXPORT ${CMAKE_PROJECT_NAME}Depends

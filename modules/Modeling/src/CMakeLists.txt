@@ -16,7 +16,7 @@ CreateCompileGroup(
     MODELING_CORE
     "The basic building blocks of the Modeling library."
     muqModeling
-    "UTILITIES_LINEARALGEBRA"
+    "MODELING_LINEARALGEBRA;UTILITIES_CORE"
     "EIGEN3;BOOST;SUNDIALS"
     ""
     WorkPiece.cpp
@@ -26,6 +26,8 @@ CreateCompileGroup(
     WorkGraph.cpp
     WorkGraphNode.cpp
     WorkGraphEdge.cpp
+
+    PyModPiece.cpp
 
     ModPiece.cpp
     ModGraphPiece.cpp
@@ -37,7 +39,8 @@ CreateCompileGroup(
     IdentityPiece.cpp
     ProductPiece.cpp
 
-    IdentityOperator.cpp
+    MultiLogisticLikelihood.cpp
+
     ReplicateOperator.cpp
 
     LinearSDE.cpp
@@ -46,11 +49,35 @@ CreateCompileGroup(
 )
 
 CreateCompileGroup(
+    MODELING_LINEARALGEBRA
+    "Extensions and generalizations of Eigen for linear algebra."
+    muqModeling
+    "MODELING_CORE"
+    "EIGEN3"
+    "SUNDIALS"
+    LinearAlgebra/LinearOperator.cpp
+    LinearAlgebra/CompanionMatrix.cpp
+    LinearAlgebra/BlockDiagonalOperator.cpp
+    LinearAlgebra/BlockRowOperator.cpp
+    LinearAlgebra/KroneckerProductOperator.cpp
+    LinearAlgebra/SumOperator.cpp
+    LinearAlgebra/ConcatenateOperator.cpp
+    LinearAlgebra/DiagonalOperator.cpp
+    LinearAlgebra/ProductOperator.cpp
+
+    LinearAlgebra/AnyAlgebra.cpp
+    LinearAlgebra/ScalarAlgebra.cpp
+    LinearAlgebra/EigenVectorAlgebra.cpp
+    LinearAlgebra/EigenMatrixAlgebra.cpp
+    LinearAlgebra/SundialsAlgebra.cpp
+)
+
+CreateCompileGroup(
     MODELING_DISTRIBUTIONS
     "Implement probability distributions, which allow us to evaluate log-densities and/or sample the distirubtion."
     muqModeling
     ""
-    "MODELING_CORE"
+    "MODELING_CORE;UTILITIES_CORE"
     ""
 
     Distributions/Distribution.cpp

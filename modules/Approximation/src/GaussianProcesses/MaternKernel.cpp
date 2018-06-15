@@ -1,13 +1,13 @@
 #include "MUQ/Approximation/GaussianProcesses/MaternKernel.h"
 
-#include "MUQ/Utilities/LinearAlgebra/LinearOperator.h"
-#include "MUQ/Utilities/LinearAlgebra/EigenLinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/EigenLinearOperator.h"
 
 #include "MUQ/Approximation/GaussianProcesses/StateSpaceGP.h"
 
 
-#include "MUQ/Utilities/LinearAlgebra/CompanionMatrix.h"
-#include "MUQ/Utilities/LinearAlgebra/LyapunovSolver.h"
+#include "MUQ/Modeling/LinearAlgebra/CompanionMatrix.h"
+#include "MUQ/Modeling/LinearAlgebra/LyapunovSolver.h"
 
 #include "MUQ/Modeling/LinearSDE.h"
 
@@ -82,7 +82,7 @@ void MaternKernel::CheckNu() const{
 };
 
 
-std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utilities::LinearOperator>, Eigen::MatrixXd> MaternKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
+std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Modeling::LinearOperator>, Eigen::MatrixXd> MaternKernel::GetStateSpace(boost::property_tree::ptree sdeOptions) const
 {
     double sigma2 = cachedParams(0);
     double length = cachedParams(1);
@@ -99,7 +99,7 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
 
     poly = poly.head(poly.size()-1).eval();
 
-    auto F = std::make_shared<muq::Utilities::CompanionMatrix>(-1.0*poly);
+    auto F = std::make_shared<muq::Modeling::CompanionMatrix>(-1.0*poly);
 
     std::vector<Eigen::Triplet<double>> Lcoeffs;
     Lcoeffs.push_back(Eigen::Triplet<double>(poly.size()-1,0,1.0));
@@ -107,7 +107,7 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
     Eigen::SparseMatrix<double> Lmat(poly.size(), 1);
     Lmat.setFromTriplets(Lcoeffs.begin(), Lcoeffs.end());
 
-    auto L = muq::Utilities::LinearOperator::Create(Lmat);
+    auto L = muq::Modeling::LinearOperator::Create(Lmat);
 
     Eigen::MatrixXd Q(1,1);
     Q(0,0) = q;
@@ -124,12 +124,12 @@ std::tuple<std::shared_ptr<muq::Modeling::LinearSDE>, std::shared_ptr<muq::Utili
     Eigen::SparseMatrix<double> Hmat(1,poly.size());
     Hmat.setFromTriplets(Hcoeffs.begin(), Hcoeffs.end());
 
-    auto H = muq::Utilities::LinearOperator::Create(Hmat);
+    auto H = muq::Modeling::LinearOperator::Create(Hmat);
 
     // Solve the continuous time Lyapunov equation to find the stationary covariance
     Q = L->Apply(L->Apply(q*Eigen::VectorXd::Ones(1)).transpose());
 
-    Eigen::MatrixXd Pinf = muq::Utilities::LyapunovSolver<double>().compute(F->GetMatrix().transpose(), Q).matrixX().real();
+    Eigen::MatrixXd Pinf = muq::Modeling::LyapunovSolver<double>().compute(F->GetMatrix().transpose(), Q).matrixX().real();
 
     return std::make_tuple(sde, H, Pinf);
 }
