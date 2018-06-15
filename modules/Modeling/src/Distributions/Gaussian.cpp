@@ -277,7 +277,7 @@ Eigen::MatrixXd Gaussian::ApplyCovariance(Eigen::Ref<const Eigen::MatrixXd> cons
 }
 Eigen::MatrixXd Gaussian::ApplyPrecision(Eigen::Ref<const Eigen::MatrixXd> const& x) const
 {
-  if(mode==Gaussian::Mode::Precision){
+  if(mode==Gaussian::Mode::Covariance){
     if(covPrec.cols()==1){
       return covPrec.col(0).array().inverse().matrix().asDiagonal()*x;
     }else{
