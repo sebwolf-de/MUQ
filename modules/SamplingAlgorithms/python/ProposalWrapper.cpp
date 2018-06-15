@@ -3,6 +3,7 @@
 #include "MUQ/SamplingAlgorithms/AMProposal.h"
 #include "MUQ/SamplingAlgorithms/MCMCProposal.h"
 #include "MUQ/SamplingAlgorithms/MHProposal.h"
+#include "MUQ/SamplingAlgorithms/CrankNicolsonProposal.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -28,6 +29,11 @@ void PythonBindings::ProposalWrapper(py::module &m) {
   py::class_<MHProposal, MCMCProposal, std::shared_ptr<MHProposal>> mhPro(m, "MHProposal");
   mhPro
     .def(py::init<boost::property_tree::ptree const&, std::shared_ptr<AbstractSamplingProblem>>());
+
+  py::class_<MHProposal, MCMCProposal, std::shared_ptr<MHProposal>> cnPro(m, "CrankNicolsonProposal");
+  cnPro
+    .def(py::init<boost::property_tree::ptree const&, std::shared_ptr<AbstractSamplingProblem>>())
+    .def(py::init<boost::property_tree::ptree const&, std::shared_ptr<AbstractSamplingProblem>, std::shared_ptr<muq::Modeling::Gaussian>>());
 
   py::class_<AMProposal, MHProposal, std::shared_ptr<AMProposal>> amPro(m, "AMProposal");
   amPro
