@@ -4,6 +4,8 @@
 
 #include "MUQ/Utilities/StringUtilities.h"
 
+#include <chrono>
+
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 

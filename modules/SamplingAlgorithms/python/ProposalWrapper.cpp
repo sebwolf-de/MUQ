@@ -30,7 +30,7 @@ void PythonBindings::ProposalWrapper(py::module &m) {
   mhPro
     .def(py::init<boost::property_tree::ptree const&, std::shared_ptr<AbstractSamplingProblem>>());
 
-  py::class_<MHProposal, MCMCProposal, std::shared_ptr<MHProposal>> cnPro(m, "CrankNicolsonProposal");
+  py::class_<CrankNicolsonProposal, MCMCProposal, std::shared_ptr<CrankNicolsonProposal>> cnPro(m, "CrankNicolsonProposal");
   cnPro
     .def(py::init<boost::property_tree::ptree const&, std::shared_ptr<AbstractSamplingProblem>>())
     .def(py::init<boost::property_tree::ptree const&, std::shared_ptr<AbstractSamplingProblem>, std::shared_ptr<muq::Modeling::Gaussian>>());
