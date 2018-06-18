@@ -248,7 +248,8 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::Matr
         }
     }
 
-
+    // Add a nugget to the covariance diagonal
+    outputCov += nugget*Eigen::MatrixXd::Identity(outputCov.rows(), outputCov.cols());
     return std::make_pair(outputMean, outputCov);
 };
 

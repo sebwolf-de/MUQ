@@ -306,17 +306,18 @@ std::shared_ptr<Gaussian> Gaussian::Condition(Eigen::MatrixXd const& obsMat,
   if((obsCov.rows() != obsCov.cols()) && (obsCov.cols()!=1))
     throw muq::WrongSizeError("In Gaussian::Condition, the given observation covariance has size " + std::to_string(obsCov.rows()) + "x" + std::to_string(obsCov.cols()) + " but should be square.");
 
-
-  Eigen::MatrixXd S = obsMat*ApplyCovariance(obsMat.transpose());
+  Eigen::MatrixXd HP = ApplyCovariance(obsMat.transpose()).transpose();
+  Eigen::MatrixXd S = obsMat * HP.transpose();
   if(obsCov.cols()==1){
     S += obsCov.asDiagonal();
   }else{
     S += obsCov;
   }
-  Eigen::MatrixXd K = ApplyCovariance(S.llt().solve(obsMat).transpose());
+  
+  Eigen::MatrixXd K = S.selfadjointView<Eigen::Lower>().ldlt().solve(HP).transpose();
 
   Eigen::VectorXd postMu = mean + K*(data - obsMat*mean);
-  Eigen::MatrixXd postCov = (Eigen::MatrixXd::Identity(Dimension(), Dimension()) - K*obsMat)*GetCovariance();
-  std::cout << postMu.size() << " and " << postCov.rows() << std::endl;
+  Eigen::MatrixXd postCov = GetCovariance() - K*HP;
+
   return std::make_shared<Gaussian>(postMu, postCov);
 }
