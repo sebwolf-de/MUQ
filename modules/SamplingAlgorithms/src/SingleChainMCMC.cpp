@@ -53,7 +53,8 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
   std::shared_ptr<SamplingState> lastSavedState;
 
-  samples->Add(prevState);
+  if(burnIn==0)
+    samples->Add(prevState);
 
   // What is the next iteration that we want to print at
   const unsigned int printIncr = std::floor(numSamps / double(10));

@@ -50,7 +50,10 @@ public:
                            Eigen::Ref<const Eigen::VectorXd> const& params,
                            Eigen::Ref<Eigen::MatrixXd>              block) const override
     {
-      static_cast<const ChildType*>(this)->FillBlockImpl(x1,x2,params,block);
+
+      Eigen::VectorXd x1slice = GetSegment(x1);
+      Eigen::VectorXd x2slice = GetSegment(x2);
+      static_cast<const ChildType*>(this)->FillBlockImpl(Eigen::Ref<const Eigen::VectorXd>(x1slice),Eigen::Ref<const Eigen::VectorXd>(x2slice),params,block);
     };
 
 
@@ -73,8 +76,9 @@ public:
       assert(wrts.size()<3);
 
       if(wrts.size()==0){
-
-        static_cast<const ChildType*>(this)->FillBlockImpl(x1, x2, params, block);
+        Eigen::VectorXd x1slice = GetSegment(x1);
+        Eigen::VectorXd x2slice = GetSegment(x2);
+        static_cast<const ChildType*>(this)->FillBlockImpl(Eigen::Ref<const Eigen::VectorXd>(x1slice), Eigen::Ref<const Eigen::VectorXd>(x2slice), params, block);
         return;
       }
 
@@ -127,6 +131,16 @@ public:
         return;
       }
     };
+
+    template<typename ScalarType>
+    Eigen::Matrix<ScalarType, Eigen::Dynamic, 1> GetSegment(Eigen::Ref<const Eigen::Matrix<ScalarType, Eigen::Dynamic, 1>> const& input) const
+    {
+      Eigen::Matrix<ScalarType, Eigen::Dynamic, 1> output(dimInds.size());
+      for(int i=0; i<dimInds.size(); ++i)
+        output(i) = input(dimInds.at(i));
+
+      return output;
+    }
 };
 
 

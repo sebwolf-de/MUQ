@@ -53,7 +53,7 @@ void PythonBindings::SampleWrapper(py::module &m)
     .def("Mean", &SampleCollection::Mean, py::arg("blockDim") = -1)
     .def("Variance", &SampleCollection::Variance, py::arg("blockDim") = -1)
     .def("Covariance", &SampleCollection::Covariance, py::arg("blockDim") = -1)
-    .def("ESS", &SampleCollection::ESS)
+    .def("ESS", &SampleCollection::ESS, py::arg("blockDim")=-1)
     .def("Add", &SampleCollection::Add)
     .def("Weights", &SampleCollection::Weights)
     .def("AsMatrix", &SampleCollection::AsMatrix, py::arg("blockDim")=-1);
