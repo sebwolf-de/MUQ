@@ -34,20 +34,20 @@ public:
                     unsigned int                 const  inputDimWrt,
                     std::vector<Eigen::VectorXd> const& input,
                     Eigen::VectorXd              const& sensitivity) override {
-    PYBIND11_OVERLOAD_PURE(void, PyModPiece, GradientImpl, outputDimWrt, inputDimWrt, input, sensitivity);
+    PYBIND11_OVERLOAD(void, PyModPiece, GradientImpl, outputDimWrt, inputDimWrt, input, sensitivity);
   }
 
   void JacobianImpl(unsigned int                 const  outputDimWrt,
                     unsigned int                 const  inputDimWrt,
                     std::vector<Eigen::VectorXd> const& input) override {
-    PYBIND11_OVERLOAD_PURE(void, PyModPiece, JacobianImpl, outputDimWrt, inputDimWrt, input);
+    PYBIND11_OVERLOAD(void, PyModPiece, JacobianImpl, outputDimWrt, inputDimWrt, input);
   }
 
   void ApplyJacobianImpl(unsigned int                 const  outputDimWrt,
                          unsigned int                 const  inputDimWrt,
                          std::vector<Eigen::VectorXd> const& input,
                          Eigen::VectorXd              const& vec) override {
-    PYBIND11_OVERLOAD_PURE(void, PyModPiece, ApplyJacobianImpl, outputDimWrt, inputDimWrt, input, vec);
+    PYBIND11_OVERLOAD(void, PyModPiece, ApplyJacobianImpl, outputDimWrt, inputDimWrt, input, vec);
   }
 };
 

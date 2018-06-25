@@ -25,7 +25,7 @@ namespace muq {
       virtual void GradientImpl(unsigned int                 const  outputDimWrt,
                                 unsigned int                 const  inputDimWrt,
                                 std::vector<Eigen::VectorXd> const& input,
-                                Eigen::VectorXd              const& sensitivity) = 0;
+                                Eigen::VectorXd              const& sensitivity);
 
       virtual void JacobianImpl(unsigned int                const  outputDimWrt,
                                 unsigned int                const  inputDimWrt,
@@ -33,7 +33,7 @@ namespace muq {
 
       virtual void JacobianImpl(unsigned int                 const  outputDimWrt,
                                 unsigned int                 const  inputDimWrt,
-                                std::vector<Eigen::VectorXd> const& input) = 0;
+                                std::vector<Eigen::VectorXd> const& input);
 
       virtual void ApplyJacobianImpl(unsigned int                const  outputDimWrt,
                                      unsigned int                const  inputDimWrt,
@@ -43,7 +43,7 @@ namespace muq {
       virtual void ApplyJacobianImpl(unsigned int                 const  outputDimWrt,
                                      unsigned int                 const  inputDimWrt,
                                      std::vector<Eigen::VectorXd> const& input,
-                                     Eigen::VectorXd              const& vec) = 0;
+                                     Eigen::VectorXd              const& vec);
 
     private:
       std::vector<Eigen::VectorXd> ToStdVec(ref_vector<Eigen::VectorXd> const& input);
