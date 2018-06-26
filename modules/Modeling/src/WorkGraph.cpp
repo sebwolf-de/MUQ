@@ -81,8 +81,9 @@ bool WorkGraph::HasNode(boost::graph_traits<Graph>::vertex_iterator& iter, std::
 }
 
 void WorkGraph::AddNode(std::shared_ptr<WorkPiece> input, std::string const& name) {
-  // make sure this node does not already exist
-  assert(!HasNode(name));
+
+  if(HasNode(name))
+    throw std::logic_error("Could not add node \"" + name + "\" to graph.  A node with that name already exists." );
 
   // add a node to the graph
   auto node = add_vertex(graph);
@@ -93,25 +94,24 @@ void WorkGraph::AddNode(std::shared_ptr<WorkPiece> input, std::string const& nam
 void WorkGraph::AddEdge(std::string const& nameFrom, unsigned int const outputDim, std::string const& nameTo, unsigned int const inputDim) {
   // get iterators to the upstream and downstream nodes (make sure they exist)
   auto itFrom = GetNodeIterator(nameFrom);
-  assert(itFrom!=vertices(graph).second);
+  if(itFrom==vertices(graph).second)
+    throw std::logic_error("Could not add an edge from \"" + nameFrom + "\" to \"" + nameTo + "\" because the source node \"" + nameFrom + "\" does not exist in the graph.");
+
   auto itTo = GetNodeIterator(nameTo);
-  assert(itTo!=vertices(graph).second);
+  if(itTo==vertices(graph).second)
+    throw std::logic_error("Could not add an edge from \"" + nameFrom + "\" to \"" + nameTo + "\" because the target node \"" + nameTo + "\" does not exist in the graph.");
 
   // the number of inputs and outputs
   const int numOutputs = graph[*itFrom]->piece->numOutputs;
   const int numInputs = graph[*itTo]->piece->numInputs;
 
   // either we don't know the number of outputs from "nameFrom" or the output dimension is less than the number of outputs
-  if( numOutputs>=0 && outputDim>=numOutputs ) {
-    std::cerr << std::endl << "ERROR: The number of outputs for node '" << nameFrom << "' is " << graph[*itFrom]->piece->numOutputs << " but the output required by 'WorkGraph::AddEdge' is " << outputDim << std::endl << std::endl;
-    assert(numOutputs<0 || outputDim<numOutputs);
-  }
+  if( numOutputs>=0 && outputDim>=numOutputs )
+    throw std::logic_error("Could not add an edge from output " + std::to_string(outputDim) + "\" of \"" + nameFrom + "\" to input " + std::to_string(inputDim) + " of \"" + nameTo + "\" because node \"" + nameFrom + "\" only has " + std::to_string(numOutputs) + " outputs.");
 
   // either we don't know the number of inputs to "nameTo" or the input dimension is less than the number of inputs
-  if( numInputs>=0 && inputDim>=numInputs ) {
-    std::cerr << std::endl << "ERROR: The number of inputs for node '" << nameTo << "' is " << graph[*itTo]->piece->numInputs << " but the input required by 'WorkGraph::AddEdge' is " << inputDim << std::endl << std::endl;
-    assert(numInputs<0 || inputDim<numInputs);
-  }
+  if( numInputs>=0 && inputDim>=numInputs )
+    throw std::logic_error("Could not add an edge from output " + std::to_string(outputDim) + "\" of \"" + nameFrom + "\" to input " + std::to_string(inputDim) + " of \"" + nameTo + "\" because node \"" + nameTo + "\" only has " + std::to_string(numInputs) + " inputs.");
 
   // the input/output type
   const std::string inType = graph[*itTo]->piece->InputType(inputDim);
@@ -125,6 +125,14 @@ void WorkGraph::AddEdge(std::string const& nameFrom, unsigned int const outputDi
     assert(inType.compare(outType)==0); // the types must match
   }
 
+
+  // Check to see if the nodes are ModPieces and then check the sizes
+  auto modPieceTo = std::dynamic_pointer_cast<ModPiece>(graph[*itTo]->piece);
+  auto modPieceFrom = std::dynamic_pointer_cast<ModPiece>(graph[*itFrom]->piece);
+  if((modPieceTo) && (modPieceFrom)){
+    if(modPieceFrom->outputSizes(outputDim) != modPieceTo->inputSizes(inputDim))
+      throw std::logic_error("Could not add an edge from output " + std::to_string(outputDim) + "\" of \"" + nameFrom + "\" to input " + std::to_string(inputDim) + " of \"" + nameTo + "\".  The output of \"" + nameFrom + "\" has size " + std::to_string(modPieceFrom->outputSizes(outputDim)) + " but the input of \"" + nameTo + "\" has size " + std::to_string(modPieceTo->inputSizes(inputDim)) + "."); 
+  }
   // remove any other edge going into dimension inputDim of the nameTo node
   boost::remove_in_edge_if(*itTo, SameInputDim(inputDim, graph), graph);
 
