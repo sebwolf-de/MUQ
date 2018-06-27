@@ -28,6 +28,14 @@
 namespace muq {
   namespace Modeling {
 
+    /**
+      @defgroup Modeling
+      @brief Tools for constructing coupled physical and statistical models.
+      @details
+      
+    */
+
+
     // Forward declaration of WorkGraphPiece
     class WorkGraphPiece;
     class WorkGraph;
