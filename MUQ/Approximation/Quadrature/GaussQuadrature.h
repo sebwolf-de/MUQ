@@ -10,6 +10,11 @@ namespace muq {
 
   namespace Approximation {
 
+    /** @ingroup Polynomials
+        @brief Class for computing Gauss Quadrature rules from an orthogonal polynomial family.
+        @details Uses the Golub-Welsch algorithm to construct a Gauss Quadrature rule of a
+        specified order.
+    */
     class GaussQuadrature {
 
     public:

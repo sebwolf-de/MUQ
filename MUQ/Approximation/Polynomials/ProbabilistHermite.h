@@ -8,11 +8,12 @@ namespace muq {
     class ProbabilistHermite : public OrthogonalPolynomial{
     public:
 
-      /// A Hermite polynomial (\f$1\f$, \f$2x\f$, \f$4x^2-2.0\f$, ect. ...)
       /**
-	 Hermite polynomials are orthogonal, which helps with some conditioning problems.   Here we implement the probabilists' Hermite polynomials.
-
-	 note: Hermite may be unstable for high orders.
+      @ingroup Polynomials
+      @class ProbabilistHermite
+      @brief A Probabilist Hermite polynomial (\f$1\f$, \f$2x\f$, \f$4x^2-2.0\f$, ect. ...)
+      @details Probabilist Hermite polynomials are orthogonal with respect to \f$\exp\left[-\frac{1}{2}x^2\right]\f$, which helps with some conditioning problems.   Here we implement the probabilists' Hermite polynomials.
+               note: Hermite may be unstable for high orders.
        */
       ProbabilistHermite() = default;
 

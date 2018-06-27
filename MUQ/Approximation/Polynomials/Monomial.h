@@ -5,9 +5,11 @@
 
 namespace muq {
   namespace Approximation {
-    /// A monomial polynomial (\f$1\f$, \f$x\f$, \f$x^2\f$, ect. ...)
-    /**
-       This is a simple polynomial basis but could cause conditioning problems in some cases ...
+
+    /** @ingroup Polynomials
+        @class Monomial
+        @brief Family of monomial polynomials, i.e. ()\f$1\f$, \f$x\f$, \f$x^2\f$, ect. ...)
+        @details This is a simple polynomial basis but could cause conditioning problems in some cases ...
      */
     class Monomial : public IndexedScalarBasis {
     public:
