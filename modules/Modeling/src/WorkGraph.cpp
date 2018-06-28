@@ -6,7 +6,7 @@
 
 #include "MUQ/Modeling/ModGraphPiece.h"
 #include "MUQ/Modeling/ConstantVector.h"
-
+#include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
 
 #include <fstream>
 #include <algorithm>
@@ -51,6 +51,38 @@ WorkGraph::WorkGraph() {}
 
 WorkGraph::~WorkGraph() {}
 
+std::shared_ptr<WorkGraph> WorkGraph::Clone() const
+{
+  std::shared_ptr<WorkGraph> newGraph = std::make_shared<WorkGraph>();
+  copy_graph(graph, newGraph->graph);
+  return newGraph;
+}
+
+void WorkGraph::RemoveNode(std::string const& nodeName)
+{
+  auto nodeDesc = GetNodeIterator(nodeName);
+
+  clear_vertex(*nodeDesc, graph);  //remove edges to the node
+  remove_vertex(*nodeDesc, graph); //then remove the node
+}
+
+std::vector<std::pair<int,int>> WorkGraph::GetEdges(std::string const& srcName, std::string const& tgtName)
+{
+  auto nodeDesc = GetNodeIterator(srcName);
+
+  std::vector<std::pair<int,int>> edges;
+
+  boost::graph_traits<Graph>::out_edge_iterator e, e_end;
+  for( boost::tie(e, e_end)=out_edges(*nodeDesc, graph); e!=e_end; ++e ) {
+    auto vTarget = target(*e, graph);
+    if(tgtName == graph[vTarget]->name)
+      edges.push_back( std::make_pair( graph[*e]->outputDim, graph[*e]->inputDim ) );
+  }
+
+  return edges;
+}
+
+
 unsigned int WorkGraph::NumNodes() const {
 
   // return the number of vertices
@@ -61,6 +93,86 @@ unsigned int WorkGraph::NumEdges() const {
   // return the number of edges
   return boost::num_edges(graph);
 }
+
+
+std::vector<std::string> WorkGraph::GetParents(std::string const& name) const
+{
+  auto v = GetNodeIterator(name);
+
+  std::vector<std::pair<int, std::string> > temp;
+
+  boost::graph_traits<Graph>::in_edge_iterator e, e_end;
+  for( boost::tie(e, e_end)=in_edges(*v, graph); e!=e_end; ++e ) {
+    auto vSource = source(*e, graph);
+    temp.push_back(std::make_pair(graph[*e]->outputDim, graph[vSource]->name));
+  }
+
+  // Sort by index
+  std::sort(temp.begin(), temp.end());
+
+  std::vector<std::string> output(temp.size());
+  for(int i=0; i<temp.size(); ++i)
+    output.at(i) = temp.at(i).second;
+
+  return output;
+}
+
+std::string WorkGraph::GetParent(std::string const& name, int inputIndex) const
+{
+  auto v = GetNodeIterator(name);
+
+  boost::graph_traits<Graph>::in_edge_iterator e, e_end;
+  for( boost::tie(e, e_end)=in_edges(*v, graph); e!=e_end; ++e ) {
+    if(graph[*e]->inputDim == inputIndex){
+        auto vSource = source(*e, graph);
+        return graph[vSource]->name;
+    }
+  }
+
+  return "";
+}
+
+
+
+std::vector<std::string> WorkGraph::GetChildren(std::string const& name) const
+{
+  auto v = GetNodeIterator(name);
+
+  std::vector<std::string> output;
+
+  boost::graph_traits<Graph>::out_edge_iterator e, e_end;
+  for( boost::tie(e, e_end)=out_edges(*v, graph); e!=e_end; ++e ) {
+    auto vSource = target(*e, graph);
+    output.push_back(graph[vSource]->name);
+  }
+
+  return output;
+}
+
+
+std::vector<std::pair<std::string, int> > WorkGraph::GetInputNames() const
+{
+  auto inputs = GraphInputs();
+
+  std::vector<std::pair<std::string,int>> names(inputs.size());
+  for(int i=0; i<inputs.size(); ++i)
+    names.at(i) = std::make_pair(graph[inputs.at(i).first]->name, inputs.at(i).second);
+
+  return names;
+}
+
+std::vector<std::pair<std::string, int> > WorkGraph::GetOutputNames() const
+{
+  auto outputs = GraphOutputs();
+
+  std::vector<std::pair<std::string,int>> names(outputs.size());
+  for(int i=0; i<outputs.size(); ++i)
+    names.at(i) = std::make_pair(graph[outputs.at(i).first]->name, outputs.at(i).second);
+
+  return names;
+}
+
+
 
 bool WorkGraph::HasNode(std::string const& name) const {
 
@@ -131,7 +243,7 @@ void WorkGraph::AddEdge(std::string const& nameFrom, unsigned int const outputDi
   auto modPieceFrom = std::dynamic_pointer_cast<ModPiece>(graph[*itFrom]->piece);
   if((modPieceTo) && (modPieceFrom)){
     if(modPieceFrom->outputSizes(outputDim) != modPieceTo->inputSizes(inputDim))
-      throw std::logic_error("Could not add an edge from output " + std::to_string(outputDim) + "\" of \"" + nameFrom + "\" to input " + std::to_string(inputDim) + " of \"" + nameTo + "\".  The output of \"" + nameFrom + "\" has size " + std::to_string(modPieceFrom->outputSizes(outputDim)) + " but the input of \"" + nameTo + "\" has size " + std::to_string(modPieceTo->inputSizes(inputDim)) + "."); 
+      throw std::logic_error("Could not add an edge from output " + std::to_string(outputDim) + "\" of \"" + nameFrom + "\" to input " + std::to_string(inputDim) + " of \"" + nameTo + "\".  The output of \"" + nameFrom + "\" has size " + std::to_string(modPieceFrom->outputSizes(outputDim)) + " but the input of \"" + nameTo + "\" has size " + std::to_string(modPieceTo->inputSizes(inputDim)) + ".");
   }
   // remove any other edge going into dimension inputDim of the nameTo node
   boost::remove_in_edge_if(*itTo, SameInputDim(inputDim, graph), graph);

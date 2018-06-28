@@ -6,6 +6,7 @@
 
 #include "MUQ/Modeling/ConstantPiece.h"
 #include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
+#include "MUQ/Modeling/ModGraphPiece.h"
 
 using namespace muq::Modeling;
 
@@ -72,6 +73,124 @@ TEST(WorkGraphTests, NodeLookup)
   foundPiece = graph->GetPiece("Node 3");
   EXPECT_TRUE(foundPiece == piece2);
 }
+
+TEST(WorkGraphTests, EdgeFinding)
+{
+  // create test WorkPieces
+  auto test0 = std::make_shared<FixedInOutMod>(1, 2);
+  auto test1 = std::make_shared<FixedInOutMod>(2, 1);
+
+  // create and empty graph
+  auto graph = std::make_shared<WorkGraph>();
+  graph->AddNode(test0,"test0");
+  graph->AddNode(test1,"test1");
+  graph->AddEdge("test0",0, "test1",1);
+
+  std::vector<std::pair<int,int>> edges = graph->GetEdges("test0", "test1");
+  EXPECT_EQ(1, edges.size());
+  EXPECT_EQ(0, edges.at(0).first);
+  EXPECT_EQ(1, edges.at(0).second);
+
+  edges = graph->GetEdges("test1", "test0");
+  EXPECT_EQ(0, edges.size());
+
+  graph->AddEdge("test0",1, "test1", 0);
+  edges = graph->GetEdges("test0", "test1");
+  EXPECT_EQ(2, edges.size());
+  EXPECT_EQ(0, edges.at(0).first);
+  EXPECT_EQ(1, edges.at(0).second);
+  EXPECT_EQ(1, edges.at(1).first);
+  EXPECT_EQ(0, edges.at(1).second);
+
+  edges = graph->GetEdges("test1", "test0");
+  EXPECT_EQ(0, edges.size());
+
+}
+
+TEST(WorkGraphTests, ParentsAndChildrenFromPiece)
+{
+  // create test WorkPieces
+  auto test0 = std::make_shared<FixedInOutMod>(1, 1);
+  auto test1 = std::make_shared<FixedInOutMod>(1, 1);
+
+  // create and empty graph
+  auto graph = std::make_shared<WorkGraph>();
+  graph->AddNode(test0,"test0");
+  graph->AddNode(test1,"test1");
+  graph->AddEdge("test0",0, "test1",0);
+
+  auto piece = graph->CreateWorkPiece("test1");
+
+  auto graph2 = piece->GetGraph();
+  std::cout << "NumNodes = " << graph2->NumNodes() << std::endl;
+  std::vector<std::pair<std::string, int>> inputs = graph2->GetInputNames();
+  std::cout << "inputs.size() = " << inputs.size() << std::endl;
+  for(int i=0; i<inputs.size();++i)
+    std::cout << inputs.at(i).first << "  " << inputs.at(i).second << std::endl;
+}
+
+TEST(WorkGraphTests, ParentsAndChildren)
+{
+  // create test WorkPieces
+  auto test0 = std::make_shared<FixedInOutMod>(2, 3);
+  auto test1 = std::make_shared<FixedInOutMod>(1, 1);
+  auto test2 = std::make_shared<FixedInOutMod>(2, 0);
+  auto test3 = std::make_shared<FixedInOutMod>(1, 2);
+
+  // create and empty graph
+  auto graph = std::make_shared<WorkGraph>();
+
+  graph->AddNode(test0, "test 0");
+  graph->AddNode(test1, "test 1");
+  graph->AddNode(test2, "test 2");
+  graph->AddNode(test3, "test 3");
+
+  graph->AddEdge("test 0", 1, "test 1", 0);
+  graph->AddEdge("test 0", 0, "test 2", 1);
+  graph->AddEdge("test 1", 0, "test 3", 0);
+
+  std::vector<std::string> parents = graph->GetParents("test 0");
+  EXPECT_EQ(0,parents.size());
+
+  parents = graph->GetParents("test 1");
+  EXPECT_EQ(1, parents.size());
+  EXPECT_EQ("test 0", parents.at(0));
+
+  std::vector<std::string> children = graph->GetChildren("test 0");
+  EXPECT_EQ(2, children.size());
+  EXPECT_EQ("test 1", children.at(0));
+  EXPECT_EQ("test 2", children.at(1));
+
+  children = graph->GetChildren("test 1");
+  EXPECT_EQ(1, children.size());
+  EXPECT_EQ("test 3", children.at(0));
+
+  children = graph->GetChildren("test 3");
+  EXPECT_EQ(0, children.size());
+
+  std::vector<std::pair<std::string, int>> outNames = graph->GetOutputNames();
+  EXPECT_EQ(3, outNames.size());
+  EXPECT_EQ("test 0", outNames.at(0).first);
+  EXPECT_EQ(2, outNames.at(0).second);
+  EXPECT_EQ("test 3", outNames.at(1).first);
+  EXPECT_EQ(0, outNames.at(1).second);
+  EXPECT_EQ("test 3", outNames.at(2).first);
+  EXPECT_EQ(1, outNames.at(2).second);
+
+  std::vector<std::pair<std::string, int>> inNames = graph->GetInputNames();
+  EXPECT_EQ(3, inNames.size());
+  EXPECT_EQ("test 0", inNames.at(0).first);
+  EXPECT_EQ(0, inNames.at(0).second);
+  EXPECT_EQ("test 0", inNames.at(1).first);
+  EXPECT_EQ(1, inNames.at(1).second);
+  EXPECT_EQ("test 2", inNames.at(2).first);
+  EXPECT_EQ(0, inNames.at(2).second);
+
+
+}
+
+
+
 TEST(WorkGraphTests, FixedInOutNum) {
   // create test WorkPieces
   auto test0 = std::make_shared<FixedInOutMod>(2, 3);
