@@ -42,6 +42,22 @@ namespace muq {
 
       std::vector<std::shared_ptr<ConstantVector> > GetConstantPieces(){return constantPieces;};
 
+      /**
+        @brief Matches inputs with another ModGraphPiece by looking at node names and edges.
+
+        @details Assume this ModGraphPiece has three inputs call \f$x_1\f$, \f$x_2\f$, and \f$y\f$,
+        where \f$x_i\f$ denotes the \f$i^{th}\f$ input of a node \f$x\f$.  Let there
+        be another ModGraphPiece with inputs \f$x_2\f$, \f$y\f$, and \f$z\f$.  This function
+        tries to match the inputs between the two ModGraphPieces by looking at the node
+        names and input indices.  It returns the input indices of *this that correspond to
+        the inputs of the other piece, with the value "-1" reserved for nonoverlapping inputs.
+        For the example above, the result would be \f$[1,2,-1]\f$.
+
+        @params[in] otherPiece The other ModGraphPiece that we want to match with the inputs to this piece.
+        @returns A std::vector containing indices into the inputs of this ModGraphPiece that correspond with the inputs of the otherPiece.  The length of this vector is equal to the number of inputs of otherPiece.
+      */
+      std::vector<int> MatchInputs(std::shared_ptr<ModGraphPiece> otherPiece) const;
+
     private:
 
       static Eigen::VectorXi ConstructInputSizes(std::vector<std::shared_ptr<ConstantVector> > const& constantPiecesIn);

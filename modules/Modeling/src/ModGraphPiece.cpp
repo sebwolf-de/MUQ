@@ -411,3 +411,40 @@ std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > ModGraphPiece
 
   return requiredIns;
 }
+
+std::vector<int> ModGraphPiece::MatchInputs(std::shared_ptr<ModGraphPiece> otherPiece) const
+{
+
+  std::vector<std::shared_ptr<ConstantVector>> otherIns = otherPiece->GetConstantPieces();
+  std::shared_ptr<WorkGraph> otherGraph = otherPiece->GetGraph();
+
+  std::vector<int> outputs(otherIns.size());
+
+  for(int i=0; i<otherIns.size(); ++i)
+  {
+    // get the downstream node and input index corresponding to this constant piece
+    std::string constName = otherGraph->GetName( otherIns.at(i) );
+    std::string sharedName = otherGraph->GetChildren( constName ).at(0);
+    
+    // Now try to find the same node and input in *this graph
+    if(wgraph->HasNode(sharedName)){
+      int inputIndex = otherGraph->GetEdges( constName, sharedName ).at(0).second;
+
+      std::string upstreamName = wgraph->GetParent( sharedName, inputIndex);
+      assert(upstreamName.size()>0);
+
+      // Now, get the parent piece and check it against all of the constant pieces
+      auto iter = std::find(constantPieces.begin(), constantPieces.end(), wgraph->GetPiece(upstreamName));
+      if(iter != constantPieces.end()){
+        outputs.at(i) = std::distance(constantPieces.begin(), iter);
+      }else{
+        outputs.at(i) = -1;
+      }
+
+    }else{
+      outputs.at(i) = -1;
+    }
+  }
+
+  return outputs;
+}

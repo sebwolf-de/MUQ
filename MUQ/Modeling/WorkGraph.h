@@ -26,6 +26,8 @@ namespace muq {
 
       virtual ~WorkGraph();
 
+      virtual std::shared_ptr<WorkGraph> Clone() const;
+
       /// Get the number of nodes in the graph
       /**
 	 \return The number of nodes
@@ -45,6 +47,8 @@ namespace muq {
       */
       void AddNode(std::shared_ptr<WorkPiece> input, std::string const& name);
 
+      void RemoveNode(std::string const& name);
+
       /// Add a new edge to the graph
       /**
 	 @param[in] nameFrom The name of the upstream node.
@@ -61,12 +65,32 @@ namespace muq {
       */
       bool HasNode(std::string const& name) const;
 
+      /**
+        @brief Returns all edges going from node name1 to node name2
+        @param[in] srcName The name of the source node
+        @param[in] tgtName The name of the target node
+        @return A vector of pairs holding the edge information.  The first component of the pair is the output index of the source node and the second component of the pair is the input index of the target ndoe.
+      */
+      std::vector<std::pair<int,int>> GetEdges(std::string const& srcName, std::string const& tgtName);
+
       /// Visualize the graph
       /**
 	 @param[in] filename The name of the file where the graph visualization is to be stored
        */
       void Visualize(std::string const& filename) const;
 
+      /**
+         Returns a list of the upstream nodes.
+      */
+      std::vector<std::string> GetParents(std::string const& name) const;
+
+      /** Get the upstream node with an edge that comes input input inputIndex. */
+      std::string GetParent(std::string const& name, int inputIndex) const;
+
+      /**
+         Returns a list of the downstream nodes.
+      */
+      std::vector<std::string> GetChildren(std::string const& name) const;
 
       /// Create a new graph cutting any of the nodes that do not affect the output node
       /**
@@ -115,6 +139,17 @@ namespace muq {
       /** Print the nodes and edges of this graph to std::cout. */
       void Print(std::ostream& fout=std::cout) const;
 
+      /// Find the inputs to the graph
+      /**
+      \return The node name and unused input index for each output
+       */
+      std::vector<std::pair<std::string, int> > GetInputNames() const;
+
+      /// Find the outputs to the graph
+      /**
+      \return The node name and unused output index for each output
+       */
+      std::vector<std::pair<std::string, int> > GetOutputNames() const;
 
       /** Fix the value of a particular node to a constant value and remove any input edges from that node.  After binding a
        *  node or edge,

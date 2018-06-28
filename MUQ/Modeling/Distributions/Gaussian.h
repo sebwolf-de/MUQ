@@ -95,10 +95,16 @@ namespace muq {
       */
       void SetPrecision(Eigen::MatrixXd const& newPrec);
 
+      Gaussian::InputMask GetInputTypes() const{return inputTypes;};
+
       /// Returns a new Gaussian distribution conditioned on a linear observation
       std::shared_ptr<Gaussian> Condition(Eigen::MatrixXd const& obsMat,
                                           Eigen::VectorXd const& data,
                                           Eigen::MatrixXd const& obsCov) const;
+
+      void ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params);
+
+
     private:
 
 
@@ -113,8 +119,6 @@ namespace muq {
 	      @return Scaling constant
       */
       void ComputeNormalization();
-
-      void ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params);
 
       static Eigen::VectorXi GetExtraSizes(unsigned dim, InputMask extraInputs);
 

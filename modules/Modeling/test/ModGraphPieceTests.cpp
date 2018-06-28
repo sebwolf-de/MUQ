@@ -113,6 +113,42 @@ private:
 };
 
 
+TEST(Modelling_ModGraphPiece, MatchInputs)
+{
+  auto myGraph = make_shared<WorkGraph>();
+
+  // add nodes
+  myGraph->AddNode(make_shared<SinSumMod>(2), "f2");
+  myGraph->AddNode(make_shared<SinSumMod>(2), "f1");
+  myGraph->AddNode(make_shared<SquareMod>(2), "x");
+  myGraph->AddNode(make_shared<SquareMod>(2), "y1");
+  myGraph->AddNode(make_shared<SquareMod>(2), "y2");
+
+  // add connectivity
+  myGraph->AddEdge("x", 0, "f2", 0);
+  myGraph->AddEdge("y1", 0, "f1", 0);
+  myGraph->AddEdge("y2", 0, "f1", 1);
+  myGraph->AddEdge("f1", 0, "f2", 1);
+
+  auto piece1 = myGraph->CreateModPiece("f1");
+  auto piece2 = myGraph->CreateModPiece("f2");
+
+  EXPECT_EQ(2, piece1->inputSizes.size());
+  EXPECT_EQ(3, piece2->inputSizes.size());
+
+  std::vector<int> sharedIns = piece1->MatchInputs(piece2);
+  EXPECT_EQ(3, sharedIns.size());
+  EXPECT_EQ(0, sharedIns.at(0));
+  EXPECT_EQ(1, sharedIns.at(1));
+  EXPECT_EQ(-1, sharedIns.at(2));
+
+  sharedIns = piece2->MatchInputs(piece1);
+  EXPECT_EQ(2, sharedIns.size());
+  EXPECT_EQ(0, sharedIns.at(0));
+  EXPECT_EQ(1, sharedIns.at(1));
+}
+
+
 TEST(Modelling_ModGraphPiece, BasicTest)
 {
   auto myGraph = make_shared<WorkGraph>();

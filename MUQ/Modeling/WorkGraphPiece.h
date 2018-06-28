@@ -92,6 +92,9 @@ namespace muq {
       /// Default destructor
       virtual ~WorkGraphPiece();
 
+
+      std::shared_ptr<WorkGraph> GetGraph(){return wgraph;};
+      
     private:
 
       /// Evaluate each muq::Modeling::WorkPiece in the graph

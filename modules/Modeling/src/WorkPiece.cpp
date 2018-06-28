@@ -641,7 +641,7 @@ std::map<unsigned int, std::string> WorkPiece::InputTypes() const {
   return inputTypes;
 }
 
-ref_vector<const Eigen::VectorXd> WorkPiece::ToRefVector(std::vector<Eigen::VectorXd> const& vec) const {
+ref_vector<const Eigen::VectorXd> WorkPiece::ToRefVector(std::vector<Eigen::VectorXd> const& vec) {
 
   ref_vector<const Eigen::VectorXd> refs;
   refs.reserve(vec.size());
@@ -653,7 +653,7 @@ ref_vector<const Eigen::VectorXd> WorkPiece::ToRefVector(std::vector<Eigen::Vect
   return refs;
 }
 
-ref_vector<const boost::any> WorkPiece::ToRefVector(std::vector<boost::any> const& anyVec) const {
+ref_vector<const boost::any> WorkPiece::ToRefVector(std::vector<boost::any> const& anyVec) {
 
   ref_vector<const boost::any> refs;
   refs.reserve(anyVec.size());

@@ -236,8 +236,10 @@ correspond to the Gaussian and Inverse Gamma densities.
 
   pt.put("Kernel1.Method","MHKernel");  // Name of the transition kernel class
   pt.put("Kernel1.Proposal", "MyProposal"); // Name of block defining the proposal distribution
-  pt.put("Kernel1.MyProposal.Method", "MHProposal"); // Name of proposal class
+  pt.put("Kernel1.MyProposal.Method", "CrankNicolsonProposal"); // Name of proposal class
   pt.put("Kernel1.MyProposal.ProposalVariance", 0.5); // Variance of the isotropic MH proposal
+  pt.put("Kernel1.MyProposal.Beta", 0.25); // Variance of the isotropic MH proposal
+  pt.put("Kernel1.MyProposal.PriorNode", "Gaussian Density");
 
   pt.put("Kernel2.Method","MHKernel");  // Name of the transition kernel class
   pt.put("Kernel2.Proposal", "GammaProposal"); // Name of block defining the proposal distribution

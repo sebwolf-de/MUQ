@@ -503,6 +503,10 @@ namespace muq {
       /// The number of outputs
       int numOutputs;
 
+      /// Create vector of references from a vector of boost::any's
+      static ref_vector<const boost::any> ToRefVector(std::vector<boost::any> const& anyVec);
+      static ref_vector<const Eigen::VectorXd> ToRefVector(std::vector<Eigen::VectorXd> const& anyVec);
+
     protected:
 
       /// Check the input type
@@ -521,9 +525,6 @@ namespace muq {
        */
       bool CheckOutputType(unsigned int const outputNum, std::string const& type) const;
 
-      /// Create vector of references from a vector of boost::any's
-      ref_vector<const boost::any> ToRefVector(std::vector<boost::any> const& anyVec) const;
-      ref_vector<const Eigen::VectorXd> ToRefVector(std::vector<Eigen::VectorXd> const& anyVec) const;
 
       /// Get the types from a vector of boost::any's
       /**
