@@ -5,6 +5,8 @@
 #include "MUQ/Utilities/RandomGenerator.h"
 
 #include "MUQ/Modeling/Distributions/Gaussian.h"
+#include "MUQ/Modeling/Distributions/Density.h"
+#include "MUQ/Modeling/ModPiece.h"
 
 using namespace muq::Utilities;
 using namespace muq::Modeling;
@@ -128,6 +130,26 @@ TEST(GaussianDistributionTests, SpecifyBoth) {
   EXPECT_NEAR((meanPrec-mu).norm(), 0.0, 1.0e-2);
 }
 
+
+TEST(GaussianDistributionTests, ModPieceInputs) {
+
+  int dim = 2;
+  auto dens = std::make_shared<Gaussian>(dim, Gaussian::Mean | Gaussian::FullCovariance)->AsDensity();
+
+  EXPECT_EQ(3, dens->inputSizes.size());
+  EXPECT_EQ(dim, dens->inputSizes(0));
+  EXPECT_EQ(dim, dens->inputSizes(1));
+  EXPECT_EQ(dim*dim, dens->inputSizes(2));
+
+  Eigen::VectorXd xIn = Eigen::VectorXd::Ones(dim);
+  Eigen::VectorXd muIn = Eigen::VectorXd::Ones(dim);
+  Eigen::VectorXd covIn = Eigen::VectorXd::Ones(dim*dim);
+
+  double logDens = dens->Evaluate(xIn, muIn, covIn).at(0)(0);
+
+}
+
+
 TEST(GaussianDistributionTests, DiagonalCovPrec) {
   // the covariance or precision scale (variance in the cov. case and 1/variance in the prec. case)
   Eigen::VectorXd covDiag = 1e-2 * Eigen::VectorXd::Ones(2) + RandomGenerator::GetUniform(2);
@@ -147,7 +169,7 @@ TEST(GaussianDistributionTests, DiagonalCovPrec) {
 
   RandomGenerator::SetSeed(5192012);
   Eigen::VectorXd meanCov = diagCov->Sample();
-  
+
   RandomGenerator::SetSeed(5192012);
   Eigen::VectorXd meanPrec = diagCov->Sample();
 
