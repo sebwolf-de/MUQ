@@ -153,11 +153,17 @@ void Gaussian::ResetHyperparameters(ref_vector<Eigen::VectorXd> const& inputs)
   }
 
   if(((inputTypes & ExtraInputs::DiagCovariance)>0) || ((inputTypes & ExtraInputs::DiagPrecision)>0)){
-    assert(inputs.at(currInd).get().size() == covPrec.rows());
+
+    if(inputs.at(currInd).get().size() != mean.size())
+      throw muq::WrongSizeError("The given diagonal covariance or precision has " + std::to_string(inputs.at(currInd).get().size()) + " components, but " + std::to_string(mean.size()) + " were expected.");
+
     covPrec = inputs.at(currInd).get();
   }else if(((inputTypes & ExtraInputs::FullCovariance)>0) || ((inputTypes & ExtraInputs::FullPrecision)>0)){
-    assert(inputs.at(currInd).get().size() == covPrec.rows()*covPrec.cols());
-    Eigen::Map<const Eigen::MatrixXd> mat(inputs.at(currInd).get().data(), covPrec.rows(), covPrec.cols());
+
+    if(inputs.at(currInd).get().size() != mean.size()*mean.size())
+      throw muq::WrongSizeError("The given covariance or precision has " + std::to_string(inputs.at(currInd).get().size()) + " components, but " + std::to_string(mean.size()*mean.size()) + " were expected.");
+
+    Eigen::Map<const Eigen::MatrixXd> mat(inputs.at(currInd).get().data(), mean.size(), mean.size());
     covPrec = mat;
     sqrtCovPrec = covPrec.selfadjointView<Eigen::Lower>().llt();
   }
@@ -313,7 +319,7 @@ std::shared_ptr<Gaussian> Gaussian::Condition(Eigen::MatrixXd const& obsMat,
   }else{
     S += obsCov;
   }
-  
+
   Eigen::MatrixXd K = S.selfadjointView<Eigen::Lower>().ldlt().solve(HP).transpose();
 
   Eigen::VectorXd postMu = mean + K*(data - obsMat*mean);
