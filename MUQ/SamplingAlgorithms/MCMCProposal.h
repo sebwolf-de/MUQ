@@ -16,6 +16,15 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /** @defgroup MCMCProposals
+        @ingroup MCMC
+        @brief Classes that define Metropolis-Hastings proposal distributions.
+    */
+
+    /** @ingroup MCMCProposals
+        @class MCMCProposal
+        @brief Base class for Metropolis-Hastings proposals.
+    */
     class MCMCProposal{
     public:
 

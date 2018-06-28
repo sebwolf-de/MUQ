@@ -16,6 +16,16 @@
 
 namespace muq {
   namespace SamplingAlgorithms {
+
+    /** @defgroup MCMCKernels
+        @ingroup MCMC
+        @brief Transition kernels used in MCMC algorithms.
+    */
+
+    /** @ingroup MCMCKernels
+        @class TransitionKernel
+        @brief Defines the transition kernel used by an MCMC algorithm.
+    */
     class TransitionKernel { //: public muq::Modeling::WorkPiece {
     public:
 

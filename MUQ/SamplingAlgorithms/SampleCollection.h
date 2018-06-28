@@ -39,11 +39,15 @@ namespace muq{
       Eigen::VectorXd output;
     };
 
-    /** @brief A class to hold and analyze a collection of SamplingState's
+    /** @ingroup SamplingAlgorithms
+        @class SampleCollection
+        @brief A class to hold and analyze a collection of SamplingState objects
     */
     class SampleCollection{
     public:
 
+      /** @brief Add a new sample to the sample collection.
+      */
       void Add(std::shared_ptr<SamplingState> newSamp);
 
       virtual std::shared_ptr<SamplingState> at(unsigned i);
