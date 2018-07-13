@@ -94,15 +94,13 @@ void GaussianProcess::ProcessObservations()
         for(int j=0; j<observations.size(); ++j)
         {
             int currRow = 0;
-            Eigen::MatrixXd baseCov;
             for(int i=0; i<j; ++i){
-                baseCov = covKernel->BuildCovariance(observations.at(i)->loc, observations.at(j)->loc);
-                trainCov.block(currRow,currCol, observations.at(i)->H->rows(), observations.at(j)->H->rows()) = observations.at(i)->H->Apply(observations.at(j)->H->Apply(baseCov).transpose());
+                observations.at(i)->FillCrossCov(observations.at(j), covKernel, trainCov.block(currRow, currCol, observations.at(i)->H->rows(), observations.at(j)->H->rows()));
                 currRow += observations.at(i)->H->rows();
             }
 
-            baseCov = covKernel->BuildCovariance(observations.at(j)->loc, observations.at(j)->loc);
-            trainCov.block(currRow, currRow, observations.at(j)->H->rows(), observations.at(j)->H->rows()) = observations.at(j)->H->Apply(observations.at(j)->H->Apply(baseCov).transpose()) + observations.at(j)->obsCov;
+            //covKernel->BuildCovariance(observations.at(j)->loc, observations.at(j)->loc);
+            observations.at(j)->FillSelfCov(covKernel, trainCov.block(currRow, currRow, observations.at(j)->H->rows(), observations.at(j)->H->rows()));
 
             currCol += observations.at(j)->H->rows();
         }
@@ -115,7 +113,12 @@ void GaussianProcess::ProcessObservations()
         Eigen::VectorXd trainDiff(obsDim);
         int currRow = 0;
         for(int i=0; i<observations.size(); ++i){
-            trainDiff.segment(currRow, observations.at(i)->H->rows()) = observations.at(i)->obs - observations.at(i)->H->Apply(mean->Evaluate(observations.at(i)->loc));
+            auto derivObs = std::dynamic_pointer_cast<DerivativeObservation>(observations.at(i));
+            if(derivObs){
+              trainDiff.segment(currRow, observations.at(i)->H->rows()) = observations.at(i)->obs - observations.at(i)->H->Apply(mean->GetDerivative(observations.at(i)->loc, derivObs->derivCoords));
+            }else{
+              trainDiff.segment(currRow, observations.at(i)->H->rows()) = observations.at(i)->obs - observations.at(i)->H->Apply(mean->Evaluate(observations.at(i)->loc));
+            }
             currRow += observations.at(i)->H->rows();
         }
 
@@ -164,9 +167,12 @@ Eigen::MatrixXd GaussianProcess::BuildCrossCov(Eigen::MatrixXd const& newLocs)
 
     for(int j=0; j<observations.size(); ++j){
         for(int i=0; i<newLocs.cols(); ++i){
-            Eigen::MatrixXd temp = covKernel->BuildCovariance(newLocs.col(i), observations.at(j)->loc);
-            Eigen::MatrixXd temp2 = observations.at(j)->H->Apply( covKernel->BuildCovariance(newLocs.col(i), observations.at(j)->loc));
-            crossCov.block(i*coDim, currCol, coDim, observations.at(j)->H->rows()) = observations.at(j)->H->Apply( covKernel->BuildCovariance(newLocs.col(i), observations.at(j)->loc)).transpose();
+          observations.at(j)->FillCrossCov(newLocs.col(i), covKernel, crossCov.block(i*coDim, currCol, coDim, observations.at(j)->H->rows()));
+
+            // Eigen::MatrixXd temp = covKernel
+            // Eigen::MatrixXd temp = covKernel->BuildCovariance(newLocs.col(i), observations.at(j)->loc);
+            // Eigen::MatrixXd temp2 = observations.at(j)->H->Apply( covKernel->BuildCovariance(newLocs.col(i), observations.at(j)->loc));
+            // crossCov.block(i*coDim, currCol, coDim, observations.at(j)->H->rows()) = observations.at(j)->H->Apply( covKernel->BuildCovariance(newLocs.col(i), observations.at(j)->loc)).transpose();
         }
         currCol += observations.at(j)->H->rows();
     }

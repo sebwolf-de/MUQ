@@ -133,3 +133,77 @@ TEST(Approximation_GP, HyperFit2d)
     std::pair<Eigen::MatrixXd, Eigen::MatrixXd> post = gp.Predict(predLocs, GaussianProcess::FullCov);
 
 }
+
+TEST(Approximation_GP, ValueCondition)
+{
+
+    const unsigned dim = 1;
+    auto kernel = SquaredExpKernel(dim, 2.0, 0.35);
+
+    const double delta =1e-4;
+    Eigen::MatrixXd evalLocs(dim, 2);
+    evalLocs << 0, delta;
+
+    // Create the GP
+    ZeroMean mean(dim, 1);
+    auto gp = ConstructGP(mean, kernel);
+
+    Eigen::VectorXd loc(1);
+    loc << 0.0;
+
+    Eigen::VectorXd val(1);
+    val << 1.0;
+
+    Eigen::MatrixXd valCov(1,1);
+    valCov(0,0) = 0.0;
+
+    auto H = std::make_shared<IdentityOperator>(dim);
+
+    auto obs = std::make_shared<ObservationInformation>(H, loc, val, valCov);
+
+    gp.Condition(obs);
+
+    Eigen::MatrixXd field = gp.PredictMean(evalLocs);
+
+    EXPECT_NEAR(val(0), field(0,0), 1e-6);
+}
+
+
+TEST(Approximation_GP, GradientCondition)
+{
+    const unsigned dim = 1;
+    auto kernel = SquaredExpKernel(dim, 2.0, 0.35);
+
+    const double delta = 1e-4;
+    Eigen::MatrixXd evalLocs(dim, 2);
+    evalLocs << 0, delta;
+
+    // Create the GP
+    ZeroMean mean(dim, 1);
+    auto gp = ConstructGP(mean, kernel);
+
+    Eigen::VectorXd loc(1);
+    loc << 0.0;
+
+    Eigen::VectorXd derivVal(1);
+    derivVal << 0.5;
+
+    Eigen::MatrixXd derivCov(1,1);
+    derivCov(0,0) = 0.0;
+
+    std::vector<std::vector<int>> derivCoords;
+    derivCoords.push_back({0});
+
+    auto H = std::make_shared<IdentityOperator>(dim);
+
+    auto derivObs = std::make_shared<DerivativeObservation>(H, loc, derivVal, derivCov, derivCoords);
+
+    Eigen::MatrixXd crossCov(1,1);
+    derivObs->FillCrossCov(evalLocs.col(1),kernel.Clone(),crossCov);
+    EXPECT_DOUBLE_EQ(kernel.GetPosDerivative(evalLocs.col(1), evalLocs.col(0), {0})(0,0), crossCov(0,0));
+
+    gp.Condition(derivObs);
+
+    Eigen::MatrixXd field = gp.PredictMean(evalLocs);
+    EXPECT_NEAR( derivVal(0), (field(1)-field(0))/(evalLocs(0,1)-evalLocs(0,0)), 1e-5);
+}
