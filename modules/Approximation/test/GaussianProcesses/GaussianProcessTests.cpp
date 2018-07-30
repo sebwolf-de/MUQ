@@ -189,7 +189,7 @@ TEST(Approximation_GP, GradientCondition)
     derivVal << 0.5;
 
     Eigen::MatrixXd derivCov(1,1);
-    derivCov(0,0) = 0.0;
+    derivCov(0,0) = 1e-4;
 
     std::vector<std::vector<int>> derivCoords;
     derivCoords.push_back({0});
@@ -206,4 +206,14 @@ TEST(Approximation_GP, GradientCondition)
 
     Eigen::MatrixXd field = gp.PredictMean(evalLocs);
     EXPECT_NEAR( derivVal(0), (field(1)-field(0))/(evalLocs(0,1)-evalLocs(0,0)), 1e-5);
+
+    field = gp.Sample(evalLocs);
+    EXPECT_NEAR( derivVal(0), (field(1)-field(0))/(evalLocs(0,1)-evalLocs(0,0)), 1e-5);
+
+    Eigen::MatrixXd cov;
+    std::tie(field, cov) = gp.Predict(evalLocs,GaussianProcess::FullCov);
+    EXPECT_NEAR( derivVal(0), (field(1)-field(0))/(evalLocs(0,1)-evalLocs(0,0)), 1e-5);
+
+    std::cout << "Covariance = "  << std::endl;
+    std::cout << cov << std::endl;
 }

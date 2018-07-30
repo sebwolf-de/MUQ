@@ -21,6 +21,10 @@ namespace muq{
       SingleChainMCMC(boost::property_tree::ptree              pt,
                       std::shared_ptr<AbstractSamplingProblem> problem);
 
+      SingleChainMCMC(boost::property_tree::ptree              pt,
+                      std::shared_ptr<AbstractSamplingProblem> problem,
+                      std::vector<std::shared_ptr<TransitionKernel>> kernelsIn);
+
       virtual ~SingleChainMCMC() = default;
 
       virtual std::vector<std::shared_ptr<TransitionKernel>>& Kernels(){return kernels;};

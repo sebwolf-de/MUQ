@@ -9,6 +9,19 @@
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
+SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree                    pt,
+                                 std::shared_ptr<AbstractSamplingProblem>       problem,
+                                 std::vector<std::shared_ptr<TransitionKernel>> kernelsIn) : SamplingAlgorithm(std::make_shared<MarkovChain>()),
+                                                                                             printLevel(pt.get("PrintLevel",3))
+{
+  numSamps = pt.get<unsigned int>("NumSamples");
+  burnIn = pt.get("BurnIn",0);
+
+  kernels = kernelsIn;
+
+  scheduler = std::make_shared<ThinScheduler>(pt);
+}
+
 SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree             pt,
                                  std::shared_ptr<AbstractSamplingProblem> problem) : SamplingAlgorithm(std::make_shared<MarkovChain>()),
                                                                                      printLevel(pt.get("PrintLevel",3))
