@@ -1,4 +1,6 @@
 #include "MUQ/SamplingAlgorithms/SampleCollection.h"
+
+#include "MUQ/Utilities/HDF5/HDF5File.h"
 #include "MUQ/Utilities/AnyHelpers.h"
 
 using namespace muq::SamplingAlgorithms;
@@ -204,4 +206,80 @@ Eigen::VectorXd SampleCollection::Weights() const
   for(int i=0; i<samples.size(); ++i)
     output(i) = samples.at(i)->weight;
   return output;
+}
+
+void SampleCollection::WriteToFile(std::string const& filename, std::string const& dataset) const {
+  // open the hdf5 file
+  auto hdf5file = std::make_shared<HDF5File>(filename);
+
+  // write the sample matrix and weights
+  hdf5file->WriteMatrix(dataset+"/samples", AsMatrix());
+  hdf5file->WriteMatrix(dataset+"/weights", (Eigen::RowVectorXd)Weights());
+
+  // meta data
+  std::unordered_map<std::string, Eigen::MatrixXd> meta;
+
+  //for( auto samp : samples ) {
+  for( unsigned int i=0; i<samples.size(); ++i ) {
+    for( auto it = samples[i]->meta.begin(); it!=samples[i]->meta.end(); ++it ) {
+      if( it->second.type()==typeid(Eigen::Vector2d) ) {
+	// create a matrix for the meta data 
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(2, samples.size(), std::numeric_limits<double>::quiet_NaN())}); }
+	meta[it->first].col(i) = boost::any_cast<Eigen::Vector2d const&>(it->second);
+
+	continue;		
+      }
+      
+      if( it->second.type()==typeid(Eigen::Vector3d) ) {
+	// create a matrix for the meta data 
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(3, samples.size(), std::numeric_limits<double>::quiet_NaN())}); }
+	meta[it->first].col(i) = boost::any_cast<Eigen::Vector3d const&>(it->second);
+
+	continue;		
+      }
+
+      if( it->second.type()==typeid(Eigen::Vector4d) ) {
+	// create a matrix for the meta data 
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(4, samples.size(), std::numeric_limits<double>::quiet_NaN())}); }
+	meta[it->first].col(i) = boost::any_cast<Eigen::Vector4d const&>(it->second);
+
+	continue;		
+      }
+
+      if( it->second.type()==typeid(Eigen::VectorXd) ) {
+	// create a matrix for the meta data 
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(boost::any_cast<Eigen::VectorXd const&>(it->second).size(), samples.size(), std::numeric_limits<double>::quiet_NaN())}); }
+	
+	meta[it->first].col(i) = boost::any_cast<Eigen::VectorXd const&>(it->second);
+
+	continue;		
+      }
+      
+      // create a matrix, assuming scalar type, for the meta data
+      if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(1, samples.size(), std::numeric_limits<double>::quiet_NaN())}); }
+      
+      if( it->second.type()==typeid(double) ) { // doubles
+	meta[it->first](i) = boost::any_cast<double const>(it->second);
+	continue;
+      }
+
+      if( it->second.type()==typeid(float) ) { // floats
+	meta[it->first](i) = boost::any_cast<float const>(it->second);
+	continue;
+      }
+
+      if( it->second.type()==typeid(int) ) { // ints
+	meta[it->first](i) = boost::any_cast<int const>(it->second);
+	continue;
+      }
+
+      if( it->second.type()==typeid(unsigned int) ) { // unsigned ints
+	meta[it->first](i) = boost::any_cast<unsigned int const>(it->second);
+	continue;
+      }
+    }
+  }
+
+  // write meta data to file
+  for( const auto& data : meta ) { hdf5file->WriteMatrix(dataset+"/"+data.first, data.second); }
 }
