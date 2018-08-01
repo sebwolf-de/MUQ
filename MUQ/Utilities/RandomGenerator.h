@@ -57,6 +57,11 @@ public:
   static Eigen::MatrixXi GetUniformInt(int lb, int ub, int rows, int cols){return GetUniformInt(lb, ub, rows, cols, true);};
   static Eigen::MatrixXi GetUniformInt(int lb, int ub, int rows, int cols, bool unique);
 
+
+  /** Sample a discrete distribution with replacement. */
+  static int SampleDiscrete(Eigen::VectorXd const& discProbs);
+  static Eigen::MatrixXi SampleDiscrete(Eigen::VectorXd const& discProbs, int rows, int cols=1);
+
   /// Set the seed for the random number generator. This is a fairly low quality way to do this, but is fine for testing.
   static void SetSeed(int seedval);
 
