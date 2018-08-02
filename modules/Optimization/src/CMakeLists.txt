@@ -17,7 +17,7 @@ CreateCompileGroup(
     "The basic building blocks to solve optimzation problems."
     muqOptimization
     "MODELING_CORE"
-    ""
+    "NLOPT"
     ""
     CostFunction.cpp
     Optimization.cpp
