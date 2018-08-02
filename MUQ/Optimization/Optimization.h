@@ -1,6 +1,8 @@
 #ifndef OPTIMIZATION_H_
 #define OPTIMIZATION_H_
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <nlopt.h>
 
 #include "MUQ/Optimization/CostFunction.h"
@@ -10,7 +12,7 @@ namespace muq {
     class Optimization : public muq::Modeling::WorkPiece {
     public:
 
-      Optimization(std::shared_ptr<CostFunction> cost);
+      Optimization(std::shared_ptr<CostFunction> cost, boost::property_tree::ptree const& pt);
 
       virtual ~Optimization();
 
@@ -41,6 +43,9 @@ namespace muq {
       };
 
       OptHelper opt;
+
+      const double ftol_rel, ftol_abs, xtol_rel, xtol_abs;
+      const unsigned int maxEvals;
     };
   } // namespace Optimization
 } // namespace muq

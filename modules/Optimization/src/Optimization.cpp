@@ -1,11 +1,18 @@
 #include "MUQ/Optimization/Optimization.h"
 
+namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::Optimization;
 
-Optimization::Optimization(std::shared_ptr<CostFunction> cost) :
+Optimization::Optimization(std::shared_ptr<CostFunction> cost, pt::ptree const& pt) :
   WorkPiece(cost->InputTypes(), cost->numInputs, std::vector<std::string>({typeid(Eigen::VectorXd).name(), typeid(double).name()})),
-  opt(cost) {}
+  opt(cost),
+  ftol_rel(pt.get<double>("Ftol.AbsoluteTolerance", 1.0e-8)),
+  ftol_abs(pt.get<double>("Ftol.RelativeTolerance", 1.0e-8)),
+  xtol_rel(pt.get<double>("Xtol.AbsoluteTolerance", 0.0)),
+  xtol_abs(pt.get<double>("Xtol.RelativeTolerance", 0.0)),
+  maxEvals(pt.get<unsigned int>("MaxEvaluations", 100))
+{}
 
 Optimization::~Optimization() {}
 
@@ -39,8 +46,12 @@ void Optimization::EvaluateImpl(ref_vector<boost::any> const& inputs) {
 
   nlopt_set_min_objective(solver, Optimization::Cost, &opt);
 
-  nlopt_set_ftol_rel(solver, 1e-14);
-  nlopt_set_ftol_abs(solver, 1e-14);
+  // set the tolerances
+  nlopt_set_ftol_rel(solver, ftol_rel);
+  nlopt_set_ftol_abs(solver, ftol_abs);
+  nlopt_set_xtol_rel(solver, xtol_rel);
+  nlopt_set_xtol_abs1(solver, xtol_abs);
+  nlopt_set_maxeval(solver, maxEvals);
 
   outputs.resize(2);
   outputs[0] = xinit;
