@@ -21,7 +21,6 @@ double Optimization::Cost(unsigned int n, const double* x, double* grad, void* f
 
   Eigen::Map<const Eigen::VectorXd> xmap(x, n);
   const Eigen::VectorXd& xeig = xmap;
-  //std::cout << xeig.transpose() << std::endl;
   opt->inputs.at(0) = std::cref(xeig);
   
   if( grad ) {
