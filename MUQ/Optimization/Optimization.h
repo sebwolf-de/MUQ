@@ -24,12 +24,16 @@ namespace muq {
 
 	return std::pair<Eigen::VectorXd, double>(boost::any_cast<Eigen::VectorXd const&>(outputs[0]), boost::any_cast<double const>(outputs[1]));
       }
-      
+
     private:
 
       virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
-      static double Cost(unsigned int n, const double* x, double* grad, void* f_data);      
+      static double Cost(unsigned int n, const double* x, double* grad, void* f_data);
+
+      nlopt_algorithm NLOptAlgorithm(std::string const& alg) const;
+
+      const nlopt_algorithm algorithm;
 
       struct OptHelper {
 	OptHelper(std::shared_ptr<CostFunction> cost);

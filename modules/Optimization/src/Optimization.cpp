@@ -6,6 +6,7 @@ using namespace muq::Optimization;
 
 Optimization::Optimization(std::shared_ptr<CostFunction> cost, pt::ptree const& pt) :
   WorkPiece(cost->InputTypes(), cost->numInputs, std::vector<std::string>({typeid(Eigen::VectorXd).name(), typeid(double).name()})),
+  algorithm(NLOptAlgorithm(pt.get<std::string>("Algorithm"))),
   opt(cost),
   ftol_rel(pt.get<double>("Ftol.AbsoluteTolerance", 1.0e-8)),
   ftol_abs(pt.get<double>("Ftol.RelativeTolerance", 1.0e-8)),
@@ -32,6 +33,27 @@ double Optimization::Cost(unsigned int n, const double* x, double* grad, void* f
   return opt->cost->Cost(opt->inputs);
 }
 
+nlopt_algorithm Optimization::NLOptAlgorithm(std::string const& alg) const {
+  if( alg.compare("DIRECT")==0 ) { return NLOPT_GN_DIRECT; }
+  if( alg.compare("DIRECTL")==0 ) { return NLOPT_GN_DIRECT_L; }
+  if( alg.compare("CRS")==0 ) { return NLOPT_GN_CRS2_LM; }
+  if( alg.compare("MLSL")==0 ) { return NLOPT_G_MLSL_LDS; }
+  if( alg.compare("ISRES")==0 ) { return NLOPT_GN_ISRES; }
+  if( alg.compare("COBYLA")==0 ) { return NLOPT_LN_COBYLA; }
+  if( alg.compare("BOBYQA")==0 ) { return NLOPT_LN_BOBYQA; }
+  if( alg.compare("NEWUOA")==0 ) { return NLOPT_LN_NEWUOA_BOUND; }
+  if( alg.compare("PRAXIS")==0 ) { return NLOPT_LN_PRAXIS; }
+  if( alg.compare("NM")==0 ) { return NLOPT_LN_NELDERMEAD; }
+  if( alg.compare("SBPLX")==0 ) { return NLOPT_LN_SBPLX; }
+  if( alg.compare("MMA")==0 ) { return NLOPT_LD_MMA; }
+  if( alg.compare("SLSQP")==0 ) { return NLOPT_LD_SLSQP; }
+  if( alg.compare("LBFGS")==0 ) { return NLOPT_LD_LBFGS; }
+  if( alg.compare("PreTN")==0 ) { return NLOPT_LD_TNEWTON_PRECOND_RESTART; }
+  if( alg.compare("LMVM")==0 ) { return NLOPT_LD_VAR2; }
+
+  return NLOPT_LN_COBYLA;
+}
+
 void Optimization::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   opt.inputs.clear();
   const Eigen::VectorXd& xinit = boost::any_cast<Eigen::VectorXd const&>(inputs.at(0));
@@ -40,8 +62,9 @@ void Optimization::EvaluateImpl(ref_vector<boost::any> const& inputs) {
     opt.inputs.push_back(std::cref(boost::any_cast<Eigen::VectorXd const&>(*it)));
   }
   
-  // create the optimizer  
-  auto solver = nlopt_create(NLOPT_LD_MMA, opt.cost->inputSizes(0));
+  // create the optimizer
+  //auto solver = nlopt_create(NLOPT_LD_MMA, opt.cost->inputSizes(0));
+  auto solver = nlopt_create(algorithm, opt.cost->inputSizes(0));
 
   nlopt_set_min_objective(solver, Optimization::Cost, &opt);
 
