@@ -15,7 +15,7 @@ public:
     return (1.0-xc(0))*(1.0-xc(0))+a(0)*(xc(1)-xc(0)*xc(0))*(xc(1)-xc(0)*xc(0));
   }
 
-  virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override {
+  inline virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override {
     assert(inputDimWrt==0);
     
     const Eigen::VectorXd& xc = input[0];
