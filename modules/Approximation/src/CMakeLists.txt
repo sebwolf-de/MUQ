@@ -20,7 +20,7 @@ CreateCompileGroup(
 	""
 	""
 	Regression/Regression.cpp
-#	Regression/LocalRegression.cpp
+	Regression/LocalRegression.cpp
 )
 
 CreateCompileGroup(

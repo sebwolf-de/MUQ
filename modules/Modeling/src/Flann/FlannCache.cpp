@@ -15,12 +15,11 @@ FlannCache::~FlannCache() {}
 
 void FlannCache::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
     int cacheId = InCache(inputs.at(0));
+    outputs.resize(1);
     if(cacheId < 0){
       Add(inputs.at(0));
-      outputs.resize(1);
       outputs.at(0) = outputCache.at(outputCache.size()-1);
     }else{
-      outputs.resize(1);
       outputs.at(0) = outputCache.at(cacheId);
     }
 }
@@ -43,7 +42,7 @@ int FlannCache::InCache(Eigen::VectorXd const& input) const {
 void FlannCache::Add(Eigen::VectorXd const& newPt) {
   kdTree->add(newPt);
 
-  Eigen::VectorXd newOutput = boost::any_cast<Eigen::VectorXd>(function->Evaluate(newPt).at(0));
+  Eigen::VectorXd newOutput = function->Evaluate(newPt).at(0);
   outputCache.push_back(newOutput);
 }
 

@@ -3,28 +3,25 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/Flann/FlannCache.h"
 
 #include "MUQ/Approximation/Regression/Regression.h"
 
 namespace muq {
   namespace Approximation {
-    class LocalRegression : public muq::Modeling::WorkPiece {
+    class LocalRegression : public muq::Modeling::ModPiece {
     public:
 
       /**
 	 @param[in] function The function we wish to approximate with a local polynomial
        */
-      LocalRegression(std::shared_ptr<muq::Modeling::WorkPiece> function, boost::property_tree::ptree const& pt);
+      LocalRegression(std::shared_ptr<muq::Modeling::ModPiece> function, boost::property_tree::ptree const& pt);
 
       ~LocalRegression();
 
       /// Add some points to the cache
-      template<typename intype>
-	inline void Add(std::vector<intype> const& inputs) const {
-	assert(cache);
-	cache->Add<intype>(inputs);
-      }
+      void Add(std::vector<Eigen::VectorXd> const& inputs) const;
 
       /// Get the total size of the cache
       /**
@@ -34,10 +31,10 @@ namespace muq {
 
     private:
 
-      virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
+      virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) override;
 
       /// Fit the regression to the nearest neighbors
-      void FitRegression(boost::any const& input) const;
+      void FitRegression(Eigen::VectorXd const& input) const;
 
       /// A cache containing previous model evaluations
       std::shared_ptr<muq::Modeling::FlannCache> cache;

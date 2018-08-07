@@ -4,7 +4,10 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::Approximation;
 
-LocalRegression::LocalRegression(std::shared_ptr<WorkPiece> function, pt::ptree const& pt) : WorkPiece(1, 1), kn(pt.get<unsigned int>("LocalRegression.NumNeighbors")) { // can only have one input and output
+LocalRegression::LocalRegression(std::shared_ptr<ModPiece> function, pt::ptree const& pt) : ModPiece(function->inputSizes, function->outputSizes), kn(pt.get<unsigned int>("LocalRegression.NumNeighbors")) { // can only have one input and output
+  assert(inputSizes.size()==1);
+  assert(outputSizes.size()==1);
+  
   // create a cache of model evaluations
   cache = std::make_shared<FlannCache>(function);
 
@@ -14,7 +17,7 @@ LocalRegression::LocalRegression(std::shared_ptr<WorkPiece> function, pt::ptree 
 
 LocalRegression::~LocalRegression() {}
 
-void LocalRegression::FitRegression(boost::any const& input) const {
+void LocalRegression::FitRegression(Eigen::VectorXd const& input) const {
   // find the nearest neighbors
   std::vector<Eigen::VectorXd> neighbors;
   std::vector<Eigen::VectorXd> result;
@@ -24,25 +27,21 @@ void LocalRegression::FitRegression(boost::any const& input) const {
   reg->Fit(neighbors, result, input);
 }
 
-void LocalRegression::EvaluateImpl(ref_vector<boost::any> const& inputs) {
+void LocalRegression::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
   // fit the regressor
   FitRegression(inputs[0]);
 
   // evaluate the regressor
-  const Eigen::VectorXd result = boost::any_cast<Eigen::MatrixXd const&>(reg->Evaluate(inputs) [0]).col(0);
-
-  // store the result as the appropriate output time
   outputs.resize(1);
-  switch( result.size() ) {
-  case 1: { outputs[0] = result(0); break; }
-  case 2: { outputs[0] = (Eigen::Vector2d)result; break; }
-  case 3: { outputs[0] = (Eigen::Vector3d)result; break; }
-  case 4: { outputs[0] = (Eigen::Vector4d)result; break; }
-  default: { outputs[0] = result; }
-  }
+  outputs[0] = (Eigen::VectorXd)boost::any_cast<Eigen::MatrixXd const&>(reg->Evaluate(inputs[0].get()) [0]).col(0);
 }
 
 unsigned int LocalRegression::CacheSize() const {
   assert(cache);
   return cache->Size();
+}
+
+void LocalRegression::Add(std::vector<Eigen::VectorXd> const& inputs) const {
+  assert(cache);
+  for( auto it : inputs ) { cache->Add(it); }
 }

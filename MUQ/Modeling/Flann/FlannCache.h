@@ -147,7 +147,7 @@ namespace muq {
       virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
       /// The function whose input/outputs we are caching
-      std::shared_ptr<WorkPiece> function;
+      std::shared_ptr<ModPiece> function;
 
       /// The nearest neighbor index, used to perform searches
       std::shared_ptr<DynamicKDTreeAdaptor<>> kdTree;
