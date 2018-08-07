@@ -1,5 +1,6 @@
 #include "MUQ/Utilities/MultiIndices/MultiIndex.h"
 
+#include <iostream>
 #include <stdexcept>
 
 using namespace muq::Utilities;
@@ -10,6 +11,12 @@ MultiIndex::MultiIndex(unsigned lengthIn) : length(lengthIn),
                                             totalOrder(0)
 {}
 
+MultiIndex::MultiIndex(unsigned lengthIn, unsigned val) : MultiIndex(lengthIn)
+{
+  for(int i=0; i<length; ++i){
+    SetValue(i, val);
+  }
+}
 
 MultiIndex::MultiIndex(Eigen::RowVectorXi const& indIn) : MultiIndex(indIn.size())
 {
@@ -17,12 +24,13 @@ MultiIndex::MultiIndex(Eigen::RowVectorXi const& indIn) : MultiIndex(indIn.size(
   totalOrder = 0;
 
   for(int i=0; i<indIn.size(); ++i){
-    if( indIn[i]>0 ){
+    if( indIn[i]>=0 ){
       nzInds[i] = indIn[i];
       maxValue = std::max<int>(maxValue, indIn[i]);
       totalOrder += indIn[i];
     }
   }
+
 }
 
 MultiIndex::MultiIndex(std::initializer_list<unsigned> const& indIn) : MultiIndex(indIn.size())
@@ -32,7 +40,7 @@ MultiIndex::MultiIndex(std::initializer_list<unsigned> const& indIn) : MultiInde
 
   unsigned i = 0;
   for(auto it = indIn.begin(); it != indIn.end(); ++it){
-    if( *it > 0 ){
+    if( *it >= 0 ){
       nzInds[i] = *it;
 
       maxValue = std::max<int>(maxValue, *it);
@@ -154,7 +162,7 @@ bool MultiIndex::operator<(const MultiIndex &b){
   }else if(totalOrder<b.totalOrder){
     return true;
   }else if(totalOrder>b.totalOrder){
-      return false;
+    return false;
   }else if(maxValue<b.maxValue){
     return true;
   }else if(maxValue>b.maxValue){
@@ -173,4 +181,51 @@ bool MultiIndex::operator<(const MultiIndex &b){
     return false;
   }
 
+}
+
+MultiIndex& MultiIndex::operator+=(const MultiIndex &b) {
+  for(int i=0; i<length; ++i){
+    SetValue(i, GetValue(i) + b.GetValue(i));
+  }
+  return *this;
+}
+
+MultiIndex& MultiIndex::operator++() {
+  MultiIndex ones (this->GetLength(), 1);
+  return (*this)+=ones;
+}
+
+MultiIndex MultiIndex::operator+(const MultiIndex &b) {
+  MultiIndex ret(*this);
+  return ret += b;
+}
+
+MultiIndex& MultiIndex::operator-=(const MultiIndex &b) {
+  for(int i=0; i<length; ++i){
+    unsigned diff = 0;
+    if (GetValue(i) > b.GetValue(i)) // Prevent "negative" unsigned result
+      diff = GetValue(i) - b.GetValue(i);
+    SetValue(i, diff);
+  }
+  return *this;
+}
+
+MultiIndex& MultiIndex::operator--() {
+  MultiIndex ones (this->GetLength(), 1);
+  return (*this)-=ones;
+}
+
+MultiIndex MultiIndex::operator-(const MultiIndex &b) {
+  MultiIndex ret(*this);
+  return ret -= b;
+}
+
+std::ostream& operator<< (std::ostream &out, const MultiIndex &ind)
+{
+  for(int i=0; i<ind.GetLength(); ++i){
+    if (i > 0)
+      out << " ";
+    out << ind.GetValue(i);
+  }
+  return out;
 }
