@@ -27,9 +27,16 @@ namespace muq{
     class AbstractSamplingProblem
     {
     public:
-      AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn) : numBlocks(blockSizesIn.size()),
-                                                                     blockSizes(blockSizesIn)
-                                                                     {assert(blockSizes.size()==numBlocks);};
+      AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn,
+                              Eigen::VectorXi const& blockSizesQOIIn)
+       : numBlocks(blockSizesIn.size()),
+         blockSizes(blockSizesIn),
+         numBlocksQOI(blockSizesQOIIn.size()),
+         blockSizesQOI(blockSizesQOIIn)
+         {assert(blockSizes.size()==numBlocks); assert(blockSizesQOI.size()==numBlocksQOI);}
+
+      AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn) : AbstractSamplingProblem(blockSizesIn, Eigen::VectorXi::Zero(0)) {}
+
 
       virtual ~AbstractSamplingProblem() = default;
 
@@ -38,8 +45,15 @@ namespace muq{
       virtual Eigen::VectorXd GradLogDensity(std::shared_ptr<SamplingState> state,
                                              unsigned                       blockWrt) = 0;
 
+      virtual std::shared_ptr<SamplingState> QOI() {
+        return nullptr;
+      }
+
+
       const int numBlocks;
       const Eigen::VectorXi blockSizes;
+      const int numBlocksQOI;
+      const Eigen::VectorXi blockSizesQOI;
     };
 
   }

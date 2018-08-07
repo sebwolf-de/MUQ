@@ -12,17 +12,25 @@ namespace muq {
     class SamplingAlgorithm {//} : public muq::Modeling::WorkPiece {
     public:
 
-      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn) : samples(samplesIn){};
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn,
+                        std::shared_ptr<SampleCollection> QOIsIn)
+       : samples(samplesIn),
+         QOIs(QOIsIn)
+       {}
+
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn)
+       : SamplingAlgorithm (samplesIn, std::make_shared<SampleCollection>())
+      {}
 
       virtual ~SamplingAlgorithm() = default;
 
       std::shared_ptr<SampleCollection> GetSamples() const{return samples;};
+      std::shared_ptr<SampleCollection> GetQOIs() const{return QOIs;};
 
-      virtual std::shared_ptr<SampleCollection> Run(){return Run(std::vector<Eigen::VectorXd>());};
-      virtual std::shared_ptr<SampleCollection> Run(Eigen::VectorXd const& x0){return Run(std::vector<Eigen::VectorXd>(1,x0));};
-      virtual std::shared_ptr<SampleCollection> Run(std::vector<Eigen::VectorXd> const& x0){return RunImpl(x0);};
+      virtual std::shared_ptr<SampleCollection> Run(){return RunImpl();};
 
-      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) = 0;
+
+      virtual std::shared_ptr<SampleCollection> RunImpl() = 0;
 
     protected:
 
@@ -37,6 +45,8 @@ namespace muq {
       //virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
       std::shared_ptr<SampleCollection> samples;
+
+      std::shared_ptr<SampleCollection> QOIs;
 
     };
   } // namespace SamplingAlgorithms
