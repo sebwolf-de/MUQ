@@ -36,6 +36,7 @@ CreateCompileGroup(
     GreedyMLMCMC.cpp
     MIMCMC.cpp
     MIMCMCBox.cpp
+    SLMCMC.cpp
     SubsamplingMIProposal.cpp
     #MCMCKernel.cpp
 
