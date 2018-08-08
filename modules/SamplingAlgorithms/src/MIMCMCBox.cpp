@@ -55,7 +55,6 @@ namespace muq {
 
       // Set up Multiindex box
       boxIndices = MultiIndexFactory::CreateFullTensor(boxSize->GetVector());
-      std::cout << "box size: " << *boxSize << std::endl;
       boxChains.resize(boxIndices->Size());
 
       for (int i = 0; i < boxIndices->Size(); i++) {
@@ -67,10 +66,6 @@ namespace muq {
         }
 
         std::shared_ptr<MultiIndex> index = std::make_shared<MultiIndex>(*boxLowestIndex + *boxIndex);
-
-        std::cout << "local  box index: " << *boxIndex << std::endl;
-        std::cout << "global box index: " << *index << std::endl;
-
 
         auto problem = componentFactory->samplingProblem(index);
         auto proposal = componentFactory->proposal(index, problem);
@@ -109,7 +104,6 @@ namespace muq {
 
         std::shared_ptr<MultiIndex> index = std::make_shared<MultiIndex>(*boxLowestIndex + *boxIndex);
         auto indexDiffFromTop = std::make_shared<MultiIndex>(*boxHighestIndex - *index);
-        std::cout << "*** index node diff: " << indexDiffFromTop->Sum() % 2 << std::endl;
 
         if (indexDiffFromTop->Sum() % 2 == 0) {
           sampMean += samps->Mean();

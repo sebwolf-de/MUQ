@@ -33,6 +33,7 @@ CreateCompileGroup(
     #ISKernel.cpp
     MHKernel.cpp
     MIKernel.cpp
+    MIMCMC.cpp
     MIMCMCBox.cpp
     SubsamplingMIProposal.cpp
     #MCMCKernel.cpp
