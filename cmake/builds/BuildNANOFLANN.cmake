@@ -1,0 +1,21 @@
+set(EIGEN_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/external/nanoflann/src")
+
+include(ExternalProject)
+if( NOT NANOFLANN_EXTERNAL_SOURCE )
+    set(NANOFLANN_EXTERNAL_SOURCE https://github.com/jlblancoc/nanoflann/archive/master.zip)
+endif()
+
+set(NANOFLANN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/muq_external/)
+ExternalProject_Add(
+ NANOFLANN
+                PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/nanoflann
+                URL ${NANOFLANN_EXTERNAL_SOURCE}
+				CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${NANOFLANN_INSTALL_DIR} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG} -DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+				BUILD_COMMAND make
+                INSTALL_COMMAND make install
+)
+
+set_property( TARGET NANOFLANN PROPERTY FOLDER "Externals")
+
+set(NANOFLANN_INCLUDE_DIRS ${NANOFLANN_INSTALL_DIR}/include/nanoflann)
+message(STATUS "Adding ${NANOFLANN_INSTALL_DIR}/include/nanoflann for a nanoflann include directory.")

@@ -1,7 +1,6 @@
 #ifndef FLANNCACHE_H_
 #define FLANNCACHE_H_
 
-//#include <flann/flann.hpp>
 #include <nanoflann.hpp>
 
 #include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
