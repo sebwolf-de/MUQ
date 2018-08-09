@@ -30,7 +30,7 @@ namespace muq {
       boxLowestIndex = MultiIndex::Copy(boxHighestIndex);
       --(*boxLowestIndex);
       std::shared_ptr<MultiIndexSet> rootPath = CreateRootPath(boxLowestIndex);
-      for (int i = rootPath->Size()-1; i > 0; i--) {
+      for (int i = rootPath->Size()-1; i >= 0; i--) {
         std::shared_ptr<MultiIndex> index = (*rootPath)[i];
 
         auto problem = componentFactory->samplingProblem(index);
