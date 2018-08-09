@@ -61,8 +61,6 @@ void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
                                   unsigned int const k,
                                   std::vector<Eigen::VectorXd>& neighbors,
                                   std::vector<Eigen::VectorXd>& result) const {
-
-
   // make sure we have enough
   assert(k<=Size());
 
@@ -72,9 +70,9 @@ void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
 
   neighbors.resize(k);
   result.resize(k);
-  for(int i=0; i<k; ++i){
-    neighbors.at(i) = kdTree->m_data.at(i);
-    result.at(i) = outputCache.at(i);
+  for( unsigned int i=0; i<k; ++i ){
+    neighbors.at(i) = kdTree->m_data.at(indices[i]);
+    result.at(i) = outputCache.at(indices[i]);
   }
 }
 
