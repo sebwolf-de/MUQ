@@ -12,8 +12,8 @@ namespace muq {
       const auto rootIndex = std::make_shared<MultiIndex>(1);
 
 
-      const double e = 0.07;
-      const double beta = 0.5;
+      const double e = pt.get("GreedyTargetVariance",0.1);
+      const double beta = pt.get("GreedyResamplingFactor",0.5);
 
 
       for (int level = 0; level <= levels; level++) {

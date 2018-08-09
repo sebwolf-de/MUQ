@@ -183,7 +183,7 @@ int main(){
 
   pt.put("NumSamples", 5e3); // number of samples for single level
   pt.put("NumInitialSamples", 1e3); // number of initial samples for greedy MLMCMC
-
+  pt.put("GreedyTargetVariance", 0.15); // estimator variance to be achieved by greedy algorithm
 
   std::cout << std::endl << "*************** greedy multillevel chain" << std::endl << std::endl;
 
