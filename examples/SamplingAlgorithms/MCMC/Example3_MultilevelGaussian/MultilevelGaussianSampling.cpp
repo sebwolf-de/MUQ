@@ -99,68 +99,34 @@ public:
   }
 
   virtual std::shared_ptr<AbstractSamplingProblem> samplingProblem (std::shared_ptr<MultiIndex> index) override {
+    Eigen::VectorXd mu(2);
+    mu << 1.0, 2.0;
+    Eigen::MatrixXd cov(2,2);
+    cov << 0.7, 0.6,
+           0.6, 1.0;
+
     if (index->GetValue(0) == 0) {
-      Eigen::VectorXd mu(2);
-      mu << 0.8, 1.8;
-      Eigen::MatrixXd cov(2,2);
-      cov << 0.7, 0.6,
-      0.6, 1.0;
-      cov *= 6.0;
-
-      auto coarseTargetDensity = std::make_shared<Gaussian>(mu, cov)->AsDensity(); // standard normal Gaussian
-      return std::make_shared<MySamplingProblem>(coarseTargetDensity);
-
+      mu *= 0.9;
+      cov *= 2.0;
     } else if (index->GetValue(0) == 1) {
-
-      Eigen::VectorXd mu(2);
-      mu << 0.9, 1.9;
-      Eigen::MatrixXd cov(2,2);
-      cov << 0.7, 0.6,
-      0.6, 1.0;
-      cov *= 3.0;
-
-      auto targetDensity = std::make_shared<Gaussian>(mu, cov)->AsDensity(); // standard normal Gaussian
-      return std::make_shared<MySamplingProblem>(targetDensity);
+      mu *= 0.99;
+      cov *= 1.1;
     } else if (index->GetValue(0) == 2) {
-
-      Eigen::VectorXd mu(2);
-      mu << 0.95, 1.95;
-      Eigen::MatrixXd cov(2,2);
-      cov << 0.7, 0.6,
-      0.6, 1.0;
-      cov *= 1.5;
-
-      auto targetDensity = std::make_shared<Gaussian>(mu, cov)->AsDensity(); // standard normal Gaussian
-      return std::make_shared<MySamplingProblem>(targetDensity);
-
+      mu *= 0.999;
+      cov *= 1.01;
     } else if (index->GetValue(0) == 3) {
-
-      Eigen::VectorXd mu(2);
-      mu << 0.98, 1.98;
-      Eigen::MatrixXd cov(2,2);
-      cov << 0.7, 0.6,
-      0.6, 1.0;
-      cov *= 1.2;
-
-      auto targetDensity = std::make_shared<Gaussian>(mu, cov)->AsDensity(); // standard normal Gaussian
-      return std::make_shared<MySamplingProblem>(targetDensity);
-
+      mu *= 0.9999;
+      cov *= 1.001;
     } else if (index->GetValue(0) == 4) {
-
-      Eigen::VectorXd mu(2);
-      mu << 1.0, 2.0;
-      Eigen::MatrixXd cov(2,2);
-      cov << 0.7, 0.6,
-      0.6, 1.0;
+      mu *= 1.0;
       cov *= 1.0;
-
-      auto targetDensity = std::make_shared<Gaussian>(mu, cov)->AsDensity(); // standard normal Gaussian
-      return std::make_shared<MySamplingProblem>(targetDensity);
-
     } else {
       std::cerr << "Sampling problem not defined!" << std::endl;
       assert (false);
     }
+
+    auto coarseTargetDensity = std::make_shared<Gaussian>(mu, cov)->AsDensity();
+    return std::make_shared<MySamplingProblem>(coarseTargetDensity);
   }
 
   virtual std::shared_ptr<MIInterpolation> interpolation (std::shared_ptr<MultiIndex> index) override {
@@ -181,9 +147,9 @@ int main(){
 
   pt::ptree pt;
 
-  pt.put("NumSamples", 5e3); // number of samples for single level
+  pt.put("NumSamples", 1e4); // number of samples for single level
   pt.put("NumInitialSamples", 1e3); // number of initial samples for greedy MLMCMC
-  pt.put("GreedyTargetVariance", 0.15); // estimator variance to be achieved by greedy algorithm
+  pt.put("GreedyTargetVariance", 0.05); // estimator variance to be achieved by greedy algorithm
 
   std::cout << std::endl << "*************** greedy multillevel chain" << std::endl << std::endl;
 
