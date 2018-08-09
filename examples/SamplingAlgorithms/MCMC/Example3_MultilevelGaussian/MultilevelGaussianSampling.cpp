@@ -84,7 +84,7 @@ public:
 
   virtual std::shared_ptr<MultiIndex> finestIndex() override {
     auto index = std::make_shared<MultiIndex>(1);
-    index->SetValue(0, 4);
+    index->SetValue(0, 3);
     return index;
   }
 
@@ -106,18 +106,15 @@ public:
            0.6, 1.0;
 
     if (index->GetValue(0) == 0) {
-      mu *= 0.9;
+      mu *= 0.8;
       cov *= 2.0;
     } else if (index->GetValue(0) == 1) {
+      mu *= 0.9;
+      cov *= 1.5;
+    } else if (index->GetValue(0) == 2) {
       mu *= 0.99;
       cov *= 1.1;
-    } else if (index->GetValue(0) == 2) {
-      mu *= 0.999;
-      cov *= 1.01;
     } else if (index->GetValue(0) == 3) {
-      mu *= 0.9999;
-      cov *= 1.001;
-    } else if (index->GetValue(0) == 4) {
       mu *= 1.0;
       cov *= 1.0;
     } else {
