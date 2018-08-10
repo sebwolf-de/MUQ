@@ -22,9 +22,9 @@ namespace muq {
       virtual std::shared_ptr<SampleCollection> Run(Eigen::VectorXd const& x0){return Run(std::vector<Eigen::VectorXd>(1,x0));};
       virtual std::shared_ptr<SampleCollection> Run(std::vector<Eigen::VectorXd> const& x0){return RunImpl(x0);};
 
-      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) = 0;
-
     protected:
+
+      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) = 0;
 
       /**
 	 Inputs:
