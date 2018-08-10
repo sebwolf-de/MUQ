@@ -12,17 +12,16 @@
 #     <source file N>
 # )
 
-#CreateCompileGroup(
-#	APPROXIMATION_REGRESSION
-#	"Polynomial regression (global and local)"
-#	muqApproximation
-#	"MODELING_FLANN;MODELING_CORE;APPROXIMATION_POLYNOMIALS"
-#	""
-#	""
-#	Regression/Regression.cpp
-#	Regression/LocalRegression.cpp
-#)
-
+CreateCompileGroup(
+	APPROXIMATION_REGRESSION
+	"Polynomial regression (global and local)"
+	muqApproximation
+	"UTILITIES_MULTIINDEX;MODELING_FLANN;MODELING_CORE;APPROXIMATION_POLYNOMIALS"
+	""
+	""
+	Regression/Regression.cpp
+	Regression/LocalRegression.cpp
+)
 
 CreateCompileGroup(
 	APPROXIMATION_POLYNOMIALS
