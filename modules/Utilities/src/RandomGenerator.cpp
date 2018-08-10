@@ -165,7 +165,7 @@ void RandomGenerator::SetGenerator(GeneratorType state)
   GetGenerator() = state;
 }
 
-int RandomGenerator::SampleDiscrete(Eigen::VectorXd const& discProbs)
+int RandomGenerator::GetDiscrete(Eigen::VectorXd const& discProbs)
 {
   double u = RandomGenerator::GetUniform();
   double cumSum = 0.0;
@@ -179,7 +179,7 @@ int RandomGenerator::SampleDiscrete(Eigen::VectorXd const& discProbs)
   return 0;
 }
 
-Eigen::MatrixXi RandomGenerator::SampleDiscrete(Eigen::VectorXd const& discProbs, int rows, int cols)
+Eigen::MatrixXi RandomGenerator::GetDiscrete(Eigen::VectorXd const& discProbs, int rows, int cols)
 {
   std::vector<int> indices(discProbs.size());
   for(int i=0; i<discProbs.size(); ++i)

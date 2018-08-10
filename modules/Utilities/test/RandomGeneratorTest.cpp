@@ -134,12 +134,12 @@ TEST(UtilitiesRandomGenerator, Discrete)
   probs << 0.2, 0.7, 0.1;
 
   for(int i=0; i<100; ++i){
-    int samp = RandomGenerator::SampleDiscrete(probs);
+    int samp = RandomGenerator::GetDiscrete(probs);
     EXPECT_TRUE((samp >= 0) && (samp < probs.size()));
   }
 
   const int numSamps = 1000;
-  Eigen::VectorXi samps = RandomGenerator::SampleDiscrete(probs, numSamps);
+  Eigen::VectorXi samps = RandomGenerator::GetDiscrete(probs, numSamps);
   Eigen::VectorXd counts = Eigen::VectorXd::Zero(3);
   for(int i=0; i<numSamps; ++i)
     counts(samps(i)) += 1;

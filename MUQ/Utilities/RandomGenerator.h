@@ -59,8 +59,8 @@ public:
 
 
   /** Sample a discrete distribution with replacement. */
-  static int SampleDiscrete(Eigen::VectorXd const& discProbs);
-  static Eigen::MatrixXi SampleDiscrete(Eigen::VectorXd const& discProbs, int rows, int cols=1);
+  static int GetDiscrete(Eigen::VectorXd const& discProbs);
+  static Eigen::MatrixXi GetDiscrete(Eigen::VectorXd const& discProbs, int rows, int cols=1);
 
   /// Set the seed for the random number generator. This is a fairly low quality way to do this, but is fine for testing.
   static void SetSeed(int seedval);

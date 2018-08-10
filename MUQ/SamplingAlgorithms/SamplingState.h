@@ -17,13 +17,15 @@ namespace muq {
     class SamplingState {
     public:
 
+      SamplingState() = default;
+
       SamplingState(Eigen::VectorXd const& stateIn, double weight = 1.0);
       SamplingState(std::vector<Eigen::VectorXd> const& stateIn, double weight = 1.0);
 
       virtual ~SamplingState() = default;
 
       /// The state variables
-      const std::vector<Eigen::VectorXd> state;
+      std::vector<Eigen::VectorXd> state;
 
       /// The weight of this state
       double weight;
@@ -37,7 +39,16 @@ namespace muq {
       /// A map containing extra information like the target density, run time, forward model output, etc...
       std::unordered_map<std::string, boost::any> meta;
 
-    private:
+      /** @brief Serialization function for use with Cereal.
+          @details This function provides a way to serialize most of the SamplingState
+          for use with Cereal and ParCer.  Due to the intracacies of serializing
+          the boost::any type, this function does not serialize the meta variable.
+      */
+      template<class Archive>
+      void serialize(Archive & archive)
+      {
+        archive( state, weight ); // serialize things by passing them to the archive
+      }
 
     };
 

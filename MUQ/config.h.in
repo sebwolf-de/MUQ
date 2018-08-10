@@ -5,3 +5,7 @@
 #ifndef MUQ_HAS_SUNDIALS
 #define MUQ_HAS_SUNDIALS @MUQ_HAS_SUNDIALS@
 #endif
+
+#ifndef MUQ_HAS_MPI
+#define MUQ_HAS_MPI @MUQ_HAS_MPI@
+#endif

@@ -33,7 +33,8 @@ CreateCompileGroup(
     #ISKernel.cpp
     MHKernel.cpp
     #MCMCKernel.cpp
-
+    ParallelMHKernel.cpp
+    
     MCMCFactory.cpp
 
     ThinScheduler.cpp

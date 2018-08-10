@@ -128,7 +128,7 @@ FILE(APPEND ${_log_summary} "#\n")
 
 FILE(APPEND ${_log_summary}
 "#  Optional tools:
-#        MPI: -----------------> ${MUQ_USE_OPENMPI}
+#        MPI: -----------------> ${MUQ_USE_MPI}
 #
 "
 )
