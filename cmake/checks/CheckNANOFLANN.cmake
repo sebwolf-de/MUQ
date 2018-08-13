@@ -1,10 +1,10 @@
-# make sure that the FLANN library is available
-set(CMAKE_REQUIRED_LIBRARIES ${FLANN_LIBRARIES})
-set(CMAKE_REQUIRED_INCLUDES ${FLANN_INCLUDE_DIR})
+# make sure that the NANOFLANN library is available
+set(CMAKE_REQUIRED_LIBRARIES ${NANOFLANN_LIBRARIES})
+set(CMAKE_REQUIRED_INCLUDES ${NANOFLANN_INCLUDE_DIR})
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS}")
 CHECK_CXX_SOURCE_COMPILES(
   "
-#include <flann/flann.hpp>
+#include <nanoflann.hpp>
 
 #include <stdio.h>
 
@@ -37,11 +37,11 @@ int main(int argc, char** argv)
 }
   
   "
-  FLANN_COMPILES)
+  NANOFLANN_COMPILES)
 
 	
-	if(NOT FLANN_COMPILES)
-		set(FLANN_TEST_FAIL 1)
+	if(NOT NANOFLANN_COMPILES)
+		set(NANOFLANN_TEST_FAIL 1)
 	else()
-		set(FLANN_TEST_FAIL 0)
+		set(NANOFLANN_TEST_FAIL 0)
 	endif()

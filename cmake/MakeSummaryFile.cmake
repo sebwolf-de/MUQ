@@ -84,7 +84,7 @@ FILE(APPEND ${_log_summary}
 PrintRequired(EIGEN3 " --")
 PrintRequired(BOOST " ---")
 PrintRequired(HDF5 " ----")
-PrintRequired(FLANN " ---")
+PrintRequired(NANOFLANN " ---")
 PrintRequired(SUNDIALS " ")
 FILE(APPEND ${_log_summary} "#\n")
 

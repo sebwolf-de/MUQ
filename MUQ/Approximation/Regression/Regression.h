@@ -3,62 +3,38 @@
 
 #include <Eigen/QR>
 
-#include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
+#include "MUQ/Utilities/MultiIndices/MultiIndexFactory.h"
 
+#include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
 #include "MUQ/Modeling/WorkPiece.h"
 
-#include "MUQ/Approximation/Regression/MultiIndex.h"
-#include "MUQ/Approximation/Polynomials/Polynomial.h"
+#include "MUQ/Approximation/Polynomials/IndexedScalarBasis.h"
 
 namespace muq {
   namespace Approximation {
     class Regression : public muq::Modeling::WorkPiece {
     public:
-
+      
       /**
 	 @param[in] order The order of the polynomial regression
 	 @param[in] basis The type of polynomial basis to use (defaults to Legendre)
-       */
-        Regression(unsigned int const order, std::string const& basis = "Legendre");
-
+      */
+      Regression(unsigned int const order, std::string const& basis = "Legendre");
+      
       /// Compute the coeffiecents of the polynomial given data
       /**
 	 @param[in] xs The input points
 	 @param[in] ys The output points
 	 @param[in] center The center of the inputs (used to recenter the inputs)
-       */
-      template<typename data>
-	inline void Fit(std::vector<data> xs, std::vector<data> const& ys, boost::any const& center) {
-	assert(xs.size()>0);
-	assert(xs.size()==ys.size());
-
-	// set the current center
-	currentCenter = center;
-
-	// center the input points
-	CenterPoints(xs);
-	
-	// Compute basis coefficients
-	ComputeCoefficients(xs, ys);
-      }
+      */
+      void Fit(std::vector<Eigen::VectorXd> xs, std::vector<Eigen::VectorXd> const& ys, Eigen::VectorXd const& center);
       
       /// Compute the coeffiecents of the polynomial given data
       /**
 	 @param[in] xs The input points
 	 @param[in] ys The output points
        */
-      template<typename data>
-	inline void Fit(std::vector<data> const& xs, std::vector<data> const& ys) {
-	assert(xs.size()>0);
-	assert(xs.size()==ys.size());
-	
-	// get the zero of this vector type
-	const unsigned int size = algebra->Size(xs[0]);
-	const boost::any& zero = algebra->Zero(typeid(data), size);
-
-	// preform the fit with zero center
-	Fit<data>(xs, ys, boost::any_cast<data const&>(zero));
-      }
+      void Fit(std::vector<Eigen::VectorXd> const& xs, std::vector<Eigen::VectorXd> const& ys);
 
       int NumInterpolationPoints() const;
       
@@ -72,144 +48,36 @@ namespace muq {
 	 @param[in] xs The points 
 	 @param[in] ys The output at each point 
       */
-      template<typename data>
-	inline void ComputeCoefficients(std::vector<data> const& xs, std::vector<data> const& ys) {
-	assert(xs.size()==ys.size());
-
-	// initalize the multi-index
-	multi = std::make_shared<MultiIndex>(algebra->Size(xs[0]), order);
-
-	// check to make sure we have more than the number of points required to interpolate
-	const unsigned int interp = NumInterpolationPoints();
-	if( xs.size()<interp ) {
-	  std::cerr << std::endl << "ERROR: Regression requires " << interp << " points to interpolate but only " << xs.size() << " are given." << std::endl;
-	  std::cerr << "\tTry fitting the regression with at least " << interp+1 << " points." << std::endl << std::endl;
-	  assert(xs.size()>NumInterpolationPoints());
-	}
-
-	// create the Vandermonde matrix and the rhs
-	Eigen::MatrixXd vand = VandermondeMatrix(xs);
-	const Eigen::MatrixXd rhs = ComputeCoefficientsRHS(vand, ys);
-	vand = vand.transpose()*vand;
-
-	// make the solver to do the regression
-	auto solver = vand.colPivHouseholderQr();
-
-	// comptue the coefficients
-	coeff = solver.solve(rhs).transpose();
-      }
+      void ComputeCoefficients(std::vector<Eigen::VectorXd> const& xs, std::vector<Eigen::VectorXd> const& ys); 
 
       /// Compute the right hand side given data to compute the polynomial coefficients
       /**
 	 @param[in] vand The Vandermonde matrix
       	 @param[in] ys_data The output at each point 
       */
-      template<typename data>
-	inline Eigen::MatrixXd ComputeCoefficientsRHS(Eigen::MatrixXd const& vand, std::vector<data> const& ys_data) const {
-	// the dimension
-	assert(ys_data.size()>0);
-	const unsigned int dim = algebra->Size(ys_data[0]);
-
-	// initialize space for the data
-	Eigen::MatrixXd ys = Eigen::MatrixXd::Constant(ys_data.size(), dim, std::numeric_limits<double>::quiet_NaN());
-
-	// copy the data into an Eigen type
-	for( unsigned int i=0; i<ys_data.size(); ++i ) {
-	  for( unsigned int j=0; j<dim; ++j ) {
-	    ys(i, j) = boost::any_cast<double const>(algebra->AccessElement(ys_data[i], j)); 
-	  }
-	}
-
-	// apply the Vandermonde matrix
-	return vand.transpose()*ys;
-      }
+      Eigen::MatrixXd ComputeCoefficientsRHS(Eigen::MatrixXd const& vand, std::vector<Eigen::VectorXd> const& ys_data) const;
 
       /// Create the Vandermonde matrix
       /**
 	 @param[in] xs The points 
+	 \return The Vandermonde matrix
       */
-      template<typename data>
-	Eigen::MatrixXd VandermondeMatrix(std::vector<data> const& xs) const {
-	assert(multi);
-	
-	// the number of points and the number of terms
-	const unsigned int N = xs.size();
-	const unsigned int M = multi->Size();
-	assert(N>0);
-
-	// initialize the matrix
-	Eigen::MatrixXd vand = Eigen::MatrixXd::Ones(N, M);
-
-	// each term is built by evaluating the polynomial basis
-	for( unsigned int pt=0; pt<N; ++pt ) { // loop through the points
-	  for( unsigned int i=0; i<M; ++i ) { // loop through the terms
-	    // get the multi-index
-	    const Eigen::VectorXi alpha = boost::any_cast<Eigen::VectorXi const&>(multi->Evaluate(i) [0]);
-
-	    // get the point
-	    const data& pnt = xs[pt];
-	    assert(alpha.size()==algebra->Size(pnt));
-
-	    // each term is a product of 1D variables
-	    for( unsigned int v=0; v<alpha.size(); ++v ) {
-	      // the point where we are evaluating the polynomial
-	      const double x = boost::any_cast<double const>(algebra->AccessElement(pnt, v));
-
-	      // evaluate the polynomial
-	      vand(pt, i) *= boost::any_cast<double const>(poly->Evaluate((unsigned int)alpha(v), x) [0]);
-	    }
-	  }
-	}
-
-	return vand;
-      }
+      Eigen::MatrixXd VandermondeMatrix(std::vector<Eigen::VectorXd> const& xs) const;
       
       /// Center the input points
-      template<typename data>
-	inline void CenterPoints(std::vector<data>& xs) {
-	// reset the current radius
-	currentRadius = 0.0;
-
-	// is the center zero?
-	const bool zeroCenter = algebra->IsZero(currentCenter);
-	
-	// loop through all of the input points
-	for( auto it=xs.begin(); it!=xs.end(); ++it ) {
-	  if( !zeroCenter ) {
-	    // recenter the the point
-	    const boost::any vec = *it;
-	    *it = boost::any_cast<data const&>(algebra->Subtract(std::reference_wrapper<boost::any const>(vec), std::reference_wrapper<boost::any const>(currentCenter)));
-	  }
-	  
-	  // set the radius to the largest distance from the center
-	  currentRadius = std::max(currentRadius, algebra->Norm(*it));
-	}
-	
-	// loop through all of the input points to normalize by the radius
-	const boost::any normalize = 1.0/currentRadius;
-	for( auto it=xs.begin(); it!=xs.end(); ++it ) {
-	  const boost::any vec = *it;
-	  *it = boost::any_cast<data const&>(algebra->Multiply(normalize, vec));
-	}
-      }
+      void CenterPoints(std::vector<Eigen::VectorXd>& xs);
 
       /// The order of the regression
       const unsigned int order;
 
-      /// An muq::Utilities::AnyAlgebra to do the algebric manipulations
-      std::shared_ptr<muq::Utilities::AnyAlgebra> algebra;
-
       /// The multi-index to so we know the order of each term
-      std::shared_ptr<MultiIndex> multi;
+      std::shared_ptr<muq::Utilities::MultiIndexSet> multi;
 
       /// The polynomial basis (in one variable) used to compute the Vandermonde matrix
-      std::shared_ptr<Polynomial> poly;
+      std::shared_ptr<IndexedScalarBasis> poly;
 
       /// Current center of the inputs
-      /**
-	 Defaults to boost::none.
-       */
-      boost::any currentCenter = boost::none;
+      Eigen::VectorXd currentCenter;
 
       /// Current radius of inputs
       /**
@@ -219,7 +87,6 @@ namespace muq {
 
       /// Coeffients for the polynomial basis
       Eigen::MatrixXd coeff;
-      
     };
   } // namespace Approximation
 } // namespace muq

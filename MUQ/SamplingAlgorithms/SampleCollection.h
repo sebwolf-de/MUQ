@@ -96,6 +96,8 @@ namespace muq{
 
       virtual Eigen::VectorXd Weights() const;
 
+      void WriteToFile(std::string const& filename, std::string const& dataset = "/") const;
+
     protected:
 
       std::vector<std::shared_ptr<SamplingState>> samples;
