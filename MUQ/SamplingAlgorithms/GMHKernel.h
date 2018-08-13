@@ -17,9 +17,12 @@ namespace muq {
 
       virtual void PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) override;
 
-      virtual std::vector<std::shared_ptr<SamplingState> > Step(unsigned int const t, std::shared_ptr<SamplingState> state) override;
+      //virtual std::vector<std::shared_ptr<SamplingState> > Step(unsigned int const t, std::shared_ptr<SamplingState> state) override;
 
     private:
+
+      /// Number of proposals
+      const unsigned int N;
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

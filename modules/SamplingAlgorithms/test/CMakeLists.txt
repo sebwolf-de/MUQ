@@ -5,6 +5,8 @@ CreateTestGroup(
     SampleCollectionTests.cpp
     MarkovChainTests.cpp
 
+    GMHKernelTests.cpp
+
     #MonteCarloTests.cpp
     #ImportanceSamplingTests.cpp
     MCMCTests.cpp
