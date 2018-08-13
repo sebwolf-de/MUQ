@@ -102,7 +102,7 @@ macro(PrintOptional name pad)
 		FILE(APPEND ${_log_summary}
 "#        ${name}${pad}------------> ON.\n"
 "#                                Include Directory:\n"
-"#                                  ${${name}_INCLUDE_DIR}\n")
+"#                                  ${${name}_INCLUDE_DIRS}\n")
 
 IF(DEFINED ${name}_LIBRARIES)
 FILE(APPEND ${_log_summary} "#                                Libraries:\n")
@@ -124,6 +124,8 @@ endmacro(PrintOptional)
 # print glog status
 FILE(APPEND ${_log_summary} "#  Optional dependencies:\n")
 PrintOptional(GTEST " ----")
+PrintOptional(NLOPT " ----")
+PrintOptional(PARCER " ----")
 FILE(APPEND ${_log_summary} "#\n")
 
 FILE(APPEND ${_log_summary}

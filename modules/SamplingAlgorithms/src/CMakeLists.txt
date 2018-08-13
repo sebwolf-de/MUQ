@@ -18,7 +18,7 @@ CreateCompileGroup(
     muqSamplingAlgorithms
     "MODELING_CORE;UTILITIES_CORE"
     ""
-    ""
+    "PARCER"
     #SamplingAlgorithm.cpp
     #MonteCarlo.cpp
     #ImportanceSampling.cpp
@@ -32,8 +32,9 @@ CreateCompileGroup(
     #MCKernel.cpp
     #ISKernel.cpp
     MHKernel.cpp
+    GMHKernel.cpp
     #MCMCKernel.cpp
-    ParallelMHKernel.cpp
+    #ParallelMHKernel.cpp
     
     MCMCFactory.cpp
 

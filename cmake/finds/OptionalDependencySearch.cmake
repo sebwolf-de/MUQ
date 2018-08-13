@@ -1,3 +1,26 @@
+########################################
+##### LOOK FOR PARCER             ######
+########################################
+
+if( MUQ_USE_PARCER )
+    find_package(PARCER)
+
+    if( PARCER_FOUND )
+	include(CheckPARCER)
+    endif()
+
+    if( PARCER_FOUND AND NOT PARCER_TEST_FAIL)
+	LIST(APPEND MUQ_LINK_LIBS ${PARCER_LIBRARIES})
+	LIST(APPEND MUQ_LINK_LIBS_STATIC ${PARCER_LIBRARIES_STATIC})
+
+	include_directories(${PARCER_INCLUDE_DIRS})
+	LIST(APPEND MUQ_EXTERNAL_INCLUDES ${PARCER_INCLUDE_DIRS})
+    else()
+	set(MUQ_USE_PARCER OFF)
+    endif()
+else()
+    set(MUQ_NEEDS_PARCER OFF)
+endif()
 
 ########################################
 ##### LOOK FOR GTEST              ######

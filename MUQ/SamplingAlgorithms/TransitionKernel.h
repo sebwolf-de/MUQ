@@ -34,8 +34,7 @@ namespace muq {
       typedef std::map<std::string, TransitionKernelConstructor> TransitionKernelMap;
       static std::shared_ptr<TransitionKernelMap> GetTransitionKernelMap();
 
-
-      virtual void PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {};
+      virtual inline void PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {};
 
       /// Allow the kernel to adapt given a new state
       /**
@@ -43,12 +42,12 @@ namespace muq {
 	 @param[in] t The current step
 	 @param[in] state The current state
        */
-      virtual void PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) {};
+      virtual inline void PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) {};
 
       virtual std::vector<std::shared_ptr<SamplingState>> Step(unsigned int const t, std::shared_ptr<SamplingState> prevState) = 0;
 
-      virtual void PrintStatus() const {PrintStatus("");};
-      virtual void PrintStatus(std::string prefix) const {};
+      virtual inline void PrintStatus() const {PrintStatus("");};
+      virtual inline void PrintStatus(std::string prefix) const {};
 
       // What block of the state does this kernel work on?
       const int blockInd = 0;

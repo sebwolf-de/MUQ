@@ -27,7 +27,7 @@ namespace muq{
     class AbstractSamplingProblem
     {
     public:
-      AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn) : numBlocks(blockSizesIn.size()),
+      inline AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn) : numBlocks(blockSizesIn.size()),
                                                                      blockSizes(blockSizesIn)
                                                                      {assert(blockSizes.size()==numBlocks);};
 
