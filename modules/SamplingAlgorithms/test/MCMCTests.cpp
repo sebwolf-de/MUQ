@@ -68,7 +68,6 @@ TEST(MCMC, MHKernel_ThinScheduler) {
 }
 
 TEST(MCMC, MHKernel_MHProposal) {
-
   const unsigned int N = 1e4;
 
   // parameters for the sampler

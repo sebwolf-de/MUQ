@@ -53,16 +53,28 @@ void GMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> sta
     }
   }
 
-  Eigen::EigenSolver<Eigen::MatrixXd> eig(A);
-  // the larget eigenvalue should be 1
-  assert(std::fabs(eig.eigenvalues() (0).real()-1.0)<1.0e-10);
-  assert(std::fabs(eig.eigenvalues() (0).imag())<1.0e-10);
-
-  stationaryAcceptance = eig.eigenvectors().col(0).real();
+  // compute the dominante eigen vector and then make the sum equal to 1
+  const double dominateEigenval = PowerIteration(A);
+  assert(std::fabs(dominateEigenval-1.0)<1.0e-10);
   stationaryAcceptance /= stationaryAcceptance.sum();
   
   // compute the cumulative sum
   for( unsigned int i=1; i<Np1; ++i ) { stationaryAcceptance(i) += stationaryAcceptance(i-1); }
+}
+
+double GMHKernel::PowerIteration(Eigen::MatrixXd const& A) {
+  stationaryAcceptance = Eigen::VectorXd::Ones(A.cols()).normalized();
+  
+  int counter = 0;
+  double error=100.0*tol;
+  while( error>tol && counter++<maxIt) {
+    Eigen::VectorXd temp = stationaryAcceptance;
+    stationaryAcceptance = (A*temp).normalized();
+    error = (temp-stationaryAcceptance).stableNorm();
+  }
+  
+  // return the dominate eigenvalue
+  return stationaryAcceptance.transpose()*A*stationaryAcceptance;
 }
 
 std::vector<std::shared_ptr<SamplingState> > GMHKernel::Step(unsigned int const t, std::shared_ptr<SamplingState> state) {

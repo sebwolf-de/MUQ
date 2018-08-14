@@ -53,6 +53,14 @@ namespace muq {
 
     private:
 
+      /// Compute the dominate eigenvalue
+      /**
+	 Populate the GMHKernel::stationaryAcceptance with the dominate eigen value of the transition matrix for the finite-state Markov chain over the proposals.
+	 @param[in] A The Markov transition matrix for the finite-state Markov chain over the proposals
+	 \return The dominate eigenvalue (it better be 1)
+       */
+      double PowerIteration(Eigen::MatrixXd const& A);
+
       /// Number of proposals
       const unsigned int N;
 
@@ -64,6 +72,12 @@ namespace muq {
 
       /// Number of accepted points (number of points added to the chain)
       const unsigned int M;
+
+      /// Tolerance for the power iteration
+      const double tol = 1.0e-12;
+
+      /// Max iterations for the power iteration
+      const unsigned int maxIt = 1000;
 
       /// The cumulative stationary accepatnce probability 
       Eigen::VectorXd stationaryAcceptance;
