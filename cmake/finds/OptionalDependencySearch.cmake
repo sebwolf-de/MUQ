@@ -15,11 +15,14 @@ if( MUQ_USE_PARCER )
 
 	include_directories(${PARCER_INCLUDE_DIRS})
 	LIST(APPEND MUQ_EXTERNAL_INCLUDES ${PARCER_INCLUDE_DIRS})
+	
+	set(MUQ_HAS_PARCER 1)
     else()
-	set(MUQ_USE_PARCER OFF)
+    	set(MUQ_USE_PARCER OFF)
+	set(MUQ_HAS_PARCER 1)
     endif()
 else()
-    set(MUQ_NEEDS_PARCER OFF)
+    set(MUQ_HAS_PARCER 0)
 endif()
 
 ########################################

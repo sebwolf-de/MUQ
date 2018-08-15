@@ -63,3 +63,20 @@ function(CreateTestGroup GROUP_NAME)
   set(${GROUP_NAME}_TEST_SOURCES ${SOURCES} CACHE INTERNAL "Source files with tests related to the ${GROUP_NAME} compile group.")
 
 endfunction(CreateTestGroup)
+
+# Used to add a collection of test files that are linked to a compile group specified with CreateCompileGroup
+function(CreateParallelTestGroup GROUP_NAME)
+
+  set(MUQ_PARALLEL_TEST_GROUPS "${MUQ_PARALLEL_TEST_GROUPS};${GROUP_NAME}" CACHE INTERNAL "A list of all of the muq parallel test groups.")
+
+  # Compute the path to the source file relative to the root directory
+  string(REPLACE "${CMAKE_SOURCE_DIR}/"  ""  RELATIVE_DIR ${CMAKE_CURRENT_LIST_DIR})
+
+  set(SOURCES )
+  foreach(source ${ARGN})
+    list(APPEND SOURCES "${RELATIVE_DIR}/${source}")
+  endforeach()
+
+  set(${GROUP_NAME}_PARALLEL_TEST_SOURCES ${SOURCES} CACHE INTERNAL "Source files with parallel tests related to the ${GROUP_NAME} compile group.")
+
+endfunction(CreateTestGroup)

@@ -12,3 +12,9 @@ CreateTestGroup(
     MCMCTests.cpp
     CrankNicolsonTests.cpp
 )
+
+CreateParallelTestGroup(
+    SAMPLING_ALGORITHM
+
+    GMHKernelParallelTests.cpp
+)
