@@ -76,7 +76,10 @@ void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
   }
 }
 
-unsigned int FlannCache::Size() const { return kdTree->m_data.size(); }
+unsigned int FlannCache::Size() const {
+  // these two numbers should be the same unless we check the size after adding the input but before the model finishings running
+  return std::min(kdTree->m_data.size(), outputCache.size());
+}
 
 void FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs) {
   for( auto it : inputs ) {
