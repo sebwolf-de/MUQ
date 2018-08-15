@@ -15,13 +15,13 @@ REGISTER_TRANSITION_KERNEL(GMHKernel)
 GMHKernel::GMHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : MHKernel(pt, problem),
   N(pt.get<unsigned int>("NumProposals")),
   Np1(N+1),
-  M(pt.get<unsigned int>("NumAccpeted", N)) {}
+  M(pt.get<unsigned int>("NumAccepted", N)) {}
 
 GMHKernel::GMHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<MCMCProposal> proposalIn) :
   MHKernel(pt, problem, proposalIn),
   N(pt.get<unsigned int>("NumProposals")),
   Np1(N+1),
-  M(pt.get<unsigned int>("NumAccpeted", N)) {}
+  M(pt.get<unsigned int>("NumAccepted", N)) {}
 
 GMHKernel::~GMHKernel() {}
 
@@ -48,16 +48,16 @@ void GMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> sta
   for( unsigned int i=0; i<Np1; ++i ) {
     for( unsigned int j=0; j<Np1; ++j ) {
       if( j==i ) { continue; }
-      A(i,j) = std::fmin(1.0, R(j)/R(i))/(double)(Np1);
+      A(i,j) = std::fmin(1.0, std::exp(R(j)-R(i)))/(double)(Np1);
       A(i,i) -= A(i,j);
     }
   }
 
   // compute the dominante eigen vector and then make the sum equal to 1
-  const double dominateEigenval = PowerIteration(A);
+  const double dominateEigenval = PowerIteration(A.transpose());
   assert(std::fabs(dominateEigenval-1.0)<1.0e-10);
   stationaryAcceptance /= stationaryAcceptance.sum();
-  
+
   // compute the cumulative sum
   for( unsigned int i=1; i<Np1; ++i ) { stationaryAcceptance(i) += stationaryAcceptance(i-1); }
 }
@@ -90,7 +90,7 @@ std::vector<std::shared_ptr<SamplingState> > GMHKernel::Step(unsigned int const 
     // store it
     *it = proposedStates[index];
   }
-  
+
   return newStates;
 }
 

@@ -155,7 +155,7 @@ std::pair<double,double> SampleCollection::RecursiveWeightSum(std::vector<std::s
 
 
 Eigen::VectorXd SampleCollection::ESS(int blockDim) const
-{
+{ 
   if(samples.size()==0)
     return Eigen::VectorXd();
 
@@ -169,6 +169,7 @@ Eigen::VectorXd SampleCollection::ESS(int blockDim) const
   }else{
     blockSize = samples.at(0)->state.at(blockDim).size();
   }
+  
   return (weightSum*weightSum / squaredSum) * Eigen::VectorXd::Ones(blockSize);
 }
 
