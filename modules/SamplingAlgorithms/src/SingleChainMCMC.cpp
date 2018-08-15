@@ -85,13 +85,14 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
       // Add the new states to the SampleCollection
       for(int i=0; i<newStates.size(); ++i){
         sampNum++;
+	if( sampNum>numSamps ) { break; }
 
         if(newStates.at(i)!=prevState)
           prevState = newStates.at(i);
 
         if((sampNum>=burnIn)&&(scheduler->ShouldSave(sampNum))){
 
-          if(!lastSavedState){
+          /*if(!lastSavedState){
             lastSavedState = newStates.at(i);
             samples->Add(newStates.at(i));
 
@@ -101,7 +102,8 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
           }else{
               lastSavedState->weight += 1;
-          }
+	      }*/
+	  samples->Add(newStates.at(i));
 
         }
       }
@@ -117,7 +119,6 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
     PrintStatus("  ", numSamps+1);
     std::cout << "Completed in " << runTime << " seconds." << std::endl;
   }
-
 
   return samples;
 }
