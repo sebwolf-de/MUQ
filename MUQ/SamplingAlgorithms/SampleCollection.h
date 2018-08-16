@@ -44,6 +44,8 @@ namespace muq{
     class SampleCollection{
     public:
 
+      virtual ~SampleCollection() = default;
+
       void Add(std::shared_ptr<SamplingState> newSamp);
 
       virtual std::shared_ptr<SamplingState> at(unsigned i);
