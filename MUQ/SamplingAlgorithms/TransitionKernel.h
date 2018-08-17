@@ -7,6 +7,12 @@
 #include <boost/function.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include "MUQ/config.h"
+
+#if MUQ_HAS_PARCER
+#include <parcer/Communicator.h>
+#endif
+
 #include "MUQ/Utilities/RegisterClassName.h"
 
 #include "MUQ/Modeling/WorkPiece.h"
@@ -22,6 +28,10 @@ namespace muq {
       TransitionKernel(boost::property_tree::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem);
 
       virtual ~TransitionKernel() = default;
+
+#if MUQ_HAS_PARCER
+      void SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm);
+#endif
 
       /// Static constructor for the transition kernel
       /**
@@ -56,6 +66,10 @@ namespace muq {
 
       /// The sampling problem that evaluates/samples the target distribution
       std::shared_ptr<AbstractSamplingProblem> problem;
+
+#if MUQ_HAS_PARCER
+      std::shared_ptr<parcer::Communicator> comm;
+#endif
 
     private:
     };

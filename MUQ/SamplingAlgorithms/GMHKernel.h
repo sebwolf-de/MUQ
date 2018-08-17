@@ -1,6 +1,12 @@
 #ifndef GMHKERNEL_H_
 #define GMHKERNEL_H_
 
+#include "MUQ/config.h"
+
+#if MUQ_HAS_PARCER
+#include <parcer/Queue.h>
+#endif
+
 #include "MUQ/SamplingAlgorithms/MCMCProposal.h"
 #include "MUQ/SamplingAlgorithms/MHKernel.h"
 
@@ -44,6 +50,8 @@ namespace muq {
        */
       virtual std::vector<std::shared_ptr<SamplingState> > Step(unsigned int const t, std::shared_ptr<SamplingState> state) override;
 
+      std::vector<std::shared_ptr<SamplingState> > SampleStationary(std::shared_ptr<SamplingState> state);
+
       /// Get the cumulative stationary acceptance probability
       /**
 	 Must be called after GMHKernel::PreStep.
@@ -51,7 +59,29 @@ namespace muq {
        */
       Eigen::VectorXd CumulativeStationaryAcceptance() const;
 
+#if MUQ_HAS_PARCER
+      std::shared_ptr<parcer::Communicator> GetCommunicator() const;
+#endif
+
     private:
+
+      void SerialProposal(std::shared_ptr<SamplingState> state);
+
+#if MUQ_HAS_PARCER
+      void ParallelProposal(std::shared_ptr<SamplingState> state);
+#endif
+
+      void SerialAcceptanceDensity();
+      
+#if MUQ_HAS_PARCER
+      void ParallelAcceptanceDensity();
+
+      void ParallelLogTarget(Eigen::VectorXd& R);
+#endif
+
+      Eigen::MatrixXd AcceptanceMatrix(Eigen::VectorXd const& R) const;
+
+      void CumulativeAcceptanceDensity(Eigen::VectorXd const& R);
 
       /// Compute the dominate eigenvalue
       /**
@@ -82,8 +112,14 @@ namespace muq {
       /// The cumulative stationary accepatnce probability 
       Eigen::VectorXd stationaryAcceptance;
 
+#if MUQ_HAS_PARCER
+      typedef parcer::Queue<std::shared_ptr<SamplingState>, std::shared_ptr<SamplingState>, MCMCProposal, &MCMCProposal::Sample> ProposalQueue;
+      typedef parcer::Queue<std::shared_ptr<SamplingState>, double, AbstractSamplingProblem, &AbstractSamplingProblem::LogDensity> LogTargetQueue;
+#endif
+      
       /// Proposed states
       std::vector<std::shared_ptr<SamplingState> > proposedStates;
+      
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

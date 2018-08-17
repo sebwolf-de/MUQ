@@ -182,8 +182,6 @@ boost::any sample3 = rv->Evaluate(x);
       	inputs.push_back(std::cref(in));
       	return GradLogDensity(wrt, inputs, args...);
       }
-
-
     };
   } // namespace Modeling
 } // namespace muq

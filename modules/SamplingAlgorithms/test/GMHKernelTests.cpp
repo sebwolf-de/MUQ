@@ -21,7 +21,7 @@ TEST(GMHKernelTest, PrposalTest) {
   const unsigned int N = 10;
   const unsigned int M = 10;
 
-  // use an apative Metropolis proposal
+  // use an adpative Metropolis proposal
   pt::ptree pt;
   pt.put("MyKernel.MyProposal.ProposalVariance", 1.0);
   pt.put("MyKernel.MyProposal.AdaptSteps", 200);

@@ -16,5 +16,9 @@ CreateTestGroup(
 CreateParallelTestGroup(
     SAMPLING_ALGORITHM
 
+    SamplingStateParallelTests.cpp
+    
     GMHKernelParallelTests.cpp
+
+    SingleChainMCMCParallelTests.cpp
 )

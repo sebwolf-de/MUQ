@@ -30,6 +30,10 @@ SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree             pt,
     boost::property_tree::ptree subTree = pt.get_child(kernelNames.at(i));
     subTree.put("BlockIndex",i);
     kernels.at(i) = TransitionKernel::Construct(subTree, problem);
+
+#if MUQ_HAS_PARCER
+    kernels.at(i)->SetCommunicator(comm);
+#endif
   }
 
 }
@@ -53,8 +57,9 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
   std::shared_ptr<SamplingState> lastSavedState;
 
-  if(burnIn==0)
+  if(burnIn==0) {
     samples->Add(prevState);
+  }
 
   // What is the next iteration that we want to print at
   const unsigned int printIncr = std::floor(numSamps / double(10));
@@ -67,6 +72,12 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
   auto startTime = std::chrono::high_resolution_clock::now();
   while(sampNum < numSamps)
   {
+
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << "~~~~~~~~~~~~~~ rank: " << comm->GetRank() << " STARTING step:" << sampNum << std::endl;
+    std::cout << std::endl;
+    
     // Should we print
     if(sampNum > nextPrintInd){
       if(printLevel>0){
@@ -103,7 +114,12 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
           }else{
               lastSavedState->weight += 1;
 	      }*/
+#if MUQ_HAS_PARCER
+	  assert(comm);
+	  if( comm->GetRank()==0 ) { samples->Add(newStates.at(i)); }
+#else
 	  samples->Add(newStates.at(i));
+#endif
 
         }
       }
@@ -122,3 +138,4 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
   return samples;
 }
+

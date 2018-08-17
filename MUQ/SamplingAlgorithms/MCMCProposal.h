@@ -16,7 +16,7 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
-    class MCMCProposal{
+    class MCMCProposal : public std::enable_shared_from_this<MCMCProposal> {
     public:
 
       MCMCProposal(boost::property_tree::ptree       const& pt,

@@ -14,10 +14,10 @@ if(MUQ_USE_MPI)
   include_directories(${MPI_CXX_INCLUDE_DIRS})
   link_directories(${MPI_CXX_LIBRARIES})
 
-  set(MUQ_HAS_MPI ON)
+  set(MUQ_HAS_MPI 1)
 
 else(MUQ_USE_MPI)
-  set(MUQ_HAS_MPI OFF)
+  set(MUQ_HAS_MPI 0)
 endif(MUQ_USE_MPI)
 
 set(CMAKE_CXX_FLAGS_DEBUG  "-O0") #-O0 works better for memcheck

@@ -1,6 +1,12 @@
 #ifndef SAMPLINGALGORITHM_H_
 #define SAMPLINGALGORITHM_H_
 
+#include "MUQ/config.h"
+
+#if MUQ_HAS_PARCER
+#include <parcer/Communicator.h>
+#endif
+
 #include "MUQ/Modeling/WorkPiece.h"
 
 #include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
@@ -22,6 +28,10 @@ namespace muq {
       virtual std::shared_ptr<SampleCollection> Run(Eigen::VectorXd const& x0){return Run(std::vector<Eigen::VectorXd>(1,x0));};
       virtual std::shared_ptr<SampleCollection> Run(std::vector<Eigen::VectorXd> const& x0){ return RunImpl(x0);};
 
+#if MUQ_HAS_PARCER
+  inline std::shared_ptr<parcer::Communicator> GetCommunicator() const { return comm; }
+#endif
+
     protected:
 
       virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) = 0;
@@ -37,6 +47,10 @@ namespace muq {
       //virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
       std::shared_ptr<SampleCollection> samples;
+
+#if MUQ_HAS_PARCER
+      std::shared_ptr<parcer::Communicator> comm = std::make_shared<parcer::Communicator>();
+#endif
 
     };
   } // namespace SamplingAlgorithms
