@@ -11,7 +11,10 @@
 #include "MUQ/config.h"
 
 #if MUQ_HAS_PARCER
-#include "MUQ/Utilities/Cereal/CerealizeEigen.h"
+#include "MUQ/Utilities/Cereal/BoostAnySerializer.h"
+#include <cereal/types/string.hpp>
+#include <cereal/types/unordered_map.hpp>
+#include <cereal/types/vector.hpp>
 #endif
 
 namespace muq {
@@ -23,6 +26,7 @@ namespace muq {
     class SamplingState {
     public:
 
+      SamplingState() = default;
       SamplingState(Eigen::VectorXd const& stateIn, double weight = 1.0);
       SamplingState(std::vector<Eigen::VectorXd> const& stateIn, double weight = 1.0);
 
@@ -43,7 +47,7 @@ namespace muq {
       /// A map containing extra information like the target density, run time, forward model output, etc...
       std::unordered_map<std::string, boost::any> meta;
 
-      
+
 #if MUQ_HAS_PARCER
       /** @brief Serialization function for use with Cereal.
           @details This function provides a way to serialize most of the SamplingState
@@ -51,26 +55,10 @@ namespace muq {
           the boost::any type, this function does not serialize the meta variable.
       */
       template<class Archive>
-	void serialize(Archive & archive) {
-        archive(state, weight); // serialize things by passing them to the archive
+	    void serialize(Archive & archive) {
+        archive(state, weight, meta); // serialize things by passing them to the archive
       }
-      
-      template<typename Archive>
-	static void load_and_construct( Archive &ar, cereal::construct<SamplingState> &construct) {
-	std::vector<Eigen::VectorXd> state;
-	double weight;
-	
-	ar(state, weight);
-	
-	std::cout << "LOAD AND COSNTRUCT SAMPLE" << std::endl;
-	std::cout << "weight: " << weight << std::endl;
-	std::cout << "state size: " << state.size() << std::endl;
-	std::cout << "state: " << state[0].transpose() << std::endl;
-	
-	construct(state, weight);
-	
-	std::cout << "FINISHED LOAD AND COSNTRUCT SAMPLE" << std::endl;
-      }
+
 #endif
     };
   } // namespace SamplingAlgoritms

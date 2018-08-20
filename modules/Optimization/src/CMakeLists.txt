@@ -14,7 +14,7 @@
 
 CreateCompileGroup(
     OPTIMIZATION_CORE
-    "The basic building blocks to solve optimzation problems."
+    "The basic building blocks to define and solve optimization problems."
     muqOptimization
     "MODELING_CORE"
     "NLOPT"

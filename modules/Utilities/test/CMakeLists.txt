@@ -22,4 +22,5 @@ CreateTestGroup(
     StringUtilitiesTest.cpp
 
     Cereal/CerealizeEigenTests.cpp
+    Cereal/BoostAnyTests.cpp
 )
