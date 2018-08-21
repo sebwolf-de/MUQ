@@ -66,14 +66,54 @@ void save(Archive & ar, TemporaryBoostAnyConst const& obj)
     BoostAnySerializer<Archive>::template save<std::string>(obj.any,ar);
   }else if(obj.any.type() == typeid(unsigned int)){
     BoostAnySerializer<Archive>::template save<unsigned int>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Vector2d)){
+    BoostAnySerializer<Archive>::template save<Eigen::Vector2d>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Vector3d)){
+    BoostAnySerializer<Archive>::template save<Eigen::Vector3d>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Vector4d)){
+    BoostAnySerializer<Archive>::template save<Eigen::Vector4d>(obj.any,ar);
   }else if(obj.any.type() == typeid(Eigen::VectorXd)){
     BoostAnySerializer<Archive>::template save<Eigen::VectorXd>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Vector2f)){
+    BoostAnySerializer<Archive>::template save<Eigen::Vector2f>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Vector3f)){
+    BoostAnySerializer<Archive>::template save<Eigen::Vector3f>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Vector4f)){
+    BoostAnySerializer<Archive>::template save<Eigen::Vector4f>(obj.any,ar);
   }else if(obj.any.type() == typeid(Eigen::VectorXf)){
     BoostAnySerializer<Archive>::template save<Eigen::VectorXf>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Vector2i)){
+    BoostAnySerializer<Archive>::template save<Eigen::Vector2i>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Vector3i)){
+    BoostAnySerializer<Archive>::template save<Eigen::Vector3i>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Vector4i)){
+    BoostAnySerializer<Archive>::template save<Eigen::Vector4i>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::VectorXi)){
+    BoostAnySerializer<Archive>::template save<Eigen::VectorXi>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Matrix2d)){
+    BoostAnySerializer<Archive>::template save<Eigen::Matrix2d>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Matrix3d)){
+    BoostAnySerializer<Archive>::template save<Eigen::Matrix3d>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Matrix4d)){
+    BoostAnySerializer<Archive>::template save<Eigen::Matrix4d>(obj.any,ar);
   }else if(obj.any.type() == typeid(Eigen::MatrixXd)){
     BoostAnySerializer<Archive>::template save<Eigen::MatrixXd>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Matrix2f)){
+    BoostAnySerializer<Archive>::template save<Eigen::Matrix2f>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Matrix3f)){
+    BoostAnySerializer<Archive>::template save<Eigen::Matrix3f>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Matrix4f)){
+    BoostAnySerializer<Archive>::template save<Eigen::Matrix4f>(obj.any,ar);
   }else if(obj.any.type() == typeid(Eigen::MatrixXf)){
     BoostAnySerializer<Archive>::template save<Eigen::MatrixXf>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Matrix2i)){
+    BoostAnySerializer<Archive>::template save<Eigen::Matrix2i>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Matrix3i)){
+    BoostAnySerializer<Archive>::template save<Eigen::Matrix3i>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::Matrix4i)){
+    BoostAnySerializer<Archive>::template save<Eigen::Matrix4i>(obj.any,ar);
+  }else if(obj.any.type() == typeid(Eigen::MatrixXi)){
+    BoostAnySerializer<Archive>::template save<Eigen::MatrixXi>(obj.any,ar);
   }else{
     assert(false);
   }
@@ -98,14 +138,54 @@ void load(Archive & ar, boost::any & obj)
     obj = BoostAnySerializer<Archive>::template load<unsigned int>(ar);
   }else if(typeName == typeid(std::string).name()){
     obj = BoostAnySerializer<Archive>::template load<std::string>(ar);
+  }else if(typeName == typeid(Eigen::Vector2d).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Vector2d>(ar);
+  }else if(typeName == typeid(Eigen::Vector3d).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Vector3d>(ar);
+  }else if(typeName == typeid(Eigen::Vector4d).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Vector4d>(ar);
   }else if(typeName == typeid(Eigen::VectorXd).name()){
     obj = BoostAnySerializer<Archive>::template load<Eigen::VectorXd>(ar);
+  }else if(typeName == typeid(Eigen::Vector2f).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Vector2f>(ar);
+  }else if(typeName == typeid(Eigen::Vector3f).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Vector3f>(ar);
+  }else if(typeName == typeid(Eigen::Vector4f).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Vector4f>(ar);
   }else if(typeName == typeid(Eigen::VectorXf).name()){
     obj = BoostAnySerializer<Archive>::template load<Eigen::VectorXf>(ar);
+  }else if(typeName == typeid(Eigen::Vector2i).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Vector2i>(ar);
+  }else if(typeName == typeid(Eigen::Vector3i).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Vector3i>(ar);
+  }else if(typeName == typeid(Eigen::Vector4i).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Vector4i>(ar);
+  }else if(typeName == typeid(Eigen::VectorXi).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::VectorXi>(ar);
+  }else if(typeName == typeid(Eigen::Matrix2d).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Matrix2d>(ar);
+  }else if(typeName == typeid(Eigen::Matrix3d).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Matrix3d>(ar);
+  }else if(typeName == typeid(Eigen::Matrix4d).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Matrix4d>(ar);
   }else if(typeName == typeid(Eigen::MatrixXd).name()){
     obj = BoostAnySerializer<Archive>::template load<Eigen::MatrixXd>(ar);
+  }else if(typeName == typeid(Eigen::Matrix2f).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Matrix2f>(ar);
+  }else if(typeName == typeid(Eigen::Matrix3f).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Matrix3f>(ar);
+  }else if(typeName == typeid(Eigen::Matrix4f).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Matrix4f>(ar);
   }else if(typeName == typeid(Eigen::MatrixXf).name()){
     obj = BoostAnySerializer<Archive>::template load<Eigen::MatrixXf>(ar);
+  }else if(typeName == typeid(Eigen::Matrix2i).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Matrix2i>(ar);
+  }else if(typeName == typeid(Eigen::Matrix3i).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Matrix3i>(ar);
+  }else if(typeName == typeid(Eigen::Matrix4i).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::Matrix4i>(ar);
+  }else if(typeName == typeid(Eigen::MatrixXi).name()){
+    obj = BoostAnySerializer<Archive>::template load<Eigen::MatrixXi>(ar);
   }else{
     assert(false);
   }
