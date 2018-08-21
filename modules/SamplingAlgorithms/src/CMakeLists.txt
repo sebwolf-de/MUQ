@@ -19,7 +19,7 @@ CreateCompileGroup(
     "MODELING_CORE;UTILITIES_CORE"
     ""
     "PARCER"
-    #SamplingAlgorithm.cpp
+    SamplingAlgorithm.cpp
     #MonteCarlo.cpp
     #ImportanceSampling.cpp
     SingleChainMCMC.cpp

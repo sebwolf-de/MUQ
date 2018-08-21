@@ -18,18 +18,22 @@ namespace muq {
     class SamplingAlgorithm {//} : public muq::Modeling::WorkPiece {
     public:
 
-      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn) : samples(samplesIn){};
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn);
+
+#if MUQ_HAS_PARCER
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn, std::shared_ptr<parcer::Communicator> comm);
+#endif
 
       virtual ~SamplingAlgorithm() = default;
 
-      std::shared_ptr<SampleCollection> GetSamples() const{return samples;};
-
-      virtual std::shared_ptr<SampleCollection> Run(){return Run(std::vector<Eigen::VectorXd>());};
-      virtual std::shared_ptr<SampleCollection> Run(Eigen::VectorXd const& x0){return Run(std::vector<Eigen::VectorXd>(1,x0));};
-      virtual std::shared_ptr<SampleCollection> Run(std::vector<Eigen::VectorXd> const& x0){ return RunImpl(x0);};
+      std::shared_ptr<SampleCollection> GetSamples() const;
+      
+      virtual std::shared_ptr<SampleCollection> Run();
+      virtual std::shared_ptr<SampleCollection> Run(Eigen::VectorXd const& x0);
+      virtual std::shared_ptr<SampleCollection> Run(std::vector<Eigen::VectorXd> const& x0);
 
 #if MUQ_HAS_PARCER
-  inline std::shared_ptr<parcer::Communicator> GetCommunicator() const { return comm; }
+      std::shared_ptr<parcer::Communicator> GetCommunicator() const;
 #endif
 
     protected:

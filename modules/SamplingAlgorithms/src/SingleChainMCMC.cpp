@@ -93,35 +93,6 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
       // add the new states to the SampleCollection (this also increments sampNum)
       prevState = SaveSamples(newStates, sampNum);
-      /*for(int i=0; i<newStates.size(); ++i){
-        sampNum++;
-	if( sampNum>numSamps ) { break; }
-
-        if(newStates.at(i)!=prevState)
-          prevState = newStates.at(i);
-
-        if((sampNum>=burnIn)&&(scheduler->ShouldSave(sampNum))){
-
-          if(!lastSavedState){
-            lastSavedState = newStates.at(i);
-            samples->Add(newStates.at(i));
-
-          }else if(newStates.at(i)!=lastSavedState){
-              samples->Add(newStates.at(i));
-              lastSavedState = newStates.at(i);
-
-          }else{
-              lastSavedState->weight += 1;
-	      }
-#if MUQ_HAS_PARCER
-	  // only one chain is relavent, assume it is rank 0 and only store that sample
-	  assert(comm);
-	  if( comm->GetRank()==0 ) { samples->Add(newStates.at(i)); }
-#else
-	  samples->Add(newStates.at(i));
-	  #endif
-	  }
-	  }*/
     }
   }
 
@@ -142,7 +113,7 @@ std::shared_ptr<SamplingState> SingleChainMCMC::SaveSamples(std::vector<std::sha
     if( ShouldSave(sampNum) ) { samples->Add(it); }
 
     // increment the number of samples and break of we hit the max. number
-    if( ++sampNum>numSamps ) { return it; }
+    if( ++sampNum>=numSamps ) { return it; }
   }
 
   return newStates.back();
