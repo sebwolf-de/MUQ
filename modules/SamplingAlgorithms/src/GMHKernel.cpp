@@ -103,7 +103,7 @@ void GMHKernel::AcceptanceDensity(Eigen::VectorXd& R) {
   }
 
   // compute the cumlative acceptance density
-  CumulativeAcceptanceDensity(R);
+  ComputeStationaryAcceptance(R);
 }
 
 Eigen::MatrixXd GMHKernel::AcceptanceMatrix(Eigen::VectorXd const& R) const {
@@ -120,14 +120,19 @@ Eigen::MatrixXd GMHKernel::AcceptanceMatrix(Eigen::VectorXd const& R) const {
   return A;
 }
 
-void GMHKernel::CumulativeAcceptanceDensity(Eigen::VectorXd const& R) {
+void GMHKernel::ComputeStationaryAcceptance(Eigen::VectorXd const& R) {
   const Eigen::MatrixXd& A = AcceptanceMatrix(R);
-  
-  // compute the dominante eigen vector and then make the sum equal to 1
-  ComputeStationaryAcceptance(A.transpose());
-  
-  // compute the cumulative sum
-  for( unsigned int i=1; i<Np1; ++i ) { stationaryAcceptance(i) += stationaryAcceptance(i-1); }
+
+  stationaryAcceptance = Eigen::VectorXd::Ones(A.cols()).normalized();
+
+  Eigen::MatrixXd mat(Np1+1, Np1);
+  mat.block(0,0,Np1,Np1) = A.transpose()-Eigen::MatrixXd::Identity(Np1,Np1);
+  mat.row(Np1) = Eigen::RowVectorXd::Ones(Np1);
+
+  Eigen::VectorXd rhs = Eigen::VectorXd::Zero(Np1+1);
+  rhs(Np1) = 1.0;
+
+  stationaryAcceptance = mat.colPivHouseholderQr().solve(rhs);
 }
 
 void GMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {
@@ -142,32 +147,15 @@ void GMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> sta
   } else { SerialProposal(state); }
 }
 
-void GMHKernel::ComputeStationaryAcceptance(Eigen::MatrixXd const& A) {
-  stationaryAcceptance = Eigen::VectorXd::Ones(A.cols()).normalized();
-
-  Eigen::MatrixXd mat(Np1+1, Np1);
-  mat.block(0,0,Np1,Np1) = A.transpose()-Eigen::MatrixXd::Identity(Np1,Np1);
-  mat.row(Np1) = Eigen::RowVectorXd::Ones(Np1);
-
-  Eigen::VectorXd rhs = Eigen::VectorXd::Zero(Np1+1);
-  rhs(Np1) = 1.0;
-
-  stationaryAcceptance = mat.colPivHouseholderQr().solve(rhs);
-}
-
 std::vector<std::shared_ptr<SamplingState> > GMHKernel::SampleStationary() const {
   std::vector<std::shared_ptr<SamplingState> > newStates(M, nullptr);
-  
-  // sample the new states
-  for( auto it=newStates.begin(); it!=newStates.end(); ++it ) {
-    // determine which proposed state to return
-    const double uniform = RandomGenerator::GetUniform();
-    unsigned int index = 0;
-    for( ; index<Np1; ++index ) { if( uniform<stationaryAcceptance(index) ) { break; }  }
-    
-    // store it
-    *it = proposedStates[index];
-  }
+
+  // get the indices of the proposed states that are accepted
+  Eigen::VectorXi indices = RandomGenerator::GetDiscrete(stationaryAcceptance, M);
+  assert(indices.size()==M);
+
+  // store the accepted states
+  for( unsigned int i=0; i<M; ++i ) { newStates[i] = proposedStates[indices[i]]; }
 
   return newStates;
 }
@@ -178,7 +166,7 @@ std::vector<std::shared_ptr<SamplingState> > GMHKernel::Step(unsigned int const 
 #if MUQ_HAS_PARCER
   return comm->GetRank()==0 ? SampleStationary() : std::vector<std::shared_ptr<SamplingState> >(M, nullptr);
 #else
-  return SampleStationary(state);
+  return SampleStationary();
 #endif
 }
 

@@ -46,7 +46,7 @@ TEST(GMHKernelTest, PrposalTest) {
   if( kern->GetCommunicator()->GetRank()==0 ) {
     const Eigen::VectorXd& cumulativeStationaryAcceptance = kern->CumulativeStationaryAcceptance();
     EXPECT_EQ(cumulativeStationaryAcceptance.size(), N+1);
-    EXPECT_DOUBLE_EQ(cumulativeStationaryAcceptance(N), 1.0);
+    EXPECT_DOUBLE_EQ(cumulativeStationaryAcceptance.sum(), 1.0);
     for( unsigned int i=0; i<N+1; ++i ) { EXPECT_TRUE(cumulativeStationaryAcceptance(i)>0.0); }
   }
 

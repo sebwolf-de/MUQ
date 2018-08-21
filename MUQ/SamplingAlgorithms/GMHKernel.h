@@ -95,14 +95,7 @@ namespace muq {
       /**
 	 @param[in] R The log-target plus the log-proposals
        */
-      void CumulativeAcceptanceDensity(Eigen::VectorXd const& R);
-
-      /// Compute the stationary acceptance probability
-      /**
-	 Populate the GMHKernel::stationaryAcceptance with the dominate eigen value of the transition matrix for the finite-state Markov chain over the proposals.
-	 @param[in] A The Markov transition matrix for the finite-state Markov chain over the proposals
-       */
-      void ComputeStationaryAcceptance(Eigen::MatrixXd const& A);
+      void ComputeStationaryAcceptance(Eigen::VectorXd const& R);
 
       /// Number of proposals
       const unsigned int N;
