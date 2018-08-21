@@ -71,13 +71,7 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
   auto startTime = std::chrono::high_resolution_clock::now();
   while(sampNum < numSamps)
-  {
-
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "~~~~~~~~~~~~~~ rank: " << comm->GetRank() << " STARTING step:" << sampNum << std::endl;
-    std::cout << std::endl;
-    
+  {    
     // Should we print
     if(sampNum > nextPrintInd){
       if(printLevel>0){

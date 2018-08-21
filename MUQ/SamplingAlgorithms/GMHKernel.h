@@ -50,7 +50,11 @@ namespace muq {
        */
       virtual std::vector<std::shared_ptr<SamplingState> > Step(unsigned int const t, std::shared_ptr<SamplingState> state) override;
 
-      std::vector<std::shared_ptr<SamplingState> > SampleStationary(std::shared_ptr<SamplingState> state);
+      /// Sample the stationary distribution
+      /**
+	 \return The new points
+       */
+      std::vector<std::shared_ptr<SamplingState> > SampleStationary() const;
 
       /// Get the cumulative stationary acceptance probability
       /**
@@ -65,31 +69,40 @@ namespace muq {
 
     private:
 
+      /// Propose \f$N\f$ points in serial and evaluate the log target
+      /**
+	 @param[in] state The current point
+       */
       void SerialProposal(std::shared_ptr<SamplingState> state);
 
 #if MUQ_HAS_PARCER
+      /// Propose \f$N\f$ points in parallel and evaluate the log target
+      /**
+	 @param[in] state The current point
+       */
       void ParallelProposal(std::shared_ptr<SamplingState> state);
 #endif
 
-      void SerialAcceptanceDensity();
+      /// Compute the stationary transition density
+      /**
+	 @param[in] R The log-target
+       */
+      void AcceptanceDensity(Eigen::VectorXd& R);
       
-#if MUQ_HAS_PARCER
-      void ParallelAcceptanceDensity();
-
-      void ParallelLogTarget(Eigen::VectorXd& R);
-#endif
-
       Eigen::MatrixXd AcceptanceMatrix(Eigen::VectorXd const& R) const;
 
+      /// Compute the cumulative acceptance density
+      /**
+	 @param[in] R The log-target plus the log-proposals
+       */
       void CumulativeAcceptanceDensity(Eigen::VectorXd const& R);
 
-      /// Compute the dominate eigenvalue
+      /// Compute the stationary acceptance probability
       /**
 	 Populate the GMHKernel::stationaryAcceptance with the dominate eigen value of the transition matrix for the finite-state Markov chain over the proposals.
 	 @param[in] A The Markov transition matrix for the finite-state Markov chain over the proposals
-	 \return The dominate eigenvalue (it better be 1)
        */
-      double PowerIteration(Eigen::MatrixXd const& A);
+      void ComputeStationaryAcceptance(Eigen::MatrixXd const& A);
 
       /// Number of proposals
       const unsigned int N;
@@ -103,23 +116,11 @@ namespace muq {
       /// Number of accepted points (number of points added to the chain)
       const unsigned int M;
 
-      /// Tolerance for the power iteration
-      const double tol = 1.0e-12;
-
-      /// Max iterations for the power iteration
-      const unsigned int maxIt = 1000;
-
       /// The cumulative stationary accepatnce probability 
       Eigen::VectorXd stationaryAcceptance;
 
-#if MUQ_HAS_PARCER
-      typedef parcer::Queue<std::shared_ptr<SamplingState>, std::shared_ptr<SamplingState>, MCMCProposal, &MCMCProposal::Sample> ProposalQueue;
-      typedef parcer::Queue<std::shared_ptr<SamplingState>, double, AbstractSamplingProblem, &AbstractSamplingProblem::LogDensity> LogTargetQueue;
-#endif
-      
       /// Proposed states
       std::vector<std::shared_ptr<SamplingState> > proposedStates;
-      
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

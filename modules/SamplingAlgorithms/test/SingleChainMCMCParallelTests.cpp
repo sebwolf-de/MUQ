@@ -56,6 +56,6 @@ TEST(MCMC, MHKernel_MHProposal) {
     EXPECT_NEAR(0.0, cov(1,0), 1e-1);
     EXPECT_NEAR(1.0, cov(1,1), 1e-1);
   } else {
-    EXPECT_EQ(0, samps->size());
+    EXPECT_EQ(1, samps->size());
   }
 }

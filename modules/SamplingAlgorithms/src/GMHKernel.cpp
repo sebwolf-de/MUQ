@@ -10,6 +10,25 @@ using namespace muq::SamplingAlgorithms;
 
 REGISTER_TRANSITION_KERNEL(GMHKernel)
 
+#if MUQ_HAS_PARCER
+typedef std::pair<std::shared_ptr<SamplingState>, bool> CurrentState;
+
+struct ProposeState {
+  inline ProposeState(std::shared_ptr<MCMCProposal> proposal, std::shared_ptr<AbstractSamplingProblem> problem) : proposal(proposal), problem(problem) {}
+
+  inline std::shared_ptr<SamplingState> Evaluate(CurrentState state) {
+    std::shared_ptr<SamplingState> proposed = state.second ? proposal->Sample(state.first) : state.first;
+    proposed->meta["log-target"] = problem->LogDensity(proposed);
+    return proposed;
+  }
+
+  std::shared_ptr<MCMCProposal> proposal;
+  std::shared_ptr<AbstractSamplingProblem> problem;
+};
+
+typedef parcer::Queue<CurrentState, std::shared_ptr<SamplingState>, ProposeState> ProposalQueue;
+#endif
+
 GMHKernel::GMHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : MHKernel(pt, problem),
   N(pt.get<unsigned int>("NumProposals")),
   Np1(N+1),
@@ -24,9 +43,21 @@ GMHKernel::GMHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProble
 GMHKernel::~GMHKernel() {}
 
 void GMHKernel::SerialProposal(std::shared_ptr<SamplingState> state) {
+  // propose the points
   proposedStates.resize(Np1, nullptr);
   proposedStates[0] = state;
-  for( auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) { *it = proposal->Sample(state); }
+  proposedStates[0]->meta["log-target"] = problem->LogDensity(state);
+  for( auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) {
+    *it = proposal->Sample(state);
+    (*it)->meta["log-target"] = problem->LogDensity(*it);
+  }
+
+  // evaluate the target density
+  Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
+  for( unsigned int i=0; i<Np1; ++i ) { R(i) = boost::any_cast<double const>(proposedStates[i]->meta["log-target"]); }
+
+  // compute stationary transition probability
+  AcceptanceDensity(R);
 }
 
 #if MUQ_HAS_PARCER
@@ -34,102 +65,46 @@ void GMHKernel::ParallelProposal(std::shared_ptr<SamplingState> state) {
   // if we only have one processor, just propose in serial
   if( comm->GetSize()==1 ) { return SerialProposal(state); }
 
-  auto proposalQueue = std::make_shared<ProposalQueue>(proposal, comm);
-
+  // create a queue to propose and evaluate the log-target
+  auto helper = std::make_shared<ProposeState>(proposal, problem);
+  auto proposalQueue = std::make_shared<ProposalQueue>(helper, comm);
+  
   if( comm->GetRank()==0 ) {
     assert(state);
-    
-    std::vector<unsigned int> proposalIDs(N);
-    for( auto id=proposalIDs.begin(); id!=proposalIDs.end(); ++id ) { *id = proposalQueue->SubmitWork(state); }
 
+    // submit the work
+    std::vector<unsigned int> proposalIDs(Np1);
+    proposalIDs[0] = proposalQueue->SubmitWork(CurrentState(state, false)); // evaluate the current state
+    for( auto id=proposalIDs.begin()+1; id!=proposalIDs.end(); ++id ) { *id = proposalQueue->SubmitWork(CurrentState(state, true)); }
+
+    // retrieve the work
     proposedStates.resize(Np1, nullptr);
-    proposedStates[0] = state;
-    for( unsigned int i=0; i<N; ++i ) {
-      proposedStates[i+1] = proposalQueue->GetResult(proposalIDs[i]);
+    Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
+    for( unsigned int i=0; i<Np1; ++i ) {
+      std::shared_ptr<SamplingState> evalState = proposalQueue->GetResult(proposalIDs[i]);
+      
+      proposedStates[i] = evalState;
+      R(i) = boost::any_cast<double const>(evalState->meta["log-target"]);
     }
+
+    // compute stationary transition probability
+    AcceptanceDensity(R);
   }
 }
 #endif
-
-void GMHKernel::SerialAcceptanceDensity() {
-  Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
+  
+void GMHKernel::AcceptanceDensity(Eigen::VectorXd& R) {
+  // update log-target with proposal density
   for( unsigned int i=0; i<Np1; ++i ) {
-    R(i) = problem->LogDensity(proposedStates[i]);
     for( auto k : proposedStates ) {
       if( k==proposedStates[i] ) { continue; }
       R(i) += proposal->LogDensity(proposedStates[i], k);
     }
   }
 
+  // compute the cumlative acceptance density
   CumulativeAcceptanceDensity(R);
 }
-
-#if MUQ_HAS_PARCER
-void GMHKernel::ParallelLogTarget(Eigen::VectorXd& R) {
-  auto logTargetQueue = std::make_shared<LogTargetQueue>(problem, comm);
-
-  if( comm->GetRank()==0 ) {
-    std::vector<unsigned int> logTargetIDs(Np1);
-    for( unsigned int i=0; i<Np1; ++i ) { logTargetIDs[i] = logTargetQueue->SubmitWork(proposedStates[i]); }
-
-    R = Eigen::VectorXd::Zero(Np1);
-    for( unsigned int i=0; i<Np1; ++i ) { R(i) = logTargetQueue->GetResult(logTargetIDs[i]);}
-  }
-}
-
-struct EvaluateProposalDensity {
-  inline EvaluateProposalDensity(std::shared_ptr<MCMCProposal> proposal) : proposal(proposal) {}
-
-  inline double Evaluate(std::pair<std::shared_ptr<SamplingState>, std::shared_ptr<SamplingState> > states) {
-    return proposal->LogDensity(states.first, states.second);
-  }
-
-  std::shared_ptr<MCMCProposal> proposal;
-};
-
-void GMHKernel::ParallelAcceptanceDensity() {
-  // if we only have one processor, compute log-target in serial
-  if( comm->GetSize()==1 ) { return SerialAcceptanceDensity(); }
-
-  /*Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
-  if( comm->GetRank()==0 ) {
-    for( unsigned int i=0; i<Np1; ++i ) { R(i) = problem->LogDensity(proposedStates[i]); }
-  }*/
-  Eigen::VectorXd R;
-  ParallelLogTarget(R);
-
-  auto evalPropDens = std::make_shared<EvaluateProposalDensity>(proposal);
-  parcer::Queue<std::pair<std::shared_ptr<SamplingState>, std::shared_ptr<SamplingState> >, double, EvaluateProposalDensity> proposalDensityQueue(evalPropDens, comm);
-
-  if( comm->GetRank()==0 ) {
-    std::vector<unsigned int> ids(Np1*N);
-    unsigned int cnt = 0;
-    for( unsigned int i=0; i<Np1; ++i ) {
-      for( auto k : proposedStates ) {
-	if( k==proposedStates[i] ) { continue; }
-	ids[cnt++] = proposalDensityQueue.SubmitWork(std::pair<std::shared_ptr<SamplingState>, std::shared_ptr<SamplingState> >(proposedStates[i], k));
-      }
-    }
-
-    cnt = 0;
-    for( unsigned int i=0; i<Np1; ++i ) {
-      for( unsigned int k=0; k<N; ++k ) {
-	if( k==i ) { continue; }
-	R(i) += proposalDensityQueue.GetResult(ids[cnt++]);
-      }
-    }
-
-    /*for( unsigned int i=0; i<Np1; ++i ) {
-      for( auto k : proposedStates ) {
-	if( k==proposedStates[i] ) { continue; }
-	R(i) += proposal->LogDensity(proposedStates[i], k);
-      }
-      }*/
-    
-    CumulativeAcceptanceDensity(R);
-  }
-}
-#endif
 
 Eigen::MatrixXd GMHKernel::AcceptanceMatrix(Eigen::VectorXd const& R) const {
   // compute stationary acceptance transition probability
@@ -149,9 +124,7 @@ void GMHKernel::CumulativeAcceptanceDensity(Eigen::VectorXd const& R) {
   const Eigen::MatrixXd& A = AcceptanceMatrix(R);
   
   // compute the dominante eigen vector and then make the sum equal to 1
-  const double dominateEigenval = PowerIteration(A.transpose());
-  assert(std::fabs(dominateEigenval-1.0)<1.0e-10);
-  stationaryAcceptance /= stationaryAcceptance.sum();
+  ComputeStationaryAcceptance(A.transpose());
   
   // compute the cumulative sum
   for( unsigned int i=1; i<Np1; ++i ) { stationaryAcceptance(i) += stationaryAcceptance(i-1); }
@@ -167,33 +140,22 @@ void GMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> sta
     SerialProposal(state);
 #endif
   } else { SerialProposal(state); }
-
-  // compute cumulative acceptance density
-  if( comm ) { 
-#if MUQ_HAS_PARCER
-    ParallelAcceptanceDensity();
-#else
-    SerialAcceptanceDensity();
-#endif
-  } else { SerialAcceptanceDensity(); }
 }
 
-double GMHKernel::PowerIteration(Eigen::MatrixXd const& A) {
+void GMHKernel::ComputeStationaryAcceptance(Eigen::MatrixXd const& A) {
   stationaryAcceptance = Eigen::VectorXd::Ones(A.cols()).normalized();
-  
-  int counter = 0;
-  double error=100.0*tol;
-  while( error>tol && counter++<maxIt) {
-    Eigen::VectorXd temp = stationaryAcceptance;
-    stationaryAcceptance = (A*temp).normalized();
-    error = (temp-stationaryAcceptance).stableNorm();
-  }
-  
-  // return the dominate eigenvalue
-  return stationaryAcceptance.transpose()*A*stationaryAcceptance;
+
+  Eigen::MatrixXd mat(Np1+1, Np1);
+  mat.block(0,0,Np1,Np1) = A.transpose()-Eigen::MatrixXd::Identity(Np1,Np1);
+  mat.row(Np1) = Eigen::RowVectorXd::Ones(Np1);
+
+  Eigen::VectorXd rhs = Eigen::VectorXd::Zero(Np1+1);
+  rhs(Np1) = 1.0;
+
+  stationaryAcceptance = mat.colPivHouseholderQr().solve(rhs);
 }
 
-std::vector<std::shared_ptr<SamplingState> > GMHKernel::SampleStationary(std::shared_ptr<SamplingState> state) {
+std::vector<std::shared_ptr<SamplingState> > GMHKernel::SampleStationary() const {
   std::vector<std::shared_ptr<SamplingState> > newStates(M, nullptr);
   
   // sample the new states
@@ -211,10 +173,10 @@ std::vector<std::shared_ptr<SamplingState> > GMHKernel::SampleStationary(std::sh
 }
 
 std::vector<std::shared_ptr<SamplingState> > GMHKernel::Step(unsigned int const t, std::shared_ptr<SamplingState> state) {
-  if( !comm ) { return SampleStationary(state); } 
+  if( !comm ) { return SampleStationary(); } 
   
 #if MUQ_HAS_PARCER
-  return comm->GetRank()==0 ? SampleStationary(state) : std::vector<std::shared_ptr<SamplingState> >(M, nullptr);
+  return comm->GetRank()==0 ? SampleStationary() : std::vector<std::shared_ptr<SamplingState> >(M, nullptr);
 #else
   return SampleStationary(state);
 #endif
