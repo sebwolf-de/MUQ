@@ -82,13 +82,18 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
     // Loop through each parameter block
     for(int blockInd=0; blockInd<kernels.size(); ++blockInd){
-
+      // kernel prestep
       kernels.at(blockInd)->PreStep(sampNum, prevState);
 
+      // use the kernel to get the next state(s)
       newStates = kernels.at(blockInd)->Step(sampNum, prevState);
 
-      // Add the new states to the SampleCollection
-      for(int i=0; i<newStates.size(); ++i){
+      // kernel post-processing
+      kernels.at(blockInd)->PostStep(sampNum, newStates);
+
+      // add the new states to the SampleCollection (this also increments sampNum)
+      prevState = SaveSamples(newStates, sampNum);
+      /*for(int i=0; i<newStates.size(); ++i){
         sampNum++;
 	if( sampNum>numSamps ) { break; }
 
@@ -97,7 +102,7 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
         if((sampNum>=burnIn)&&(scheduler->ShouldSave(sampNum))){
 
-          /*if(!lastSavedState){
+          if(!lastSavedState){
             lastSavedState = newStates.at(i);
             samples->Add(newStates.at(i));
 
@@ -107,18 +112,16 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
           }else{
               lastSavedState->weight += 1;
-	      }*/
+	      }
 #if MUQ_HAS_PARCER
+	  // only one chain is relavent, assume it is rank 0 and only store that sample
 	  assert(comm);
 	  if( comm->GetRank()==0 ) { samples->Add(newStates.at(i)); }
 #else
 	  samples->Add(newStates.at(i));
-#endif
-
-        }
-      }
-
-      kernels.at(blockInd)->PostStep(sampNum, newStates);
+	  #endif
+	  }
+	  }*/
     }
   }
 
@@ -133,3 +136,16 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
   return samples;
 }
 
+std::shared_ptr<SamplingState> SingleChainMCMC::SaveSamples(std::vector<std::shared_ptr<SamplingState> > const& newStates, unsigned int& sampNum) const {
+  for( auto it : newStates ) {
+    // save the sample, if we want to
+    if( ShouldSave(sampNum) ) { samples->Add(it); }
+
+    // increment the number of samples and break of we hit the max. number
+    if( ++sampNum>numSamps ) { return it; }
+  }
+
+  return newStates.back();
+}
+
+bool SingleChainMCMC::ShouldSave(unsigned int const sampNum) const { return sampNum>=burnIn && scheduler->ShouldSave(sampNum); }
