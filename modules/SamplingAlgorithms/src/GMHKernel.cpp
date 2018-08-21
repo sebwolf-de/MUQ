@@ -170,7 +170,7 @@ std::vector<std::shared_ptr<SamplingState> > GMHKernel::Step(unsigned int const 
 #endif
 }
 
-Eigen::VectorXd GMHKernel::CumulativeStationaryAcceptance() const {
+Eigen::VectorXd GMHKernel::StationaryAcceptance() const {
   // make sure this object has been populated
   assert(stationaryAcceptance.size()==Np1);
   

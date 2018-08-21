@@ -59,9 +59,9 @@ namespace muq {
       /// Get the cumulative stationary acceptance probability
       /**
 	 Must be called after GMHKernel::PreStep.
-	 \return The cumulative stationary acceptance probability
+	 \return The stationary acceptance probability
        */
-      Eigen::VectorXd CumulativeStationaryAcceptance() const;
+      Eigen::VectorXd StationaryAcceptance() const;
 
 #if MUQ_HAS_PARCER
       std::shared_ptr<parcer::Communicator> GetCommunicator() const;

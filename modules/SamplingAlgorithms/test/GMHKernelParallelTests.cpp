@@ -44,10 +44,10 @@ TEST(GMHKernelTest, PrposalTest) {
   kern->PreStep(0, state);
 
   if( kern->GetCommunicator()->GetRank()==0 ) {
-    const Eigen::VectorXd& cumulativeStationaryAcceptance = kern->CumulativeStationaryAcceptance();
-    EXPECT_EQ(cumulativeStationaryAcceptance.size(), N+1);
-    EXPECT_DOUBLE_EQ(cumulativeStationaryAcceptance.sum(), 1.0);
-    for( unsigned int i=0; i<N+1; ++i ) { EXPECT_TRUE(cumulativeStationaryAcceptance(i)>0.0); }
+    const Eigen::VectorXd& stationaryAcceptance = kern->StationaryAcceptance();
+    EXPECT_EQ(stationaryAcceptance.size(), N+1);
+    EXPECT_DOUBLE_EQ(stationaryAcceptance.sum(), 1.0);
+    for( unsigned int i=0; i<N+1; ++i ) { EXPECT_TRUE(stationaryAcceptance(i)>-1.0e-15); }
   }
 
   // accept/reject M of the proposed states
