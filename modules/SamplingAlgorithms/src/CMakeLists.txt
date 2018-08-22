@@ -44,6 +44,7 @@ CreateCompileGroup(
     MCMCProposal.cpp
     MHProposal.cpp
     AMProposal.cpp
+    ParallelAMProposal.cpp
     InverseGammaProposal.cpp
     CrankNicolsonProposal.cpp
 
