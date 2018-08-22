@@ -1,6 +1,5 @@
 #include "MUQ/SamplingAlgorithms/SampleCollection.h"
 
-#include "MUQ/Utilities/HDF5/HDF5File.h"
 #include "MUQ/Utilities/AnyHelpers.h"
 
 using namespace muq::SamplingAlgorithms;
@@ -209,7 +208,46 @@ Eigen::VectorXd SampleCollection::Weights() const
   return output;
 }
 
+bool SampleCollection::CreateDataset(std::shared_ptr<muq::Utilities::HDF5File> hdf5file, std::string const& dataname, int const dataSize, int const totSamps) const {
+  if( !hdf5file->IsDataSet(dataname) ) { return true; }
+
+  Eigen::VectorXi size = hdf5file->GetDataSetSize(dataname);
+  if( size(0)!=dataSize || size(1)!=totSamps ) { return true; }
+
+  return false;
+}
+
+void SampleCollection::WriteToFile(int firstSamp, std::string const& filename, std::string const& dataset, int totSamps) const {
+  if( samples.size()==0 ) { return; }
+  
+  // open the hdf5 file
+  auto hdf5file = std::make_shared<HDF5File>(filename);
+
+  totSamps = totSamps<0? size() : totSamps;
+  assert(totSamps>0);
+
+  // write the sample matrix and weights
+  unsigned int sampSize = 0;
+  for( unsigned int i=0; i<samples.at(0)->state.size(); ++i ) { sampSize += samples.at(0)->state[i].size(); }
+  if( CreateDataset(hdf5file, dataset+"/samples", sampSize, totSamps) ) { hdf5file->CreateDataset<double>(dataset+"/samples", sampSize, totSamps); }
+  hdf5file->WritePartialMatrix(dataset+"/samples", AsMatrix(), 0, firstSamp);
+  
+  if( CreateDataset(hdf5file, dataset+"/weights", 1, totSamps) ) { hdf5file->CreateDataset<double>(dataset+"/weights", 1, totSamps); }
+  hdf5file->WritePartialMatrix(dataset+"/weights", (Eigen::RowVectorXd)Weights(), 0, firstSamp);
+
+  // meta data
+  const std::unordered_map<std::string, Eigen::MatrixXd>& meta = GetMeta();
+
+  // write meta data to file
+  for( const auto& data : meta ) {
+    if( CreateDataset(hdf5file, dataset+"/"+data.first, data.second.rows(), totSamps) ) { hdf5file->CreateDataset<double>(dataset+"/"+data.first, data.second.rows(), totSamps); }
+    hdf5file->WritePartialMatrix(dataset+"/"+data.first, data.second, 0, firstSamp);
+  }
+}
+
 void SampleCollection::WriteToFile(std::string const& filename, std::string const& dataset) const {
+  if( samples.size()==0 ) { return; }
+    
   // open the hdf5 file
   auto hdf5file = std::make_shared<HDF5File>(filename);
 
@@ -218,9 +256,19 @@ void SampleCollection::WriteToFile(std::string const& filename, std::string cons
   hdf5file->WriteMatrix(dataset+"/weights", (Eigen::RowVectorXd)Weights());
 
   // meta data
+  const std::unordered_map<std::string, Eigen::MatrixXd>& meta = GetMeta();
+
+  // write meta data to file
+  for( const auto& data : meta ) { hdf5file->WriteMatrix(dataset+"/"+data.first, data.second); }
+}
+
+unsigned SampleCollection::size() const { return samples.size(); }
+
+Eigen::VectorXd SampleCollection::Variance(int blockDim) const { return CentralMoment(2,blockDim); }
+
+std::unordered_map<std::string, Eigen::MatrixXd> SampleCollection::GetMeta() const {
   std::unordered_map<std::string, Eigen::MatrixXd> meta;
 
-  //for( auto samp : samples ) {
   for( unsigned int i=0; i<samples.size(); ++i ) {
     for( auto it = samples[i]->meta.begin(); it!=samples[i]->meta.end(); ++it ) {
       if( it->second.type()==typeid(Eigen::Vector2d) ) {
@@ -281,6 +329,5 @@ void SampleCollection::WriteToFile(std::string const& filename, std::string cons
     }
   }
 
-  // write meta data to file
-  for( const auto& data : meta ) { hdf5file->WriteMatrix(dataset+"/"+data.first, data.second); }
+  return meta;
 }
