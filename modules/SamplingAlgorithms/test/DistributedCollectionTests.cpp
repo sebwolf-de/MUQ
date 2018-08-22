@@ -56,7 +56,7 @@ protected:
     }
   }
   
-  const int numSamps = 1.0e5;
+  const int numSamps = 5.0e5;
   Eigen::MatrixXd L;
 
   int rank;

@@ -58,7 +58,20 @@ Eigen::MatrixXd DistributedCollection::Covariance(int blockDim) const { return G
 
 Eigen::VectorXd DistributedCollection::LocalESS(int blockDim) const { return collection->ESS(blockDim); }
 
-Eigen::VectorXd DistributedCollection::GlobalESS(int blockDim) const { return GlobalEigenMean(LocalESS(blockDim)); }
+Eigen::VectorXd DistributedCollection::GlobalESS(int blockDim) const {
+  const Eigen::VectorXd& local = LocalESS(blockDim);
+  Eigen::VectorXd global = Eigen::VectorXd::Zero(local.size());
+  
+  for( unsigned int i=0; i<comm->GetSize(); ++i ) {
+    Eigen::VectorXd l(local.size());
+    if( comm->GetRank()==i ) { l = local; }
+    comm->Bcast(l, i);
+    
+    global += l;
+  }
+  
+  return global;
+}
 
 Eigen::VectorXd DistributedCollection::ESS(int blockDim) const { return GlobalESS(blockDim); }
 
