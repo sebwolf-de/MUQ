@@ -3,6 +3,7 @@
 #include <Eigen/Eigenvalues>
 
 #include "MUQ/Utilities/RandomGenerator.h"
+#include "MUQ/Utilities/AnyHelpers.h"
 
 namespace pt = boost::property_tree;
 using namespace muq::Utilities;
@@ -11,6 +12,7 @@ using namespace muq::SamplingAlgorithms;
 REGISTER_TRANSITION_KERNEL(GMHKernel)
 
 #if MUQ_HAS_PARCER
+
 typedef std::pair<std::shared_ptr<SamplingState>, bool> CurrentState;
 
 struct ProposeState {
@@ -18,7 +20,8 @@ struct ProposeState {
 
   inline std::shared_ptr<SamplingState> Evaluate(CurrentState state) {
     std::shared_ptr<SamplingState> proposed = state.second ? proposal->Sample(state.first) : state.first;
-    proposed->meta["log-target"] = problem->LogDensity(proposed);
+    proposed->meta["LogTarget"] = problem->LogDensity(proposed);
+    // TODO: Fill in gradient information if needed by proposal
     return proposed;
   }
 
@@ -43,24 +46,31 @@ GMHKernel::GMHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProble
 GMHKernel::~GMHKernel() {}
 
 void GMHKernel::SerialProposal(std::shared_ptr<SamplingState> state) {
+
+  // If the current state does not have LogTarget information, add it
+  if(! state->HasMeta("LogTarget"))
+    state->meta["LogTarget"] = problem->LogDensity(state);
+
   // propose the points
   proposedStates.resize(Np1, nullptr);
   proposedStates[0] = state;
-  proposedStates[0]->meta["log-target"] = problem->LogDensity(state);
-  for( auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) {
+
+  for(auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) {
     *it = proposal->Sample(state);
-    (*it)->meta["log-target"] = problem->LogDensity(*it);
+    (*it)->meta["LogTarget"] = problem->LogDensity(*it);
   }
 
   // evaluate the target density
   Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
-  for( unsigned int i=0; i<Np1; ++i ) { R(i) = boost::any_cast<double const>(proposedStates[i]->meta["log-target"]); }
+  for( unsigned int i=0; i<Np1; ++i )
+    R(i) = boost::any_cast<double const>(proposedStates[i]->meta["LogTarget"]);
 
   // compute stationary transition probability
   AcceptanceDensity(R);
 }
 
 #if MUQ_HAS_PARCER
+
 void GMHKernel::ParallelProposal(std::shared_ptr<SamplingState> state) {
   // if we only have one processor, just propose in serial
   if( comm->GetSize()==1 ) { return SerialProposal(state); }
@@ -68,23 +78,40 @@ void GMHKernel::ParallelProposal(std::shared_ptr<SamplingState> state) {
   // create a queue to propose and evaluate the log-target
   auto helper = std::make_shared<ProposeState>(proposal, problem);
   auto proposalQueue = std::make_shared<ProposalQueue>(helper, comm);
-  
+
   if( comm->GetRank()==0 ) {
     assert(state);
 
     // submit the work
-    std::vector<unsigned int> proposalIDs(Np1);
-    proposalIDs[0] = proposalQueue->SubmitWork(CurrentState(state, false)); // evaluate the current state
-    for( auto id=proposalIDs.begin()+1; id!=proposalIDs.end(); ++id ) { *id = proposalQueue->SubmitWork(CurrentState(state, true)); }
+    std::vector<int> proposalIDs(Np1);
+
+    // If the current state doesn't have the logtarget evaluation, submit it to the queue for evaluation
+    if(!state->HasMeta("LogTarget")){
+      proposalIDs[0] = proposalQueue->SubmitWork(CurrentState(state, false)); // evaluate the current state
+    }else{
+      proposalIDs[0] = -1;
+    }
+
+    // Submit a bunch of proposal requests to the queue
+    for( auto id=proposalIDs.begin()+1; id!=proposalIDs.end(); ++id )
+      *id = proposalQueue->SubmitWork(CurrentState(state, true));
 
     // retrieve the work
     proposedStates.resize(Np1, nullptr);
     Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
-    for( unsigned int i=0; i<Np1; ++i ) {
+
+    if(proposalIDs[0]<0){
+      proposedStates[0] = state;
+    }else{
+      proposedStates[0] =  proposalQueue->GetResult(proposalIDs[0]);
+    }
+    R(0) = AnyCast(evalState->meta["LogTarget"]);
+
+    for( unsigned int i=1; i<Np1; ++i ) {
       std::shared_ptr<SamplingState> evalState = proposalQueue->GetResult(proposalIDs[i]);
-      
+
       proposedStates[i] = evalState;
-      R(i) = boost::any_cast<double const>(evalState->meta["log-target"]);
+      R(i) = AnyCast(evalState->meta["LogTarget"]);
     }
 
     // compute stationary transition probability
@@ -92,8 +119,9 @@ void GMHKernel::ParallelProposal(std::shared_ptr<SamplingState> state) {
   }
 }
 #endif
-  
+
 void GMHKernel::AcceptanceDensity(Eigen::VectorXd& R) {
+
   // update log-target with proposal density
   for( unsigned int i=0; i<Np1; ++i ) {
     for( auto k : proposedStates ) {
@@ -137,14 +165,17 @@ void GMHKernel::ComputeStationaryAcceptance(Eigen::VectorXd const& R) {
 
 void GMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {
   // propose N steps
-  if( comm ) {
+
 #if MUQ_HAS_PARCER
-    if( comm->GetRank()==0 ) { assert(state); }
-    ParallelProposal(state);
+    if( comm ) {
+      if( comm->GetRank()==0 ) { assert(state); }
+      ParallelProposal(state);
+    }else{
+      SerialProposal(state);
+    }
 #else
     SerialProposal(state);
 #endif
-  } else { SerialProposal(state); }
 }
 
 std::vector<std::shared_ptr<SamplingState> > GMHKernel::SampleStationary() const {
@@ -161,9 +192,9 @@ std::vector<std::shared_ptr<SamplingState> > GMHKernel::SampleStationary() const
 }
 
 std::vector<std::shared_ptr<SamplingState> > GMHKernel::Step(unsigned int const t, std::shared_ptr<SamplingState> state) {
-  if( !comm ) { return SampleStationary(); } 
-  
+
 #if MUQ_HAS_PARCER
+  if( !comm ) { return SampleStationary(); }
   return comm->GetRank()==0 ? SampleStationary() : std::vector<std::shared_ptr<SamplingState> >(M, nullptr);
 #else
   return SampleStationary();
@@ -173,7 +204,7 @@ std::vector<std::shared_ptr<SamplingState> > GMHKernel::Step(unsigned int const 
 Eigen::VectorXd GMHKernel::CumulativeStationaryAcceptance() const {
   // make sure this object has been populated
   assert(stationaryAcceptance.size()==Np1);
-  
+
   return stationaryAcceptance;
 }
 
