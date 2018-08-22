@@ -41,3 +41,9 @@ std::shared_ptr<MCMCProposal::MCMCProposalMap> MCMCProposal::GetMCMCProposalMap(
 
   return map;
 }
+
+#if MUQ_HAS_PARCER
+void MCMCProposal::SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm) {
+  comm = newcomm;
+}
+#endif
