@@ -1,18 +1,33 @@
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 
 #include "MUQ/SamplingAlgorithms/MarkovChain.h"
+#if MUQ_HAS_PARCER
+#include "MUQ/SamplingAlgorithms/DistributedCollection.h"
+#endif
 
 #include "MUQ/Utilities/StringUtilities.h"
 
 #include <chrono>
 
+namespace pt = boost::property_tree;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
-SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree             pt,
-                                 std::shared_ptr<AbstractSamplingProblem> problem) : SamplingAlgorithm(std::make_shared<MarkovChain>()),
-                                                                                     printLevel(pt.get("PrintLevel",3))
+SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem) :
+  SamplingAlgorithm(std::make_shared<MarkovChain>()),
+  printLevel(pt.get("PrintLevel",3))
 {
+  SetUp(pt, problem);
+}
+
+SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<parcer::Communicator> comm) :
+  SamplingAlgorithm(SampCollection(comm), comm),
+  printLevel(pt.get("PrintLevel",3))
+{
+  SetUp(pt, problem);
+}
+
+void SingleChainMCMC::SetUp(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem) {
   numSamps = pt.get<unsigned int>("NumSamples");
   burnIn = pt.get("BurnIn",0);
 
@@ -35,7 +50,15 @@ SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree             pt,
     kernels.at(i)->SetCommunicator(comm);
 #endif
   }
+}
 
+std::shared_ptr<SampleCollection> SingleChainMCMC::SampCollection(std::shared_ptr<parcer::Communicator> communicator) {
+#if MUQ_HAS_PARCER
+  auto local = std::make_shared<MarkovChain>();
+  return std::make_shared<DistributedCollection>(local, communicator);
+#else
+  return std::make_shared<MarkovChain>();
+#endif
 }
 
 void SingleChainMCMC::PrintStatus(std::string prefix, unsigned int currInd) const
@@ -82,43 +105,17 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
     // Loop through each parameter block
     for(int blockInd=0; blockInd<kernels.size(); ++blockInd){
-
+      // kernel prestep
       kernels.at(blockInd)->PreStep(sampNum, prevState);
 
+      // use the kernel to get the next state(s)
       newStates = kernels.at(blockInd)->Step(sampNum, prevState);
 
-      // Add the new states to the SampleCollection
-      for(int i=0; i<newStates.size(); ++i){
-        sampNum++;
-	if( sampNum>numSamps ) { break; }
-
-        if(newStates.at(i)!=prevState)
-          prevState = newStates.at(i);
-
-        if((sampNum>=burnIn)&&(scheduler->ShouldSave(sampNum))){
-
-          /*if(!lastSavedState){
-            lastSavedState = newStates.at(i);
-            samples->Add(newStates.at(i));
-
-          }else if(newStates.at(i)!=lastSavedState){
-              samples->Add(newStates.at(i));
-              lastSavedState = newStates.at(i);
-
-          }else{
-              lastSavedState->weight += 1;
-	      }*/
-#if MUQ_HAS_PARCER
-	  assert(comm);
-	  if( comm->GetRank()==0 ) { samples->Add(newStates.at(i)); }
-#else
-	  samples->Add(newStates.at(i));
-#endif
-
-        }
-      }
-
+      // kernel post-processing
       kernels.at(blockInd)->PostStep(sampNum, newStates);
+
+      // add the new states to the SampleCollection (this also increments sampNum)
+      prevState = SaveSamples(newStates, sampNum);
     }
   }
 
@@ -133,3 +130,16 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
   return samples;
 }
 
+std::shared_ptr<SamplingState> SingleChainMCMC::SaveSamples(std::vector<std::shared_ptr<SamplingState> > const& newStates, unsigned int& sampNum) const {
+  for( auto it : newStates ) {
+    // save the sample, if we want to
+    if( ShouldSave(sampNum) ) { samples->Add(it); }
+
+    // increment the number of samples and break of we hit the max. number
+    if( ++sampNum>=numSamps ) { return it; }
+  }
+
+  return newStates.back();
+}
+
+bool SingleChainMCMC::ShouldSave(unsigned int const sampNum) const { return sampNum>=burnIn && scheduler->ShouldSave(sampNum); }

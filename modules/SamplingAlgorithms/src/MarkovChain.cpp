@@ -135,7 +135,6 @@ double MarkovChain::SingleComponentESS(Eigen::Ref<const Eigen::VectorXd> const& 
     freqVec(i) = std::complex<double>(real, 0.0);
   }
 
-
   // now compute the inverse fft to get the autocorrelation (stored in timeVec)
   fft.inv(timeVec, freqVec);
 

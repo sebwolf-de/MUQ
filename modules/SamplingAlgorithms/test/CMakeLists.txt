@@ -18,6 +18,8 @@ CreateParallelTestGroup(
 
     SamplingStateParallelTests.cpp
     
+    DistributedCollectionTests.cpp
+    
     GMHKernelParallelTests.cpp
 
     SingleChainMCMCParallelTests.cpp

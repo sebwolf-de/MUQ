@@ -35,27 +35,22 @@ TEST(MCMC, MHKernel_MHProposal) {
   // starting point
   const Eigen::VectorXd start = mu;
 
+  auto comm = std::make_shared<parcer::Communicator>();
+
   // create an instance of MCMC
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"), problem, comm);
 
   std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
-  
-  auto comm = mcmc->GetCommunicator();
 
-  if( comm->GetRank()==0 ) {
-    EXPECT_EQ(pt.get<int>("MyMCMC.NumSamples"), samps->size());
-    
-    //boost::any anyMean = samps.Mean();
-    Eigen::VectorXd mean = samps->Mean();
-    EXPECT_NEAR(mu(0), mean(0), 1e-1);
-    EXPECT_NEAR(mu(1), mean(1), 1e-1);
-    
-    Eigen::MatrixXd cov = samps->Covariance();
-    EXPECT_NEAR(1.0, cov(0,0), 1e-1);
-    EXPECT_NEAR(0.0, cov(0,1), 1e-1);
-    EXPECT_NEAR(0.0, cov(1,0), 1e-1);
-    EXPECT_NEAR(1.0, cov(1,1), 1e-1);
-  } else {
-    EXPECT_EQ(1, samps->size());
-  }
+  EXPECT_EQ(comm->GetSize()*pt.get<int>("MyMCMC.NumSamples"), samps->size());
+  
+  Eigen::VectorXd mean = samps->Mean();
+  EXPECT_NEAR(mu(0), mean(0), 1e-1);
+  EXPECT_NEAR(mu(1), mean(1), 1e-1);
+  
+  Eigen::MatrixXd cov = samps->Covariance();
+  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
 }

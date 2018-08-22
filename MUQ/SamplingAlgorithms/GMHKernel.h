@@ -59,7 +59,7 @@ namespace muq {
       /// Get the cumulative stationary acceptance probability
       /**
 	 Must be called after GMHKernel::PreStep.
-	 \return The cumulative stationary acceptance probability
+	 \return The stationary acceptance probability
        */
       Eigen::VectorXd StationaryAcceptance() const;
 

@@ -67,9 +67,9 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   numCalls++;
   if( RandomGenerator::GetUniform()<alpha ) {
     numAccepts++;
-    return std::vector<std::shared_ptr<SamplingState>>(1,prop);
+    return std::vector<std::shared_ptr<SamplingState>>(1, prop);
   } else {
-    return std::vector<std::shared_ptr<SamplingState>>(1,prevState);
+    return std::vector<std::shared_ptr<SamplingState>>(1, prevState);
   }
 }
 

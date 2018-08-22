@@ -47,7 +47,7 @@ TEST(GMHKernelTest, PrposalTest) {
     const Eigen::VectorXd& stationaryAcceptance = kern->StationaryAcceptance();
     EXPECT_EQ(stationaryAcceptance.size(), N+1);
     EXPECT_DOUBLE_EQ(stationaryAcceptance.sum(), 1.0);
-    for( unsigned int i=0; i<N+1; ++i ) { EXPECT_TRUE(stationaryAcceptance(i)>1.0e-15); }
+    for( unsigned int i=0; i<N+1; ++i ) { EXPECT_TRUE(stationaryAcceptance(i)>-1.0e-15); }
   }
 
   // accept/reject M of the proposed states
