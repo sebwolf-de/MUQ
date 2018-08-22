@@ -4,7 +4,9 @@ using namespace muq::SamplingAlgorithms;
 
 SamplingAlgorithm::SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn) : samples(samplesIn) {}
 
+#if MUQ_HAS_PARCER
 SamplingAlgorithm::SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn, std::shared_ptr<parcer::Communicator> comm) : samples(samplesIn), comm(comm) {};
+#endif
 
 std::shared_ptr<SampleCollection> SamplingAlgorithm::GetSamples() const { return samples; }
 

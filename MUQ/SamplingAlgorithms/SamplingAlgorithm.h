@@ -56,6 +56,8 @@ namespace muq {
       std::shared_ptr<parcer::Communicator> comm = std::make_shared<parcer::Communicator>();
 #endif
 
+    private:
+      
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

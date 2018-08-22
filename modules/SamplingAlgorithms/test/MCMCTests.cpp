@@ -153,7 +153,6 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   graph->AddEdge("Gaussian1",0,"ProductDensity",0);
   graph->AddEdge("Gaussian2",0,"ProductDensity",1);
 
-  graph->Visualize("Graph.pdf");
   auto dens = graph->CreateModPiece("ProductDensity");
 
   // create a sampling problem

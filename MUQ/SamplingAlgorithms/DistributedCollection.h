@@ -26,7 +26,7 @@ namespace muq {
       /**
 	 @param[in] newSamp The sample to be added
        */
-      void Add(std::shared_ptr<SamplingState> newSamp);
+      virtual void Add(std::shared_ptr<SamplingState> newSamp) override;
 
       /// Get the local state at the \f$i^{th}\f$ index
       /**

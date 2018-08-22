@@ -1,18 +1,33 @@
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 
 #include "MUQ/SamplingAlgorithms/MarkovChain.h"
+#if MUQ_HAS_PARCER
+#include "MUQ/SamplingAlgorithms/DistributedCollection.h"
+#endif
 
 #include "MUQ/Utilities/StringUtilities.h"
 
 #include <chrono>
 
+namespace pt = boost::property_tree;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
-SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree             pt,
-                                 std::shared_ptr<AbstractSamplingProblem> problem) : SamplingAlgorithm(std::make_shared<MarkovChain>()),
-                                                                                     printLevel(pt.get("PrintLevel",3))
+SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem) :
+  SamplingAlgorithm(std::make_shared<MarkovChain>()),
+  printLevel(pt.get("PrintLevel",3))
 {
+  SetUp(pt, problem);
+}
+
+SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<parcer::Communicator> comm) :
+  SamplingAlgorithm(SampCollection(comm), comm),
+  printLevel(pt.get("PrintLevel",3))
+{
+  SetUp(pt, problem);
+}
+
+void SingleChainMCMC::SetUp(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem) {
   numSamps = pt.get<unsigned int>("NumSamples");
   burnIn = pt.get("BurnIn",0);
 
@@ -35,7 +50,15 @@ SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree             pt,
     kernels.at(i)->SetCommunicator(comm);
 #endif
   }
+}
 
+std::shared_ptr<SampleCollection> SingleChainMCMC::SampCollection(std::shared_ptr<parcer::Communicator> communicator) {
+#if MUQ_HAS_PARCER
+  auto local = std::make_shared<MarkovChain>();
+  return std::make_shared<DistributedCollection>(local, communicator);
+#else
+  return std::make_shared<MarkovChain>();
+#endif
 }
 
 void SingleChainMCMC::PrintStatus(std::string prefix, unsigned int currInd) const

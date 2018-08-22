@@ -35,14 +35,14 @@ TEST(MCMC, MHKernel_MHProposal) {
   // starting point
   const Eigen::VectorXd start = mu;
 
+  auto comm = std::make_shared<parcer::Communicator>();
+
   // create an instance of MCMC
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"), problem, comm);
 
   std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
-  
-  auto comm = mcmc->GetCommunicator();
 
-  EXPECT_EQ(pt.get<int>("MyMCMC.NumSamples"), samps->size());
+  EXPECT_EQ(comm->GetSize()*pt.get<int>("MyMCMC.NumSamples"), samps->size());
   
   Eigen::VectorXd mean = samps->Mean();
   EXPECT_NEAR(mu(0), mean(0), 1e-1);

@@ -50,7 +50,7 @@ namespace muq{
 
       virtual ~SampleCollection() = default;
 
-      void Add(std::shared_ptr<SamplingState> newSamp);
+      virtual void Add(std::shared_ptr<SamplingState> newSamp);
 
       virtual std::shared_ptr<SamplingState> at(unsigned i);
       virtual const std::shared_ptr<SamplingState> at(unsigned i) const;
