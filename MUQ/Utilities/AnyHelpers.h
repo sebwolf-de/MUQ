@@ -52,8 +52,8 @@ NOTE: This class stores a reference to the boost::any in question and errors may
           template<typename T>
           operator T const&(){ return boost::any_cast<T const&>(obj);};
 
-          template<typename T>
-          operator T(){ return boost::any_cast<T const&>(obj);};
+          /*template<typename T>
+	    operator T(){ return boost::any_cast<T const&>(obj);};*/
           
         private:
           boost::any const& obj;

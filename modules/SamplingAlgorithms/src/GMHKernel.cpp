@@ -105,7 +105,7 @@ void GMHKernel::ParallelProposal(std::shared_ptr<SamplingState> state) {
     }else{
       proposedStates[0] =  proposalQueue->GetResult(proposalIDs[0]);
     }
-    R(0) = AnyCast(evalState->meta["LogTarget"]);
+    R(0) = AnyCast(state->meta["LogTarget"]);
 
     for( unsigned int i=1; i<Np1; ++i ) {
       std::shared_ptr<SamplingState> evalState = proposalQueue->GetResult(proposalIDs[i]);
@@ -201,7 +201,7 @@ std::vector<std::shared_ptr<SamplingState> > GMHKernel::Step(unsigned int const 
 #endif
 }
 
-Eigen::VectorXd GMHKernel::CumulativeStationaryAcceptance() const {
+Eigen::VectorXd GMHKernel::StationaryAcceptance() const {
   // make sure this object has been populated
   assert(stationaryAcceptance.size()==Np1);
 
