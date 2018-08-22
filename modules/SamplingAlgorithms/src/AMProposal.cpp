@@ -16,7 +16,6 @@ AMProposal::AMProposal(pt::ptree const& pt , std::shared_ptr<AbstractSamplingPro
 AMProposal::~AMProposal() {}
 
 void AMProposal::Adapt(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& states) {
-
   // always update the sample mean and covariance
   Update(t, states);
 

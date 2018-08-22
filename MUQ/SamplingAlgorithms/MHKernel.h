@@ -34,6 +34,10 @@ namespace muq {
 
       virtual inline double AcceptanceRate() const {return double(numAccepts)/double(numCalls);};
 
+#if MUQ_HAS_PARCER
+      virtual void SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm) override;
+#endif
+
     protected:
       std::shared_ptr<MCMCProposal> proposal;
 

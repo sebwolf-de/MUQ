@@ -45,7 +45,6 @@ TEST(MCMC, MHKernel_ThinScheduler) {
   // starting point
   const Eigen::VectorXd start = mu;
 
-  // evaluate
   // create an instance of MCMC
   auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
 
@@ -206,8 +205,6 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
 
 
 TEST(MCMC, MHKernel_AMProposal) {
-
-
   const unsigned int N = 5e4;
 
   // parameters for the sampler

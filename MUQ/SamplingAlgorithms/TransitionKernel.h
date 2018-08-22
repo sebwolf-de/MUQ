@@ -30,7 +30,7 @@ namespace muq {
       virtual ~TransitionKernel() = default;
 
 #if MUQ_HAS_PARCER
-      void SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm);
+      virtual void SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm);
 #endif
 
       /// Static constructor for the transition kernel
