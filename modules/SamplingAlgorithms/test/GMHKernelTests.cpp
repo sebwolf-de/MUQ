@@ -10,7 +10,7 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
-TEST(GMHKernelTest, PrposalTest) {
+TEST(GMHKernelTest, ProposalTest) {
   // create the density we wish to sample
   const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
   auto dist = std::make_shared<Gaussian>(mu)->AsDensity();

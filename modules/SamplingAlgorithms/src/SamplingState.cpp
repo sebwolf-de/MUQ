@@ -10,7 +10,7 @@ SamplingState::SamplingState(std::vector<Eigen::VectorXd> const& stateIn, double
 
 bool SamplingState::HasMeta(std::string const& metaKey) {
   auto iter = meta.find(metaKey);
-  return iter != meta.end();
+  return iter!=meta.end();
 }
 
 int SamplingState::TotalDim() const {

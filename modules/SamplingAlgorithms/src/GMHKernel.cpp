@@ -94,7 +94,7 @@ void GMHKernel::ParallelProposal(std::shared_ptr<SamplingState> state) {
 
     // Submit a bunch of proposal requests to the queue
     for( auto id=proposalIDs.begin()+1; id!=proposalIDs.end(); ++id )
-      *id = proposalQueue->SubmitWork(CurrentState(state, true));
+     *id = proposalQueue->SubmitWork(CurrentState(state, true));
 
     // retrieve the work
     proposedStates.resize(Np1, nullptr);
@@ -103,15 +103,13 @@ void GMHKernel::ParallelProposal(std::shared_ptr<SamplingState> state) {
     if(proposalIDs[0]<0){
       proposedStates[0] = state;
     }else{
-      proposedStates[0] =  proposalQueue->GetResult(proposalIDs[0]);
+      proposedStates[0] = proposalQueue->GetResult(proposalIDs[0]);
     }
-    R(0) = AnyCast(state->meta["LogTarget"]);
+    R(0) = AnyCast(proposedStates[0]->meta["LogTarget"]);
 
     for( unsigned int i=1; i<Np1; ++i ) {
-      std::shared_ptr<SamplingState> evalState = proposalQueue->GetResult(proposalIDs[i]);
-
-      proposedStates[i] = evalState;
-      R(i) = AnyCast(evalState->meta["LogTarget"]);
+      proposedStates[i] = proposalQueue->GetResult(proposalIDs[i]);
+      R(i) = AnyCast(proposedStates[i]->meta["LogTarget"]);
     }
 
     // compute stationary transition probability
@@ -165,7 +163,6 @@ void GMHKernel::ComputeStationaryAcceptance(Eigen::VectorXd const& R) {
 
 void GMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {
   // propose N steps
-
 #if MUQ_HAS_PARCER
     if( comm ) {
       if( comm->GetRank()==0 ) { assert(state); }
