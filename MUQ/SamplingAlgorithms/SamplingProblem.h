@@ -28,10 +28,12 @@ namespace muq {
 
       std::shared_ptr<muq::Modeling::ModPiece> GetDistribution(){return target;};
 
-    private:
+    protected:
 
       /// The target distribution (the prior in the inference case)
       std::shared_ptr<muq::Modeling::ModPiece> target;
+
+    private:
 
       static unsigned GetNumBlocks(std::shared_ptr<muq::Modeling::ModPiece> target);
       static std::vector<int> GetBlockSizes(std::shared_ptr<muq::Modeling::ModPiece> target);

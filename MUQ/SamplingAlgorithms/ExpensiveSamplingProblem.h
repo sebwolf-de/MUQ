@@ -10,7 +10,9 @@ namespace muq {
 
       ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target);
 
-      ~ExpensiveSamplingProblem();
+      ~ExpensiveSamplingProblem() = default;
+
+      virtual double LogDensity(std::shared_ptr<SamplingState> state) override;
       
     private:
     };
