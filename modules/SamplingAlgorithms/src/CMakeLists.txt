@@ -49,4 +49,5 @@ CreateCompileGroup(
     CrankNicolsonProposal.cpp
 
     SamplingProblem.cpp
+    ExpensiveSamplingProblem.cpp
 )
