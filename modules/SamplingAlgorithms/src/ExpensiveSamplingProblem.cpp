@@ -6,8 +6,8 @@ using namespace muq::Approximation;
 using namespace muq::SamplingAlgorithms;
 
 ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, pt::ptree const& pt) : SamplingProblem(target) {
-  const std::string& regOpt = pt.get<std::string>("RegressionOptions");
-  //reg = std::make_shared<LocalRegression>
+  // create the local regressor
+  reg = std::make_shared<LocalRegression>(target, pt.get_child(pt.get<std::string>("RegressionOptions")));
 }
 
 double ExpensiveSamplingProblem::LogDensity(std::shared_ptr<SamplingState> state) {
