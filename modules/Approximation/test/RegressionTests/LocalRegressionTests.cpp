@@ -35,7 +35,7 @@ public:
     pt.put<unsigned int>("LocalRegression.Order", 2);
 
     // create a local regressor
-    reg = std::make_shared<LocalRegression>(fn, pt);
+    reg = std::make_shared<LocalRegression>(fn, pt.get_child("LocalRegression"));
   }
 
   inline virtual ~LocalRegressionTest() {}
