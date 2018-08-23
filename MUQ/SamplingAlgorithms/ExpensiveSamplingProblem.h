@@ -10,7 +10,7 @@ namespace muq {
     class ExpensiveSamplingProblem : public SamplingProblem {
     public:
 
-      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target);
+      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree const& pt);
 
       ~ExpensiveSamplingProblem() = default;
 

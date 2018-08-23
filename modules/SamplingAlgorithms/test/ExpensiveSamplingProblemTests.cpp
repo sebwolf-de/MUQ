@@ -22,12 +22,16 @@ TEST(ExpensiveSamplingProblemTests, GaussianTarget) {
   pt.put("MyMCMC.Kernel1.MyProposal.Method", "MHProposal");
   pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 0.5); // the variance of the isotropic MH proposal
 
+  pt.put("MySamplingProblem.RegressionOptions", "MyRegression");
+  pt.put("MySamplingProblem.MyRegression.NumNeighbors", 5);
+  pt.put("MySamplingProblem.MyRegression.Order", 1); // approximating the quardatic log-Gaussian with a locally linear function
+
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
   const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
   auto dist = std::make_shared<Gaussian>(mu)->AsDensity(); // standard normal Gaussian
 
   // create a sampling problem
-  auto problem = std::make_shared<ExpensiveSamplingProblem>(dist);
+  auto problem = std::make_shared<ExpensiveSamplingProblem>(dist, pt.get_child("MySamplingProblem"));
 
   // starting point
   const Eigen::VectorXd start = Eigen::VectorXd::Random(2);

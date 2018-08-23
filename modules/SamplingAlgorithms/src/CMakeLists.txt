@@ -13,10 +13,23 @@
 # )
 
 CreateCompileGroup(
+    SAMPLING_PROBLEMS
+    "Implement sampling algorithms such as Monte Carlo, importance sampling, and Markov chain Monte Carlo"
+    muqSamplingAlgorithms
+    "MODELING_CORE;APPROXIMATION_REGRESSION"
+    ""
+    "PARCER"
+
+    SamplingProblem.cpp
+    ExpensiveSamplingProblem.cpp
+)
+
+
+CreateCompileGroup(
     SAMPLING_ALGORITHM
     "Implement sampling algorithms such as Monte Carlo, importance sampling, and Markov chain Monte Carlo"
     muqSamplingAlgorithms
-    "MODELING_CORE;UTILITIES_CORE"
+    "MODELING_CORE;UTILITIES_CORE;SAMPLING_PROBLEMS"
     ""
     "PARCER"
     SamplingAlgorithm.cpp
@@ -47,7 +60,4 @@ CreateCompileGroup(
     ParallelAMProposal.cpp
     InverseGammaProposal.cpp
     CrankNicolsonProposal.cpp
-
-    SamplingProblem.cpp
-    ExpensiveSamplingProblem.cpp
 )
