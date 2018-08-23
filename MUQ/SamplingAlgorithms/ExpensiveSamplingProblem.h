@@ -18,7 +18,7 @@ namespace muq {
       
     private:
 
-      void RefineSurrogate();
+      void RefineSurrogate(unsigned int const step);
 
       std::shared_ptr<muq::Approximation::LocalRegression> reg;
 
