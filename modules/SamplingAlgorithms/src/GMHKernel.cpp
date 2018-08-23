@@ -2,6 +2,8 @@
 
 #include <Eigen/Eigenvalues>
 
+#include <cereal/types/tuple.hpp>
+
 #include "MUQ/Utilities/RandomGenerator.h"
 #include "MUQ/Utilities/AnyHelpers.h"
 
@@ -13,14 +15,15 @@ REGISTER_TRANSITION_KERNEL(GMHKernel)
 
 #if MUQ_HAS_PARCER
 
-typedef std::pair<std::shared_ptr<SamplingState>, bool> CurrentState;
+// first: current step, second: the current state, third: do we want to propose a new state or not?
+typedef std::tuple<unsigned int, std::shared_ptr<SamplingState>, bool> CurrentState;
 
 struct ProposeState {
   inline ProposeState(std::shared_ptr<MCMCProposal> proposal, std::shared_ptr<AbstractSamplingProblem> problem) : proposal(proposal), problem(problem) {}
 
   inline std::shared_ptr<SamplingState> Evaluate(CurrentState state) {
-    std::shared_ptr<SamplingState> proposed = state.second ? proposal->Sample(state.first) : state.first;
-    proposed->meta["LogTarget"] = problem->LogDensity(proposed);
+    std::shared_ptr<SamplingState> proposed = std::get<2>(state) ? proposal->Sample(std::get<1>(state)) : std::get<1>(state);
+    proposed->meta["LogTarget"] = problem->LogDensity(std::get<0>(state), proposed);
     // TODO: Fill in gradient information if needed by proposal
     return proposed;
   }
@@ -45,11 +48,11 @@ GMHKernel::GMHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProble
 
 GMHKernel::~GMHKernel() {}
 
-void GMHKernel::SerialProposal(std::shared_ptr<SamplingState> state) {
+void GMHKernel::SerialProposal(unsigned int const t, std::shared_ptr<SamplingState> state) {
 
   // If the current state does not have LogTarget information, add it
   if(! state->HasMeta("LogTarget"))
-    state->meta["LogTarget"] = problem->LogDensity(state);
+    state->meta["LogTarget"] = problem->LogDensity(t, state);
 
   // propose the points
   proposedStates.resize(Np1, nullptr);
@@ -57,7 +60,7 @@ void GMHKernel::SerialProposal(std::shared_ptr<SamplingState> state) {
 
   for(auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) {
     *it = proposal->Sample(state);
-    (*it)->meta["LogTarget"] = problem->LogDensity(*it);
+    (*it)->meta["LogTarget"] = problem->LogDensity(t, *it);
   }
 
   // evaluate the target density
@@ -71,9 +74,9 @@ void GMHKernel::SerialProposal(std::shared_ptr<SamplingState> state) {
 
 #if MUQ_HAS_PARCER
 
-void GMHKernel::ParallelProposal(std::shared_ptr<SamplingState> state) {
+void GMHKernel::ParallelProposal(unsigned int const t, std::shared_ptr<SamplingState> state) {
   // if we only have one processor, just propose in serial
-  if( comm->GetSize()==1 ) { return SerialProposal(state); }
+  if( comm->GetSize()==1 ) { return SerialProposal(t, state); }
 
   // create a queue to propose and evaluate the log-target
   auto helper = std::make_shared<ProposeState>(proposal, problem);
@@ -87,14 +90,14 @@ void GMHKernel::ParallelProposal(std::shared_ptr<SamplingState> state) {
 
     // If the current state doesn't have the logtarget evaluation, submit it to the queue for evaluation
     if(!state->HasMeta("LogTarget")){
-      proposalIDs[0] = proposalQueue->SubmitWork(CurrentState(state, false)); // evaluate the current state
+      proposalIDs[0] = proposalQueue->SubmitWork(CurrentState(t, state, false)); // evaluate the current state
     }else{
       proposalIDs[0] = -1;
     }
 
     // Submit a bunch of proposal requests to the queue
     for( auto id=proposalIDs.begin()+1; id!=proposalIDs.end(); ++id )
-     *id = proposalQueue->SubmitWork(CurrentState(state, true));
+      *id = proposalQueue->SubmitWork(CurrentState(t, state, true));
 
     // retrieve the work
     proposedStates.resize(Np1, nullptr);
@@ -166,12 +169,12 @@ void GMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> sta
 #if MUQ_HAS_PARCER
     if( comm ) {
       if( comm->GetRank()==0 ) { assert(state); }
-      ParallelProposal(state);
+      ParallelProposal(t, state);
     }else{
-      SerialProposal(state);
+      SerialProposal(t, state);
     }
 #else
-    SerialProposal(state);
+    SerialProposal(t, state);
 #endif
 }
 
