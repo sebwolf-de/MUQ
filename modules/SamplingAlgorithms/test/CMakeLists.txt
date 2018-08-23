@@ -11,6 +11,8 @@ CreateTestGroup(
     #ImportanceSamplingTests.cpp
     MCMCTests.cpp
     CrankNicolsonTests.cpp
+
+    ExpensiveSamplingProblemTests.cpp
 )
 
 CreateParallelTestGroup(

@@ -1,7 +1,8 @@
 #ifndef SAMPLINGPROBLEM_H_
 #define SAMPLINGPROBLEM_H_
 
-#include "MUQ/Modeling/ModPiece.h"
+// include Density and not ModPiece so that if a SamplingProblem is constructed with a Density the compiler knows it is a child of ModPiece
+#include "MUQ/Modeling/Distributions/Density.h" 
 #include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
 
 namespace muq {
