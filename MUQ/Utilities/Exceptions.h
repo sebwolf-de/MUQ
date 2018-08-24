@@ -39,6 +39,17 @@ namespace muq
         NotRegisteredError(std::string const& message) : std::logic_error(message){};
     };
 
+    /** @ingroup Exceptions
+        @class ExternalLibraryError
+        @brief A MUQ dependency has failed.
+        @details Exception thrown when an external libraries returns a failed flag.
+    */
+    class ExternalLibraryError : public std::logic_error
+    {
+    public:
+        ExternalLibraryError(std::string const& message) : std::logic_error(message){};
+    };
+
     /** @class WrongSizeError
         @ingroup Exceptions
         @brief Exception to throw when matrices, vectors, or arrays are the wrong size.

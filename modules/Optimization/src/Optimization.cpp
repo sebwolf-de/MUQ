@@ -1,5 +1,7 @@
 #include "MUQ/Optimization/Optimization.h"
 
+#include "MUQ/Utilities/Exceptions.h"
+
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::Optimization;
@@ -62,8 +64,8 @@ void Optimization::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   
   // create the optimizer
   auto solver = nlopt_create(algorithm, opt.cost->inputSizes(0));
-
   nlopt_set_min_objective(solver, Optimization::Cost, &opt);
+  
   for( std::vector<CostFunction>::size_type i=0; i<ineqConstraints.size(); ++i ) { nlopt_add_inequality_constraint(solver, Optimization::Cost, &ineqConstraints[i], constraint_tol); }
   for( std::vector<CostFunction>::size_type i=0; i<eqConstraints.size(); ++i ) { nlopt_add_equality_constraint(solver, Optimization::Cost, &eqConstraints[i], constraint_tol); }
 
@@ -81,8 +83,8 @@ void Optimization::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   Eigen::VectorXd& xopt = boost::any_cast<Eigen::VectorXd&>(outputs.at(0));
 
   double minf;
-  const double check = nlopt_optimize(solver, xopt.data(), &minf);
-  assert(check>=0);
+  const nlopt_result check = nlopt_optimize(solver, xopt.data(), &minf);
+  if( check<0 ) { throw muq::ExternalLibraryError("NLOPT has failed with flag "+std::to_string(check)); }
   
   outputs[1] = minf;
 }

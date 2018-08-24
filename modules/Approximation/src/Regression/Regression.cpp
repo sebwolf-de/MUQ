@@ -24,8 +24,9 @@ Regression::Regression(pt::ptree const& pt) : WorkPiece(), order(pt.get<unsigned
   optPt.put("Ftol.RelativeTolerance", pt.get<double>("PoisednessConstant.Ftol.RelativeTolerance", 1.0e-8));
   optPt.put("Xtol.AbsoluteTolerance", pt.get<double>("PoisednessConstant.Xtol.AbsoluteTolerance", 1.0e-8));
   optPt.put("Xtol.RelativeTolerance", pt.get<double>("PoisednessConstant.Xtol.RelativeTolerance", 1.0e-8));
+  optPt.put("ConstraintTolerance", pt.get<double>("PoisednessConstant.ConstraintTolerance", 1.0e-8));
   optPt.put("MaxEvaluations", pt.get<unsigned int>("PoisednessConstant.MaxEvaluations", 1000));
-  optPt.put("Algorithm", pt.get<std::string>("PoisednessConstant.Algorithm", "COBYLA"));
+  optPt.put("Algorithm", pt.get<std::string>("PoisednessConstant.Algorithm", "MMA"));
 }
 
 void Regression::EvaluateImpl(ref_vector<boost::any> const& inputs) {
@@ -188,6 +189,14 @@ double Regression::CenterPoints(std::vector<Eigen::VectorXd>& xs) {
   return currentRadius;
 }
 
+/*double GradientDecent(Eigen::VectorXd& start, std::shared_ptr<CostFunction> cost) {
+  for( unsigned int i=0; i<3; ++i ) {
+    //Eigen::VectorXd grad = cost->Gradient(start);
+
+    //std::cout << "grad: " << grad.transpose() << std::endl;
+  }
+  }*/
+
 std::pair<Eigen::VectorXd, double> Regression::PoisednessConstant(std::vector<Eigen::VectorXd> xs, Eigen::VectorXd const& center) const {
   // recenter so the points are on the unit ball
   const double radius = CenterPoints(xs, center);
@@ -217,7 +226,7 @@ std::pair<Eigen::VectorXd, double> Regression::PoisednessConstant(std::vector<Ei
   const std::pair<Eigen::VectorXd, double>& soln = opt->Solve((Eigen::VectorXd)Eigen::VectorXd::Zero(inputDim));
   assert(soln.second<=0.0); // we are minimizing a negative inner product so the optimal solution should be negative
 
-  return std::pair<Eigen::VectorXd, double>(radius*soln.first+center, std::sqrt(-soln.second));
+  return std::pair<Eigen::VectorXd, double>(radius*soln.first+center, -soln.second);
 }
 
 void Regression::ComputeBasisDerivatives(Eigen::VectorXd const& point, std::vector<Eigen::VectorXd>& gradient) const {
@@ -259,8 +268,8 @@ double Regression::PoisednessCost::CostImpl(ref_vector<Eigen::VectorXd> const& i
 
   Eigen::VectorXd lambda(lagrangeCoeff.size());
   for( unsigned int i=0; i<lagrangeCoeff.size(); ++i ) { lambda(i) = phi.dot(lagrangeCoeff[i]); }
-  
-  return -1.0*lambda.dot(lambda);
+
+  return -1.0*lambda.norm();
 }
 
 void Regression::PoisednessCost::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) {
@@ -277,38 +286,44 @@ void Regression::PoisednessCost::GradientImpl(unsigned int const inputDimWrt, mu
   
   gradient = Eigen::VectorXd::Zero(inputSizes(0));
 
+  Eigen::VectorXd lambda(lagrangeCoeff.size());
   for( unsigned int i=0; i<lagrangeCoeff.size(); ++i ) {
-    const double lambda = 2.0*phi.dot(lagrangeCoeff[i]);
+    lambda(i) = phi.dot(lagrangeCoeff[i]);
     for( unsigned int j=0; j<gradBasis.size(); ++j ) {
-      gradient += lambda*lagrangeCoeff[i](j)*gradBasis[j];
+      gradient += lambda(i)*lagrangeCoeff[i](j)*gradBasis[j];
     }
   }
 
-  gradient *= -1.0*sensitivity(0);
+  gradient *= -1.0*sensitivity(0)/lambda.norm();
 
   /*{ // sanity check ...
     std::cout << std::endl;
     Eigen::VectorXd gradFD = GradientByFD(0, 0, input, sensitivity);
-    std::cout << "(cost) FD: " << gradFD.transpose() << std::endl;
-    std::cout << "(cost) grad: " << gradient.transpose() << std::endl;
+    std::cout << "point (in GradientImpl): " << x.transpose() << std::endl;
+    std::cout << "(cost) FD gradient: " << gradFD.transpose() << std::endl;
+    std::cout << "(cost) gradient: " << gradient.transpose() << std::endl;
     }*/
 }
 
 Regression::PoisednessConstraint::PoisednessConstraint(unsigned int const inDim) : CostFunction(Eigen::VectorXi::Constant(1, inDim)) {}
 
-double Regression::PoisednessConstraint::CostImpl(ref_vector<Eigen::VectorXd> const& input) { return input[0].get().norm()-1.0; }
+double Regression::PoisednessConstraint::CostImpl(ref_vector<Eigen::VectorXd> const& input) {
+  const Eigen::VectorXd& x = input[0];
+  return x.dot(x)-1.0;
+}
 
 void Regression::PoisednessConstraint::GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) {
   assert(inputDimWrt==0);
   const Eigen::VectorXd& x = input[0];
-  gradient = x/x.norm();
+  gradient = 2.0*x;///x.norm();
 
   gradient *= sensitivity(0);
 
   /*{ // sanity check ...
     std::cout << std::endl;
     Eigen::VectorXd gradFD = GradientByFD(0, 0, input, sensitivity);
-    std::cout << "(constraint) FD: " << gradFD.transpose() << std::endl;
-    std::cout << "(constraint) grad: " << gradient.transpose() << std::endl;
+    std::cout << "point (in GradientImpl): " << x.transpose() << std::endl;
+    std::cout << "(constraint) FD gradient: " << gradFD.transpose() << std::endl;
+    std::cout << "(constraint) gradient: " << gradient.transpose() << std::endl;
     }*/
 }

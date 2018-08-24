@@ -8,7 +8,7 @@ using namespace muq::Approximation;
 class RegressionTest : public::testing::Test {
 public:
   inline RegressionTest() {
-    const unsigned int Npts = 100;
+    const unsigned int Npts = 14;
 
     // generate the input points
     ins.resize(Npts, Eigen::VectorXd::Constant(2, std::numeric_limits<double>::quiet_NaN()));
@@ -59,7 +59,14 @@ public:
     EXPECT_NEAR((y_true-result.col(1)).norm(), 0.0, 1.0e-10);
     EXPECT_NEAR((z_true-result.col(2)).norm(), 0.0, 1.0e-10);
 
-    reg->PoisednessConstant(ins, x);
+    std::pair<Eigen::VectorXd, double> lambda = reg->PoisednessConstant(ins, x);
+    unsigned int count = 0;
+    while( lambda.second>25.0 && count++<1000 ) { // adding the computed point should improve bad poisedness
+      ins.push_back(lambda.first);
+      lambda = reg->PoisednessConstant(ins, x);
+    }
+    EXPECT_TRUE(lambda.second<25.0);
+    EXPECT_TRUE(count<1000);
   }
 
   /// A matrix holding the input points.

@@ -217,3 +217,6 @@ TEST_F(ConstrainedOptimizationTests, COBYLA) {
   pt.put("Optimization.Algorithm", "COBYLA");
 }
 
+TEST_F(ConstrainedOptimizationTests, SLSQP) {
+  pt.put("Optimization.Algorithm", "SLSQP");
+}
