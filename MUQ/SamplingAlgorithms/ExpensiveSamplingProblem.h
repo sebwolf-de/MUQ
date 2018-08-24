@@ -10,7 +10,7 @@ namespace muq {
     class ExpensiveSamplingProblem : public SamplingProblem {
     public:
 
-      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree const& pt);
+      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree& pt);
 
       ~ExpensiveSamplingProblem() = default;
 
@@ -29,11 +29,11 @@ namespace muq {
       std::pair<double, double> beta;
 
       /// Level scaling for sturctural error
-      double phi1;
+      double phi;
 
       /// Parameters for structural refinement
       /**
-	 Refine if the error threshold exceeds \f$\gamma = \gamma_0 l^{\gamma_1}\f$, where \f$l\f$ is the current error threshold level (ExpensiveSamplingProblem::level).
+	 Refine if the error threshold exceeds \f$\gamma = \gamma_0 l^{-\gamma_1}\f$, where \f$l\f$ is the current error threshold level (ExpensiveSamplingProblem::level).  \f$\gamma_0\f$ is "GammaScale" and it defaults to \f$1\f$.  \f$\gamma_1\f$ is "GammaExponent" and it defaults to \f$1.0\f$.
        */
       std::pair<double, double> gamma;
 

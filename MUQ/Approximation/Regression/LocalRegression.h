@@ -1,8 +1,6 @@
 #ifndef LOCALREGRESSION_H_
 #define LOCALREGRESSION_H_
 
-#include <boost/property_tree/ptree.hpp>
-
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/Flann/FlannCache.h"
 
@@ -16,7 +14,7 @@ namespace muq {
       /**
 	 @param[in] function The function we wish to approximate with a local polynomial
        */
-      LocalRegression(std::shared_ptr<muq::Modeling::ModPiece> function, boost::property_tree::ptree const& pt);
+      LocalRegression(std::shared_ptr<muq::Modeling::ModPiece> function, boost::property_tree::ptree& pt);
 
       ~LocalRegression();
 

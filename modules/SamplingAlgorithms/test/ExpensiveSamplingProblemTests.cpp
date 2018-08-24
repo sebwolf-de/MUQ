@@ -26,8 +26,12 @@ TEST(ExpensiveSamplingProblemTests, GaussianTarget) {
   pt.put("MySamplingProblem.MyRegression.NumNeighbors", 5);
   pt.put("MySamplingProblem.MyRegression.Order", 1); // approximating the quardatic log-Gaussian with a locally linear function
 
-  pt.put("MySamplingProblem.BetaScale", 1.0);
-  pt.put("MySamplingProblem.BetaExponent", 0.9);
+  pt.put("MySamplingProblem.StructuralScaling", 1.0);
+  pt.put("MySamplingProblem.GammaScale", 1.0);
+  pt.put("MySamplingProblem.GammaExponent", 0.9);
+
+  //pt.put("MySamplingProblem.BetaScale", 1.0);
+  //pt.put("MySamplingProblem.BetaExponent", 0.9);
 
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
   const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);

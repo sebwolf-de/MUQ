@@ -4,7 +4,7 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::Approximation;
 
-LocalRegression::LocalRegression(std::shared_ptr<ModPiece> function, pt::ptree const& pt) : ModPiece(function->inputSizes, function->outputSizes), kn(pt.get<unsigned int>("NumNeighbors")) { // can only have one input and output
+LocalRegression::LocalRegression(std::shared_ptr<ModPiece> function, pt::ptree& pt) : ModPiece(function->inputSizes, function->outputSizes), kn(pt.get<unsigned int>("NumNeighbors")) { // can only have one input and output
   assert(inputSizes.size()==1);
   assert(outputSizes.size()==1);
   
@@ -12,7 +12,10 @@ LocalRegression::LocalRegression(std::shared_ptr<ModPiece> function, pt::ptree c
   cache = std::make_shared<FlannCache>(function);
 
   // create a regression object
-  reg = std::make_shared<Regression>(pt.get<unsigned int>("Order", 2), "Legendre");
+  pt.put<std::string>("PolynomialBasis", pt.get<std::string>("PolynomialBasis", "Legendre")); // set default to Legendre
+  pt.put<unsigned int>("Order", pt.get<unsigned int>("Order", 2)); // set default order to 2
+  pt.put<unsigned int>("InputSize", function->inputSizes(0));
+  reg = std::make_shared<Regression>(pt);
 }
 
 LocalRegression::~LocalRegression() {}

@@ -27,7 +27,7 @@ double Optimization::Cost(unsigned int n, const double* x, double* grad, void* f
   
   if( grad ) {
     Eigen::Map<Eigen::VectorXd> gradmap(grad, n);
-    const Eigen::VectorXd& gradeig = opt->cost->Gradient(0, opt->inputs, (Eigen::VectorXd)Eigen::VectorXd::Ones(n));
+    const Eigen::VectorXd& gradeig = opt->cost->Gradient(0, opt->inputs, (Eigen::VectorXd)Eigen::VectorXd::Ones(1));
     gradmap = gradeig;
   }
   

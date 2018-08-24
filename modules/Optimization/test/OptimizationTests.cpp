@@ -124,7 +124,7 @@ class InequalityConstraint : public CostFunction {
     gradient = Eigen::Vector2d::Zero(2);
     gradient(0) = -1.0;
 
-    gradient.array()*sensitivity.array();
+    gradient *= sensitivity(0);
   }
 };
 
@@ -151,7 +151,7 @@ class EqualityConstraint : public CostFunction {
     gradient(0) = -2.0*xc(0);
     gradient(1) = 1.0;
 
-    gradient.array()*sensitivity.array();
+    gradient *= sensitivity(0);
   }
 };
 
