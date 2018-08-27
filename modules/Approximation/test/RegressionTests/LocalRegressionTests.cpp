@@ -36,29 +36,32 @@ public:
 
     // create a local regressor
     reg = std::make_shared<LocalRegression>(fn, pt.get_child("LocalRegression"));
+
+    // generate some random inputs
+    std::vector<Eigen::VectorXd> inputs(M);
+    for( auto it=inputs.begin(); it!=inputs.end(); ++it ) { *it = Eigen::Vector3d::Random(); }
+    
+    // add the random input points to the cache
+    reg->Add(inputs);
   }
 
   inline virtual ~LocalRegressionTest() {}
 
+protected:
+  
   /// The function to approximate
   std::shared_ptr<func> fn;
 
   /// The local regressor
   std::shared_ptr<LocalRegression> reg;
 
-private:
+  // The number of points we added
+  const unsigned int M = 25;
 };
 
 TEST_F(LocalRegressionTest, Basic) {
-  // generate some random inputs
-  std::vector<Eigen::VectorXd> inputs(25);
-  for( auto it=inputs.begin(); it!=inputs.end(); ++it ) { *it = Eigen::Vector3d::Random(); }
-
-  // add the random input points to the cache
-  reg->Add(inputs);
-
   // check the size
-  EXPECT_EQ(reg->CacheSize(), inputs.size());
+  EXPECT_EQ(reg->CacheSize(), M);
 
   // the input point
   const Eigen::VectorXd input = Eigen::Vector3d::Random();
@@ -68,7 +71,27 @@ TEST_F(LocalRegressionTest, Basic) {
 
   // evaluate the truth
   const std::vector<Eigen::VectorXd>& truth = fn->Evaluate(input);
-  
+
   // the regression and the truth are the same---approximating a quadratic with a quardratic
   EXPECT_NEAR((truth[0]-result[0]).norm(), 0.0, 1.0e-10);
+}
+
+TEST_F(LocalRegressionTest, Poisedness) {
+  // check the size
+  EXPECT_EQ(reg->CacheSize(), M);
+  
+  for( unsigned int i=0; i<10; ++i ) {
+    // the input point
+    const Eigen::VectorXd input = Eigen::Vector3d::Random();
+
+    std::vector<Eigen::VectorXd> neighbors;
+    std::vector<Eigen::VectorXd> results;
+    reg->NearestNeighbors(input, neighbors, results);
+    
+    // get the poisedness constant
+    std::pair<Eigen::VectorXd, double> lambda = reg->PoisednessConstant(input, neighbors);
+    const Eigen::VectorXd& newResult = reg->Add(lambda.first);
+
+    EXPECT_EQ(reg->CacheSize(), M+i+1);    
+  }
 }

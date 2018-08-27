@@ -51,6 +51,9 @@ namespace muq {
 	 \return A tuple: poisedness constant, radius, index of input point associated with the poisedness consant, the location that maximizes the Lagrange polynomial
        */
       std::pair<Eigen::VectorXd, double> PoisednessConstant(std::vector<Eigen::VectorXd> xs, Eigen::VectorXd const& center) const;
+
+      /// The order of the regression
+      const unsigned int order;
       
     private:
 
@@ -118,9 +121,6 @@ namespace muq {
 	
 	virtual void GradientImpl(unsigned int const inputDimWrt, muq::Modeling::ref_vector<Eigen::VectorXd> const& input, Eigen::VectorXd const& sensitivity) override;
       };
-
-      /// The order of the regression
-      const unsigned int order;
 
       /// The input dimension
       const unsigned int inputDim;

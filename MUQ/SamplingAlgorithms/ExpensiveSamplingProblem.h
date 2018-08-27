@@ -15,10 +15,14 @@ namespace muq {
       ~ExpensiveSamplingProblem() = default;
 
       virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state) override;
+
+      unsigned int CacheSize() const;
       
     private:
 
-      void RefineSurrogate(unsigned int const step);
+      void RefineSurrogate(unsigned int const step, std::shared_ptr<SamplingState> state, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results);
+
+      void RefineSurrogate(Eigen::VectorXd const& point, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) const;
 
       std::shared_ptr<muq::Approximation::LocalRegression> reg;
 
@@ -30,6 +34,9 @@ namespace muq {
 
       /// Level scaling for sturctural error
       double phi;
+
+      /// The upper bound for the poisedness constant
+      double lambda;
 
       /// Parameters for structural refinement
       /**

@@ -36,6 +36,9 @@ TEST(FlannCache, CreateCache) {
   std::vector<Eigen::VectorXd> inputs(10);
   for( auto it=inputs.begin(); it!=inputs.end(); ++it ) { *it = Eigen::Vector3d::Random(); }
 
+  // make sure the size is equal to the number of points that we added
+  EXPECT_EQ(cache->Size(), 0);
+
   // add the inputs to the cache
   cache->Add(inputs);
   

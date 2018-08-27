@@ -1,6 +1,8 @@
 #ifndef FLANNCACHE_H_
 #define FLANNCACHE_H_
 
+#include <deque>
+
 #include <nanoflann.hpp>
 
 #include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
@@ -21,7 +23,7 @@ namespace muq {
         typedef nanoflann::KDTreeSingleIndexDynamicAdaptor< metric_t,self_t,-1,IndexType>  index_t;
 	
         std::shared_ptr<index_t> index; //! The kd-tree index for the user to call its methods as usual with any other FLANN index.
-        std::vector<Eigen::VectorXd> m_data;
+        std::deque<Eigen::VectorXd> m_data;
 	
         /// Constructor: takes a const ref to the vector of vectors object with the data points
 	inline DynamicKDTreeAdaptor(const int dim, const int leaf_max_size = 10) {
@@ -52,7 +54,7 @@ namespace muq {
           nanoflann::KNNResultSet<double,IndexType> resultSet(num_closest);
           resultSet.init(&out_indices[0], &out_distances_sq[0]);
           index->findNeighbors(resultSet, query_point.data(), nanoflann::SearchParams());
-	  
+
           return std::make_pair(out_indices, out_distances_sq);
         }
 	
@@ -71,7 +73,7 @@ namespace muq {
 
         // Returns the dim'th component of the idx'th point in the class:
         inline double kdtree_get_pt(const size_t idx, int dim) const {
-          return m_data[idx][dim];
+	  return m_data[idx][dim];
         }
 
         // Optional bounding-box computation: return false to default to a standard bbox computation loop.
@@ -111,8 +113,9 @@ namespace muq {
       /// Add a new point to the cache
       /**
 	 @param[in] input The entry we would like to add to the cache (if it is not there already)
+	 \return The function result at that point
        */
-      void Add(Eigen::VectorXd const& input);
+      Eigen::VectorXd Add(Eigen::VectorXd const& input);
 
       /// Remove point from the cache
       /**
@@ -132,6 +135,16 @@ namespace muq {
                             std::vector<Eigen::VectorXd>& neighbors,
                             std::vector<Eigen::VectorXd>& result) const;
 
+      /// Find the \f$k\f$ nearest neighbors (don't bother getting the result too)
+      /**
+	 @param[in] point The point whose nearest neighbors we want to find
+	 @param[in] k We want to find this many nearest neighbors
+	 @param[out] neighbors A vector of the \fk\f$ nearest neighbors
+       */
+      void NearestNeighbors(Eigen::VectorXd const& point,
+                            unsigned int const k,
+                            std::vector<Eigen::VectorXd>& neighbors) const;
+
       /// Get the size of the cache
       /**
 	     \return The size of the cache
@@ -141,7 +154,7 @@ namespace muq {
     private:
 
       // The vector of previous results
-      std::vector<Eigen::VectorXd> outputCache;
+      std::deque<Eigen::VectorXd> outputCache;
 
       virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 

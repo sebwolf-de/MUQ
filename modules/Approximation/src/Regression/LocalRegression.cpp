@@ -36,7 +36,7 @@ void LocalRegression::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
 
   // evaluate the regressor
   outputs.resize(1);
-  outputs[0] = (Eigen::VectorXd)boost::any_cast<Eigen::MatrixXd const&>(reg->Evaluate(inputs[0].get()) [0]).col(0);
+  outputs[0] = (Eigen::VectorXd)boost::any_cast<Eigen::MatrixXd const&>(reg->Evaluate(inputs[0]) [0]).col(0);
 }
 
 unsigned int LocalRegression::CacheSize() const {
@@ -44,7 +44,61 @@ unsigned int LocalRegression::CacheSize() const {
   return cache->Size();
 }
 
+Eigen::VectorXd LocalRegression::Add(Eigen::VectorXd const& input) const {
+  assert(cache);
+  return cache->Add(input);
+}
+
 void LocalRegression::Add(std::vector<Eigen::VectorXd> const& inputs) const {
   assert(cache);
-  for( auto it : inputs ) { cache->Add(it); }
+  cache->Add(inputs);
+}
+
+std::pair<Eigen::VectorXd, double> LocalRegression::PoisednessConstant(Eigen::VectorXd const& input) const {
+  // find the nearest neighbors
+  std::vector<Eigen::VectorXd> neighbors;
+  cache->NearestNeighbors(input, kn, neighbors);
+
+  return PoisednessConstant(input, neighbors);
+}
+
+std::pair<Eigen::VectorXd, double> LocalRegression::PoisednessConstant(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const {
+  assert(reg);
+  return reg->PoisednessConstant(neighbors, input);
+}
+
+std::pair<Eigen::VectorXd, double> LocalRegression::ErrorIndicator(Eigen::VectorXd const& input) const {
+  // find the nearest neighbors
+  std::vector<Eigen::VectorXd> neighbors;
+  cache->NearestNeighbors(input, kn, neighbors);
+
+  return ErrorIndicator(input, neighbors);
+}
+
+std::pair<Eigen::VectorXd, double> LocalRegression::ErrorIndicator(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const {
+  // get the poisedness constant
+  std::pair<Eigen::VectorXd, double> lambda = PoisednessConstant(input, neighbors);
+
+  // update the error indicator
+  lambda.second *= std::sqrt((double)kn)*std::pow((*(neighbors.end()-1)-input).norm(), (double)reg->order+1.0);
+
+  return lambda;
+}
+
+void LocalRegression::NearestNeighbors(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd>& neighbors) const {
+  assert(cache);
+  cache->NearestNeighbors(input, kn, neighbors);
+}
+
+void LocalRegression::NearestNeighbors(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& result) const {
+  assert(cache);
+  cache->NearestNeighbors(input, kn, neighbors, result);
+}
+
+Eigen::VectorXd LocalRegression::EvaluateRegressor(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors, std::vector<Eigen::VectorXd> const& result) const {
+  // fit the regression
+  reg->Fit(neighbors, result, input);
+
+  // evaluate the regressor
+  return (Eigen::VectorXd)boost::any_cast<Eigen::MatrixXd const&>(reg->Evaluate(input) [0]).col(0);  
 }
