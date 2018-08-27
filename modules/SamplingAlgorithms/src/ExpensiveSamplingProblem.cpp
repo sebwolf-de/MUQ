@@ -13,12 +13,25 @@ using namespace muq::Approximation;
 using namespace muq::SamplingAlgorithms;
 
 ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, pt::ptree& pt) : SamplingProblem(target) {
+  SetUp(pt);
+
+  // create the local regressor
+  reg = std::make_shared<LocalRegression>(target, pt.get_child(pt.get<std::string>("RegressionOptions")));
+}
+
+#if MUQ_HAS_PARCER
+ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree& pt, std::shared_ptr<parcer::Communicator> comm) : SamplingProblem(target) {
+  SetUp(pt);
+
+  // create the local regressor
+  reg = std::make_shared<LocalRegression>(target, pt.get_child(pt.get<std::string>("RegressionOptions")), comm);
+}
+#endif
+
+void ExpensiveSamplingProblem::SetUp(boost::property_tree::ptree& pt) {
   // can only have one input
   assert(target->numInputs==1);
   
-  // create the local regressor
-  reg = std::make_shared<LocalRegression>(target, pt.get_child(pt.get<std::string>("RegressionOptions")));
-
   beta = std::pair<double, double>(pt.get<double>("BetaScale", 0.0), -pt.get<double>("BetaExponent", RAND_MAX));
   assert(beta.second<0.0);
 

@@ -25,4 +25,6 @@ CreateParallelTestGroup(
     GMHKernelParallelTests.cpp
 
     SingleChainMCMCParallelTests.cpp
+
+    ExpensiveSamplingProblemParallelTests.cpp
 )

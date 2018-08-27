@@ -40,12 +40,19 @@ int FlannCache::InCache(Eigen::VectorXd const& input) const {
 }
 
 Eigen::VectorXd FlannCache::Add(Eigen::VectorXd const& newPt) {
-  kdTree->add(newPt);
+  // evaluate the function
+  const Eigen::VectorXd& newOutput = function->Evaluate(newPt).at(0);
 
-  Eigen::VectorXd newOutput = function->Evaluate(newPt).at(0);
-  outputCache.push_back(newOutput);
-  
+  // add the new point
+  Add(newPt, newOutput);
+
+  // return the result
   return newOutput;
+}
+
+void FlannCache::Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result) {
+  kdTree->add(input);
+  outputCache.push_back(result);
 }
 
 void FlannCache::Remove(Eigen::VectorXd const& input) {
@@ -114,12 +121,31 @@ unsigned int FlannCache::Size() const {
   return std::min(kdTree->m_data.size(), outputCache.size());
 }
 
-void FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs) {
-  for( auto it : inputs ) {
+std::vector<Eigen::VectorXd> FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs) {
+  std::vector<Eigen::VectorXd> results(inputs.size());
+  
+  for( unsigned int i=0; i<inputs.size(); ++i ) {
+    // see if the point is already there
+    const int index = InCache(inputs[i]);
+
     // add the point if is not already there
-    if( InCache(it)<0 ) { Add(it); }
+    results[i] = index<0? Add(inputs[i]) : outputCache.at(index);
     
     // make sure it got added
-    assert(InCache(it)>=0);
+    assert(InCache(inputs[i])>=0);
+  }
+
+  return results;
+}
+
+void FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs, std::vector<Eigen::VectorXd> const& results) {
+  assert(inputs.size()==results.size());
+
+  for( unsigned int i=0; i<inputs.size(); ++i ) {
+    // add the point to cache (with result)
+    Add(inputs[i], results[i]);
+
+    // make sure it got added
+    assert(InCache(inputs[i])>=0);
   }
 }

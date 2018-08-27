@@ -1,6 +1,12 @@
 #ifndef EXPENSIVESAMPLINGPROBLEM_H_
 #define EXPENSIVESAMPLINGPROBLEM_H_
 
+#include "MUQ/config.h"
+
+#if MUQ_HAS_PARCER
+#include <parcer/Communicator.h>
+#endif
+
 #include "MUQ/Approximation/Regression/LocalRegression.h"
 
 #include "MUQ/SamplingAlgorithms/SamplingProblem.h"
@@ -10,7 +16,20 @@ namespace muq {
     class ExpensiveSamplingProblem : public SamplingProblem {
     public:
 
+      /**
+	 @param[in] target The target distribution
+	 @param[in] pt Options for the sampling problem
+       */
       ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree& pt);
+
+#if MUQ_HAS_PARCER
+      /**
+	 @param[in] target The target distribution
+	 @param[in] pt Options for the sampling problem
+	 @param[in] comm Parallel communicator for regression
+       */
+      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree& pt, std::shared_ptr<parcer::Communicator> comm);
+#endif
 
       ~ExpensiveSamplingProblem() = default;
 
@@ -19,6 +38,12 @@ namespace muq {
       unsigned int CacheSize() const;
       
     private:
+
+      /// Set up the sampling problem
+      /**
+	 @param[in] pt Options for the sampling problem
+       */
+      void SetUp(boost::property_tree::ptree& pt);
 
       /**
 	 @param[in] step The current MCMC step

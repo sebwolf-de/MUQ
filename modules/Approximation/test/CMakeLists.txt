@@ -28,3 +28,9 @@ CreateTestGroup(
 	RegressionTests/RegressionTests.cpp
 	RegressionTests/LocalRegressionTests.cpp
 )
+
+CreateParallelTestGroup(
+	APPROXIMATION_REGRESSION
+
+	RegressionTests/LocalRegressionParallelTests.cpp
+)

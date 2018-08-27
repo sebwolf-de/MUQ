@@ -1,6 +1,12 @@
 #ifndef LOCALREGRESSION_H_
 #define LOCALREGRESSION_H_
 
+#include "MUQ/config.h"
+
+#if MUQ_HAS_PARCER
+#include <parcer/Communicator.h>
+#endif
+
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/Flann/FlannCache.h"
 
@@ -13,10 +19,20 @@ namespace muq {
 
       /**
 	 @param[in] function The function we wish to approximate with a local polynomial
+	 @param[in] pt Options for the regression
        */
       LocalRegression(std::shared_ptr<muq::Modeling::ModPiece> function, boost::property_tree::ptree& pt);
 
-      ~LocalRegression();
+#if MUQ_HAS_PARCER
+      /**
+	 @param[in] function The function we wish to approximate with a local polynomial
+	 @param[in] pt Options for the regression
+	 @param[in] comm The parcer communicator
+       */
+      LocalRegression(std::shared_ptr<muq::Modeling::ModPiece> function, boost::property_tree::ptree& pt, std::shared_ptr<parcer::Communicator> comm);
+#endif
+
+      ~LocalRegression() = default;
 
       /// Add some points to the cache
       /**
@@ -88,6 +104,10 @@ namespace muq {
 
       Eigen::VectorXd EvaluateRegressor(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors, std::vector<Eigen::VectorXd> const& result) const;
 
+#if MUQ_HAS_PARCER
+      void Probe() const;
+#endif
+
       /// The number of nearest neighbors to use by the regressor
       const unsigned int kn;
 
@@ -98,11 +118,20 @@ namespace muq {
       /// Fit the regression to the nearest neighbors
       void FitRegression(Eigen::VectorXd const& input) const;
 
+      /// Set up the regressor
+      void SetUp(std::shared_ptr<muq::Modeling::ModPiece> function, boost::property_tree::ptree& pt);
+
       /// A cache containing previous model evaluations
       std::shared_ptr<muq::Modeling::FlannCache> cache;
 
       /// A regressor
-      std::shared_ptr<Regression> reg;      
+      std::shared_ptr<Regression> reg;
+
+#if MUQ_HAS_PARCER
+      std::shared_ptr<parcer::Communicator> comm = nullptr;
+      int tagSingle = 0;
+      int tagMulti = 1;
+#endif
     };
   } // namespace Approximation
 } // namespace muq

@@ -94,6 +94,6 @@ TEST_F(LocalRegressionTest, Poisedness) {
     EXPECT_TRUE(std::get<2>(lambda)<neighbors.size());
     
     const Eigen::VectorXd& newResult = reg->Add(std::get<0>(lambda));
-    EXPECT_EQ(reg->CacheSize(), M+i+1);    
+    EXPECT_EQ(reg->CacheSize(), M+i+1);
   }
 }

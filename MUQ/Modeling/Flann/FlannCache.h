@@ -108,7 +108,18 @@ namespace muq {
       int InCache(Eigen::VectorXd const& input) const;
 
       /// Add new points to the cache
-      void Add(std::vector<Eigen::VectorXd> const& inputs);
+      /**
+	 @param[in] inputs The points to add 
+	 \return The function evaluation at each input point
+       */
+      std::vector<Eigen::VectorXd> Add(std::vector<Eigen::VectorXd> const& inputs);
+
+      /// Add new points to the cache given the result
+      /**
+	 @param[in] inputs The points to add 
+	 @param[in] results The function evaluation at each input point
+       */
+      void Add(std::vector<Eigen::VectorXd> const& inputs, std::vector<Eigen::VectorXd> const& results);
 
       /// Add a new point to the cache
       /**
@@ -116,6 +127,13 @@ namespace muq {
 	 \return The function result at that point
        */
       Eigen::VectorXd Add(Eigen::VectorXd const& input);
+
+      /// Add a new point to the cache given the result
+      /**
+	 @param[in] input The entry we would like to add to the cache (if it is not there already)
+	 @param[in] result The result of the function 
+      */
+      void Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result);
 
       /// Remove point from the cache
       /**
