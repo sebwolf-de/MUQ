@@ -41,35 +41,35 @@ namespace muq {
       /**
 	 Get the poisedness constant associated with the nearest neighbors of the input point.
 	 @param[in] input The input point
-	 \return first: the point where the Lagrange polynomials are maximized, second: the poisedness constant
+	 \return first: the point where the Lagrange polynomials are maximized, second: the poisedness constant, third: the index of the nearest neighbor closest to the new point
        */
-      std::pair<Eigen::VectorXd, double> PoisednessConstant(Eigen::VectorXd const& input) const;
+      std::tuple<Eigen::VectorXd, double, unsigned int> PoisednessConstant(Eigen::VectorXd const& input) const;
 
       /// Get the poisedness constant
       /**
 	 Get the poisedness constant associated with the nearest neighbors of the input point.
 	 @param[in] input The input point
 	 @param[in] neighbors The nearest neighbors
-	 \return first: the point where the Lagrange polynomials are maximized, second: the poisedness constant
+	 \return first: the point where the Lagrange polynomials are maximized, second: the poisedness constant, third: the index of the nearest neighbor closest to the new point
        */
-      std::pair<Eigen::VectorXd, double> PoisednessConstant(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const;
+      std::tuple<Eigen::VectorXd, double, unsigned int> PoisednessConstant(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const;
 
       /// Get the error indicator
       /**
 	 Get the error indicator \f$\Lambda \sqrt{k} \Delta^{p+1}\f$
 	 @param[in] input The input point
-	 \return first: the point where the Lagrange polynomials are maximized, second: the error indicator
+	 \return first: the point where the Lagrange polynomials are maximized, second: the error indicator, third: the index of the nearest neighbor closest to the new point
        */
-      std::pair<Eigen::VectorXd, double> ErrorIndicator(Eigen::VectorXd const& input) const;
+      std::tuple<Eigen::VectorXd, double, unsigned int> ErrorIndicator(Eigen::VectorXd const& input) const;
 
       /// Get the error indicator
       /**
 	 Get the error indicator \f$\Lambda \sqrt{k} \Delta^{p+1}\f$
 	 @param[in] input The input point
 	 @param[in] neighbors The nearest neighbors
-	 \return first: the point where the Lagrange polynomials are maximized, second: the error indicator
+	 \return first: the point where the Lagrange polynomials are maximized, second: the error indicator, third: the index of the nearest neighbor closest to the new point
        */
-      std::pair<Eigen::VectorXd, double> ErrorIndicator(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const;
+      std::tuple<Eigen::VectorXd, double, unsigned int> ErrorIndicator(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const;
 
       /// Get the number of nearest neighbors
       /**

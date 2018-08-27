@@ -20,9 +20,22 @@ namespace muq {
       
     private:
 
+      /**
+	 @param[in] step The current MCMC step
+	 @param[in] state The state where we are evalauting the log target
+	 @param[out] neighbors The nearest neighbors
+	 @param[out] results The log-target at the nearest neighbors
+       */
       void RefineSurrogate(unsigned int const step, std::shared_ptr<SamplingState> state, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results);
 
-      void RefineSurrogate(Eigen::VectorXd const& point, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) const;
+      /**
+	 Replace the point that is farthest from the new point
+	 @param[in] state The point where we are evalauting the log target
+	 @param[in] index The index of the point that we are replacing
+	 @param[out] neighbors The nearest neighbors
+	 @param[out] results The log-target at the nearest neighbors
+       */
+      void RefineSurrogate(Eigen::VectorXd const& point, unsigned int const index, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) const;
 
       std::shared_ptr<muq::Approximation::LocalRegression> reg;
 

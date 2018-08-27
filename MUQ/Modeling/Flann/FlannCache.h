@@ -123,6 +123,13 @@ namespace muq {
        */
       void Remove(Eigen::VectorXd const& input);
 
+      /// The index of the nearest neighbor
+      /**
+	 @param[in] point We want the index of the nearest neighbor that is closest to this point.
+	 \return The index of the nearest neighbor
+       */
+      size_t NearestNeighborIndex(Eigen::VectorXd const& point) const;
+
       /// Find the \f$k\f$ nearest neighbors
       /**
 	 @param[in] point The point whose nearest neighbors we want to find

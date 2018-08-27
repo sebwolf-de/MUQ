@@ -189,14 +189,6 @@ double Regression::CenterPoints(std::vector<Eigen::VectorXd>& xs) {
   return currentRadius;
 }
 
-/*double GradientDecent(Eigen::VectorXd& start, std::shared_ptr<CostFunction> cost) {
-  for( unsigned int i=0; i<3; ++i ) {
-    //Eigen::VectorXd grad = cost->Gradient(start);
-
-    //std::cout << "grad: " << grad.transpose() << std::endl;
-  }
-  }*/
-
 std::pair<Eigen::VectorXd, double> Regression::PoisednessConstant(std::vector<Eigen::VectorXd> xs, Eigen::VectorXd const& center) const {
   // recenter so the points are on the unit ball
   const double radius = CenterPoints(xs, center);

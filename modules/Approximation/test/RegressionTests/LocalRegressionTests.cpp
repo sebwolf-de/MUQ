@@ -87,11 +87,13 @@ TEST_F(LocalRegressionTest, Poisedness) {
     std::vector<Eigen::VectorXd> neighbors;
     std::vector<Eigen::VectorXd> results;
     reg->NearestNeighbors(input, neighbors, results);
-    
-    // get the poisedness constant
-    std::pair<Eigen::VectorXd, double> lambda = reg->PoisednessConstant(input, neighbors);
-    const Eigen::VectorXd& newResult = reg->Add(lambda.first);
+    EXPECT_TRUE(neighbors.size()==results.size());
 
+    // get the poisedness constant
+    std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(input, neighbors);
+    EXPECT_TRUE(std::get<2>(lambda)<neighbors.size());
+    
+    const Eigen::VectorXd& newResult = reg->Add(std::get<0>(lambda));
     EXPECT_EQ(reg->CacheSize(), M+i+1);    
   }
 }

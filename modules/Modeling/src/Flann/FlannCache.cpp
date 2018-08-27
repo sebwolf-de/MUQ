@@ -59,6 +59,19 @@ void FlannCache::Remove(Eigen::VectorXd const& input) {
   kdTree->UpdateIndex();
 }
 
+size_t FlannCache::NearestNeighborIndex(Eigen::VectorXd const& point) const {
+  // make sure we have enough
+  assert(1<=Size());
+
+  std::vector<size_t> indices;
+  std::vector<double> squaredDists;
+  std::tie(indices, squaredDists) = kdTree->query(point, 1);
+  assert(indices.size()==1);
+  assert(squaredDists.size()==1);
+
+  return indices[0];
+}
+
 void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
                                   unsigned int const k,
                                   std::vector<Eigen::VectorXd>& neighbors,
@@ -69,6 +82,8 @@ void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
   std::vector<size_t> indices;
   std::vector<double> squaredDists;
   std::tie(indices, squaredDists) = kdTree->query(point, k);
+  assert(indices.size()==k);
+  assert(squaredDists.size()==k);
 
   neighbors.resize(k);
   result.resize(k);
@@ -87,6 +102,8 @@ void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
   std::vector<size_t> indices;
   std::vector<double> squaredDists;
   std::tie(indices, squaredDists) = kdTree->query(point, k);
+  assert(indices.size()==k);
+  assert(squaredDists.size()==k);
 
   neighbors.resize(k);
   for( unsigned int i=0; i<k; ++i ){ neighbors.at(i) = kdTree->m_data.at(indices[i]); }

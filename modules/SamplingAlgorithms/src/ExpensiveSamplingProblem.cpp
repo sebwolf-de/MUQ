@@ -49,27 +49,27 @@ void ExpensiveSamplingProblem::RefineSurrogate(unsigned int const step, std::sha
   assert(neighbors.size()==results.size());
 
   // get the error indicator
-  std::pair<Eigen::VectorXd, double> error = reg->ErrorIndicator(state->state[0], neighbors);
+  const std::tuple<Eigen::VectorXd, double, unsigned int>& error = reg->ErrorIndicator(state->state[0], neighbors);
   
   // BETA refinement
   if( RandomGenerator::GetUniform()<beta.first*std::pow((double)step, beta.second) ) {
-    RefineSurrogate(error.first, neighbors, results);
+    RefineSurrogate(std::get<0>(error), std::get<2>(error), neighbors, results);
     return;
   }
   
   // check to see if we should increment the level
   if( step>phi*std::pow((double)level, 2.0*gamma.second) ) { ++level; }
 
-  if( error.second>lambda*std::sqrt((double)reg->kn)*gamma.first*std::pow((double)level, -gamma.second) ) {
-    RefineSurrogate(error.first, neighbors, results);
+  if( std::get<1>(error)>lambda*std::sqrt((double)reg->kn)*gamma.first*std::pow((double)level, -gamma.second) ) {
+    RefineSurrogate(std::get<0>(error), std::get<2>(error), neighbors, results);
     return;
   }
 }
 
-void ExpensiveSamplingProblem::RefineSurrogate(Eigen::VectorXd const& point, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) const {
+void ExpensiveSamplingProblem::RefineSurrogate(Eigen::VectorXd const& point, unsigned int const index, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) const {
   const Eigen::VectorXd& result = reg->Add(point);
-  neighbors[neighbors.size()-1] = point;
-  results[results.size()-1] = result;
+  neighbors[index] = point;
+  results[index] = result;
 }
 
 unsigned int ExpensiveSamplingProblem::CacheSize() const { return reg->CacheSize(); }
