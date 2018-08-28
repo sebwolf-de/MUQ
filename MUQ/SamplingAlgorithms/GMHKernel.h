@@ -71,16 +71,18 @@ namespace muq {
 
       /// Propose \f$N\f$ points in serial and evaluate the log target
       /**
+	 @param[in] t The current step in the MCMC chain
 	 @param[in] state The current point
        */
-      void SerialProposal(std::shared_ptr<SamplingState> state);
+      void SerialProposal(unsigned int const t, std::shared_ptr<SamplingState> state);
 
 #if MUQ_HAS_PARCER
       /// Propose \f$N\f$ points in parallel and evaluate the log target
       /**
+	 @param[in] t The current step in the MCMC chain
 	 @param[in] state The current point
        */
-      void ParallelProposal(std::shared_ptr<SamplingState> state);
+      void ParallelProposal(unsigned int const t, std::shared_ptr<SamplingState> state);
 #endif
 
       /// Compute the stationary transition density

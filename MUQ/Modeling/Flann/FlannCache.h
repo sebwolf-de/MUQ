@@ -1,6 +1,8 @@
 #ifndef FLANNCACHE_H_
 #define FLANNCACHE_H_
 
+#include <deque>
+
 #include <nanoflann.hpp>
 
 #include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
@@ -21,7 +23,7 @@ namespace muq {
         typedef nanoflann::KDTreeSingleIndexDynamicAdaptor< metric_t,self_t,-1,IndexType>  index_t;
 	
         std::shared_ptr<index_t> index; //! The kd-tree index for the user to call its methods as usual with any other FLANN index.
-        std::vector<Eigen::VectorXd> m_data;
+        std::deque<Eigen::VectorXd> m_data;
 	
         /// Constructor: takes a const ref to the vector of vectors object with the data points
 	inline DynamicKDTreeAdaptor(const int dim, const int leaf_max_size = 10) {
@@ -29,6 +31,7 @@ namespace muq {
         }
 	
 	inline void UpdateIndex(const int leaf_max_size = 10) {
+	  assert(m_data.size()>0);
           index = std::make_shared<index_t>(m_data.at(0).size(), *this /* adaptor */, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size ) );
           index->addPoints(0, m_data.size()-1);
         }
@@ -37,7 +40,7 @@ namespace muq {
 	
         inline void add(Eigen::VectorXd const& newPt) {
           m_data.push_back(newPt);
-          index->addPoints(m_data.size()-1, m_data.size()-1);
+	  index->addPoints(m_data.size()-1, m_data.size()-1);
         }
 	
         /** Query for the \a num_closest closest points to a given point (entered as query_point[0:dim-1]).
@@ -52,7 +55,7 @@ namespace muq {
           nanoflann::KNNResultSet<double,IndexType> resultSet(num_closest);
           resultSet.init(&out_indices[0], &out_distances_sq[0]);
           index->findNeighbors(resultSet, query_point.data(), nanoflann::SearchParams());
-	  
+
           return std::make_pair(out_indices, out_distances_sq);
         }
 	
@@ -71,7 +74,10 @@ namespace muq {
 
         // Returns the dim'th component of the idx'th point in the class:
         inline double kdtree_get_pt(const size_t idx, int dim) const {
-          return m_data[idx][dim];
+	  assert(idx<m_data.size());
+	  assert(dim<m_data[idx].size());
+	  
+	  return m_data[idx][dim];
         }
 
         // Optional bounding-box computation: return false to default to a standard bbox computation loop.
@@ -92,9 +98,10 @@ namespace muq {
     public:
 
       /**
+	 If we pass a nullptr (default), then only construct a cache of points (no outputs)
 	 @param[in] function The function whose input/output pairs we want to cache
        */
-      FlannCache(std::shared_ptr<ModPiece> function);
+      FlannCache(std::shared_ptr<ModPiece> function/* = nullptr*/);
 
       ~FlannCache();
 
@@ -106,19 +113,45 @@ namespace muq {
       int InCache(Eigen::VectorXd const& input) const;
 
       /// Add new points to the cache
-      void Add(std::vector<Eigen::VectorXd> const& inputs);
+      /**
+	 @param[in] inputs The points to add 
+	 \return The function evaluation at each input point
+       */
+      std::vector<Eigen::VectorXd> Add(std::vector<Eigen::VectorXd> const& inputs);
+
+      /// Add new points to the cache given the result
+      /**
+	 @param[in] inputs The points to add 
+	 @param[in] results The function evaluation at each input point
+       */
+      void Add(std::vector<Eigen::VectorXd> const& inputs, std::vector<Eigen::VectorXd> const& results);
 
       /// Add a new point to the cache
       /**
 	 @param[in] input The entry we would like to add to the cache (if it is not there already)
+	 \return The function result at that point
        */
-      void Add(Eigen::VectorXd const& input);
+      Eigen::VectorXd Add(Eigen::VectorXd const& input);
+
+      /// Add a new point to the cache given the result
+      /**
+	 @param[in] input The entry we would like to add to the cache (if it is not there already)
+	 @param[in] result The result of the function 
+      */
+      void Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result);
 
       /// Remove point from the cache
       /**
 	 @param[in] input The entry we would like to remove from the cache
        */
       void Remove(Eigen::VectorXd const& input);
+
+      /// The index of the nearest neighbor
+      /**
+	 @param[in] point We want the index of the nearest neighbor that is closest to this point.
+	 \return The index of the nearest neighbor
+       */
+      size_t NearestNeighborIndex(Eigen::VectorXd const& point) const;
 
       /// Find the \f$k\f$ nearest neighbors
       /**
@@ -132,6 +165,16 @@ namespace muq {
                             std::vector<Eigen::VectorXd>& neighbors,
                             std::vector<Eigen::VectorXd>& result) const;
 
+      /// Find the \f$k\f$ nearest neighbors (don't bother getting the result too)
+      /**
+	 @param[in] point The point whose nearest neighbors we want to find
+	 @param[in] k We want to find this many nearest neighbors
+	 @param[out] neighbors A vector of the \fk\f$ nearest neighbors
+       */
+      void NearestNeighbors(Eigen::VectorXd const& point,
+                            unsigned int const k,
+                            std::vector<Eigen::VectorXd>& neighbors) const;
+
       /// Get the size of the cache
       /**
 	     \return The size of the cache
@@ -141,7 +184,7 @@ namespace muq {
     private:
 
       // The vector of previous results
-      std::vector<Eigen::VectorXd> outputCache;
+      std::deque<Eigen::VectorXd> outputCache;
 
       virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 

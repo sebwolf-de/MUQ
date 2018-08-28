@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <Eigen/Core>
+
 #include "MUQ/Utilities/RandomGenerator.h"
 
 #include "MUQ/SamplingAlgorithms/DistributedCollection.h"
@@ -36,7 +38,7 @@ protected:
     for( unsigned int i=0; i<numSamps; ++i ) {
       if( i%nproc!=rank ) { continue; }
 
-      auto state = std::make_shared<SamplingState>(L*RandomGenerator::GetNormal(2), RandomGenerator::GetUniform());
+      auto state = std::make_shared<SamplingState>((Eigen::VectorXd)(L*RandomGenerator::GetNormal(2)), (double)RandomGenerator::GetUniform());
       state->meta["rank"] = rank;
       state->meta["id"] = i;
       
@@ -50,13 +52,23 @@ protected:
     for( unsigned int i=0; i<numSamps; ++i ) {
       if( i%nproc!=rank ) { continue; }
 	    
-      auto state = collection->at(cnt++);
+      auto state = collection->LocalAt(cnt++);
       EXPECT_EQ(boost::any_cast<unsigned int const>(state->meta["id"]), i);
       EXPECT_EQ(boost::any_cast<int const>(state->meta["rank"]), rank);
     }
+
+    for( unsigned int i=0; i<numSamps; ++i ) {
+      auto state0 = collection->GlobalAt(i);
+      EXPECT_TRUE(boost::any_cast<int const>(state0->meta["rank"])<nproc);
+      EXPECT_TRUE(boost::any_cast<unsigned int const>(state0->meta["id"])<numSamps);
+
+      auto state1 = collection->at(i);
+      EXPECT_TRUE(boost::any_cast<int const>(state1->meta["rank"])<nproc);
+      EXPECT_TRUE(boost::any_cast<unsigned int const>(state1->meta["id"])<numSamps);
+    }
   }
   
-  const int numSamps = 5.0e5;
+  const int numSamps = 5e5;
   Eigen::MatrixXd L;
 
   int rank;
@@ -74,9 +86,9 @@ TEST_F(DistributedCollectionTest, SizeTest) {
 }
 
 TEST_F(DistributedCollectionTest, CentralMoment) {
-  EXPECT_NEAR(collection->LocalCentralMoment(1).norm(), 0.0, 1.0e-5);
-  EXPECT_NEAR(collection->GlobalCentralMoment(1).norm(), 0.0, 1.0e-5);
-  EXPECT_NEAR(collection->CentralMoment(1).norm(), 0.0, 1.0e-5);
+  EXPECT_NEAR(collection->LocalCentralMoment(1).norm(), 0.0, 1.0e-2);
+  EXPECT_NEAR(collection->GlobalCentralMoment(1).norm(), 0.0, 1.0e-2);
+  EXPECT_NEAR(collection->CentralMoment(1).norm(), 0.0, 1.0e-2);
 }
 
 TEST_F(DistributedCollectionTest, Mean) {
@@ -142,9 +154,9 @@ TEST_F(DistributedCollectionTest, Weights) {
 }
 
 TEST_F(DistributedCollectionTest, WriteToFile) {
-  const std::string filename = "output.h5";
-  collection->WriteToFile(filename);
-
+    const std::string filename = "output.h5";
+    collection->WriteToFile(filename);
+    
   if( rank==0 ) { 
     auto hdf5file = std::make_shared<HDF5File>(filename);
     

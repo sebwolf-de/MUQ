@@ -25,6 +25,6 @@ public:
     gradient(0) = -4.0*a(0)*(xc(1)-xc(0)*xc(0))*xc(0)-2.0*(1.0-xc(0));
     gradient(1) = 2.0*a(0)*(xc(1)-xc(0)*xc(0));
 
-    gradient.array()*sensitivity.array();
+    gradient *= sensitivity(0);
   }
 };

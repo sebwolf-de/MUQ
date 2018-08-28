@@ -29,7 +29,7 @@ int FlannCache::InCache(Eigen::VectorXd const& input) const {
     std::vector<size_t> indices;
     std::vector<double> squaredDists;
     std::tie(indices, squaredDists) = kdTree->query(input, 1);
-    
+
     if(squaredDists.at(0)<std::numeric_limits<double>::epsilon()){
       return indices.at(0);
     }
@@ -39,11 +39,25 @@ int FlannCache::InCache(Eigen::VectorXd const& input) const {
   return -1;
 }
 
-void FlannCache::Add(Eigen::VectorXd const& newPt) {
-  kdTree->add(newPt);
+Eigen::VectorXd FlannCache::Add(Eigen::VectorXd const& newPt) {
+  // evaluate the function
+  const Eigen::VectorXd& newOutput = function->Evaluate(newPt).at(0);
 
-  Eigen::VectorXd newOutput = function->Evaluate(newPt).at(0);
-  outputCache.push_back(newOutput);
+  // add the new point
+  Add(newPt, newOutput);
+
+  // return the result
+  return newOutput;
+}
+
+void FlannCache::Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result) {
+  assert(input.size()==function->inputSizes(0));
+  assert(result.size()==function->outputSizes(0));
+  
+  kdTree->add(input);
+  outputCache.push_back(result);
+
+  assert(kdTree->m_data.size()==outputCache.size());
 }
 
 void FlannCache::Remove(Eigen::VectorXd const& input) {
@@ -53,8 +67,25 @@ void FlannCache::Remove(Eigen::VectorXd const& input) {
   // the point is not in the cache ... nothing to remove
   if( id<0 ) { return; }
 
+  // remove from output
+  outputCache.erase(outputCache.begin()+id);
+
+  // remove from input
   kdTree->m_data.erase(kdTree->m_data.begin()+id);
   kdTree->UpdateIndex();
+}
+
+size_t FlannCache::NearestNeighborIndex(Eigen::VectorXd const& point) const {
+  // make sure we have enough
+  assert(1<=Size());
+
+  std::vector<size_t> indices;
+  std::vector<double> squaredDists;
+  std::tie(indices, squaredDists) = kdTree->query(point, 1);
+  assert(indices.size()==1);
+  assert(squaredDists.size()==1);
+
+  return indices[0];
 }
 
 void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
@@ -67,6 +98,8 @@ void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
   std::vector<size_t> indices;
   std::vector<double> squaredDists;
   std::tie(indices, squaredDists) = kdTree->query(point, k);
+  assert(indices.size()==k);
+  assert(squaredDists.size()==k);
 
   neighbors.resize(k);
   result.resize(k);
@@ -76,17 +109,56 @@ void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
   }
 }
 
+void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
+                                  unsigned int const k,
+                                  std::vector<Eigen::VectorXd>& neighbors) const {
+  // make sure we have enough
+  assert(k<=Size());
+
+  std::vector<size_t> indices;
+  std::vector<double> squaredDists;
+  std::tie(indices, squaredDists) = kdTree->query(point, k);
+  assert(indices.size()==k);
+  assert(squaredDists.size()==k);
+
+  neighbors.resize(k);
+  for( unsigned int i=0; i<k; ++i ){ neighbors.at(i) = kdTree->m_data.at(indices[i]); }
+}
+
 unsigned int FlannCache::Size() const {
   // these two numbers should be the same unless we check the size after adding the input but before the model finishings running
   return std::min(kdTree->m_data.size(), outputCache.size());
 }
 
-void FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs) {
-  for( auto it : inputs ) {
+std::vector<Eigen::VectorXd> FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs) {
+  std::vector<Eigen::VectorXd> results(inputs.size());
+  
+  for( unsigned int i=0; i<inputs.size(); ++i ) {
+    // see if the point is already there
+    const int index = InCache(inputs[i]);
+
     // add the point if is not already there
-    if( InCache(it)<0 ) { Add(it); }
+    results[i] = index<0? Add(inputs[i]) : outputCache.at(index);
     
     // make sure it got added
-    assert(InCache(it)>=0);
+    assert(InCache(inputs[i])>=0);
   }
+
+  assert(kdTree->m_data.size()==outputCache.size());
+
+  return results;
+}
+
+void FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs, std::vector<Eigen::VectorXd> const& results) {
+  assert(inputs.size()==results.size());
+
+  for( unsigned int i=0; i<inputs.size(); ++i ) {
+    // add the point to cache (with result)
+    Add(inputs[i], results[i]);
+
+    // make sure it got added
+    assert(InCache(inputs[i])>=0);
+  }
+
+  assert(kdTree->m_data.size()==outputCache.size());
 }

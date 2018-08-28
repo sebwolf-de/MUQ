@@ -2,20 +2,24 @@
 
 #include "MUQ/Approximation/Regression/Regression.h"
 
+namespace pt = boost::property_tree;
 using namespace muq::Approximation;
 
 class RegressionTest : public::testing::Test {
 public:
   inline RegressionTest() {
-    const unsigned int Npts = 100;
+    const unsigned int Npts = 14;
 
     // generate the input points
-    ins.resize(100, Eigen::VectorXd::Constant(2, std::numeric_limits<double>::quiet_NaN()));
+    ins.resize(Npts, Eigen::VectorXd::Constant(2, std::numeric_limits<double>::quiet_NaN()));
     for( auto it=ins.begin(); it!=ins.end(); ++it ) { *it = Eigen::Vector2d::Random(); }
 
     // generate the output points
     outs.resize(ins.size());
     for( std::vector<Eigen::VectorXd>::size_type i=0; i<ins.size(); ++i ) { outs[i] = f(ins[i]); }
+
+    pt.put<unsigned int>("MyRegression.Order", order);
+    pt.put<unsigned int>("MyRegression.InputSize", 2);
   }
 
   inline virtual ~RegressionTest() {}
@@ -29,6 +33,9 @@ public:
   }
 
   inline virtual void TearDown() override {
+    // create the regression 
+    auto reg = std::make_shared<Regression>(pt.get_child("MyRegression"));
+
     // fit the polynomial coefficients
     reg->Fit(ins, outs);
     
@@ -51,6 +58,15 @@ public:
     EXPECT_NEAR((x_true-result.col(0)).norm(), 0.0, 1.0e-10);
     EXPECT_NEAR((y_true-result.col(1)).norm(), 0.0, 1.0e-10);
     EXPECT_NEAR((z_true-result.col(2)).norm(), 0.0, 1.0e-10);
+
+    std::pair<Eigen::VectorXd, double> lambda = reg->PoisednessConstant(ins, x);
+    unsigned int count = 0;
+    while( lambda.second>25.0 && count++<1000 ) { // adding the computed point should improve bad poisedness
+      ins.push_back(lambda.first);
+      lambda = reg->PoisednessConstant(ins, x);
+    }
+    EXPECT_TRUE(lambda.second<25.0);
+    EXPECT_TRUE(count<1000);
   }
 
   /// A matrix holding the input points.
@@ -62,36 +78,28 @@ public:
   /// The order of the polynomial regression
   const unsigned int order = 3;
 
-  /// The object that does the regression
-  std::shared_ptr<Regression> reg;
+  /// The options for the regression
+  pt::ptree pt;
 };
 
-TEST_F(RegressionTest, LegendreBasis) {
-  // create the regression 
-  reg = std::make_shared<Regression>(order);
-}
+TEST_F(RegressionTest, LegendreBasis) {} // should use Legendre basis by default
 
 TEST_F(RegressionTest, MonomialBasis) {
-  // create the regression 
-  reg = std::make_shared<Regression>(order, "Monomial");
+  pt.put<std::string>("MyRegression.PolynomialBasis", "Monomial");
 }
 
 TEST_F(RegressionTest, PhysicistHermiteBasis) {
-  // create the regression 
-  reg = std::make_shared<Regression>(order, "PhysicistHermite");
+  pt.put<std::string>("MyRegression.PolynomialBasis", "PhysicistHermite");
 }
 
 TEST_F(RegressionTest, ProbabilistHermiteBasis) {
-  // create the regression 
-  reg = std::make_shared<Regression>(order, "ProbabilistHermite");
+  pt.put<std::string>("MyRegression.PolynomialBasis", "ProbabilistHermite");
 }
 
 TEST_F(RegressionTest, LaguerreBasis) {
-  // create the regression 
-  reg = std::make_shared<Regression>(order, "Laguerre");
+  pt.put<std::string>("MyRegression.PolynomialBasis", "Laguerre");
 }
 
 TEST_F(RegressionTest, JacobiBasis) {
-  // create the regression 
-  reg = std::make_shared<Regression>(order, "Jacobi");
+  pt.put<std::string>("MyRegression.PolynomialBasis", "Jacobi");
 }

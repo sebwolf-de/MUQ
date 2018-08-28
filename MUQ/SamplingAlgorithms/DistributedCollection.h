@@ -32,6 +32,30 @@ namespace muq {
       /**
 	 @param[in] i The local index
        */
+      std::shared_ptr<SamplingState> LocalAt(unsigned i);
+	    
+      /// Get the local state at the \f$i^{th}\f$ index
+      /**
+	 @param[in] i The local index
+       */
+      const std::shared_ptr<SamplingState> LocalAt(unsigned i) const;
+
+      /// Get the global state at the \f$i^{th}\f$ index
+      /**
+	 @param[in] i The global index
+       */
+      std::shared_ptr<SamplingState> GlobalAt(unsigned i);
+	    
+      /// Get the global state at the \f$i^{th}\f$ index
+      /**
+	 @param[in] i The global index
+       */
+      const std::shared_ptr<SamplingState> GlobalAt(unsigned i) const;
+
+      /// Get the local state at the \f$i^{th}\f$ index
+      /**
+	 @param[in] i The local index
+       */
       virtual std::shared_ptr<SamplingState> at(unsigned i) override;
 	    
       /// Get the local state at the \f$i^{th}\f$ index
@@ -221,11 +245,6 @@ namespace muq {
 	 @param[in] totSamp The total number of samples (defaults to -1, which means just write all of the samples in this collection)
       */
       virtual void WriteToFile(std::string const& filename, std::string const& dataset = "/") const override;
-
-      /**
-	 This function does not make sense in parallel; so just have it fail.
-       */
-      virtual inline void WriteToFile(int firstSamp, std::string const& filename, std::string const& dataset = "/", int totSamp = -1) const override { assert(false); }
 
     private:
 

@@ -44,6 +44,12 @@ namespace muq {
       typedef std::map<std::string, TransitionKernelConstructor> TransitionKernelMap;
       static std::shared_ptr<TransitionKernelMap> GetTransitionKernelMap();
 
+      /// Allow the kernel to preprocess the current step
+      /**
+	 By default this function does nothing but children can override it to adapt the kernel
+	 @param[in] t The current step
+	 @param[in] state The current state
+       */
       virtual inline void PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {};
 
       /// Allow the kernel to adapt given a new state
@@ -54,6 +60,10 @@ namespace muq {
        */
       virtual inline void PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) {};
 
+      /**
+	 @param[in] t The current step
+	 @param[in] state The current state
+       */
       virtual std::vector<std::shared_ptr<SamplingState>> Step(unsigned int const t, std::shared_ptr<SamplingState> prevState) = 0;
 
       virtual inline void PrintStatus() const {PrintStatus("");};

@@ -58,11 +58,11 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   if( prevState->HasMeta("LogTarget") ){
     currentTarget = AnyCast( prevState->meta["LogTarget"]);
   }else{
-    currentTarget = problem->LogDensity(prevState);
+    currentTarget = problem->LogDensity(t, prevState);
     prevState->meta["LogTarget"] = currentTarget;
   }
 
-  propTarget = problem->LogDensity(prop);
+  propTarget = problem->LogDensity(t, prop);
   prop->meta["LogTarget"] = propTarget;
 
   // Aceptance probability

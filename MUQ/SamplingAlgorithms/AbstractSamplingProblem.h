@@ -33,10 +33,7 @@ namespace muq{
 
       virtual ~AbstractSamplingProblem() = default;
 
-      virtual double LogDensity(std::shared_ptr<SamplingState> state) = 0;
-
-      virtual Eigen::VectorXd GradLogDensity(std::shared_ptr<SamplingState> state,
-                                             unsigned                       blockWrt) = 0;
+      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state) = 0;
 
       const int numBlocks;
       const Eigen::VectorXi blockSizes;
