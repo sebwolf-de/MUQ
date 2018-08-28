@@ -4,6 +4,7 @@
 
 #if MUQ_HAS_MPI
 
+using namespace muq::Utilities;
 using namespace muq::SamplingAlgorithms;
 
 DistributedCollection::DistributedCollection(std::shared_ptr<SampleCollection> collection, std::shared_ptr<parcer::Communicator> comm) : SampleCollection(), collection(collection), comm(comm) {}
@@ -12,9 +13,65 @@ void DistributedCollection::Add(std::shared_ptr<SamplingState> newSamp) {
   collection->Add(newSamp);
 }
 
-std::shared_ptr<SamplingState> DistributedCollection::at(unsigned i) { return collection->at(i); }
+std::shared_ptr<SamplingState> DistributedCollection::at(unsigned i) { return GlobalAt(i); }
 	    
-const std::shared_ptr<SamplingState> DistributedCollection::at(unsigned i) const { return collection->at(i); }
+const std::shared_ptr<SamplingState> DistributedCollection::at(unsigned i) const { return GlobalAt(i); }
+
+std::shared_ptr<SamplingState> DistributedCollection::LocalAt(unsigned i) {
+  assert(i<collection->size());
+  return collection->at(i);
+}
+	    
+const std::shared_ptr<SamplingState> DistributedCollection::LocalAt(unsigned i) const {
+  assert(i<collection->size());
+  return collection->at(i);
+}
+
+std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i) {
+  assert(i<GlobalSize());
+
+  std::shared_ptr<SamplingState> state = nullptr;
+  
+  int size = 0;
+  for( unsigned int j=0; j<comm->GetSize(); ++j ) {
+    int localSize = j==comm->GetRank() ? LocalSize() : 0;
+    comm->Bcast(localSize, j);
+
+    if( i<size+localSize ) {
+      state = j==comm->GetRank() ? LocalAt(i-size) : nullptr;
+      comm->Bcast(state, j);
+      break;
+    }
+
+    size += localSize;
+  }
+
+  assert(state);
+  return state;
+}
+
+const std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i) const {
+  assert(i<GlobalSize());
+
+  std::shared_ptr<SamplingState> state = nullptr;
+  
+  int size = 0;
+  for( unsigned int j=0; j<comm->GetSize(); ++j ) {
+    int localSize = j==comm->GetRank() ? LocalSize() : 0;
+    comm->Bcast(localSize, j);
+
+    if( i<size+localSize ) {
+      state = j==comm->GetRank() ? LocalAt(i-size) : nullptr;
+      comm->Bcast(state, j);
+      break;
+    }
+
+    size += localSize;
+  }
+
+  assert(state);
+  return state;
+}
 
 unsigned int DistributedCollection::LocalSize() const { return collection->size(); }
 
@@ -126,17 +183,28 @@ Eigen::VectorXd DistributedCollection::GlobalWeights() const {
 Eigen::VectorXd DistributedCollection::Weights() const { return GlobalWeights(); }
 
 void DistributedCollection::WriteToFile(std::string const& filename, std::string const& dataset) const {
-  const unsigned int size = GlobalSize();
-  int numSamps = 0;
-  for( unsigned int i=0; i<comm->GetSize(); ++i ) {
-    int localSize = i==comm->GetRank() ? LocalSize() : 0;
-    comm->Bcast(localSize, i);
+  if( size()==0 ) { return; }
+    
+  // get the sample matrix and weights
+  const Eigen::MatrixXd& mat = AsMatrix();
+  const Eigen::RowVectorXd& w = Weights();
 
-    if( comm->GetRank()==i ) { collection->WriteToFile(numSamps, filename, dataset, size); }
-    numSamps += localSize;
+  // get the meta data
+  const std::unordered_map<std::string, Eigen::MatrixXd>& meta = GetMeta();
 
-    comm->Barrier();
+  if( comm->GetRank()==0 ) {
+    // open the hdf5 file
+    auto hdf5file = std::make_shared<HDF5File>(filename);
+
+    // write samples and weights
+    hdf5file->WriteMatrix(dataset+"/samples", mat);
+    hdf5file->WriteMatrix(dataset+"/weights", w);
+
+    // write meta data to file
+    for( const auto& data : meta ) { hdf5file->WriteMatrix(dataset+"/"+data.first, data.second); }
   }
+
 }
+
 
 #endif // end MUQ_HAS_MPI

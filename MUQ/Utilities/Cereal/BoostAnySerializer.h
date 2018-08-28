@@ -144,7 +144,7 @@ void load(Archive & ar, boost::any & obj)
     obj = BoostAnySerializer<Archive>::template load<float>(ar);
   }else if(typeName == typeid(std::string).name()){
     obj = BoostAnySerializer<Archive>::template load<std::string>(ar);
-  }else if(typeName == typeid(unsigned).name()){
+  }else if(typeName == typeid(int).name()){
     obj = BoostAnySerializer<Archive>::template load<int>(ar);
   }else if(typeName == typeid(unsigned int).name()){
     obj = BoostAnySerializer<Archive>::template load<unsigned int>(ar);

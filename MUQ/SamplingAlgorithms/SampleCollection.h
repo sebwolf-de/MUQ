@@ -112,14 +112,6 @@ namespace muq{
        */
       virtual void WriteToFile(std::string const& filename, std::string const& dataset = "/") const;
 
-      /**
-	 @param[in] firstSamp The index where we store the first sample
-	 @param[in] filename The name of the file
-	 @param[in] dataset The name of the group within the file
-	 @param[in] totSamp The total number of samples (defaults to -1, which means just write all of the samples in this collection)
-       */
-      virtual void WriteToFile(int firstSamp, std::string const& filename, std::string const& dataset = "/", int totSamp = -1) const;
-
     protected:
 
       std::vector<std::shared_ptr<SamplingState>> samples;
@@ -161,6 +153,11 @@ namespace muq{
         }
       }
 
+      /**
+	 \return A map from meta data name to a matrix where each column corresponds to a sample
+       */
+      std::unordered_map<std::string, Eigen::MatrixXd> GetMeta() const;
+
     private:
 
       /**
@@ -171,16 +168,8 @@ namespace muq{
 	 \return true: the data set exists and is the right size, false: the data set does not exist or is the wrong size
        */
       bool CreateDataset(std::shared_ptr<muq::Utilities::HDF5File> hdf5file, std::string const& dataname, int const dataSize, int const totSamps) const;
-
-      /**
-	 \return A map from meta data name to a matrix where each column corresponds to a sample
-       */
-      std::unordered_map<std::string, Eigen::MatrixXd> GetMeta() const;
     };
-
   }
 }
-
-
 
 #endif // SAMPLECOLLECTION_H

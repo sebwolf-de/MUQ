@@ -226,36 +226,8 @@ bool SampleCollection::CreateDataset(std::shared_ptr<muq::Utilities::HDF5File> h
   return false;
 }
 
-void SampleCollection::WriteToFile(int firstSamp, std::string const& filename, std::string const& dataset, int totSamps) const {
-  if( samples.size()==0 ) { return; }
-  
-  // open the hdf5 file
-  auto hdf5file = std::make_shared<HDF5File>(filename);
-
-  totSamps = totSamps<0? size() : totSamps;
-  assert(totSamps>0);
-
-  // write the sample matrix and weights
-  unsigned int sampSize = 0;
-  for( unsigned int i=0; i<samples.at(0)->state.size(); ++i ) { sampSize += samples.at(0)->state[i].size(); }
-  if( CreateDataset(hdf5file, dataset+"/samples", sampSize, totSamps) ) { hdf5file->CreateDataset<double>(dataset+"/samples", sampSize, totSamps); }
-  hdf5file->WritePartialMatrix(dataset+"/samples", AsMatrix(), 0, firstSamp);
-  
-  if( CreateDataset(hdf5file, dataset+"/weights", 1, totSamps) ) { hdf5file->CreateDataset<double>(dataset+"/weights", 1, totSamps); }
-  hdf5file->WritePartialMatrix(dataset+"/weights", (Eigen::RowVectorXd)Weights(), 0, firstSamp);
-
-  // meta data
-  const std::unordered_map<std::string, Eigen::MatrixXd>& meta = GetMeta();
-
-  // write meta data to file
-  for( const auto& data : meta ) {
-    if( CreateDataset(hdf5file, dataset+"/"+data.first, data.second.rows(), totSamps) ) { hdf5file->CreateDataset<double>(dataset+"/"+data.first, data.second.rows(), totSamps); }
-    hdf5file->WritePartialMatrix(dataset+"/"+data.first, data.second, 0, firstSamp);
-  }
-}
-
 void SampleCollection::WriteToFile(std::string const& filename, std::string const& dataset) const {
-  if( samples.size()==0 ) { return; }
+  if( size()==0 ) { return; }
     
   // open the hdf5 file
   auto hdf5file = std::make_shared<HDF5File>(filename);
@@ -278,11 +250,12 @@ Eigen::VectorXd SampleCollection::Variance(int blockDim) const { return CentralM
 std::unordered_map<std::string, Eigen::MatrixXd> SampleCollection::GetMeta() const {
   std::unordered_map<std::string, Eigen::MatrixXd> meta;
 
-  for( unsigned int i=0; i<samples.size(); ++i ) {
-    for( auto it = samples[i]->meta.begin(); it!=samples[i]->meta.end(); ++it ) {
+  for( unsigned int i=0; i<size(); ++i ) {
+    auto s = at(i);
+    for( auto it = s->meta.begin(); it!=s->meta.end(); ++it ) {
       if( it->second.type()==typeid(Eigen::Vector2d) ) {
 	// create a matrix for the meta data 
-	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(2, samples.size(), std::numeric_limits<double>::quiet_NaN())}); }
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(2, size(), std::numeric_limits<double>::quiet_NaN())}); }
 	meta[it->first].col(i) = boost::any_cast<Eigen::Vector2d const&>(it->second);
 
 	continue;		
@@ -290,7 +263,7 @@ std::unordered_map<std::string, Eigen::MatrixXd> SampleCollection::GetMeta() con
       
       if( it->second.type()==typeid(Eigen::Vector3d) ) {
 	// create a matrix for the meta data 
-	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(3, samples.size(), std::numeric_limits<double>::quiet_NaN())}); }
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(3, size(), std::numeric_limits<double>::quiet_NaN())}); }
 	meta[it->first].col(i) = boost::any_cast<Eigen::Vector3d const&>(it->second);
 
 	continue;		
@@ -298,7 +271,7 @@ std::unordered_map<std::string, Eigen::MatrixXd> SampleCollection::GetMeta() con
 
       if( it->second.type()==typeid(Eigen::Vector4d) ) {
 	// create a matrix for the meta data 
-	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(4, samples.size(), std::numeric_limits<double>::quiet_NaN())}); }
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(4, size(), std::numeric_limits<double>::quiet_NaN())}); }
 	meta[it->first].col(i) = boost::any_cast<Eigen::Vector4d const&>(it->second);
 
 	continue;		
@@ -306,7 +279,7 @@ std::unordered_map<std::string, Eigen::MatrixXd> SampleCollection::GetMeta() con
 
       if( it->second.type()==typeid(Eigen::VectorXd) ) {
 	// create a matrix for the meta data 
-	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(boost::any_cast<Eigen::VectorXd const&>(it->second).size(), samples.size(), std::numeric_limits<double>::quiet_NaN())}); }
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(boost::any_cast<Eigen::VectorXd const&>(it->second).size(), size(), std::numeric_limits<double>::quiet_NaN())}); }
 	
 	meta[it->first].col(i) = boost::any_cast<Eigen::VectorXd const&>(it->second);
 
@@ -314,7 +287,7 @@ std::unordered_map<std::string, Eigen::MatrixXd> SampleCollection::GetMeta() con
       }
       
       // create a matrix, assuming scalar type, for the meta data
-      if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(1, samples.size(), std::numeric_limits<double>::quiet_NaN())}); }
+      if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(1, size(), std::numeric_limits<double>::quiet_NaN())}); }
       
       if( it->second.type()==typeid(double) ) { // doubles
 	meta[it->first](i) = boost::any_cast<double const>(it->second);
