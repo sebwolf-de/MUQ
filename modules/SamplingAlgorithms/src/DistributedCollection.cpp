@@ -183,6 +183,10 @@ Eigen::VectorXd DistributedCollection::GlobalWeights() const {
 Eigen::VectorXd DistributedCollection::Weights() const { return GlobalWeights(); }
 
 void DistributedCollection::WriteToFile(std::string const& filename, std::string const& dataset) const {
+  WriteToFile(0, filename, dataset);
+}
+
+void DistributedCollection::WriteToFile(unsigned int const rank, std::string const& filename, std::string const& dataset) const {
   if( size()==0 ) { return; }
     
   // get the sample matrix and weights
@@ -192,7 +196,7 @@ void DistributedCollection::WriteToFile(std::string const& filename, std::string
   // get the meta data
   const std::unordered_map<std::string, Eigen::MatrixXd>& meta = GetMeta();
 
-  if( comm->GetRank()==0 ) {
+  if( comm->GetRank()==rank ) {
     // open the hdf5 file
     auto hdf5file = std::make_shared<HDF5File>(filename);
 
@@ -203,7 +207,6 @@ void DistributedCollection::WriteToFile(std::string const& filename, std::string
     // write meta data to file
     for( const auto& data : meta ) { hdf5file->WriteMatrix(dataset+"/"+data.first, data.second); }
   }
-
 }
 
 
