@@ -5,6 +5,7 @@
 #include "MUQ/Modeling/Distributions/Gaussian.h"
 #include "MUQ/Modeling/Distributions/Density.h"
 
+#include "MUQ/SamplingAlgorithms/DistributedCollection.h"
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 #include "MUQ/SamplingAlgorithms/MHKernel.h"
 #include "MUQ/SamplingAlgorithms/ParallelAMProposal.h"
@@ -42,7 +43,8 @@ TEST(MCMC, MHKernel_MHProposal) {
   // create an instance of MCMC
   auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"), problem, comm);
 
-  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> localSamps = mcmc->Run(start);
+  auto samps = std::make_shared<DistributedCollection>(localSamps, comm);
   EXPECT_EQ(comm->GetSize()*pt.get<int>("MyMCMC.NumSamples"), samps->size());
   
   Eigen::VectorXd mean = samps->Mean();
@@ -95,7 +97,8 @@ TEST(MCMC, MHKernel_ParallelAMProposal) {
   std::shared_ptr<ParallelAMProposal> proposalAM = std::dynamic_pointer_cast<ParallelAMProposal>(proposalBase);
   EXPECT_TRUE(proposalAM);
 
-  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> localSamps = mcmc->Run(start);
+  auto samps = std::make_shared<DistributedCollection>(localSamps, comm);
   EXPECT_EQ(comm->GetSize()*pt.get<int>("MyMCMC.NumSamples"), samps->size());
 
   Eigen::VectorXd mean = samps->Mean();

@@ -239,12 +239,17 @@ namespace muq {
       virtual Eigen::VectorXd Weights() const override;
 
       /**
-	 @param[in] firstSamp The index where we store the first sample
 	 @param[in] filename The name of the file
 	 @param[in] dataset The name of the group within the file
-	 @param[in] totSamp The total number of samples (defaults to -1, which means just write all of the samples in this collection)
       */
       virtual void WriteToFile(std::string const& filename, std::string const& dataset = "/") const override;
+
+      /**
+	 @param[in] rank The rank that writes to file
+	 @param[in] filename The name of the file
+	 @param[in] dataset The name of the group within the file
+      */
+      void WriteToFile(unsigned int const rank, std::string const& filename, std::string const& dataset = "/") const;
 
     private:
 

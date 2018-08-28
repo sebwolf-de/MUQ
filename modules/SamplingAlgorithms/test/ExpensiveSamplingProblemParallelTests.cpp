@@ -51,7 +51,7 @@ TEST(ExpensiveSamplingProblemTests, GaussianTarget) {
   auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"), problem);
 
   // run MCMC
-  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> localSamps = mcmc->Run(start);
 
   // make sure the number of evaluations is less than the number of steps
   EXPECT_TRUE(problem->CacheSize()>pt.get<unsigned int>("MySamplingProblem.MyRegression.NumNeighbors"));

@@ -1,9 +1,6 @@
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 
 #include "MUQ/SamplingAlgorithms/MarkovChain.h"
-#if MUQ_HAS_PARCER
-#include "MUQ/SamplingAlgorithms/DistributedCollection.h"
-#endif
 
 #include "MUQ/Utilities/StringUtilities.h"
 
@@ -21,7 +18,7 @@ SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingP
 }
 
 SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<parcer::Communicator> comm) :
-  SamplingAlgorithm(SampCollection(comm), comm),
+  SamplingAlgorithm(std::make_shared<MarkovChain>(), comm),
   printLevel(pt.get("PrintLevel",3))
 {
   SetUp(pt, problem);
@@ -50,15 +47,6 @@ void SingleChainMCMC::SetUp(pt::ptree pt, std::shared_ptr<AbstractSamplingProble
     kernels.at(i)->SetCommunicator(comm);
 #endif
   }
-}
-
-std::shared_ptr<SampleCollection> SingleChainMCMC::SampCollection(std::shared_ptr<parcer::Communicator> communicator) {
-#if MUQ_HAS_PARCER
-  auto local = std::make_shared<MarkovChain>();
-  return std::make_shared<DistributedCollection>(local, communicator);
-#else
-  return std::make_shared<MarkovChain>();
-#endif
 }
 
 void SingleChainMCMC::PrintStatus(std::string prefix, unsigned int currInd) const

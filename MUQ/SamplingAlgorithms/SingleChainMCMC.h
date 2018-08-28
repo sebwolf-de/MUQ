@@ -51,8 +51,6 @@ namespace muq{
     private:
 
       void SetUp(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem);
-
-      static std::shared_ptr<SampleCollection> SampCollection(std::shared_ptr<parcer::Communicator> communicator);
     }; // class SingleChainMCMC
   } // namespace SamplingAlgorithms
 } // namespace muq
