@@ -59,17 +59,22 @@ const std::shared_ptr<SamplingState> SampleCollection::at(unsigned i) const
   return samples.at(i);
 }
 
-//  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order
-Eigen::VectorXd SampleCollection::CentralMoment(unsigned order, int blockNum) const
-{
-  Eigen::VectorXd mu = Mean(blockNum);
-  SamplingStatePartialMoment op(blockNum, order, mu);
-
+Eigen::VectorXd SampleCollection::CentralMoment(unsigned order, Eigen::VectorXd const& mean, int blockNum) const {
+  SamplingStatePartialMoment op(blockNum, order, mean);
+  
   Eigen::VectorXd stateSum;
   double weightSum;
 
   std::tie(weightSum, stateSum) = RecursiveSum(samples.begin(), samples.end(), op);
   return (stateSum / weightSum).eval();
+}
+
+//  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order
+Eigen::VectorXd SampleCollection::CentralMoment(unsigned order, int blockNum) const
+{
+  const Eigen::VectorXd& mu = Mean(blockNum);
+
+  return CentralMoment(order, mu, blockNum);
 }
 
 Eigen::VectorXd SampleCollection::Mean(int blockNum) const
@@ -85,6 +90,12 @@ Eigen::VectorXd SampleCollection::Mean(int blockNum) const
 
 Eigen::MatrixXd SampleCollection::Covariance(int blockInd) const
 {
+  const Eigen::VectorXd& mu = Mean(blockInd);
+
+  return Covariance(mu, blockInd);
+}
+
+Eigen::MatrixXd SampleCollection::Covariance(Eigen::VectorXd const& mean, int blockInd) const {
   const int numSamps = samples.size();
   Eigen::MatrixXd samps;
   Eigen::VectorXd weights(numSamps);
@@ -119,9 +130,7 @@ Eigen::MatrixXd SampleCollection::Covariance(int blockInd) const
     }
   }
 
-  Eigen::VectorXd mu = (samps * weights) / weights.sum();
-  Eigen::MatrixXd cov = (samps.colwise() - mu) * weights.asDiagonal() * (samps.colwise()-mu).transpose() / weights.sum();
-  return cov;
+  return (samps.colwise() - mean) * weights.asDiagonal() * (samps.colwise()-mean).transpose() / weights.sum();
 }
 
 std::pair<double,double> SampleCollection::RecursiveWeightSum(std::vector<std::shared_ptr<SamplingState>>::const_iterator start,

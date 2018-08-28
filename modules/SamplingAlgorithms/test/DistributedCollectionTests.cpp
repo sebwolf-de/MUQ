@@ -56,7 +56,7 @@ protected:
     }
   }
   
-  const int numSamps = 5.0e5;
+  const int numSamps = 1.0e6;
   Eigen::MatrixXd L;
 
   int rank;
@@ -74,9 +74,9 @@ TEST_F(DistributedCollectionTest, SizeTest) {
 }
 
 TEST_F(DistributedCollectionTest, CentralMoment) {
-  EXPECT_NEAR(collection->LocalCentralMoment(1).norm(), 0.0, 1.0e-5);
-  EXPECT_NEAR(collection->GlobalCentralMoment(1).norm(), 0.0, 1.0e-5);
-  EXPECT_NEAR(collection->CentralMoment(1).norm(), 0.0, 1.0e-5);
+  EXPECT_NEAR(collection->LocalCentralMoment(1).norm(), 0.0, 1.0e-2);
+  EXPECT_NEAR(collection->GlobalCentralMoment(1).norm(), 0.0, 1.0e-2);
+  EXPECT_NEAR(collection->CentralMoment(1).norm(), 0.0, 1.0e-2);
 }
 
 TEST_F(DistributedCollectionTest, Mean) {

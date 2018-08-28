@@ -58,11 +58,15 @@ namespace muq{
       virtual unsigned size() const;
 
       ///  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order
-      virtual Eigen::VectorXd CentralMoment(unsigned order, int blockDim=-1) const;
+      virtual Eigen::VectorXd CentralMoment(unsigned order, int blockNum=-1) const;
 
-      virtual Eigen::VectorXd Mean(int blockDim=-1) const;
-      virtual Eigen::VectorXd Variance(int blockDim=-1) const;
-      virtual Eigen::MatrixXd Covariance(int blockDim=-1) const;
+      ///  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order given that we already know the mean
+      virtual Eigen::VectorXd CentralMoment(unsigned order, Eigen::VectorXd const& mean, int blockNum=-1) const;
+
+      virtual Eigen::VectorXd Mean(int blockInd=-1) const;
+      virtual Eigen::VectorXd Variance(int blockInd=-1) const;
+      virtual Eigen::MatrixXd Covariance(int blockInd=-1) const;
+      virtual Eigen::MatrixXd Covariance(Eigen::VectorXd const& mean, int blockInd=-1) const;
 
       /** @brief Returns the effective sample size of the samples
           @details For almost all random variables of interest, the central limit

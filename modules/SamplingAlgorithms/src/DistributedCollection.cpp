@@ -32,7 +32,7 @@ unsigned int DistributedCollection::GlobalSize() const {
 
 unsigned int DistributedCollection::size() const { return GlobalSize(); }
 
-Eigen::VectorXd DistributedCollection::LocalCentralMoment(unsigned order, int blockDim) const { return collection->CentralMoment(order, blockDim); }
+Eigen::VectorXd DistributedCollection::LocalCentralMoment(unsigned order, int blockDim) const { return collection->CentralMoment(order, GlobalMean(blockDim), blockDim); }
 
 Eigen::VectorXd DistributedCollection::GlobalCentralMoment(unsigned order, int blockDim) const { return GlobalEigenMean(LocalCentralMoment(order, blockDim)); }
 
@@ -50,7 +50,7 @@ Eigen::VectorXd DistributedCollection::GlobalVariance(int blockDim) const { retu
 
 Eigen::VectorXd DistributedCollection::Variance(int blockDim) const { return GlobalVariance(blockDim); }
 
-Eigen::MatrixXd DistributedCollection::LocalCovariance(int blockDim) const { return collection->Covariance(blockDim); }
+Eigen::MatrixXd DistributedCollection::LocalCovariance(int blockDim) const { return collection->Covariance(GlobalMean(blockDim), blockDim); }
 
 Eigen::MatrixXd DistributedCollection::GlobalCovariance(int blockDim) const { return GlobalEigenMean(LocalCovariance(blockDim)); }
 
