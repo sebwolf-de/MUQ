@@ -3,6 +3,8 @@
 #include <Eigen/Cholesky>
 #include <Eigen/Eigenvalues>
 
+#include "MUQ/Utilities/RandomGenerator.h"
+
 #include "MUQ/Optimization/Optimization.h"
 
 #include "MUQ/Approximation/Polynomials/IndexedScalarBasis.h"
@@ -193,6 +195,12 @@ std::pair<Eigen::VectorXd, double> Regression::PoisednessConstant(std::vector<Ei
   // recenter so the points are on the unit ball
   const double radius = CenterPoints(xs, center);
   const unsigned int N = xs.size(); // the number of points
+
+  /*// choose a random point and normalize
+  Eigen::VectorXd random = RandomGenerator::GetNormal(inputDim);
+  random *= RandomGenerator::GetUniform()/random.norm();
+
+  return std::pair<Eigen::VectorXd, double>(radius*random+center, 1.0);*/
 
   // the data for the lagrange polynomial are the Euclidean vectors (w.l.o.g. assume one dimensional output space)
   std::vector<Eigen::VectorXd> euclidean(N, Eigen::VectorXd::Zero(1));

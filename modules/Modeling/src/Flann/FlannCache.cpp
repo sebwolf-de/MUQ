@@ -51,8 +51,13 @@ Eigen::VectorXd FlannCache::Add(Eigen::VectorXd const& newPt) {
 }
 
 void FlannCache::Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result) {
+  assert(input.size()==function->inputSizes(0));
+  assert(result.size()==function->outputSizes(0));
+  
   kdTree->add(input);
   outputCache.push_back(result);
+
+  assert(kdTree->m_data.size()==outputCache.size());
 }
 
 void FlannCache::Remove(Eigen::VectorXd const& input) {
@@ -62,6 +67,10 @@ void FlannCache::Remove(Eigen::VectorXd const& input) {
   // the point is not in the cache ... nothing to remove
   if( id<0 ) { return; }
 
+  // remove from output
+  outputCache.erase(outputCache.begin()+id);
+
+  // remove from input
   kdTree->m_data.erase(kdTree->m_data.begin()+id);
   kdTree->UpdateIndex();
 }
@@ -135,6 +144,8 @@ std::vector<Eigen::VectorXd> FlannCache::Add(std::vector<Eigen::VectorXd> const&
     assert(InCache(inputs[i])>=0);
   }
 
+  assert(kdTree->m_data.size()==outputCache.size());
+
   return results;
 }
 
@@ -148,4 +159,6 @@ void FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs, std::vector<Eig
     // make sure it got added
     assert(InCache(inputs[i])>=0);
   }
+
+  assert(kdTree->m_data.size()==outputCache.size());
 }

@@ -31,6 +31,7 @@ namespace muq {
         }
 	
 	inline void UpdateIndex(const int leaf_max_size = 10) {
+	  assert(m_data.size()>0);
           index = std::make_shared<index_t>(m_data.at(0).size(), *this /* adaptor */, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size ) );
           index->addPoints(0, m_data.size()-1);
         }
@@ -39,7 +40,7 @@ namespace muq {
 	
         inline void add(Eigen::VectorXd const& newPt) {
           m_data.push_back(newPt);
-          index->addPoints(m_data.size()-1, m_data.size()-1);
+	  index->addPoints(m_data.size()-1, m_data.size()-1);
         }
 	
         /** Query for the \a num_closest closest points to a given point (entered as query_point[0:dim-1]).
@@ -73,6 +74,9 @@ namespace muq {
 
         // Returns the dim'th component of the idx'th point in the class:
         inline double kdtree_get_pt(const size_t idx, int dim) const {
+	  assert(idx<m_data.size());
+	  assert(dim<m_data[idx].size());
+	  
 	  return m_data[idx][dim];
         }
 
@@ -94,9 +98,10 @@ namespace muq {
     public:
 
       /**
+	 If we pass a nullptr (default), then only construct a cache of points (no outputs)
 	 @param[in] function The function whose input/output pairs we want to cache
        */
-      FlannCache(std::shared_ptr<ModPiece> function);
+      FlannCache(std::shared_ptr<ModPiece> function/* = nullptr*/);
 
       ~FlannCache();
 

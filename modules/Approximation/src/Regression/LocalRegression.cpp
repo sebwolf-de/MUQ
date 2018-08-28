@@ -11,8 +11,18 @@ LocalRegression::LocalRegression(std::shared_ptr<ModPiece> function, pt::ptree& 
 }
 
 #if MUQ_HAS_PARCER
-LocalRegression::LocalRegression(std::shared_ptr<muq::Modeling::ModPiece> function, boost::property_tree::ptree& pt, std::shared_ptr<parcer::Communicator> comm) : ModPiece(function->inputSizes, function->outputSizes), kn(pt.get<unsigned int>("NumNeighbors")), comm(comm) {
+LocalRegression::LocalRegression(std::shared_ptr<muq::Modeling::ModPiece> function, boost::property_tree::ptree& pt, std::shared_ptr<parcer::Communicator> comm) : ModPiece(function->inputSizes, function->outputSizes), kn(pt.get<unsigned int>("NumNeighbors")), comm(comm) /*tagSingle(comm->GetSize()+1), tagMulti(comm->GetSize()+2)*/ {
   SetUp(function, pt);
+}
+
+LocalRegression::~LocalRegression() {
+  if( comm ) {
+    // needs to be destroyed on all processors
+    comm->Barrier();
+    
+    // clear any messages
+    Probe();
+  }
 }
 #endif
 
@@ -55,6 +65,31 @@ unsigned int LocalRegression::CacheSize() const {
   return cache->Size();
 }
 
+#if MUQ_HAS_PARCER
+struct SinglePoint {
+  ~SinglePoint() = default;  
+  
+  inline SinglePoint(Eigen::VectorXd const& input, Eigen::VectorXd const& output) : input(input), output(output) {}
+  
+  const Eigen::VectorXd input;
+  const Eigen::VectorXd output;
+
+  template<class Archive>
+  inline void serialize(Archive & archive) {
+    archive(input, output); 
+  }
+
+  template<typename Archive>
+  inline static void load_and_construct(Archive &ar, cereal::construct<SinglePoint> &construct) {
+    Eigen::VectorXd input;
+    Eigen::VectorXd output;
+
+    ar(input, output);
+    construct(input, output);
+  }
+};
+#endif
+
 Eigen::VectorXd LocalRegression::Add(Eigen::VectorXd const& input) const {
   assert(cache);
   const Eigen::VectorXd& result = cache->Add(input);
@@ -71,8 +106,7 @@ Eigen::VectorXd LocalRegression::Add(Eigen::VectorXd const& input) const {
     Probe();
   }
 #endif  
-  
-  assert(cache);
+
   return result;
 }
 
@@ -124,8 +158,9 @@ std::tuple<Eigen::VectorXd, double, unsigned int> LocalRegression::ErrorIndicato
 
 std::tuple<Eigen::VectorXd, double, unsigned int> LocalRegression::ErrorIndicator(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const {
   // get the poisedness constant
-  std::tuple<Eigen::VectorXd, double, unsigned int> lambda = PoisednessConstant(input, neighbors);
-
+  //std::tuple<Eigen::VectorXd, double, unsigned int> lambda = PoisednessConstant(input, neighbors);
+  std::tuple<Eigen::VectorXd, double, unsigned int> lambda = std::tuple<Eigen::VectorXd, double, unsigned int>(Eigen::VectorXd(), 1.0, 0);
+  
   // update the error indicator
   std::get<1>(lambda) *= std::sqrt((double)kn)*std::pow((*(neighbors.end()-1)-input).norm(), (double)reg->order+1.0);
 
@@ -161,8 +196,17 @@ void LocalRegression::Probe() const {
       parcer::RecvRequest recvReq;
       bool has = comm->Iprobe(i, tagSingle, recvReq);
       while( has ) {
-	const std::pair<Eigen::VectorXd, Eigen::VectorXd>& other = comm->Recv<std::pair<Eigen::VectorXd, Eigen::VectorXd> >(i, tagSingle);
-	cache->Add(other.first, other.second);
+	//std::cout << "RANK " << comm->GetRank() << " IS LOOKING FROM (single) " << i << std::endl;
+
+	// get the point
+	const std::pair<Eigen::VectorXd, Eigen::VectorXd>& point = comm->Recv<std::pair<Eigen::VectorXd, Eigen::VectorXd> >(i, tagSingle);
+
+	//std::cout << "RANK " << comm->GetRank() << " GOT FROM (single) " << i << " IN SIZE: " << point.first.size() << " OUT SIZE: " << point.second.size() << std::endl;
+
+	// add the point
+	cache->Add(point.first, point.second);
+
+	// check for more
 	has = comm->Iprobe(i, tagSingle, recvReq);
       }
     }
@@ -171,8 +215,14 @@ void LocalRegression::Probe() const {
       parcer::RecvRequest recvReq;
       bool has = comm->Iprobe(i, tagMulti, recvReq);
       while( has ) {
+	// get the points
 	const std::pair<std::vector<Eigen::VectorXd>, std::vector<Eigen::VectorXd>>& other = comm->Recv<std::pair<std::vector<Eigen::VectorXd>, std::vector<Eigen::VectorXd> > >(i, tagMulti);
+	assert(other.first.size()==other.second.size());
+	
+	// add the point
 	cache->Add(other.first, other.second);
+
+	// check for more
 	has = comm->Iprobe(i, tagMulti, recvReq);
       }
     }

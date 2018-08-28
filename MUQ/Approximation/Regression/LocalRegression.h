@@ -32,7 +32,11 @@ namespace muq {
       LocalRegression(std::shared_ptr<muq::Modeling::ModPiece> function, boost::property_tree::ptree& pt, std::shared_ptr<parcer::Communicator> comm);
 #endif
 
+#if MUQ_HAS_PARCER
+      ~LocalRegression();
+#else 
       ~LocalRegression() = default;
+#endif
 
       /// Add some points to the cache
       /**
@@ -129,8 +133,8 @@ namespace muq {
 
 #if MUQ_HAS_PARCER
       std::shared_ptr<parcer::Communicator> comm = nullptr;
-      int tagSingle = 0;
-      int tagMulti = 1;
+      const int tagSingle = 0;
+      const int tagMulti = 1;
 #endif
     };
   } // namespace Approximation

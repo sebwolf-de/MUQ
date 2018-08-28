@@ -28,6 +28,7 @@ TEST(LocalRegressionTest, SharedCache) {
 
   // the communicator
   auto comm = std::make_shared<parcer::Communicator>();
+  comm->Barrier();
 
   // set the regressor options
   pt::ptree pt;
@@ -67,3 +68,4 @@ TEST(LocalRegressionTest, SharedCache) {
   // check the size
   EXPECT_EQ(reg->CacheSize(), comm->GetSize()*(N+M));
 }
+
