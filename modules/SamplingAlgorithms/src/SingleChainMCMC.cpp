@@ -1,14 +1,15 @@
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 
-#include "MUQ/SamplingAlgorithms/MarkovChain.h"
+#include <chrono>
 
 #include "MUQ/Utilities/StringUtilities.h"
 
-#include <chrono>
+#include "MUQ/SamplingAlgorithms/MarkovChain.h"
+#include "MUQ/SamplingAlgorithms/ExpensiveSamplingProblem.h"
 
 namespace pt = boost::property_tree;
-using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
+using namespace muq::SamplingAlgorithms;
 
 SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem) :
   SamplingAlgorithm(std::make_shared<MarkovChain>()),
@@ -43,6 +44,7 @@ void SingleChainMCMC::SetUp(pt::ptree pt, std::shared_ptr<AbstractSamplingProble
   for(int i=0; i<kernels.size(); ++i) {
     boost::property_tree::ptree subTree = pt.get_child(kernelNames.at(i));
     subTree.put("BlockIndex",i);
+    if( std::dynamic_pointer_cast<ExpensiveSamplingProblem>(problem) ) { subTree.put("ReevaluateAcceptedDensity", true); }
     kernels.at(i) = TransitionKernel::Construct(subTree, problem);
 
 #if MUQ_HAS_PARCER
@@ -68,11 +70,11 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
   std::vector<std::shared_ptr<SamplingState>> newStates;
   std::shared_ptr<SamplingState> prevState = std::make_shared<SamplingState>(x0);
 
-  std::shared_ptr<SamplingState> lastSavedState;
-
+  // save the first state
   if(burnIn==0) {
     samples->Add(prevState);
   }
+  std::shared_ptr<SamplingState> lastSavedState = prevState;
 
   // What is the next iteration that we want to print at
   const unsigned int printIncr = std::floor(numSamps / double(10));
@@ -105,7 +107,7 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
       kernels.at(blockInd)->PostStep(sampNum, newStates);
 
       // add the new states to the SampleCollection (this also increments sampNum)
-      prevState = SaveSamples(newStates, sampNum);
+      prevState = SaveSamples(newStates, lastSavedState, sampNum);
     }
   }
 
@@ -120,7 +122,7 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
   return samples;
 }
 
-std::shared_ptr<SamplingState> SingleChainMCMC::SaveSamples(std::vector<std::shared_ptr<SamplingState> > const& newStates, unsigned int& sampNum) const {
+std::shared_ptr<SamplingState> SingleChainMCMC::SaveSamples(std::vector<std::shared_ptr<SamplingState> > const& newStates, std::shared_ptr<SamplingState>& lastSavedState, unsigned int& sampNum) const {
   for( auto it : newStates ) {
     // save the sample, if we want to
     if( ShouldSave(sampNum) ) { samples->Add(it); }

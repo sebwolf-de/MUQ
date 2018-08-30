@@ -52,19 +52,19 @@ protected:
     for( unsigned int i=0; i<numSamps; ++i ) {
       if( i%nproc!=rank ) { continue; }
 	    
-      auto state = collection->LocalAt(cnt++);
-      EXPECT_EQ(boost::any_cast<unsigned int const>(state->meta["id"]), i);
-      EXPECT_EQ(boost::any_cast<int const>(state->meta["rank"]), rank);
+      std::shared_ptr<SamplingState> state = collection->LocalAt(cnt++);
+      EXPECT_EQ(boost::any_cast<unsigned int const>(state->meta.at("id")), i);
+      EXPECT_EQ(boost::any_cast<int const>(state->meta.at("rank")), rank);
     }
 
     for( unsigned int i=0; i<numSamps; ++i ) {
-      auto state0 = collection->GlobalAt(i);
-      EXPECT_TRUE(boost::any_cast<int const>(state0->meta["rank"])<nproc);
-      EXPECT_TRUE(boost::any_cast<unsigned int const>(state0->meta["id"])<numSamps);
+      std::shared_ptr<SamplingState> state0 = collection->GlobalAt(i);
+      EXPECT_TRUE(boost::any_cast<int const>(state0->meta.at("rank"))<nproc);
+      EXPECT_TRUE(boost::any_cast<unsigned int const>(state0->meta.at("id"))<numSamps);
 
-      auto state1 = collection->at(i);
-      EXPECT_TRUE(boost::any_cast<int const>(state1->meta["rank"])<nproc);
-      EXPECT_TRUE(boost::any_cast<unsigned int const>(state1->meta["id"])<numSamps);
+      std::shared_ptr<SamplingState> state1 = collection->at(i);
+      EXPECT_TRUE(boost::any_cast<int const>(state1->meta.at("rank"))<nproc);
+      EXPECT_TRUE(boost::any_cast<unsigned int const>(state1->meta.at("id"))<numSamps);
     }
   }
   

@@ -48,7 +48,6 @@ std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i) {
     size += localSize;
   }
 
-  assert(state);
   return state;
 }
 
@@ -71,7 +70,6 @@ const std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i)
     size += localSize;
   }
 
-  assert(state);
   return state;
 }
 
