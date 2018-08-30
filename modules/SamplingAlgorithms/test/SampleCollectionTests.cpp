@@ -129,11 +129,17 @@ TEST_F(SampleCollectionTest, Variance)
 TEST_F(SampleCollectionTest, Covariance)
 {
   Eigen::MatrixXd cov = collection.Covariance(0);
+  std::vector<Eigen::MatrixXd> runCov = collection.RunningCovariance(0);
 
   Eigen::VectorXd sampMu  = samps * weights;
   Eigen::MatrixXd sampCov = (samps.colwise()-sampMu) * weights.asDiagonal() * (samps.colwise()-sampMu).transpose();
 
   Eigen::MatrixXd trueCov = L*L.transpose();
+
+  EXPECT_NEAR(trueCov(0,0), runCov[numSamps-1](0,0), 5.0/sqrt(double(numSamps)));
+  EXPECT_NEAR(trueCov(0,1), runCov[numSamps-1](0,1), 10.0/sqrt(double(numSamps)));
+  EXPECT_NEAR(trueCov(1,0), runCov[numSamps-1](1,0), 10.0/sqrt(double(numSamps)));
+  EXPECT_NEAR(trueCov(1,1), runCov[numSamps-1](1,1), 50.0/sqrt(double(numSamps)));
 
   EXPECT_NEAR(trueCov(0,0), cov(0,0), 5.0/sqrt(double(numSamps)));
   EXPECT_NEAR(trueCov(0,1), cov(0,1), 10.0/sqrt(double(numSamps)));

@@ -33,7 +33,7 @@ namespace muq {
 
       ~ExpensiveSamplingProblem() = default;
 
-      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state) override;
+      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) override;
 
       unsigned int CacheSize() const;
       
@@ -84,7 +84,15 @@ namespace muq {
 
       /// The current error threshold level
       unsigned int level = 1;
-      
+
+      /// Cumulative beta refinements
+      unsigned int cumbeta = 0;
+
+      /// Cumulative gamma refinements
+      unsigned int cumgamma = 0;
+
+      /// Cumulative kappa refinements
+      unsigned int cumkappa = 0;
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

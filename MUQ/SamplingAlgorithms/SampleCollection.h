@@ -68,6 +68,9 @@ namespace muq{
       virtual Eigen::MatrixXd Covariance(int blockInd=-1) const;
       virtual Eigen::MatrixXd Covariance(Eigen::VectorXd const& mean, int blockInd=-1) const;
 
+      virtual std::vector<Eigen::MatrixXd> RunningCovariance(int blockInd=-1) const;
+      virtual std::vector<Eigen::MatrixXd> RunningCovariance(Eigen::VectorXd const& mean, int blockInd=-1) const;
+
       /** @brief Returns the effective sample size of the samples
           @details For almost all random variables of interest, the central limit
                    theorem states that the variance of a Monte Carlo estimator
@@ -114,7 +117,7 @@ namespace muq{
 
     protected:
 
-      std::vector<std::shared_ptr<SamplingState>> samples;
+      std::vector<std::shared_ptr<SamplingState> > samples;
 
       /** Returns the sum of the weights and the sum of the squared weights. */
       static std::pair<double,double> RecursiveWeightSum(std::vector<std::shared_ptr<SamplingState>>::const_iterator start,

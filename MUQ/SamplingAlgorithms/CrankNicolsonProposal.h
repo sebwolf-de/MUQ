@@ -47,7 +47,7 @@ namespace muq {
 
       virtual double LogDensity(std::shared_ptr<SamplingState> currState,
                                 std::shared_ptr<SamplingState> propState) override;
-
+      
       void ExtractPrior(std::shared_ptr<AbstractSamplingProblem> prob, std::string nodeName);
     };
 

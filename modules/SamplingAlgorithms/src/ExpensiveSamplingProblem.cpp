@@ -44,10 +44,23 @@ void ExpensiveSamplingProblem::SetUp(boost::property_tree::ptree& pt) {
   assert(gamma.second>0.0);
 }
 
-double ExpensiveSamplingProblem::LogDensity(unsigned int const step, std::shared_ptr<SamplingState> state) {
+double ExpensiveSamplingProblem::LogDensity(unsigned int const step, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) {
   std::vector<Eigen::VectorXd> neighbors, results;
   RefineSurrogate(step, state, neighbors, results);
-  
+  /*if( type==AbstractSamplingProblem::SampleType::Accepted ) {
+    // refine and get nearest neighbors
+    RefineSurrogate(step, state, neighbors, results);
+  } else {
+    // get nearest neighbors
+    reg->NearestNeighbors(state->state[0], neighbors, results);
+    }*/
+
+  // set cumulative refinement 
+  state->meta["cumulative beta refinement"] = cumbeta;
+  state->meta["cumulative gamma refinement"] = cumgamma;
+  state->meta["cumulative kappa refinement"] = cumkappa;
+  assert(cumbeta+cumgamma+cumkappa==reg->CacheSize());
+
   return reg->EvaluateRegressor(state->state[0], neighbors, results) (0);
 }
 
@@ -55,11 +68,8 @@ void ExpensiveSamplingProblem::RefineSurrogate(unsigned int const step, std::sha
   while( reg->CacheSize()<reg->kn ) {
     auto gauss = std::make_shared<muq::Modeling::Gaussian>(state->state[0]);
     reg->Add(gauss->Sample());
+    ++cumkappa;
   }
-
-  // set refinement to zero (did not refine)
-  state->meta["beta refinement"] = 0.0;
-  state->meta["gamma refinement"] = 0.0;
     
   // get the nearest neighbors
   reg->NearestNeighbors(state->state[0], neighbors, results);
@@ -74,7 +84,7 @@ void ExpensiveSamplingProblem::RefineSurrogate(unsigned int const step, std::sha
   if( RandomGenerator::GetUniform()<beta.first*std::pow((double)step, beta.second) ) {
     const std::tuple<Eigen::VectorXd, double, unsigned int>& lambda = reg->PoisednessConstant(state->state[0], neighbors);
     RefineSurrogate(std::get<0>(lambda), std::get<2>(lambda), neighbors, results);
-    state->meta["beta refinement"] = 1.0;
+    ++cumbeta;
     return;
   }
   
@@ -86,7 +96,7 @@ void ExpensiveSamplingProblem::RefineSurrogate(unsigned int const step, std::sha
   if( std::get<1>(error)>threshold ) {
     const std::tuple<Eigen::VectorXd, double, unsigned int>& lambda = reg->PoisednessConstant(state->state[0], neighbors);
     RefineSurrogate(std::get<0>(lambda), std::get<2>(lambda), neighbors, results);
-    state->meta["gamma refinement"] = 1.0;
+    ++cumgamma;
     return;
   }
 }

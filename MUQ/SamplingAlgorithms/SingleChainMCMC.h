@@ -32,7 +32,7 @@ namespace muq{
 
     protected:
 
-      std::shared_ptr<SamplingState> SaveSamples(std::vector<std::shared_ptr<SamplingState> > const& newStates, unsigned int& sampNum) const;
+      std::shared_ptr<SamplingState> SaveSamples(std::vector<std::shared_ptr<SamplingState> > const& newStates, std::shared_ptr<SamplingState>& lastSavedState, unsigned int& sampNum) const;
 
       bool ShouldSave(unsigned int const sampNum) const;
 

@@ -30,7 +30,7 @@ const std::shared_ptr<SamplingState> DistributedCollection::LocalAt(unsigned i) 
 std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i) {
   assert(i<GlobalSize());
 
-  std::shared_ptr<SamplingState> state = nullptr;
+  std::shared_ptr<SamplingState> state;
   
   int size = 0;
   for( unsigned int j=0; j<comm->GetSize(); ++j ) {
@@ -46,14 +46,13 @@ std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i) {
     size += localSize;
   }
 
-  assert(state);
   return state;
 }
 
 const std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i) const {
   assert(i<GlobalSize());
 
-  std::shared_ptr<SamplingState> state = nullptr;
+  std::shared_ptr<SamplingState> state;
   
   int size = 0;
   for( unsigned int j=0; j<comm->GetSize(); ++j ) {
@@ -69,7 +68,6 @@ const std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i)
     size += localSize;
   }
 
-  assert(state);
   return state;
 }
 
