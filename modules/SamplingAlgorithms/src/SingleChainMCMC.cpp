@@ -17,12 +17,14 @@ SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingP
   SetUp(pt, problem);
 }
 
+#if MUQ_HAS_PARCER
 SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<parcer::Communicator> comm) :
   SamplingAlgorithm(std::make_shared<MarkovChain>(), comm),
   printLevel(pt.get("PrintLevel",3))
 {
   SetUp(pt, problem);
 }
+#endif
 
 void SingleChainMCMC::SetUp(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem) {
   numSamps = pt.get<unsigned int>("NumSamples");
@@ -82,7 +84,7 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
   auto startTime = std::chrono::high_resolution_clock::now();
   while(sampNum < numSamps)
-  {    
+  {
     // Should we print
     if(sampNum > nextPrintInd){
       if(printLevel>0){

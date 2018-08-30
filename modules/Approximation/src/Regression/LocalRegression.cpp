@@ -1,12 +1,14 @@
 #include "MUQ/Approximation/Regression/LocalRegression.h"
 
+#if MUQ_HAS_PARCER
 #include <parcer/Eigen.h>
+#endif
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::Approximation;
 
-LocalRegression::LocalRegression(std::shared_ptr<ModPiece> function, pt::ptree& pt) : ModPiece(function->inputSizes, function->outputSizes), kn(pt.get<unsigned int>("NumNeighbors")) { 
+LocalRegression::LocalRegression(std::shared_ptr<ModPiece> function, pt::ptree& pt) : ModPiece(function->inputSizes, function->outputSizes), kn(pt.get<unsigned int>("NumNeighbors")) {
   SetUp(function, pt);
 }
 
@@ -19,7 +21,7 @@ LocalRegression::~LocalRegression() {
   if( comm ) {
     // needs to be destroyed on all processors
     comm->Barrier();
-    
+
     // clear any messages
     Probe();
   }
@@ -30,10 +32,10 @@ void LocalRegression::SetUp(std::shared_ptr<muq::Modeling::ModPiece> function, b
   // can only have one input and output
   assert(inputSizes.size()==1);
   assert(outputSizes.size()==1);
-  
+
   // create a cache of model evaluations
   cache = std::make_shared<FlannCache>(function);
-  
+
   // create a regression object
   pt.put<std::string>("PolynomialBasis", pt.get<std::string>("PolynomialBasis", "Legendre")); // set default to Legendre
   pt.put<unsigned int>("Order", pt.get<unsigned int>("Order", 2)); // set default order to 2
@@ -67,16 +69,16 @@ unsigned int LocalRegression::CacheSize() const {
 
 #if MUQ_HAS_PARCER
 struct SinglePoint {
-  ~SinglePoint() = default;  
-  
+  ~SinglePoint() = default;
+
   inline SinglePoint(Eigen::VectorXd const& input, Eigen::VectorXd const& output) : input(input), output(output) {}
-  
+
   const Eigen::VectorXd input;
   const Eigen::VectorXd output;
 
   template<class Archive>
   inline void serialize(Archive & archive) {
-    archive(input, output); 
+    archive(input, output);
   }
 
   template<typename Archive>
@@ -93,19 +95,19 @@ struct SinglePoint {
 Eigen::VectorXd LocalRegression::Add(Eigen::VectorXd const& input) const {
   assert(cache);
   const Eigen::VectorXd& result = cache->Add(input);
-  
+
 #if MUQ_HAS_PARCER
   if( comm ) {
     for( unsigned int i=0; i<comm->GetSize(); ++i ) {
       if( i==comm->GetRank() ) { continue; }
-      
+
       parcer::SendRequest sendReq;
       comm->Isend(std::pair<Eigen::VectorXd, Eigen::VectorXd>(input, result), i, tagSingle, sendReq);
     }
 
     Probe();
   }
-#endif  
+#endif
 
   return result;
 }
@@ -118,7 +120,7 @@ void LocalRegression::Add(std::vector<Eigen::VectorXd> const& inputs) const {
   if( comm ) {
     for( unsigned int i=0; i<comm->GetSize(); ++i ) {
       if( i==comm->GetRank() ) { continue; }
-      
+
       parcer::SendRequest sendReq;
       comm->Isend(std::pair<std::vector<Eigen::VectorXd>, std::vector<Eigen::VectorXd> >(inputs, results), i, tagMulti, sendReq);
     }
@@ -160,7 +162,7 @@ std::tuple<Eigen::VectorXd, double, unsigned int> LocalRegression::ErrorIndicato
   // get the poisedness constant
   //std::tuple<Eigen::VectorXd, double, unsigned int> lambda = PoisednessConstant(input, neighbors);
   std::tuple<Eigen::VectorXd, double, unsigned int> lambda = std::tuple<Eigen::VectorXd, double, unsigned int>(Eigen::VectorXd(), 1.0, 0);
-  
+
   // update the error indicator
   std::get<1>(lambda) *= std::sqrt((double)kn)*std::pow((*(neighbors.end()-1)-input).norm(), (double)reg->order+1.0);
 
@@ -182,7 +184,7 @@ Eigen::VectorXd LocalRegression::EvaluateRegressor(Eigen::VectorXd const& input,
   reg->Fit(neighbors, result, input);
 
   // evaluate the regressor
-  return (Eigen::VectorXd)boost::any_cast<Eigen::MatrixXd const&>(reg->Evaluate(input) [0]).col(0);  
+  return (Eigen::VectorXd)boost::any_cast<Eigen::MatrixXd const&>(reg->Evaluate(input) [0]).col(0);
 }
 
 #if MUQ_HAS_PARCER
@@ -218,7 +220,7 @@ void LocalRegression::Probe() const {
 	// get the points
 	const std::pair<std::vector<Eigen::VectorXd>, std::vector<Eigen::VectorXd>>& other = comm->Recv<std::pair<std::vector<Eigen::VectorXd>, std::vector<Eigen::VectorXd> > >(i, tagMulti);
 	assert(other.first.size()==other.second.size());
-	
+
 	// add the point
 	cache->Add(other.first, other.second);
 
