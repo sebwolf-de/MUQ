@@ -40,7 +40,7 @@ public:
     // generate some random inputs
     std::vector<Eigen::VectorXd> inputs(M);
     for( auto it=inputs.begin(); it!=inputs.end(); ++it ) { *it = Eigen::Vector3d::Random(); }
-    
+
     // add the random input points to the cache
     reg->Add(inputs);
   }
@@ -48,7 +48,7 @@ public:
   inline virtual ~LocalRegressionTest() {}
 
 protected:
-  
+
   /// The function to approximate
   std::shared_ptr<func> fn;
 
@@ -79,7 +79,7 @@ TEST_F(LocalRegressionTest, Basic) {
 TEST_F(LocalRegressionTest, Poisedness) {
   // check the size
   EXPECT_EQ(reg->CacheSize(), M);
-  
+
   for( unsigned int i=0; i<10; ++i ) {
     // the input point
     const Eigen::VectorXd input = Eigen::Vector3d::Random();
@@ -92,7 +92,7 @@ TEST_F(LocalRegressionTest, Poisedness) {
     // get the poisedness constant
     std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(input, neighbors);
     EXPECT_TRUE(std::get<2>(lambda)<neighbors.size());
-    
+
     const Eigen::VectorXd& newResult = reg->Add(std::get<0>(lambda));
     EXPECT_EQ(reg->CacheSize(), M+i+1);
   }

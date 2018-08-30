@@ -33,12 +33,12 @@ public:
   }
 
   inline virtual void TearDown() override {
-    // create the regression 
+    // create the regression
     auto reg = std::make_shared<Regression>(pt.get_child("MyRegression"));
 
     // fit the polynomial coefficients
     reg->Fit(ins, outs);
-    
+
     // points to test the evaluate
     const Eigen::VectorXd x = Eigen::Vector2d::Random();
     const Eigen::VectorXd y = Eigen::Vector2d::Random();
@@ -47,7 +47,7 @@ public:
     // evaluate the polynomial
     const std::vector<boost::any>& output = reg->Evaluate(x, y, z);
     const Eigen::MatrixXd& result = boost::any_cast<Eigen::MatrixXd const&>(output[0]);
-    EXPECT_EQ(result.rows(), 2);    
+    EXPECT_EQ(result.rows(), 2);
     EXPECT_EQ(result.cols(), 3);
 
     // compute the true function values---should be exact (we are using 3rd order to estimate a degree 3 polynomial)
@@ -55,9 +55,9 @@ public:
     const Eigen::Vector2d y_true = f(y);
     const Eigen::Vector2d z_true = f(z);
 
-    EXPECT_NEAR((x_true-result.col(0)).norm(), 0.0, 1.0e-10);
-    EXPECT_NEAR((y_true-result.col(1)).norm(), 0.0, 1.0e-10);
-    EXPECT_NEAR((z_true-result.col(2)).norm(), 0.0, 1.0e-10);
+    EXPECT_NEAR((x_true-result.col(0)).norm(), 0.0, 1.0e-9);
+    EXPECT_NEAR((y_true-result.col(1)).norm(), 0.0, 1.0e-9);
+    EXPECT_NEAR((z_true-result.col(2)).norm(), 0.0, 1.0e-9);
 
     std::pair<Eigen::VectorXd, double> lambda = reg->PoisednessConstant(ins, x);
     unsigned int count = 0;
