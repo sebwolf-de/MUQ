@@ -50,6 +50,9 @@ TEST(FlannCache, CreateCache) {
   
   // make sure the size is equal to the number of points that we added with not repeats
   EXPECT_EQ(cache->Size(), inputs.size());
+
+  // make sure they are there
+  for( unsigned int i=0; i<inputs.size(); ++i ) { EXPECT_NEAR((cache->at(i)-inputs[i]).norm(), 0.0, 1.0e-10); }
   
   // remove a point from the cache
   cache->Remove(inputs[0]);

@@ -39,6 +39,8 @@ void ExpensiveSamplingProblem::SetUp(boost::property_tree::ptree& pt) {
 
   lambda = pt.get<double>("PoisednessConstant", 10.0);
 
+  delta = pt.get<double>("DeltaExponent", 1.0);
+
   gamma = std::pair<double, double>(pt.get<double>("GammaScale", 1.0), pt.get<double>("GammaExponent", 1.0));
   assert(gamma.first>0.0);
   assert(gamma.second>0.0);
@@ -56,9 +58,10 @@ double ExpensiveSamplingProblem::LogDensity(unsigned int const step, std::shared
     }*/
 
   // set cumulative refinement
+  state->meta["cumulative kappa refinement"] = cumkappa;
   state->meta["cumulative beta refinement"] = cumbeta;
   state->meta["cumulative gamma refinement"] = cumgamma;
-  state->meta["cumulative kappa refinement"] = cumkappa;
+  state->meta["cumulative delta refinement"] = cumdelta;
 #if !MUQ_HAS_MPI
   assert(cumbeta+cumgamma+cumkappa==reg->CacheSize());
 #endif
@@ -69,7 +72,9 @@ double ExpensiveSamplingProblem::LogDensity(unsigned int const step, std::shared
 void ExpensiveSamplingProblem::RefineSurrogate(unsigned int const step, std::shared_ptr<SamplingState> state, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) {
   while( reg->CacheSize()<reg->kn ) {
     auto gauss = std::make_shared<muq::Modeling::Gaussian>(state->state[0]);
-    reg->Add(gauss->Sample());
+    const Eigen::VectorXd& x = gauss->Sample();
+    reg->Add(x);
+    UpdateGlobalData(x);
     ++cumkappa;
   }
 
@@ -82,7 +87,7 @@ void ExpensiveSamplingProblem::RefineSurrogate(unsigned int const step, std::sha
   state->meta["error indicator"] = std::get<1>(error);
   state->meta["error threshold"] = std::numeric_limits<double>::quiet_NaN();
 
-  // BETA refinement
+  // BETA1 refinement
   if( RandomGenerator::GetUniform()<beta.first*std::pow((double)step, beta.second) ) {
     const std::tuple<Eigen::VectorXd, double, unsigned int>& lambda = reg->PoisednessConstant(state->state[0], neighbors);
     RefineSurrogate(std::get<0>(lambda), std::get<2>(lambda), neighbors, results);
@@ -101,12 +106,37 @@ void ExpensiveSamplingProblem::RefineSurrogate(unsigned int const step, std::sha
     ++cumgamma;
     return;
   }
+
+  // DELTA refinement
+  const double dist = (globalMean-state->state[0]).norm();
+  //std::cout << "TEST: " << (dist-radius_avg)/(dist-radius_max) << " " << std::pow(std::fmax(0.0, (dist-radius_avg)/(dist-radius_max)), (double)CacheSize()*delta) << std::endl;
+  //if( RandomGenerator::GetUniform()<std::pow(dist/radius_max-0.1, (double)CacheSize()*delta) ) {
+  if( dist>0.1*radius_max ) {
+    const std::tuple<Eigen::VectorXd, double, unsigned int>& lambda = reg->PoisednessConstant(state->state[0], neighbors);
+    RefineSurrogate(std::get<0>(lambda), std::get<2>(lambda), neighbors, results);
+    ++cumdelta;
+    return;
+  }
 }
 
-void ExpensiveSamplingProblem::RefineSurrogate(Eigen::VectorXd const& point, unsigned int const index, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) const {
+void ExpensiveSamplingProblem::RefineSurrogate(Eigen::VectorXd const& point, unsigned int const index, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) {
   const Eigen::VectorXd& result = reg->Add(point);
   neighbors[index] = point;
   results[index] = result;
+
+  UpdateGlobalData(point);
+}
+
+void ExpensiveSamplingProblem::UpdateGlobalData(Eigen::VectorXd const& point) {
+  globalMean = reg->CacheSize()==1? point : ((double)(CacheSize()-1)*globalMean+point)/(double)CacheSize();
+
+  radius_max = 0.0;
+  radius_avg = 0.0;
+  for( unsigned int i=0; i<CacheSize(); ++i ) {
+    const double r = (globalMean-reg->CachePoint(i)).norm();
+    radius_max = std::max(radius_max, r);
+    radius_avg = ((double)i*radius_avg + r)/(double)(i+1);
+  }
 }
 
 unsigned int ExpensiveSamplingProblem::CacheSize() const { return reg->CacheSize(); }

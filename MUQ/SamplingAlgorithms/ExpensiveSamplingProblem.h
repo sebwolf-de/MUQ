@@ -60,7 +60,12 @@ namespace muq {
 	 @param[out] neighbors The nearest neighbors
 	 @param[out] results The log-target at the nearest neighbors
        */
-      void RefineSurrogate(Eigen::VectorXd const& point, unsigned int const index, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) const;
+      void RefineSurrogate(Eigen::VectorXd const& point, unsigned int const index, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results);
+
+      /**
+	 @param[in] state The point where we are evalauting the log target
+       */
+      void UpdateGlobalData(Eigen::VectorXd const& point);
 
       std::shared_ptr<muq::Approximation::LocalRegression> reg;
 
@@ -75,6 +80,9 @@ namespace muq {
 
       /// The upper bound for the poisedness constant
       double lambda;
+
+      /// Exponenent for delta refinement
+      double delta;
 
       /// Parameters for structural refinement
       /**
@@ -93,6 +101,17 @@ namespace muq {
 
       /// Cumulative kappa refinements
       unsigned int cumkappa = 0;
+      
+      /// Cumulative delta refinements
+      unsigned int cumdelta = 0;
+
+      /// Global mean of evaluated locations
+      Eigen::VectorXd globalMean;
+
+      double radius_avg = 0.0;
+
+      /// Global radius of evaluated locations
+      double radius_max = 0.0;
     };
   } // namespace SamplingAlgorithms
 } // namespace muq
