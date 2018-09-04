@@ -2,7 +2,9 @@
 
 #include <Eigen/Eigenvalues>
 
+#if MUQ_HAS_PARCER
 #include <cereal/types/tuple.hpp>
+#endif
 
 #include "MUQ/Utilities/RandomGenerator.h"
 #include "MUQ/Utilities/AnyHelpers.h"

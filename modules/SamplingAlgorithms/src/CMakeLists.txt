@@ -18,7 +18,7 @@ CreateCompileGroup(
     muqSamplingAlgorithms
     "MODELING_CORE;APPROXIMATION_REGRESSION"
     ""
-    "PARCER"
+    ""
 
     SamplingProblem.cpp
     ExpensiveSamplingProblem.cpp
@@ -31,7 +31,7 @@ CreateCompileGroup(
     muqSamplingAlgorithms
     "MODELING_CORE;UTILITIES_CORE;SAMPLING_PROBLEMS"
     ""
-    "PARCER"
+    ""
     SamplingAlgorithm.cpp
     #MonteCarlo.cpp
     #ImportanceSampling.cpp
@@ -39,7 +39,7 @@ CreateCompileGroup(
 
     SamplingState.cpp
     SampleCollection.cpp
-    DistributedCollection.cpp
+    #DistributedCollection.cpp
     MarkovChain.cpp
 
     TransitionKernel.cpp
@@ -49,7 +49,7 @@ CreateCompileGroup(
     GMHKernel.cpp
     #MCMCKernel.cpp
     #ParallelMHKernel.cpp
-    
+
     MCMCFactory.cpp
 
     ThinScheduler.cpp
@@ -61,3 +61,17 @@ CreateCompileGroup(
     InverseGammaProposal.cpp
     CrankNicolsonProposal.cpp
 )
+
+if(MUQ_USE_MPI)
+
+  CreateCompileGroup(
+      PARALLEL_SAMPLING_ALGORITHM
+      "Tools for sampling that require MPI distributed parallelism."
+      muqSamplingAlgorithms
+      "MODELING_CORE;UTILITIES_CORE;SAMPLING_ALGORITHM"
+      "PARCER"
+      ""
+      DistributedCollection.cpp
+  )
+
+endif()

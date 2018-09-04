@@ -3,7 +3,7 @@ set(STANMATH_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/external/stanmath/src/STANMA
 
 include(ExternalProject)
 if(NOT STANMATH_EXTERNAL_SOURCE)
-	set(STANMATH_EXTERNAL_SOURCE https://github.com/stan-dev/math/archive/develop.zip)
+	set(STANMATH_EXTERNAL_SOURCE https://github.com/stan-dev/math/archive/release/v2.18.0.zip)
 endif()
 
 set(STANMATH_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/muq_external/)

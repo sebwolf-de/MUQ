@@ -2,8 +2,6 @@
 
 #include "parcer/Eigen.h"
 
-#if MUQ_HAS_MPI
-
 using namespace muq::Utilities;
 using namespace muq::SamplingAlgorithms;
 
@@ -14,14 +12,14 @@ void DistributedCollection::Add(std::shared_ptr<SamplingState> newSamp) {
 }
 
 std::shared_ptr<SamplingState> DistributedCollection::at(unsigned i) { return GlobalAt(i); }
-	    
+
 const std::shared_ptr<SamplingState> DistributedCollection::at(unsigned i) const { return GlobalAt(i); }
 
 std::shared_ptr<SamplingState> DistributedCollection::LocalAt(unsigned i) {
   assert(i<collection->size());
   return collection->at(i);
 }
-	    
+
 const std::shared_ptr<SamplingState> DistributedCollection::LocalAt(unsigned i) const {
   assert(i<collection->size());
   return collection->at(i);
@@ -31,7 +29,7 @@ std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i) {
   assert(i<GlobalSize());
 
   std::shared_ptr<SamplingState> state = nullptr;
-  
+
   int size = 0;
   for( unsigned int j=0; j<comm->GetSize(); ++j ) {
     int localSize = j==comm->GetRank() ? LocalSize() : 0;
@@ -54,7 +52,7 @@ const std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i)
   assert(i<GlobalSize());
 
   std::shared_ptr<SamplingState> state = nullptr;
-  
+
   int size = 0;
   for( unsigned int j=0; j<comm->GetSize(); ++j ) {
     int localSize = j==comm->GetRank() ? LocalSize() : 0;
@@ -118,15 +116,15 @@ Eigen::VectorXd DistributedCollection::LocalESS(int blockDim) const { return col
 Eigen::VectorXd DistributedCollection::GlobalESS(int blockDim) const {
   const Eigen::VectorXd& local = LocalESS(blockDim);
   Eigen::VectorXd global = Eigen::VectorXd::Zero(local.size());
-  
+
   for( unsigned int i=0; i<comm->GetSize(); ++i ) {
     Eigen::VectorXd l(local.size());
     if( comm->GetRank()==i ) { l = local; }
     comm->Bcast(l, i);
-    
+
     global += l;
   }
-  
+
   return global;
 }
 
@@ -188,7 +186,7 @@ void DistributedCollection::WriteToFile(std::string const& filename, std::string
 
 void DistributedCollection::WriteToFile(unsigned int const rank, std::string const& filename, std::string const& dataset) const {
   if( size()==0 ) { return; }
-    
+
   // get the sample matrix and weights
   const Eigen::MatrixXd& mat = AsMatrix();
   const Eigen::RowVectorXd& w = Weights();
@@ -208,6 +206,3 @@ void DistributedCollection::WriteToFile(unsigned int const rank, std::string con
     for( const auto& data : meta ) { hdf5file->WriteMatrix(dataset+"/"+data.first, data.second); }
   }
 }
-
-
-#endif // end MUQ_HAS_MPI

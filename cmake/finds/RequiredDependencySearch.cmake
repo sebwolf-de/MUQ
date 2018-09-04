@@ -45,14 +45,7 @@ macro (GetDependency name)
 	    LIST(APPEND MUQ_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
 
         else()
-	    message(STATUS "")
-	    message(STATUS "")
-	    message(STATUS "")
-	    message(STATUS ${name})
-	    message(STATUS "WHAT!!?!?!?")
-	    message(STATUS "")
-	    message(STATUS "")
-	    message(STATUS "")
+
 
             set(MUQ_NEEDS_${name} OFF)
 	    set(MUQ_HAS_${name} 1)
@@ -77,6 +70,18 @@ GetDependency(STANMATH)
 ########################################
 GetDependency(SUNDIALS)
 
+
+########################################
+##### LOOK FOR AND/OR BUILD NLOPT ###
+########################################
+GetDependency(NLOPT)
+
+########################################
+##### LOOK FOR AND/OR BUILD PARCER ###
+########################################
+GetDependency(PARCER)
+
+
 ########################################
 ##### LOOK FOR AND/OR BUILD HDF5  ######
 ########################################
@@ -92,7 +97,7 @@ if(MUQ_USE_OPENMPI)
 	LIST(APPEND MUQ_LINK_LIBS_STATIC ${ZLIB_LIBRARIES_STATIC})
 	LIST(APPEND MUQ_EXTERNAL_INCLUDES ${ZLIB_INCLUDE_DIRS})
 	message("ZLIB_LIBRARIES" ${ZLIB_LIBRARIES})
- 
+
 endif()
 
 ############################################
