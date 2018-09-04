@@ -83,9 +83,12 @@ void ExpensiveSamplingProblem::RefineSurrogate(unsigned int const step, std::sha
   assert(neighbors.size()==results.size());
 
   // get the error indicator
+  const double approxLogTarg = reg->EvaluateRegressor(state->state[0], neighbors, results) (0);
   const std::tuple<Eigen::VectorXd, double, unsigned int>& error = reg->ErrorIndicator(state->state[0], neighbors);
+  //const double threshold = std::exp(approxLogTarg)*lambda*std::sqrt((double)reg->kn)*gamma.first*std::pow((double)level, -gamma.second);
+  const double threshold = lambda*std::sqrt((double)reg->kn)*gamma.first*std::pow((double)level, -gamma.second);
   state->meta["error indicator"] = std::get<1>(error);
-  state->meta["error threshold"] = std::numeric_limits<double>::quiet_NaN();
+  state->meta["error threshold"] = threshold;
 
   // BETA1 refinement
   if( RandomGenerator::GetUniform()<beta.first*std::pow((double)step, beta.second) ) {
@@ -98,8 +101,6 @@ void ExpensiveSamplingProblem::RefineSurrogate(unsigned int const step, std::sha
   // check to see if we should increment the level
   if( step>phi*std::pow((double)level, 2.0*gamma.second) ) { ++level; }
 
-  const double threshold = lambda*std::sqrt((double)reg->kn)*gamma.first*std::pow((double)level, -gamma.second);
-  state->meta["error threshold"] = threshold;
   if( std::get<1>(error)>threshold ) {
     const std::tuple<Eigen::VectorXd, double, unsigned int>& lambda = reg->PoisednessConstant(state->state[0], neighbors);
     RefineSurrogate(std::get<0>(lambda), std::get<2>(lambda), neighbors, results);
@@ -110,8 +111,7 @@ void ExpensiveSamplingProblem::RefineSurrogate(unsigned int const step, std::sha
   // DELTA refinement
   const double dist = (globalMean-state->state[0]).norm();
   //std::cout << "TEST: " << (dist-radius_avg)/(dist-radius_max) << " " << std::pow(std::fmax(0.0, (dist-radius_avg)/(dist-radius_max)), (double)CacheSize()*delta) << std::endl;
-  //if( RandomGenerator::GetUniform()<std::pow(dist/radius_max-0.1, (double)CacheSize()*delta) ) {
-  if( dist>0.1*radius_max ) {
+  if( RandomGenerator::GetUniform()<std::pow(dist/radius_max, (double)CacheSize()*delta) ) {
     const std::tuple<Eigen::VectorXd, double, unsigned int>& lambda = reg->PoisednessConstant(state->state[0], neighbors);
     RefineSurrogate(std::get<0>(lambda), std::get<2>(lambda), neighbors, results);
     ++cumdelta;
