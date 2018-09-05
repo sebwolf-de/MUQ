@@ -5,7 +5,7 @@
 using namespace muq::Utilities;
 using namespace muq::Modeling;
 
-UniformBox::UniformBox(Eigen::MatrixXd const& boundsIn) : Distribution(boundsIn.cols(),
+UniformBox::UniformBox(Eigen::MatrixXd const& boundsIn) : Distribution(boundsIn.rows(),
                                                                        Eigen::VectorXi()),
                                                           bounds(boundsIn),
                                                           volume(ComputeVolume(boundsIn)) {
