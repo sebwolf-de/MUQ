@@ -32,23 +32,21 @@ macro (GetDependency name)
 
             endif()
 
-	    if(USE_INTERNAL_${name})
-		include(Build${name})
-	    endif()
+      	    if(USE_INTERNAL_${name})
+      		    include(Build${name})
+      	    endif()
 
-	    # store include directory information
-	    include_directories(${${name}_INCLUDE_DIRS})
-	    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${${name}_INCLUDE_DIRS})
+      	    # store include directory information
+      	    include_directories(${${name}_INCLUDE_DIRS})
+      	    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${${name}_INCLUDE_DIRS})
 
-	    # store library information
-	    LIST(APPEND MUQ_LINK_LIBS ${${name}_LIBRARIES})
-	    LIST(APPEND MUQ_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
+      	    # store library information
+      	    LIST(APPEND MUQ_LINK_LIBS ${${name}_LIBRARIES})
+      	    LIST(APPEND MUQ_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
 
         else()
-
-
             set(MUQ_NEEDS_${name} OFF)
-	    set(MUQ_HAS_${name} 1)
+	          set(MUQ_HAS_${name} 0)
         endif()
 
 endmacro(GetDependency)
