@@ -157,10 +157,10 @@ TEST_F(DistributedCollectionTest, WriteToFile) {
     const Eigen::RowVectorXd id = hdf5file->ReadMatrix("/id");
     const Eigen::RowVectorXd rnk = hdf5file->ReadMatrix("/rank");
 
-    EXPECT_EQ(id.size(), numSamps);
-    EXPECT_EQ(rnk.size(), numSamps);
-    EXPECT_EQ(weights.size(), numSamps);
-    EXPECT_EQ(samples.cols(), numSamps);
+    EXPECT_EQ(id.size(), 2*numSamps);
+    EXPECT_EQ(rnk.size(), 2*numSamps);
+    EXPECT_EQ(weights.size(), 2*numSamps);
+    EXPECT_EQ(samples.cols(), 2*numSamps);
     EXPECT_EQ(samples.rows(), 2);
 
     std::remove(filename.c_str());
