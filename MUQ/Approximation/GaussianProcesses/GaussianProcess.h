@@ -354,7 +354,7 @@ namespace muq
         bool hasNewObs;
 
         const double pi = 4.0 * atan(1.0); //boost::math::constants::pi<double>();
-        const double nugget = 1e-12; // added to the covariance diagonal to ensure eigenvalues are positive
+        const double nugget = 1e-14; // added to the covariance diagonal to ensure eigenvalues are positive
     };
 
     // class GaussianProcess

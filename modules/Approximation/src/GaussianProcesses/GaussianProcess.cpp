@@ -271,7 +271,6 @@ Eigen::MatrixXd GaussianProcess::PredictMean(Eigen::MatrixXd const& newPts)
     // Construct the cross covariance
     Eigen::MatrixXd crossCov = BuildCrossCov(newPts);
 
-
     Eigen::MatrixXd meanMat(coDim, newPts.size());
     Eigen::Map<Eigen::VectorXd> meanVec(meanMat.data(), coDim*newPts.cols());
 
@@ -292,7 +291,6 @@ Eigen::MatrixXd GaussianProcess::Sample(Eigen::MatrixXd const& newPts)
     Eigen::MatrixXd output(mean.rows(), mean.cols());
     Eigen::Map<Eigen::VectorXd> outVec(output.data(), output.rows()*output.cols());
 
-    std::cout << "Covariance in Sample = \n" << covariance << std::endl;
     outVec = covariance.selfadjointView<Eigen::Lower>().llt().matrixL()*RandomGenerator::GetNormal(covariance.rows());
 
     output += mean;
