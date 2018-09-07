@@ -33,7 +33,7 @@ namespace muq {
 
       ~ExpensiveSamplingProblem() = default;
 
-      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state) override;
+      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) override;
 
       unsigned int CacheSize() const;
       
@@ -60,7 +60,12 @@ namespace muq {
 	 @param[out] neighbors The nearest neighbors
 	 @param[out] results The log-target at the nearest neighbors
        */
-      void RefineSurrogate(Eigen::VectorXd const& point, unsigned int const index, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) const;
+      void RefineSurrogate(Eigen::VectorXd const& point, unsigned int const index, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results);
+
+      /**
+	 @param[in] state The point where we are evalauting the log target
+       */
+      void UpdateGlobalData(Eigen::VectorXd const& point);
 
       std::shared_ptr<muq::Approximation::LocalRegression> reg;
 
@@ -76,6 +81,9 @@ namespace muq {
       /// The upper bound for the poisedness constant
       double lambda;
 
+      /// Exponenent for delta refinement
+      double delta;
+
       /// Parameters for structural refinement
       /**
 	 Refine if the error threshold exceeds \f$\gamma = \gamma_0 l^{-\gamma_1}\f$, where \f$l\f$ is the current error threshold level (ExpensiveSamplingProblem::level).  \f$\gamma_0\f$ is "GammaScale" and it defaults to \f$1\f$.  \f$\gamma_1\f$ is "GammaExponent" and it defaults to \f$1.0\f$.
@@ -84,7 +92,26 @@ namespace muq {
 
       /// The current error threshold level
       unsigned int level = 1;
+
+      /// Cumulative beta refinements
+      unsigned int cumbeta = 0;
+
+      /// Cumulative gamma refinements
+      unsigned int cumgamma = 0;
+
+      /// Cumulative kappa refinements
+      unsigned int cumkappa = 0;
       
+      /// Cumulative delta refinements
+      unsigned int cumdelta = 0;
+
+      /// Global mean of evaluated locations
+      Eigen::VectorXd globalMean;
+
+      double radius_avg = 0.0;
+
+      /// Global radius of evaluated locations
+      double radius_max = 0.0;
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

@@ -34,6 +34,8 @@ TEST(ExpensiveSamplingProblemTests, GaussianTarget) {
   pt.put("MySamplingProblem.BetaScale", 1.0);
   pt.put("MySamplingProblem.BetaExponent", 0.9);
 
+  pt.put("MySamplingProblem.DeltaExponent", 1.0);
+
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
   const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
   auto dist = std::make_shared<Gaussian>(mu)->AsDensity(); // standard normal Gaussian

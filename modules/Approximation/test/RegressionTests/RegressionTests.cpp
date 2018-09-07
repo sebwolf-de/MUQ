@@ -55,9 +55,9 @@ public:
     const Eigen::Vector2d y_true = f(y);
     const Eigen::Vector2d z_true = f(z);
 
-    EXPECT_NEAR((x_true-result.col(0)).norm(), 0.0, 1.0e-10);
-    EXPECT_NEAR((y_true-result.col(1)).norm(), 0.0, 1.0e-10);
-    EXPECT_NEAR((z_true-result.col(2)).norm(), 0.0, 1.0e-10);
+    EXPECT_NEAR((x_true-result.col(0)).norm(), 0.0, 1.0e-9);
+    EXPECT_NEAR((y_true-result.col(1)).norm(), 0.0, 1.0e-9);
+    EXPECT_NEAR((z_true-result.col(2)).norm(), 0.0, 1.0e-9);
 
     std::pair<Eigen::VectorXd, double> lambda = reg->PoisednessConstant(ins, x);
     unsigned int count = 0;
