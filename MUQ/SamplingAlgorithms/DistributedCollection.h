@@ -253,22 +253,23 @@ namespace muq {
 
     private:
 
-      template <class scalar, int rows, int cols, int options, int maxRows, int maxCols> 
-	Eigen::Matrix<scalar, rows, cols, options, maxRows, maxCols> GlobalEigenMean(Eigen::Matrix<scalar, rows, cols, options, maxRows, maxCols> const& local) const {
-	typedef Eigen::Matrix<scalar, rows, cols, options, maxRows, maxCols> MatType;
-	MatType global = MatType::Zero(local.rows(), local.cols());
+      template <class scalar, int rows, int cols, int options, int maxRows, int maxCols>
+    	Eigen::Matrix<scalar, rows, cols, options, maxRows, maxCols> GlobalEigenMean(Eigen::Matrix<scalar, rows, cols, options, maxRows, maxCols> const& local) const {
+        
+        	typedef Eigen::Matrix<scalar, rows, cols, options, maxRows, maxCols> MatType;
+        	MatType global = MatType::Zero(local.rows(), local.cols());
 
-	for( unsigned int i=0; i<comm->GetSize(); ++i ) {
-	  MatType l(local.rows(), local.cols());
-	  if( comm->GetRank()==i ) { l = local; }
-	  comm->Bcast(l, i);
-    
-	  global += l/(double)comm->GetSize();
-	}
-	
-	return global;
+        	for( unsigned int i=0; i<comm->GetSize(); ++i ) {
+        	  MatType l(local.rows(), local.cols());
+        	  if( comm->GetRank()==i ) { l = local; }
+        	  comm->Bcast(l, i);
+
+        	  global += l/(double)comm->GetSize();
+        	}
+
+        	return global;
       }
-      
+
       /// The local sample collection (stored on this processor)
       std::shared_ptr<SampleCollection> collection;
 
