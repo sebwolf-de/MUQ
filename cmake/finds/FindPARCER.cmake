@@ -6,9 +6,9 @@ if(NOT DEFINED MUQ_PARCER_DIR)
 	pkg_check_modules(PC_PARCER QUIET libparcer)
 	set(PARCER_DEFINITIONS ${PC_PARCER_CFLAGS_OTHER})
 
-	find_path(PARCER_INCLUDE_DIR SerializationFunctions.h
-          HINTS ${PC_PARCER_INCLUDEDIR} ${PC_PARCER_INCLUDE_DIRS}
-          PATH_SUFFIXES parcer )
+	find_path(PARCER_INCLUDE_DIR parcer/Communicator.h
+					HINTS ${PC_PARCER_INCLUDEDIR} ${PC_PARCER_INCLUDE_DIRS}
+					PATH_SUFFIXES parcer )
 
 	find_library(PARCER_LIBRARY NAMES parcer
              HINTS ${PC_PARCER_LIBDIR} ${PC_PARCER_LIBRARY_DIRS} )
@@ -17,7 +17,7 @@ if(NOT DEFINED MUQ_PARCER_DIR)
              HINTS ${PC_PARCER_LIBDIR} ${PC_PARCER_LIBRARY_DIRS} )
 
 else()
-	find_path(PARCER_INCLUDE_DIR SerializationFunctions.h
+	find_path(PARCER_INCLUDE_DIR parcer/Communicator.h
 	          HINTS ${MUQ_PARCER_DIR}/include
 	          PATH_SUFFIXES parcer NO_DEFAULT_PATH)
 
