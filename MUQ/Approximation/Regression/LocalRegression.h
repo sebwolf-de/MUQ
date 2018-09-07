@@ -57,6 +57,13 @@ namespace muq {
        */
       unsigned int CacheSize() const;
 
+      /// A point in the cache
+      /**
+	 @param[in] index The index of the input
+	 \return The input point in the cache associated with the index
+       */
+      Eigen::VectorXd CachePoint(unsigned int const index) const;
+
       /// Get the poisedness constant
       /**
 	 Get the poisedness constant associated with the nearest neighbors of the input point.

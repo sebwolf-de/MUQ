@@ -47,7 +47,8 @@ Eigen::VectorXd const& SamplingStatePartialMoment::operator()(SamplingState cons
 
 void SampleCollection::Add(std::shared_ptr<SamplingState> newSamp)
 {
-  samples.push_back(newSamp);
+  // copy the sample
+  samples.push_back(std::make_shared<SamplingState>(*newSamp));
 }
 
 std::shared_ptr<SamplingState> SampleCollection::at(unsigned i)
@@ -90,9 +91,7 @@ Eigen::VectorXd SampleCollection::Mean(int blockNum) const
 
 Eigen::MatrixXd SampleCollection::Covariance(int blockInd) const
 {
-  const Eigen::VectorXd& mu = Mean(blockInd);
-
-  return Covariance(mu, blockInd);
+  return Covariance(Mean(blockInd), blockInd);
 }
 
 Eigen::MatrixXd SampleCollection::Covariance(Eigen::VectorXd const& mean, int blockInd) const {
@@ -131,6 +130,66 @@ Eigen::MatrixXd SampleCollection::Covariance(Eigen::VectorXd const& mean, int bl
   }
 
   return (samps.colwise() - mean) * weights.asDiagonal() * (samps.colwise()-mean).transpose() / weights.sum();
+}
+
+std::vector<Eigen::MatrixXd> SampleCollection::RunningCovariance(int blockInd) const {
+  return RunningCovariance(Mean(blockInd), blockInd);
+}
+
+std::vector<Eigen::MatrixXd> SampleCollection::RunningCovariance(Eigen::VectorXd const& mean, int blockInd) const {
+  const int numSamps = size();
+  std::vector<Eigen::MatrixXd> runCov(numSamps);
+
+  if(blockInd<0){
+    std::shared_ptr<SamplingState> s = at(0);
+
+    const int totalSize = s->TotalDim();
+    const int numBlocks = s->state.size();
+    double totWeight = s->weight;
+
+    Eigen::VectorXd samp(totalSize);
+
+    int currInd = 0;
+    for(int block = 0; block<numBlocks; ++block){
+      samp.segment(currInd, s->state.at(block).size()) = s->state.at(block);
+      currInd += s->state.at(block).size();
+    }
+
+    samp -= mean;
+    runCov[0] = totWeight*samp*samp.transpose();
+
+    for(int i=1; i<numSamps; ++i){
+      s = at(i);
+
+      int currInd = 0;
+      for(int block = 0; block<numBlocks; ++block){
+        samp.segment(currInd, s->state.at(block).size()) = s->state.at(block);
+        currInd += s->state.at(block).size();
+      }
+
+      totWeight += s->weight;
+      samp -= mean;
+      runCov[i] = ((totWeight-s->weight)*runCov[i-1] + s->weight*samp*samp.transpose())/totWeight;
+    }
+
+  }else{
+    std::shared_ptr<SamplingState> s = at(0);
+    
+    const int blockSize = s->state.at(blockInd).size();
+    double totWeight = s->weight;
+
+    Eigen::VectorXd samp = s->state.at(blockInd)-mean;
+    runCov[0] = totWeight*samp*samp.transpose();
+
+    for(int i=1; i<numSamps; ++i){
+      s = at(i);
+      totWeight += s->weight;
+      samp = s->state.at(blockInd);
+      runCov[i] = ((totWeight-s->weight)*runCov[i-1] + s->weight*samp*samp.transpose())/totWeight;
+    }
+  }
+
+  return runCov;
 }
 
 std::pair<double,double> SampleCollection::RecursiveWeightSum(std::vector<std::shared_ptr<SamplingState>>::const_iterator start,

@@ -126,6 +126,20 @@ namespace muq {
        */
       void Add(std::vector<Eigen::VectorXd> const& inputs, std::vector<Eigen::VectorXd> const& results);
 
+      /// Get an input point from the cache
+      /**
+	 @param[in] index The point to returnn
+	 \return The input point associated with the index
+       */
+      const Eigen::VectorXd at(unsigned int const index) const;
+
+      /// Get an input point from the cache
+      /**
+	 @param[in] index The point to returnn
+	 \return The input point associated with the index
+       */
+      Eigen::VectorXd at(unsigned int const index);
+
       /// Add a new point to the cache
       /**
 	 @param[in] input The entry we would like to add to the cache (if it is not there already)

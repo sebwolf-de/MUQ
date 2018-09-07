@@ -162,3 +162,13 @@ void FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs, std::vector<Eig
 
   assert(kdTree->m_data.size()==outputCache.size());
 }
+
+const Eigen::VectorXd FlannCache::at(unsigned int const index) const {
+  assert(index<kdTree->m_data.size());
+  return kdTree->m_data[index];
+}
+
+Eigen::VectorXd FlannCache::at(unsigned int const index) {
+  assert(index<kdTree->m_data.size());
+  return kdTree->m_data[index];
+}

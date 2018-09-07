@@ -67,6 +67,11 @@ unsigned int LocalRegression::CacheSize() const {
   return cache->Size();
 }
 
+Eigen::VectorXd LocalRegression::CachePoint(unsigned int const index) const {
+  assert(cache);
+  return cache->at(index);
+}
+
 #if MUQ_HAS_PARCER
 struct SinglePoint {
   ~SinglePoint() = default;
@@ -163,8 +168,12 @@ std::tuple<Eigen::VectorXd, double, unsigned int> LocalRegression::ErrorIndicato
   //std::tuple<Eigen::VectorXd, double, unsigned int> lambda = PoisednessConstant(input, neighbors);
   std::tuple<Eigen::VectorXd, double, unsigned int> lambda = std::tuple<Eigen::VectorXd, double, unsigned int>(Eigen::VectorXd(), 1.0, 0);
 
+  // create a local factorial function (caution: may be problematic if n is sufficiently large)
+  std::function<int(int)> factorial = [&factorial](int const n) { return ((n==2 || n==1)? n : n*factorial(n-1)); };
+
   // update the error indicator
-  std::get<1>(lambda) *= std::sqrt((double)kn)*std::pow((*(neighbors.end()-1)-input).norm(), (double)reg->order+1.0);
+  //std::get<1>(lambda) *= std::sqrt((double)kn)*std::pow((*(neighbors.end()-1)-input).norm(), (double)reg->order+1.0);
+  std::get<1>(lambda) =(double)kn*std::pow((*(neighbors.end()-1)-input).norm(), (double)reg->order+1.0)/(double)factorial(reg->order+1);
 
   return lambda;
 }

@@ -1,6 +1,10 @@
 #include "MUQ/SamplingAlgorithms/DistributedCollection.h"
 
+#if MUQ_HAS_MPI
+
+#if MUQ_HAS_PARCER
 #include "parcer/Eigen.h"
+#endif 
 
 using namespace muq::Utilities;
 using namespace muq::SamplingAlgorithms;
@@ -44,7 +48,6 @@ std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i) {
     size += localSize;
   }
 
-  assert(state);
   return state;
 }
 
@@ -67,7 +70,6 @@ const std::shared_ptr<SamplingState> DistributedCollection::GlobalAt(unsigned i)
     size += localSize;
   }
 
-  assert(state);
   return state;
 }
 
@@ -206,3 +208,6 @@ void DistributedCollection::WriteToFile(unsigned int const rank, std::string con
     for( const auto& data : meta ) { hdf5file->WriteMatrix(dataset+"/"+data.first, data.second); }
   }
 }
+
+
+#endif // end MUQ_HAS_MPI

@@ -25,7 +25,7 @@ struct ProposeState {
 
   inline std::shared_ptr<SamplingState> Evaluate(CurrentState state) {
     std::shared_ptr<SamplingState> proposed = std::get<2>(state) ? proposal->Sample(std::get<1>(state)) : std::get<1>(state);
-    proposed->meta["LogTarget"] = problem->LogDensity(std::get<0>(state), proposed);
+    proposed->meta["LogTarget"] = problem->LogDensity(std::get<0>(state), proposed, std::get<2>(state) ? AbstractSamplingProblem::SampleType::Proposed : AbstractSamplingProblem::SampleType::Accepted);
     // TODO: Fill in gradient information if needed by proposal
     return proposed;
   }
@@ -54,7 +54,7 @@ void GMHKernel::SerialProposal(unsigned int const t, std::shared_ptr<SamplingSta
 
   // If the current state does not have LogTarget information, add it
   if(! state->HasMeta("LogTarget"))
-    state->meta["LogTarget"] = problem->LogDensity(t, state);
+    state->meta["LogTarget"] = problem->LogDensity(t, state, AbstractSamplingProblem::SampleType::Accepted);
 
   // propose the points
   proposedStates.resize(Np1, nullptr);
@@ -62,7 +62,7 @@ void GMHKernel::SerialProposal(unsigned int const t, std::shared_ptr<SamplingSta
 
   for(auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) {
     *it = proposal->Sample(state);
-    (*it)->meta["LogTarget"] = problem->LogDensity(t, *it);
+    (*it)->meta["LogTarget"] = problem->LogDensity(t, *it, AbstractSamplingProblem::SampleType::Proposed);
   }
 
   // evaluate the target density
