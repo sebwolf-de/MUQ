@@ -27,7 +27,15 @@ SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingP
 }
 #endif
 
-
+SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree              pt,
+                std::shared_ptr<AbstractSamplingProblem> problem,
+                std::vector<std::shared_ptr<TransitionKernel>> kernelsIn) :
+                SamplingAlgorithm(std::make_shared<MarkovChain>()),
+                printLevel(pt.get("PrintLevel",3)),
+                kernels(kernels) {
+  numSamps = pt.get<unsigned int>("NumSamples");
+  burnIn = pt.get("BurnIn",0);
+}
 
 void SingleChainMCMC::SetUp(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem) {
   numSamps = pt.get<unsigned int>("NumSamples");
