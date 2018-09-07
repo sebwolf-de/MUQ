@@ -101,9 +101,9 @@ namespace muq {
       void CheckNumNeighbors(std::shared_ptr<SamplingState> state);
 
       /**
-	 @param[in] state The point where we are evalauting the log target
+      	 Update the global radius: the max distance between the cache centroid and a point in the cache.
        */
-      void UpdateGlobalData(Eigen::VectorXd const& point);
+      void UpdateGlobalRadius();
 
       /// Compute the error threshold
       /**
@@ -157,9 +157,6 @@ namespace muq {
 
       /// Cumulative kappa refinements
       unsigned int cumkappa = 0;
-
-      /// Global mean of evaluated locations
-      Eigen::VectorXd globalMean;
 
       /// Maximum distance between the globalMean and an evaluated point
       double radius_max = 0.0;

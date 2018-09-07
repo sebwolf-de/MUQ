@@ -210,12 +210,9 @@ void LocalRegression::Probe() const {
       parcer::RecvRequest recvReq;
       bool has = comm->Iprobe(i, tagSingle, recvReq);
       while( has ) {
-	//std::cout << "RANK " << comm->GetRank() << " IS LOOKING FROM (single) " << i << std::endl;
 
 	// get the point
 	const std::pair<Eigen::VectorXd, Eigen::VectorXd>& point = comm->Recv<std::pair<Eigen::VectorXd, Eigen::VectorXd> >(i, tagSingle);
-
-	//std::cout << "RANK " << comm->GetRank() << " GOT FROM (single) " << i << " IN SIZE: " << point.first.size() << " OUT SIZE: " << point.second.size() << std::endl;
 
 	// add the point
 	cache->Add(point.first, point.second);
@@ -243,3 +240,8 @@ void LocalRegression::Probe() const {
   }
 }
 #endif
+
+Eigen::VectorXd LocalRegression::CacheCentroid() const {
+  assert(cache);
+  return cache->Centroid();
+}

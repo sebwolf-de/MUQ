@@ -129,6 +129,12 @@ namespace muq {
       /// The number of nearest neighbors to use by the regressor
       const unsigned int kn;
 
+      /// Get the centroid of the cache
+      /**
+      \return The cache centroid
+      */
+      Eigen::VectorXd CacheCentroid() const;
+
     private:
 
       virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) override;

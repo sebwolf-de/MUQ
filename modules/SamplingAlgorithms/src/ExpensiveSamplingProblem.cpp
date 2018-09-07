@@ -77,7 +77,7 @@ void ExpensiveSamplingProblem::CheckNumNeighbors(std::shared_ptr<SamplingState> 
     auto gauss = std::make_shared<muq::Modeling::Gaussian>(state->state[0]);
     const Eigen::VectorXd& x = gauss->Sample();
     reg->Add(x);
-    UpdateGlobalData(x);
+    UpdateGlobalRadius();
     ++cumkappa;
   }
 }
@@ -173,7 +173,7 @@ void ExpensiveSamplingProblem::RefineSurrogate(
 
   // compute the error threshold
   const double approxLogTarg = reg->EvaluateRegressor(state->state[0], neighbors, results) (0);
-  const double threshold = ErrorThreshold(step, (state->state[0]-globalMean).norm(), approxLogTarg);
+  const double threshold = ErrorThreshold(step, (state->state[0]-reg->CacheCentroid()).norm(), approxLogTarg);
   state->meta["error indicator"] = error;
   state->meta["error threshold"] = threshold;
 
@@ -207,15 +207,13 @@ void ExpensiveSamplingProblem::RefineSurrogate(Eigen::VectorXd const& point, uns
   std::iter_swap(neighbors.end()-1, neighbors.begin()+index);
   std::iter_swap(results.end()-1, results.begin()+index);
 
-  UpdateGlobalData(point);
+  UpdateGlobalRadius();
 }
 
-void ExpensiveSamplingProblem::UpdateGlobalData(Eigen::VectorXd const& point) {
-  globalMean = reg->CacheSize()==1? point : ((double)(CacheSize()-1)*globalMean+point)/(double)CacheSize();
-
+void ExpensiveSamplingProblem::UpdateGlobalRadius() {
   radius_max = 0.0;
   for( unsigned int i=0; i<CacheSize(); ++i ) {
-    const double r = (globalMean-reg->CachePoint(i)).norm();
+    const double r = (reg->CacheCentroid()-reg->CachePoint(i)).norm();
     radius_max = std::max(radius_max, r);
   }
 }

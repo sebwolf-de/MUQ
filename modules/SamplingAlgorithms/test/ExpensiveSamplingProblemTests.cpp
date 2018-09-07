@@ -12,6 +12,10 @@ using namespace muq::SamplingAlgorithms;
 TEST(ExpensiveSamplingProblemTests, GaussianTarget) {
   const unsigned int N = 1000;
 
+  // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
+  const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
+  auto dist = std::make_shared<Gaussian>(mu)->AsDensity(); // standard normal Gaussian
+
   // parameters for the sampler
   pt::ptree pt;
   pt.put("MyMCMC.NumSamples", N); // number of Monte Carlo samples
@@ -26,19 +30,19 @@ TEST(ExpensiveSamplingProblemTests, GaussianTarget) {
   pt.put("MySamplingProblem.MyRegression.NumNeighbors", 5);
   pt.put("MySamplingProblem.MyRegression.Order", 1); // approximating the quardatic log-Gaussian with a locally linear function
 
-  pt.put("MySamplingProblem.StructuralScaling", 1.0);
-  pt.put("MySamplingProblem.PoisednessConstant", 50.0);
-  pt.put("MySamplingProblem.GammaScale", 1.0);
-  pt.put("MySamplingProblem.GammaExponent", 0.5);
-
   pt.put("MySamplingProblem.BetaScale", 1.0);
   pt.put("MySamplingProblem.BetaExponent", 0.9);
 
-  pt.put("MySamplingProblem.DeltaExponent", 1.0);
+  pt.put("MySamplingProblem.FirstLevelLength", 1.0);
 
-  // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
-  const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
-  auto dist = std::make_shared<Gaussian>(mu)->AsDensity(); // standard normal Gaussian
+  pt.put("MySamplingProblem.GammaScale", 1.0);
+  pt.put("MySamplingProblem.GammaExponent", 0.5);
+
+  pt.put("MySamplingProblem.DeltaExponent", 0.01);
+
+  pt.put("MySamplingProblem.TargetMax", std::exp(dist->LogDensity(mu)));
+  pt.put("MySamplingProblem.EtaScale", 2.0);
+  pt.put("MySamplingProblem.EtaExponent", 2.0);
 
   // create a sampling problem
   auto problem = std::make_shared<ExpensiveSamplingProblem>(dist, pt.get_child("MySamplingProblem"));
