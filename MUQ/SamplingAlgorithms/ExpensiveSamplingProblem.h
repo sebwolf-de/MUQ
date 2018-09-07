@@ -36,7 +36,7 @@ namespace muq {
       virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) override;
 
       unsigned int CacheSize() const;
-      
+
     private:
 
       /// Set up the sampling problem
@@ -51,7 +51,23 @@ namespace muq {
 	 @param[out] neighbors The nearest neighbors
 	 @param[out] results The log-target at the nearest neighbors
        */
-      void RefineSurrogate(unsigned int const step, std::shared_ptr<SamplingState> state, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results);
+      void RefineSurrogate(
+        unsigned int const step,
+        std::shared_ptr<SamplingState> state,
+        std::vector<Eigen::VectorXd>& neighbors,
+        std::vector<Eigen::VectorXd>& results);
+
+        /**
+     @param[in] state The state where we are evalauting the log target
+     @param[in] radius The radus of the nearest neighbor ball
+     @param[out] neighbors The nearest neighbors
+     @param[out] results The log-target at the nearest neighbors
+         */
+        void RefineSurrogate(
+          std::shared_ptr<SamplingState> state,
+          double const radius,
+          std::vector<Eigen::VectorXd>& neighbors,
+          std::vector<Eigen::VectorXd>& results);
 
       /**
 	 Replace the point that is farthest from the new point
@@ -60,12 +76,43 @@ namespace muq {
 	 @param[out] neighbors The nearest neighbors
 	 @param[out] results The log-target at the nearest neighbors
        */
-      void RefineSurrogate(Eigen::VectorXd const& point, unsigned int const index, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results);
+      void RefineSurrogate(
+        Eigen::VectorXd const& point,
+        unsigned int const index,
+        std::vector<Eigen::VectorXd>& neighbors,
+        std::vector<Eigen::VectorXd>& results);
+
+      /// Check to make sure we have enough model evaluations
+      /**
+      Check to see if the state has the nearest neighbors already stored.  If yes, return them, if not, find and return them.
+        @param[in] state Find the nearest neighbors closest to this point
+        @param[out] neighbors The nearest neighbors
+        @param[out] results The log-target at the nearest neighbors
+      */
+      void CheckNeighbors(
+        std::shared_ptr<SamplingState> state,
+        std::vector<Eigen::VectorXd>& neighbors,
+        std::vector<Eigen::VectorXd>& results) const;
+
+      /// Check to make sure we have enough model evaluations
+      /**
+        @param[in] state If we do not have enough points, sample from a standard Gaussian centered at this point
+      */
+      void CheckNumNeighbors(std::shared_ptr<SamplingState> state);
 
       /**
 	 @param[in] state The point where we are evalauting the log target
        */
       void UpdateGlobalData(Eigen::VectorXd const& point);
+
+      /// Compute the error threshold
+      /**
+        @param[in] step The current MCMC step
+        @param[in] radius The distance from the centroid of the evaluated points
+        @param[in] approxLogTarg The value of the surrogate model
+        \return The error threshold
+      */
+      double ErrorThreshold(unsigned int const step, double const radius, double const approxLogTarg) const;
 
       std::shared_ptr<muq::Approximation::LocalRegression> reg;
 
@@ -75,20 +122,29 @@ namespace muq {
        */
       std::pair<double, double> beta;
 
-      /// Level scaling for sturctural error
-      double phi;
-
-      /// The upper bound for the poisedness constant
-      double lambda;
-
-      /// Exponenent for delta refinement
-      double delta;
+      /// The length of the first level
+      /**
+        \f$\tau_0\f$ is "FirstLevelLength" and defaults to \f$1.0\f$.
+      */
+      double tau0;
 
       /// Parameters for structural refinement
       /**
 	 Refine if the error threshold exceeds \f$\gamma = \gamma_0 l^{-\gamma_1}\f$, where \f$l\f$ is the current error threshold level (ExpensiveSamplingProblem::level).  \f$\gamma_0\f$ is "GammaScale" and it defaults to \f$1\f$.  \f$\gamma_1\f$ is "GammaExponent" and it defaults to \f$1.0\f$.
        */
       std::pair<double, double> gamma;
+
+      /// An approximation for \f$\max{\pi(x)}\f$.
+      /**
+        \f$\nu\f$ is "TargetMax" and defaults to \f$1.0\f$.
+      */
+      double nu;
+
+      /// Parameters for the tail indicator
+      /**
+      \f$\eta_0\f$ is "EtaScale" and it defaults to \f$1.0\f$.  \f$\eta_1\f$ is "EtaExponent" and it defaults to \f$1.0\f$.
+      */
+      std::pair<double, double> eta;
 
       /// The current error threshold level
       unsigned int level = 1;
@@ -101,16 +157,11 @@ namespace muq {
 
       /// Cumulative kappa refinements
       unsigned int cumkappa = 0;
-      
-      /// Cumulative delta refinements
-      unsigned int cumdelta = 0;
 
       /// Global mean of evaluated locations
       Eigen::VectorXd globalMean;
 
-      double radius_avg = 0.0;
-
-      /// Global radius of evaluated locations
+      /// Maximum distance between the globalMean and an evaluated point
       double radius_max = 0.0;
     };
   } // namespace SamplingAlgorithms

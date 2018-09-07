@@ -34,7 +34,7 @@ namespace muq {
 
 #if MUQ_HAS_PARCER
       ~LocalRegression();
-#else 
+#else
       ~LocalRegression() = default;
 #endif
 
@@ -56,6 +56,13 @@ namespace muq {
 	 \return The cache size
        */
       unsigned int CacheSize() const;
+
+      /// Is a point in the cache?
+      /**
+      @param[in] point We want to know if this point is in the cache
+      \return true: it is in the cache, false: it is not in the cache
+      */
+      bool InCache(Eigen::VectorXd const& point) const;
 
       /// A point in the cache
       /**
@@ -85,18 +92,18 @@ namespace muq {
       /**
 	 Get the error indicator \f$\Lambda \sqrt{k} \Delta^{p+1}\f$
 	 @param[in] input The input point
-	 \return first: the point where the Lagrange polynomials are maximized, second: the error indicator, third: the index of the nearest neighbor closest to the new point
+	 \return first: the error indicator, second: the radius of the ball
        */
-      std::tuple<Eigen::VectorXd, double, unsigned int> ErrorIndicator(Eigen::VectorXd const& input) const;
+      std::pair<double, double> ErrorIndicator(Eigen::VectorXd const& input) const;
 
       /// Get the error indicator
       /**
 	 Get the error indicator \f$\Lambda \sqrt{k} \Delta^{p+1}\f$
 	 @param[in] input The input point
 	 @param[in] neighbors The nearest neighbors
-	 \return first: the point where the Lagrange polynomials are maximized, second: the error indicator, third: the index of the nearest neighbor closest to the new point
+   \return first: the error indicator, second: the radius of the ball
        */
-      std::tuple<Eigen::VectorXd, double, unsigned int> ErrorIndicator(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const;
+      std::pair<double, double> ErrorIndicator(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const;
 
       /// Get the number of nearest neighbors
       /**
