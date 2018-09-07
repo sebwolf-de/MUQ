@@ -53,6 +53,13 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
     .def("Kernel", &GaussianProcess::Kernel)
     .def("Discretize", &GaussianProcess::Discretize);
 
+  py::enum_<GaussianProcess::CovarianceType>(gaussProc, "CovarianceType")
+        .value("DiagonalCov", GaussianProcess::CovarianceType::DiagonalCov)
+        .value("BlockCov", GaussianProcess::CovarianceType::BlockCov)
+        .value("FullCov", GaussianProcess::CovarianceType::FullCov)
+        .value("NoCov", GaussianProcess::CovarianceType::NoCov)
+        .export_values();
+
   // MeanFunctionBase class
   py::class_<MeanFunctionBase,
              std::shared_ptr<MeanFunctionBase>>
