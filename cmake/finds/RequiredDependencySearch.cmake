@@ -44,6 +44,7 @@ macro (GetDependency name)
       	    LIST(APPEND MUQ_LINK_LIBS ${${name}_LIBRARIES})
       	    LIST(APPEND MUQ_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
 
+            set(MUQ_HAS_${name} 1)
         else()
             set(MUQ_NEEDS_${name} OFF)
 	          set(MUQ_HAS_${name} 0)
