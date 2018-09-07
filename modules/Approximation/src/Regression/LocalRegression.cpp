@@ -72,6 +72,11 @@ Eigen::VectorXd LocalRegression::CachePoint(unsigned int const index) const {
   return cache->at(index);
 }
 
+bool LocalRegression::InCache(Eigen::VectorXd const& point) const {
+  assert(cache);
+  return cache->InCache(point)>=0;
+}
+
 #if MUQ_HAS_PARCER
 struct SinglePoint {
   ~SinglePoint() = default;
@@ -142,12 +147,13 @@ std::tuple<Eigen::VectorXd, double, unsigned int> LocalRegression::PoisednessCon
 }
 
 std::tuple<Eigen::VectorXd, double, unsigned int> LocalRegression::PoisednessConstant(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const {
+  assert(neighbors.size()>=kn);
   assert(reg);
   std::pair<Eigen::VectorXd, double> lambda = reg->PoisednessConstant(neighbors, input);
 
   double dist = RAND_MAX;
   unsigned int index = 0;
-  for( unsigned int i=0; i<neighbors.size(); ++i ) {
+  for( unsigned int i=0; i<kn; ++i ) {
     const double d = (lambda.first-neighbors[i]).norm();
     if( d<dist ) { dist = d; index = i; }
   }
@@ -155,7 +161,7 @@ std::tuple<Eigen::VectorXd, double, unsigned int> LocalRegression::PoisednessCon
   return std::tuple<Eigen::VectorXd, double, unsigned int>(lambda.first, lambda.second, index);
 }
 
-std::tuple<Eigen::VectorXd, double, unsigned int> LocalRegression::ErrorIndicator(Eigen::VectorXd const& input) const {
+std::pair<double, double> LocalRegression::ErrorIndicator(Eigen::VectorXd const& input) const {
   // find the nearest neighbors
   std::vector<Eigen::VectorXd> neighbors;
   cache->NearestNeighbors(input, kn, neighbors);
@@ -163,19 +169,16 @@ std::tuple<Eigen::VectorXd, double, unsigned int> LocalRegression::ErrorIndicato
   return ErrorIndicator(input, neighbors);
 }
 
-std::tuple<Eigen::VectorXd, double, unsigned int> LocalRegression::ErrorIndicator(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const {
-  // get the poisedness constant
-  //std::tuple<Eigen::VectorXd, double, unsigned int> lambda = PoisednessConstant(input, neighbors);
-  std::tuple<Eigen::VectorXd, double, unsigned int> lambda = std::tuple<Eigen::VectorXd, double, unsigned int>(Eigen::VectorXd(), 1.0, 0);
-
+std::pair<double, double> LocalRegression::ErrorIndicator(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const {
   // create a local factorial function (caution: may be problematic if n is sufficiently large)
   std::function<int(int)> factorial = [&factorial](int const n) { return ((n==2 || n==1)? n : n*factorial(n-1)); };
 
-  // update the error indicator
-  //std::get<1>(lambda) *= std::sqrt((double)kn)*std::pow((*(neighbors.end()-1)-input).norm(), (double)reg->order+1.0);
-  std::get<1>(lambda) =(double)kn*std::pow((*(neighbors.end()-1)-input).norm(), (double)reg->order+1.0)/(double)factorial(reg->order+1);
+  // compute the radius
+  double radius = 0.0;
+  for( auto n : neighbors) { radius = std::max(radius, (n-input).norm()); }
 
-  return lambda;
+  // compute the error indicator
+  return std::pair<double, double>(std::pow(radius, (double)reg->order+1.0)/(double)factorial(reg->order+1), radius);
 }
 
 void LocalRegression::NearestNeighbors(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd>& neighbors) const {
@@ -207,12 +210,9 @@ void LocalRegression::Probe() const {
       parcer::RecvRequest recvReq;
       bool has = comm->Iprobe(i, tagSingle, recvReq);
       while( has ) {
-	//std::cout << "RANK " << comm->GetRank() << " IS LOOKING FROM (single) " << i << std::endl;
 
 	// get the point
 	const std::pair<Eigen::VectorXd, Eigen::VectorXd>& point = comm->Recv<std::pair<Eigen::VectorXd, Eigen::VectorXd> >(i, tagSingle);
-
-	//std::cout << "RANK " << comm->GetRank() << " GOT FROM (single) " << i << " IN SIZE: " << point.first.size() << " OUT SIZE: " << point.second.size() << std::endl;
 
 	// add the point
 	cache->Add(point.first, point.second);
@@ -240,3 +240,8 @@ void LocalRegression::Probe() const {
   }
 }
 #endif
+
+Eigen::VectorXd LocalRegression::CacheCentroid() const {
+  assert(cache);
+  return cache->Centroid();
+}

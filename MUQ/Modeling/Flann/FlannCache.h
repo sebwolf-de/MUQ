@@ -17,19 +17,19 @@ namespace muq {
     template <class Distance = nanoflann::metric_L2, typename IndexType = size_t>
       struct DynamicKDTreeAdaptor {
         friend class FlannCache;
-	
+
         typedef DynamicKDTreeAdaptor<Distance,IndexType> self_t;
         typedef typename Distance::template traits<double,self_t>::distance_t metric_t;
         typedef nanoflann::KDTreeSingleIndexDynamicAdaptor< metric_t,self_t,-1,IndexType>  index_t;
-	
+
         std::shared_ptr<index_t> index; //! The kd-tree index for the user to call its methods as usual with any other FLANN index.
         std::deque<Eigen::VectorXd> m_data;
-	
+
         /// Constructor: takes a const ref to the vector of vectors object with the data points
 	inline DynamicKDTreeAdaptor(const int dim, const int leaf_max_size = 10) {
           index = std::make_shared<index_t>(dim, *this /* adaptor */, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size ) );
         }
-	
+
 	inline void UpdateIndex(const int leaf_max_size = 10) {
 	  assert(m_data.size()>0);
           index = std::make_shared<index_t>(m_data.at(0).size(), *this /* adaptor */, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size ) );
@@ -37,12 +37,12 @@ namespace muq {
         }
 
 	inline virtual ~DynamicKDTreeAdaptor() {}
-	
+
         inline void add(Eigen::VectorXd const& newPt) {
           m_data.push_back(newPt);
 	  index->addPoints(m_data.size()-1, m_data.size()-1);
         }
-	
+
         /** Query for the \a num_closest closest points to a given point (entered as query_point[0:dim-1]).
 	 *  Note that this is a short-cut method for index->findNeighbors().
 	 *  The user can also call index->... methods as desired.
@@ -51,18 +51,18 @@ namespace muq {
         inline std::pair<std::vector<IndexType>, std::vector<double>> query(Eigen::VectorXd const& query_point, const size_t num_closest, const int nChecks_IGNORED = 10) const {
           std::vector<IndexType> out_indices(num_closest);
           std::vector<double> out_distances_sq(num_closest);
-	  
+
           nanoflann::KNNResultSet<double,IndexType> resultSet(num_closest);
           resultSet.init(&out_indices[0], &out_distances_sq[0]);
           index->findNeighbors(resultSet, query_point.data(), nanoflann::SearchParams());
 
           return std::make_pair(out_indices, out_distances_sq);
         }
-	
+
         inline const self_t & derived() const {
           return *this;
         }
-	
+
         inline self_t& derived() {
           return *this;
         }
@@ -76,7 +76,7 @@ namespace muq {
         inline double kdtree_get_pt(const size_t idx, int dim) const {
 	  assert(idx<m_data.size());
 	  assert(dim<m_data[idx].size());
-	  
+
 	  return m_data[idx][dim];
         }
 
@@ -114,14 +114,14 @@ namespace muq {
 
       /// Add new points to the cache
       /**
-	 @param[in] inputs The points to add 
+	 @param[in] inputs The points to add
 	 \return The function evaluation at each input point
        */
       std::vector<Eigen::VectorXd> Add(std::vector<Eigen::VectorXd> const& inputs);
 
       /// Add new points to the cache given the result
       /**
-	 @param[in] inputs The points to add 
+	 @param[in] inputs The points to add
 	 @param[in] results The function evaluation at each input point
        */
       void Add(std::vector<Eigen::VectorXd> const& inputs, std::vector<Eigen::VectorXd> const& results);
@@ -150,7 +150,7 @@ namespace muq {
       /// Add a new point to the cache given the result
       /**
 	 @param[in] input The entry we would like to add to the cache (if it is not there already)
-	 @param[in] result The result of the function 
+	 @param[in] result The result of the function
       */
       void Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result);
 
@@ -195,7 +195,19 @@ namespace muq {
        */
       unsigned int Size() const;
 
+      /// Get the centroid of the cache
+      /**
+      \return The cache centroid
+      */
+      Eigen::VectorXd Centroid() const;
+
     private:
+
+      /// Update the centroid when a new point is added to the cache
+      /**
+        @param[in] point The new point
+      */
+      void UpdateCentroid(Eigen::VectorXd const& point);
 
       // The vector of previous results
       std::deque<Eigen::VectorXd> outputCache;
@@ -208,6 +220,17 @@ namespace muq {
       /// The nearest neighbor index, used to perform searches
       std::shared_ptr<DynamicKDTreeAdaptor<>> kdTree;
 
+      /// The centroid of the input addPoints
+      /**
+        The centroid is
+        \f{equation}{
+          \bar{x} = \frac{1}{N} \sum_{i=1}^N x_i,
+        \f}
+        where \f$N\f$ is the cache size.
+
+        Note: the centroid is not necessarily in the cache.
+      */
+      Eigen::VectorXd centroid;
     };
   } // namespace Utilities
 } // namespace muq

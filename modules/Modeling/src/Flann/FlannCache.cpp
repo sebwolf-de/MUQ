@@ -34,7 +34,7 @@ int FlannCache::InCache(Eigen::VectorXd const& input) const {
       return indices.at(0);
     }
   }
-  
+
   // the cache is either empty or none of the points in a small radius are exactly the point we care about
   return -1;
 }
@@ -53,11 +53,13 @@ Eigen::VectorXd FlannCache::Add(Eigen::VectorXd const& newPt) {
 void FlannCache::Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result) {
   assert(input.size()==function->inputSizes(0));
   assert(result.size()==function->outputSizes(0));
-  
+
   kdTree->add(input);
   outputCache.push_back(result);
 
   assert(kdTree->m_data.size()==outputCache.size());
+
+	UpdateCentroid(input);
 }
 
 void FlannCache::Remove(Eigen::VectorXd const& input) {
@@ -132,14 +134,14 @@ unsigned int FlannCache::Size() const {
 
 std::vector<Eigen::VectorXd> FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs) {
   std::vector<Eigen::VectorXd> results(inputs.size());
-  
+
   for( unsigned int i=0; i<inputs.size(); ++i ) {
     // see if the point is already there
     const int index = InCache(inputs[i]);
 
     // add the point if is not already there
     results[i] = index<0? Add(inputs[i]) : outputCache.at(index);
-    
+
     // make sure it got added
     assert(InCache(inputs[i])>=0);
   }
@@ -172,3 +174,9 @@ Eigen::VectorXd FlannCache::at(unsigned int const index) {
   assert(index<kdTree->m_data.size());
   return kdTree->m_data[index];
 }
+
+void FlannCache::UpdateCentroid(Eigen::VectorXd const& point) {
+	centroid = Size()==1? point : ((double)(Size()-1)*centroid+point)/(double)Size();
+}
+
+Eigen::VectorXd FlannCache::Centroid() const { return centroid; }
