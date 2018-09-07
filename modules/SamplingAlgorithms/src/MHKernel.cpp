@@ -33,6 +33,13 @@ MHKernel::MHKernel(pt::ptree const& pt,
                    std::shared_ptr<MCMCProposal> proposalIn) :
                    TransitionKernel(pt, problem), proposal(proposalIn) {}
 
+#if MUQ_HAS_PARCER
+void MHKernel::SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm) {
+  comm = newcomm;
+  proposal->SetCommunicator(newcomm);
+}
+#endif
+
 void MHKernel::PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state){
   proposal->Adapt(t,state);
 }
@@ -51,11 +58,11 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   if( prevState->HasMeta("LogTarget") ){
     currentTarget = AnyCast( prevState->meta["LogTarget"]);
   }else{
-    currentTarget = problem->LogDensity(prevState);
+    currentTarget = problem->LogDensity(t, prevState);
     prevState->meta["LogTarget"] = currentTarget;
   }
 
-  propTarget = problem->LogDensity(prop);
+  propTarget = problem->LogDensity(t, prop);
   prop->meta["LogTarget"] = propTarget;
 
   // Aceptance probability
@@ -67,9 +74,9 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   numCalls++;
   if( RandomGenerator::GetUniform()<alpha ) {
     numAccepts++;
-    return std::vector<std::shared_ptr<SamplingState>>(1,prop);
+    return std::vector<std::shared_ptr<SamplingState>>(1, prop);
   } else {
-    return std::vector<std::shared_ptr<SamplingState>>(1,prevState);
+    return std::vector<std::shared_ptr<SamplingState>>(1, prevState);
   }
 }
 

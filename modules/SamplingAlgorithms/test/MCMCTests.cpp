@@ -21,7 +21,6 @@ using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
 TEST(MCMC, MHKernel_ThinScheduler) {
-
   const unsigned int N = 1e5;
 
   // parameters for the sampler
@@ -46,13 +45,12 @@ TEST(MCMC, MHKernel_ThinScheduler) {
   // starting point
   const Eigen::VectorXd start = mu;
 
-  // evaluate
   // create an instance of MCMC
   auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
 
   std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
 
-  EXPECT_EQ(int(std::floor(pt.get<double>("MyMCMC.NumSamples")/pt.get<double>("MyMCMC.ThinIncrement")))+1, samps->size());
+  EXPECT_EQ(int(std::floor(pt.get<double>("MyMCMC.NumSamples")/pt.get<double>("MyMCMC.ThinIncrement"))), samps->size());
 
   //boost::any anyMean = samps.Mean();
   Eigen::VectorXd mean = samps->Mean();
@@ -68,8 +66,7 @@ TEST(MCMC, MHKernel_ThinScheduler) {
 }
 
 TEST(MCMC, MHKernel_MHProposal) {
-
-  const unsigned int N = 1e4;
+  const unsigned int N = 1e5;
 
   // parameters for the sampler
   pt::ptree pt;
@@ -120,10 +117,9 @@ TEST(MCMC, MHKernel_MHProposal) {
   EXPECT_NEAR(1.0, cov(1,1), 1e-1);
 }
 
-
 TEST(MCMC, MetropolisInGibbs_IsoGauss) {
 
-  const unsigned int N = 1e4;
+  const unsigned int N = 1e5;
 
   // parameters for the sampler
   pt::ptree pt;
@@ -156,7 +152,6 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   graph->AddEdge("Gaussian1",0,"ProductDensity",0);
   graph->AddEdge("Gaussian2",0,"ProductDensity",1);
 
-  graph->Visualize("Graph.pdf");
   auto dens = graph->CreateModPiece("ProductDensity");
 
   // create a sampling problem
@@ -210,8 +205,6 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
 
 
 TEST(MCMC, MHKernel_AMProposal) {
-
-
   const unsigned int N = 5e4;
 
   // parameters for the sampler

@@ -2,6 +2,10 @@
 
 #include "MUQ/Utilities/AnyHelpers.h"
 
+
+
+#include <mpi.h>
+
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
@@ -29,9 +33,11 @@ MHProposal::MHProposal(pt::ptree const& pt,
                        MCMCProposal(pt,prob), proposal(proposalIn) {}
 
 std::shared_ptr<SamplingState> MHProposal::Sample(std::shared_ptr<SamplingState> currentState) {
+  assert(currentState->state.size()>blockInd);
 
   // the mean of the proposal is the current point
   std::vector<Eigen::VectorXd> props = currentState->state;
+  assert(props.size()>blockInd);
   Eigen::VectorXd const& xc = currentState->state.at(blockInd);
 
   Eigen::VectorXd prop = proposal->Sample();

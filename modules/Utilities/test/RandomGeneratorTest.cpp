@@ -128,6 +128,29 @@ TEST(UtilitiesRandomGenerator, SeedTempSet)
   EXPECT_NE(before[4], during[4]);
 }
 
+TEST(UtilitiesRandomGenerator, Discrete)
+{
+  Eigen::VectorXd probs(3);
+  probs << 0.2, 0.7, 0.1;
+
+  for(int i=0; i<100; ++i){
+    int samp = RandomGenerator::GetDiscrete(probs);
+    EXPECT_TRUE((samp >= 0) && (samp < probs.size()));
+  }
+
+  const int numSamps = 1000;
+  Eigen::VectorXi samps = RandomGenerator::GetDiscrete(probs, numSamps);
+  Eigen::VectorXd counts = Eigen::VectorXd::Zero(3);
+  for(int i=0; i<numSamps; ++i)
+    counts(samps(i)) += 1;
+
+  counts /= double(numSamps);
+
+  EXPECT_NEAR(probs(0), counts(0), 5e-2);
+  EXPECT_NEAR(probs(1), counts(1), 5e-2);
+  EXPECT_NEAR(probs(2), counts(2), 5e-2);
+}
+
 TEST(UtilitiesRandomGenerator, Gamma)
 {
   const double alpha = 1.5;

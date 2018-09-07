@@ -1,6 +1,12 @@
 #ifndef SAMPLINGALGORITHM_H_
 #define SAMPLINGALGORITHM_H_
 
+#include "MUQ/config.h"
+
+#if MUQ_HAS_PARCER
+#include <parcer/Communicator.h>
+#endif
+
 #include "MUQ/Modeling/WorkPiece.h"
 
 #include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
@@ -12,19 +18,27 @@ namespace muq {
     class SamplingAlgorithm {//} : public muq::Modeling::WorkPiece {
     public:
 
-      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn) : samples(samplesIn){};
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn);
+
+#if MUQ_HAS_PARCER
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn, std::shared_ptr<parcer::Communicator> comm);
+#endif
 
       virtual ~SamplingAlgorithm() = default;
 
-      std::shared_ptr<SampleCollection> GetSamples() const{return samples;};
+      std::shared_ptr<SampleCollection> GetSamples() const;
+      
+      virtual std::shared_ptr<SampleCollection> Run();
+      virtual std::shared_ptr<SampleCollection> Run(Eigen::VectorXd const& x0);
+      virtual std::shared_ptr<SampleCollection> Run(std::vector<Eigen::VectorXd> const& x0);
 
-      virtual std::shared_ptr<SampleCollection> Run(){return Run(std::vector<Eigen::VectorXd>());};
-      virtual std::shared_ptr<SampleCollection> Run(Eigen::VectorXd const& x0){return Run(std::vector<Eigen::VectorXd>(1,x0));};
-      virtual std::shared_ptr<SampleCollection> Run(std::vector<Eigen::VectorXd> const& x0){return RunImpl(x0);};
-
-      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) = 0;
+#if MUQ_HAS_PARCER
+      std::shared_ptr<parcer::Communicator> GetCommunicator() const;
+#endif
 
     protected:
+
+      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) = 0;
 
       /**
 	 Inputs:
@@ -38,6 +52,12 @@ namespace muq {
 
       std::shared_ptr<SampleCollection> samples;
 
+#if MUQ_HAS_PARCER
+      std::shared_ptr<parcer::Communicator> comm = std::make_shared<parcer::Communicator>();
+#endif
+
+    private:
+      
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

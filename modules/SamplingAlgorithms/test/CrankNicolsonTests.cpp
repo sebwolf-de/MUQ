@@ -21,7 +21,7 @@ using namespace muq::Utilities;
 
 TEST(MCMC, CrankNicolson) {
 
-  const unsigned int N = 1e5;
+  const unsigned int N = 5e5;
 
   // parameters for the sampler
   pt::ptree pt;

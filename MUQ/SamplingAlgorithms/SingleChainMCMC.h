@@ -18,8 +18,11 @@ namespace muq{
 
     public:
 
-      SingleChainMCMC(boost::property_tree::ptree              pt,
-                      std::shared_ptr<AbstractSamplingProblem> problem);
+      SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem);
+
+#if MUQ_HAS_PARCER
+      SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<parcer::Communicator> comm);
+#endif
 
       SingleChainMCMC(boost::property_tree::ptree              pt,
                       std::shared_ptr<AbstractSamplingProblem> problem,
@@ -33,11 +36,14 @@ namespace muq{
 
     protected:
 
+      std::shared_ptr<SamplingState> SaveSamples(std::vector<std::shared_ptr<SamplingState> > const& newStates, unsigned int& sampNum) const;
 
-      std::shared_ptr<SaveSchedulerBase> scheduler;
+      bool ShouldSave(unsigned int const sampNum) const;
 
       void PrintStatus(unsigned int currInd) const{PrintStatus("",currInd);};
       void PrintStatus(std::string prefix, unsigned int currInd) const;
+
+      std::shared_ptr<SaveSchedulerBase> scheduler;
 
       unsigned int numSamps;
       unsigned int burnIn;
@@ -46,9 +52,10 @@ namespace muq{
       // A vector of transition kernels: One for each block
       std::vector<std::shared_ptr<TransitionKernel>> kernels;
 
+    private:
 
+      void SetUp(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem);
     }; // class SingleChainMCMC
-
   } // namespace SamplingAlgorithms
 } // namespace muq
 

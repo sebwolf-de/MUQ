@@ -6,6 +6,12 @@
 #include <functional>
 #include <boost/property_tree/ptree.hpp>
 
+#include "MUQ/config.h"
+
+#if MUQ_HAS_PARCER
+#include <parcer/Communicator.h>
+#endif
+
 #include "MUQ/Utilities/RegisterClassName.h"
 
 #include "MUQ/Modeling/Distributions/Distribution.h"
@@ -16,7 +22,7 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
-    class MCMCProposal{
+    class MCMCProposal : public std::enable_shared_from_this<MCMCProposal> {
     public:
 
       MCMCProposal(boost::property_tree::ptree       const& pt,
@@ -49,8 +55,17 @@ namespace muq {
       virtual double LogDensity(std::shared_ptr<SamplingState> currState,
                                 std::shared_ptr<SamplingState> propState) = 0;
 
+#if MUQ_HAS_PARCER
+      void SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm);
+#endif
+
       const int blockInd = 0;
 
+    protected:
+      
+#if MUQ_HAS_PARCER
+      std::shared_ptr<parcer::Communicator> comm;
+#endif
     };
   } // namespace SamplingAlgoirthms
 } // namespace muq

@@ -4,11 +4,6 @@ if(Inference_build)
   set(Optimization_build ON)
 endif(Inference_build)
 
-# check the use of SACADO and MPI
-IF(MUQ_USE_SACADO AND MUQ_USE_OPENMPI)
-	message(WARNING "The simultaneous use of Sacado and MPI is not fully supported.  You may experience odd behavior.")
-endif()
-
 # If incremental approximation is needed, make sure nlopt is available
 IF(NOT MUQ_USE_NLOPT AND IncrementalApproximation_build)
 	message(WARNING "IncrementalApproximation explicitly requires NLOPT.  NLOPT was not found, so IncrementalApproximation will not be compiled.")

@@ -23,7 +23,7 @@ namespace muq {
 
       virtual ~MHKernel() = default;
 
-      virtual std::shared_ptr<MCMCProposal> Proposal(){return proposal;};
+      virtual inline std::shared_ptr<MCMCProposal> Proposal() {return proposal;};
 
       virtual void PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) override;
 
@@ -32,7 +32,11 @@ namespace muq {
       virtual void PrintStatus(std::string prefix) const override;
 
 
-      virtual double AcceptanceRate() const{return double(numAccepts)/double(numCalls);};
+      virtual inline double AcceptanceRate() const {return double(numAccepts)/double(numCalls);};
+
+#if MUQ_HAS_PARCER
+      virtual void SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm) override;
+#endif
 
     protected:
       std::shared_ptr<MCMCProposal> proposal;

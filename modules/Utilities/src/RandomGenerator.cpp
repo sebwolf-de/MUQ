@@ -165,6 +165,49 @@ void RandomGenerator::SetGenerator(GeneratorType state)
   GetGenerator() = state;
 }
 
+int RandomGenerator::GetDiscrete(Eigen::VectorXd const& discProbs)
+{
+  double u = RandomGenerator::GetUniform();
+  double cumSum = 0.0;
+
+  for(int i=0; i<discProbs.size(); ++i){
+    cumSum += discProbs(i);
+    if(u<cumSum)
+      return  i;
+  }
+
+  return 0;
+}
+
+Eigen::MatrixXi RandomGenerator::GetDiscrete(Eigen::VectorXd const& discProbs, int rows, int cols)
+{
+  std::vector<int> indices(discProbs.size());
+  for(int i=0; i<discProbs.size(); ++i)
+    indices[i] = i;
+
+  // Sort in descending order so that we're more likely to terminate early in the cumulative sum loop below
+  std::sort(indices.begin(), indices.end(), [discProbs](int const& a, int const& b) -> bool{ return discProbs(a) > discProbs(b); });
+
+  Eigen::MatrixXi output(rows,cols);
+  for(int j=0; j<cols; ++j){
+    for(int i=0; i<rows; ++i){
+
+      double cumSum = 0;
+      double u = RandomGenerator::GetUniform();
+
+      for(int k=0; k<discProbs.size(); ++k){
+        cumSum += discProbs(indices.at(k));
+        if(u<cumSum){
+          output(i,j) = indices.at(k);
+          break;
+        }
+      }
+    }
+  }
+
+  return output;
+}
+
 
 RandomGenerator::GeneratorType& RandomGenerator::GetGenerator()
 {
@@ -183,6 +226,7 @@ RandomGenerator::GeneratorType& RandomGenerator::GetGenerator()
 
   return BaseGenerator;
 }
+
 
 RandomGeneratorTemporarySetSeed::RandomGeneratorTemporarySetSeed(int seed)
 {

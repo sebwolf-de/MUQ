@@ -2,9 +2,9 @@
 
 #include "MUQ/Utilities/RandomGenerator.h"
 #include "MUQ/Utilities/AnyHelpers.h"
+#include "MUQ/Utilities/HDF5/HDF5File.h"
 
 #include "MUQ/SamplingAlgorithms/SampleCollection.h"
-
 
 using namespace muq::Utilities;
 using namespace muq::SamplingAlgorithms;
@@ -22,8 +22,17 @@ protected:
       weights = RandomGenerator::GetUniform(numSamps);
       weights /= weights.sum();
 
-      for(int i=0; i<numSamps; ++i)
-        collection.Add(std::make_shared<SamplingState>(Eigen::VectorXd(samps.col(i)), weights(i)));
+      for(int i=0; i<numSamps; ++i) {
+	auto state = std::make_shared<SamplingState>(Eigen::VectorXd(samps.col(i)), weights(i));
+	state->meta["id"] = i;
+	state->meta["x norm"] = samps.col(i).norm();
+	state->meta["vec2"] = (Eigen::Vector2d)(i*Eigen::Vector2d::Ones());
+	state->meta["vec3"] = (Eigen::Vector3d)(i*Eigen::Vector3d::Ones());
+	state->meta["vec4"] = (Eigen::Vector4d)(i*Eigen::Vector4d::Ones());
+	state->meta["vecX"] = (Eigen::VectorXd)(i*Eigen::VectorXd::Ones(5));
+	
+        collection.Add(state);
+      }
 
     }
 
@@ -147,4 +156,34 @@ TEST_F(SampleCollectionTest, Covariance)
   EXPECT_NEAR(sampCov(0,1), cov2(0,1), 1e-13);
   EXPECT_NEAR(sampCov(1,0), cov2(1,0), 1e-13);
   EXPECT_NEAR(sampCov(1,1), cov2(1,1), 1e-13);
+}
+
+TEST_F(SampleCollectionTest, WriteToFile) {
+  const std::string filename = "output.h5";
+
+  // write the collection to file
+  collection.WriteToFile(filename);
+
+  auto hdf5file = std::make_shared<HDF5File>(filename);
+
+  const Eigen::MatrixXd samples = hdf5file->ReadMatrix("/samples");
+  const Eigen::MatrixXd wghts = hdf5file->ReadMatrix("/weights");
+  const Eigen::MatrixXd id = hdf5file->ReadMatrix("/id");
+  const Eigen::MatrixXd vec2 = hdf5file->ReadMatrix("/vec2");
+  const Eigen::MatrixXd vec3 = hdf5file->ReadMatrix("/vec3");
+  const Eigen::MatrixXd vec4 = hdf5file->ReadMatrix("/vec4");
+  const Eigen::MatrixXd vecX = hdf5file->ReadMatrix("/vecX");
+
+  for( unsigned int i=0; i<samps.cols(); ++i ) {
+    EXPECT_DOUBLE_EQ(i, id(i));
+    EXPECT_DOUBLE_EQ((samples.col(i)-samps.col(i)).norm(), 0.0);
+    EXPECT_DOUBLE_EQ(weights(i), wghts(i));
+
+    EXPECT_DOUBLE_EQ((vec2.col(i)-i*Eigen::Vector2d::Ones()).norm(), 0.0);
+    EXPECT_DOUBLE_EQ((vec3.col(i)-i*Eigen::Vector3d::Ones()).norm(), 0.0);
+    EXPECT_DOUBLE_EQ((vec4.col(i)-i*Eigen::Vector4d::Ones()).norm(), 0.0);
+    EXPECT_DOUBLE_EQ((vecX.col(i)-i*Eigen::VectorXd::Ones(5)).norm(), 0.0);
+  }
+
+  std::remove(filename.c_str());
 }

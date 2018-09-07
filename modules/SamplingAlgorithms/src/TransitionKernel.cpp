@@ -40,3 +40,9 @@ std::shared_ptr<TransitionKernel> TransitionKernel::Construct(pt::ptree const& p
 
   return iter->second(pt, problem);
 }
+
+#if MUQ_HAS_PARCER
+void TransitionKernel::SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm) {
+  comm = newcomm;
+}
+#endif

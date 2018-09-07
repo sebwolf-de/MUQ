@@ -31,7 +31,7 @@ protected:
 
     const int maxRepeat = 10;
     int numSamps;
-    const int numWeightedSamps = 1e4;
+    const int numWeightedSamps = 2e4;
     Eigen::MatrixXd L;
 
     Eigen::MatrixXd samps;

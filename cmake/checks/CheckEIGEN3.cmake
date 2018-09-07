@@ -19,6 +19,7 @@ CHECK_CXX_SOURCE_COMPILES(
   CHECK_CXX_SOURCE_COMPILES(
     "
     #include <Eigen/Core>
+    #include <Eigen/Eigenvalues>
     int main(){
      Eigen::VectorXd diag, subDiag;
      Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver;
