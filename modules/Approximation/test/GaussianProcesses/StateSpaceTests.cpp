@@ -234,8 +234,8 @@ TEST(Approximation_GP, StateSpacePredict_Interpolation)
     std::tie(predMu, predCov) = gp1.Predict(evalPts, GaussianProcess::DiagonalCov);
     std::tie(predMu2, predCov2) = gp2.Predict(evalPts, GaussianProcess::DiagonalCov);
 
-    const double meanTol = 1e-4;
-    const double covTol = 1e-4;
+    const double meanTol = 1e-2;
+    const double covTol = 1e-2;
     for(int j=0; j<predMu.size(); ++j){
         EXPECT_NEAR(predMu2(0,j), predMu(0,j), meanTol);
         EXPECT_NEAR(predCov2(0,j), predCov(0,j), covTol);
@@ -286,8 +286,8 @@ TEST(Approximation_GP, StateSpacePredict_ExtrapolateRight)
     std::tie(predMu, predCov) = gp1.Predict(evalPts, GaussianProcess::DiagonalCov);
     std::tie(predMu2, predCov2) = gp2.Predict(evalPts, GaussianProcess::DiagonalCov);
 
-    const double meanTol = 1e-4;
-    const double covTol = 1e-4;
+    const double meanTol = 1e-2;
+    const double covTol = 1e-2;
     for(int j=0; j<predMu.size(); ++j){
         EXPECT_NEAR(predMu2(0,j), predMu(0,j), meanTol);
         EXPECT_NEAR(predCov2(0,j), predCov(0,j), covTol);
@@ -339,8 +339,8 @@ TEST(Approximation_GP, StateSpacePredict_ExtrapolateLeft)
     std::tie(predMu, predCov) = gp1.Predict(evalPts, GaussianProcess::DiagonalCov);
     std::tie(predMu2, predCov2) = gp2.Predict(evalPts, GaussianProcess::DiagonalCov);
 
-    const double meanTol = 1e-4;
-    const double covTol = 1e-4;
+    const double meanTol = 1e-2;
+    const double covTol = 1e-2;
     for(int j=0; j<predMu.size(); ++j){
         EXPECT_NEAR(predMu2(0,j), predMu(0,j), meanTol);
         EXPECT_NEAR(predCov2(0,j), predCov(0,j), covTol);

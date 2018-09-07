@@ -86,6 +86,14 @@ public:
                                      std::vector<int>            const& wrts,
                                      Eigen::Ref<Eigen::MatrixXd>        cov) const;
 
+    /** @brief Returns derivatives of the kernel with respect to the first input, x1.
+        @param[in] x1 The first position passed to the kernel.
+        @param[in] x2 The second position passed to the kernel.
+        @param[in] wrts A vector defining the order and directions of the
+                   spatial derivatives.  wrts.size() is the derivative order.
+        @return A matrix containing the derivatives of the kernel output with
+                respect to the dimensions defined by wrts.
+    */ 
     virtual Eigen::MatrixXd GetPosDerivative(Eigen::VectorXd  const& x1,
                                              Eigen::VectorXd  const& x2,
                                              std::vector<int> const& wrts) const;

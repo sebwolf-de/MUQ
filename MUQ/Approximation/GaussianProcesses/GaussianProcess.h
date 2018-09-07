@@ -95,6 +95,8 @@ namespace muq
             return shared_from_this();
         };
 
+        virtual Eigen::MatrixXd GetDerivative(Eigen::MatrixXd const& xs, std::vector<std::vector<int>> const& derivCoords) const = 0;
+
         const unsigned inputDim;
         const unsigned coDim;
 
@@ -120,6 +122,10 @@ namespace muq
           return Eigen::MatrixXd::Zero(coDim, xs.cols());
         }
 
+        virtual Eigen::MatrixXd GetDerivative(Eigen::MatrixXd const& xs, std::vector<std::vector<int>> const& derivCoords) const override
+        {
+          return Eigen::MatrixXd::Zero(coDim*derivCoords.size(), xs.cols());
+        }
     };
 
     class LinearMean : public MeanFunctionBase
@@ -141,6 +147,22 @@ namespace muq
         virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const override
         {
           return (slopes*xs).colwise() + intercepts;
+        }
+
+        virtual Eigen::MatrixXd GetDerivative(Eigen::MatrixXd const& xs, std::vector<std::vector<int>> const& derivCoords) const override
+        {
+            Eigen::MatrixXd output = Eigen::VectorXd::Zero(coDim*derivCoords.size(), xs.cols());
+            for(int j=0; j<xs.cols(); ++j){
+              for(int i=0; i<derivCoords.size(); ++i)
+              {
+                if(derivCoords.at(i).size()==1){
+                  output.col(j).segment(i*coDim, coDim) = slopes.col(derivCoords.at(i).at(0));
+                }else if(derivCoords.at(i).size()==1){
+                  output.col(j).segment(i*coDim, coDim) = Evaluate(xs.col(j)).col(0);
+                }
+              }
+            }
+            return output;
         }
 
     private:
@@ -176,6 +198,13 @@ namespace muq
       virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const override
       {
         return A * otherMean->Evaluate(xs);
+      }
+
+      virtual Eigen::MatrixXd GetDerivative(Eigen::MatrixXd const& xs, std::vector<std::vector<int>> const& derivCoords) const override
+      {
+          // TODO
+          std::cerr << "Derivatives in linear transform mean have not been implemented yet..." << std::endl;
+          assert(false);
       }
 
     private:
@@ -217,6 +246,11 @@ namespace muq
       virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const override
       {
         return mu1->Evaluate(xs) + mu2->Evaluate(xs);
+      }
+
+      virtual Eigen::MatrixXd GetDerivative(Eigen::MatrixXd const& xs, std::vector<std::vector<int>> const& derivCoords) const override
+      {
+        return mu1->GetDerivative(xs, derivCoords) + mu2->GetDerivative(xs, derivCoords);
       }
 
     private:
@@ -320,7 +354,7 @@ namespace muq
         bool hasNewObs;
 
         const double pi = 4.0 * atan(1.0); //boost::math::constants::pi<double>();
-        const double nugget = 1e-12; // added to the covariance diagonal to ensure eigenvalues are positive
+        const double nugget = 1e-14; // added to the covariance diagonal to ensure eigenvalues are positive
     };
 
     // class GaussianProcess

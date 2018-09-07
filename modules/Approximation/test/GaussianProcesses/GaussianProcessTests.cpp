@@ -133,3 +133,137 @@ TEST(Approximation_GP, HyperFit2d)
     std::pair<Eigen::MatrixXd, Eigen::MatrixXd> post = gp.Predict(predLocs, GaussianProcess::FullCov);
 
 }
+
+TEST(Approximation_GP, ValueCondition)
+{
+
+    const unsigned dim = 1;
+    auto kernel = SquaredExpKernel(dim, 2.0, 0.35);
+
+    const double delta =1e-4;
+    Eigen::MatrixXd evalLocs(dim, 2);
+    evalLocs << 0, delta;
+
+    // Create the GP
+    ZeroMean mean(dim, 1);
+    auto gp = ConstructGP(mean, kernel);
+
+    Eigen::VectorXd loc(1);
+    loc << 0.0;
+
+    Eigen::VectorXd val(1);
+    val << 1.0;
+
+    Eigen::MatrixXd valCov(1,1);
+    valCov(0,0) = 0.0;
+
+    auto H = std::make_shared<IdentityOperator>(dim);
+
+    auto obs = std::make_shared<ObservationInformation>(H, loc, val, valCov);
+
+    gp.Condition(obs);
+
+    Eigen::MatrixXd field = gp.PredictMean(evalLocs);
+
+    EXPECT_NEAR(val(0), field(0,0), 1e-6);
+}
+
+
+TEST(Approximation_GP, GradientCondition)
+{
+    const unsigned dim = 1;
+    auto kernel = SquaredExpKernel(dim, 2.0, 0.35);
+
+    const double delta = 1e-4;
+    Eigen::MatrixXd evalLocs(dim, 2);
+    evalLocs << 0, delta;
+
+    // Create the GP
+    ZeroMean mean(dim, 1);
+    auto gp = ConstructGP(mean, kernel);
+
+    Eigen::VectorXd loc(1);
+    loc << 0.0;
+
+    Eigen::VectorXd derivVal(1);
+    derivVal << 0.5;
+
+    Eigen::MatrixXd derivCov(1,1);
+    derivCov(0,0) = 1e-4;
+
+    std::vector<std::vector<int>> derivCoords;
+    derivCoords.push_back({0});
+
+    auto H = std::make_shared<IdentityOperator>(dim);
+
+    auto derivObs = std::make_shared<DerivativeObservation>(H, loc, derivVal, derivCov, derivCoords);
+
+    Eigen::MatrixXd crossCov(1,1);
+    derivObs->FillCrossCov(evalLocs.col(1),kernel.Clone(),crossCov);
+    EXPECT_DOUBLE_EQ(kernel.GetPosDerivative(evalLocs.col(1), evalLocs.col(0), {0})(0,0), crossCov(0,0));
+
+    gp.Condition(derivObs);
+
+    Eigen::MatrixXd field = gp.PredictMean(evalLocs);
+    EXPECT_NEAR( derivVal(0), (field(1)-field(0))/delta, 1e-5);
+
+    // field = gp.Sample(evalLocs);
+    // EXPECT_NEAR( derivVal(0), (field(1)-field(0))/delta, 1e-5);
+
+    Eigen::MatrixXd cov;
+    std::tie(field, cov) = gp.Predict(evalLocs,GaussianProcess::FullCov);
+    EXPECT_NEAR( derivVal(0), (field(1)-field(0))/(evalLocs(0,1)-evalLocs(0,0)), 1e-5);
+}
+
+
+TEST(Approximation_GP, HessianCondition)
+{
+    const unsigned dim = 1;
+    auto kernel = SquaredExpKernel(dim, 2.0, 0.35);
+
+    const double delta = 1e-4;
+    Eigen::MatrixXd evalLocs(dim, 4);
+    evalLocs << 0, delta, 2.0*delta, 3.0*delta;
+
+    // Create the GP
+    ZeroMean mean(dim, 1);
+    auto gp = ConstructGP(mean, kernel);
+
+    Eigen::VectorXd loc(1);
+    loc << 0.0;
+
+    // Value of the second derivative
+    Eigen::VectorXd derivVal(1);
+    derivVal << 0.5;
+
+    // Observation variance
+    Eigen::MatrixXd derivCov(1,1);
+    derivCov(0,0) = 1e-4;
+
+    std::vector<std::vector<int>> derivCoords;
+    derivCoords.push_back({0,0});
+
+    auto H = std::make_shared<IdentityOperator>(dim);
+
+    auto derivObs = std::make_shared<DerivativeObservation>(H, loc, derivVal, derivCov, derivCoords);
+
+    Eigen::MatrixXd crossCov(1,1);
+    derivObs->FillCrossCov(evalLocs.col(1),kernel.Clone(),crossCov);
+    EXPECT_DOUBLE_EQ(kernel.GetPosDerivative(evalLocs.col(1), evalLocs.col(0), {0,0})(0,0), crossCov(0,0));
+
+    gp.Condition(derivObs);
+
+    Eigen::MatrixXd field = gp.PredictMean(evalLocs);
+    double fdDeriv = (2.0*field(0) - 5.0*field(1) + 4.0*field(2) -field(3))/(delta*delta);
+    EXPECT_NEAR( derivVal(0), fdDeriv, 1e-5);
+
+//    field = gp.Sample(evalLocs);
+//    fdDeriv = (2.0*field(0) - 5.0*field(1) + 4.0*field(2) -field(3))/(delta*delta);
+//    EXPECT_NEAR( derivVal(0), fdDeriv, 1e-5);
+
+    Eigen::MatrixXd cov, field2;
+    std::tie(field2, cov) = gp.Predict(evalLocs,GaussianProcess::FullCov);
+    fdDeriv = (2.0*field2(0) - 5.0*field2(1) + 4.0*field2(2) -field2(3))/(delta*delta);
+    EXPECT_NEAR( derivVal(0), fdDeriv, 1e-5);
+
+}
