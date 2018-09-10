@@ -5,6 +5,11 @@
 
 namespace muq {
   namespace Approximation {
+
+    /** @ingroup Polynomials
+        @class Legendre
+        @brief Family of Legendre orthogonal polynomials.
+    */
     class Legendre : public OrthogonalPolynomial {
     public:
 

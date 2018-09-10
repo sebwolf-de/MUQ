@@ -4,22 +4,19 @@
  *
  * <h3> Installation: </h3>
  * For information on how to build and install MUQ, check out \ref muqinstall
- * 
+ *
  * <h3> Getting started: </h3>
  * MUQ contains several modules for solving Uncertainty Quantification (UQ) related problems.  Most of the modules depend on constructing models (either statistical models or process models), so we recommend getting started with MUQ by familiarizing yourself with the \ref Modelling module.  With a basic understanding of constructing models, you can start investigating the tools from other modules:
  <ul>
- <li> <b>\ref Modelling :</b> The modelling module defines classes and methods for constructing both process-based (e.g. physical) and statistical models.  Densities, random variables, and forward models can all be defined using the tools in \ref Modelling. </li>
- <li> <b>\ref Inference :</b> This module contains tools for sampling probability densities with Markov chain Monte Carlo (MCMC), computing maximum aposteriori (MAP) points, and constructiong transport maps. </li>
- <li> <b>\ref Optimization :</b> In this module, there are tools for solving nonlinear constrained (and unconstrained) optimization problems.  There is also some functionality for robust optimization using stochastic approximation (SA) or sample average approximation (SAA).  When MUQ is compiled with <a href="http://ab-initio.mit.edu/wiki/index.php/NLopt">NLOPT</a> support, the optimization library can call the many algorithms implemented by NLOPT.</li>
- <li> <b>\ref Approximation :</b> The approximation module contains a suite of tools for function approximation.  Examples include polynomial chaos expansion, regression, and localized polynomial approximations.</li>
- <li> <b>\ref PDE :</b> The PDE module provides an interface to <a href="http://libmesh.github.io/">libMesh</a> for defining and solving partial differential equation models.</b>
- <li> <b>\ref Geostatistics :</b> A smaller module than those above, geostatistics contains tools for working with covariance kernels and constructing Karhunen-Loeve decompositions. </li>
- <li> <b>\ref Utilities : </b> The utilities module contains general odds an ends needed by the rest of MUQ.  Typical tools in the Utilities modules are random number generators, linear solvers, and functions to translate between vector types. </li>
+ <li> <b>\ref Modeling :</b> The modeling module defines classes and methods for constructing both process-based (e.g. physical) and statistical models.  Densities, random variables, and forward models can all be defined using the tools in \ref Modelling. </li>
+ <li> <b>\ref SamplingAlgorithms :</b> This module contains tools for sampling probability distributions, including MCMC. </li>
+ <li> <b>\ref Approximation :</b> The approximation module contains a suite of tools for function approximation such as Gaussian processes.</li>
+ <li> <b>\ref Utilities : </b> The utilities module contains general odds an ends needed by the rest of MUQ.  Typical tools in the Utilities modules are random number generators and tools for interacting with HDF5 files. </li>
  </ul>
-   
+
  <h3>Getting help</h3>
  MUQ has many features and we know that it can be difficult to find what you are looking for when starting out.  We recommend that users start by finding an example that is similar to their problem and adapting the example to suit their needs.  If an appropriate example is not available, or you need more information, questions can be posted to <a href="http://nusselt.mit.edu/qa">MUQ's Q&A site</a>.
- 
+
  <h3>Parameters</h3>
- Many of the tools in MUQ require manually setting algorithm-specific parameters.  MUQ stores these values in the boost::property_tree:ptree container.  More details on all of the available parameters can be found on the \ref parameters page.
+ Many of the tools in MUQ require manually setting algorithm-specific parameters.  In c++, MUQ stores these values in the boost::property_tree:ptree container.  In Python, MUQ uses the standard python dict object.
  */

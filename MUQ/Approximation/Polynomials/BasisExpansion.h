@@ -13,6 +13,10 @@ namespace muq{
 
     class MonotoneExpansion;
 
+    /** @defgroup Polynomials
+        @brief Tools for constructing multivariate (orthogonal) polynomial expansions
+    */
+
     /** @class BasisExpansion
         @ingroup Polynomials
         @brief Class for defining expansions of basis functions defined by a

@@ -162,7 +162,7 @@ TEST(GaussianDistributionTests, Gradient) {
   Eigen::VectorXd testPt = Eigen::VectorXd::Ones(dim);
 
   Eigen::VectorXd grad = dist->GradLogDensity(0, testPt);
-  Eigen::VectorXd trueGrad = -1.0*cov.ldlt().solve(testPt-mu);
+  Eigen::VectorXd trueGrad = -1.0*cov.llt().solve(testPt-mu);
 
   for(int i=0; i<dim; ++i)
     EXPECT_NEAR(trueGrad(i), grad(i),1e-12);

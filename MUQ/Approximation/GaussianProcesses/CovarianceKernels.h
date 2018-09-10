@@ -38,7 +38,7 @@ where \f$k_1\f$ is a squared exponential kernel, \f$k_2\f$ is a periodic kernel 
 // Other setup ...
 
 auto k1 = SquaredExpKernel(dim, var1, length1);
-auto k2 =   PeriodicKernel(dim, var2, length2, period);
+auto k2 = PeriodicKernel(dim, var2, length2, period);
 auto k3 = WhiteNoiseKernel(dim, var3);
 
 auto k = kernel1*kernel2 + kernel3;
@@ -86,75 +86,6 @@ std::vector<unsigned> inds2 = {2};
 auto kz = SquaredExpKernel(3, indsz, varz, Lz);
 
 auto k = kxy * kz;
-
-\endcode
-
-<h2>Vector-Valued Kernels</h2>
-Gaussian processes are used most often to characterize scalar-valued functions.  However, gaussian processes can also be incredibly useful for characterizing vector-valued functions.  A common way to handle vector-valued Gaussian processes, and the one employed by MUQ, is to adopt a ``Linear Model of Coregionalization."  In this setting, each component of the vector-valued Gaussian process is expressed as a sum of independent latent Gaussian processes. See \cite Wackernagel2010 for more details.
-
-In MUQ, vector-valued Gaussian processes are represented through a vector-valued mean function and a matrix-valued covariance function.
-
-A common way of constructing a vector-valued Gaussian process is to first define a \f$D\times D\f$ dimensional marginal covariance \f$\Sigma\f$ and define the process with scalar-valued Gaussian processes on the eigenvectors of \f$\Sigma\f$.  Let \f$Q\Lambda Q^T=\Sigma\f$ be the eigenvalue decomposition of the covariance matrix, where \f$Q\f$ is a matrix whose columns contain the eigenvectors and \f$\Lambda\f$ is a diagonal matrix containing the corresponding eigenalues.  With this decomposition, the muq::Approximation::CoregionalKernel defines the matrix-valued kernel \f$k\f$ as
-\f[
-k(x_1,x_2) = \sum_{i=1}^D \sqrt{\lambda_i} k_i(x_1,x_2) Q_i Q_i^T,
-\f]
-where each \f$k_i\f$ is a scalar-valued kernel.
-
-In MUQ, such a kernel can be constructed using
-\code{.cpp}
-
-Eigen::MatrixXd marginalCov(2,2);
-marginalCov << 1.0, 0.8,
-               0.8, 1.0;
-
-// The kernel along the first eigenvector of marginalCov
-auto k1 = SquaredExpKernel(2, var1, length1);
-
-// The kernel along the second eigenvector of marginalCov
-auto k2 = SquaredExpKernel(2, var1, length1);
-
-auto k = CoregionTie(marginalCov, k1, k2);
-
-\endcode
-Note that we use Eigen to compute the eigendecomposition of the covariance.  Eigen sorts eigenvalues in ascending order, meaning that the kernel <code>k1</code> in this snippet will correpsond to te smallest eigenvalue.
-
-The constructor of the muq::Approximation::CoregionalKernel can also be called directly.  For example, the same kernel can be constructed using
-\code{.cpp}
-
-Eigen::MatrixXd marginalCov(2,2);
-marginalCov << 1.0, 0.8,
-               0.8, 1.0;
-
-std::vector<std::shared_ptr<KernelBase>> ks(2);
-ks.at(0) = std::make_shared<SquaredExpKernel>(2, var1, length1);
-ks.at(1) = std::make_shared<SquaredExpKernel>(2, var2, length2);
-
-CoregionalKernel k(2, marginalCov, kernels);
-
-\endcode
-
-
-<h3> Linear Operations </h3>
-Suppose we have a vector-valued Gaussian Process \f$f\sim GP( \mu(x), k_f(x, x^\prime) )\f$ where \f$\mu(x)\f$ returns a vector with \f$N\f$ components and \f$k(x,x^\prime)\f$ returns an \f$N\times N\f$ marginal covariance matrix.  Now, let \f$A\f$ be an \f$M\times N\f$ matrix and consider the new Gaussian process \f$g = Af\f$.  The mean function of \f$g\f$ is given by \f$A \mu(x)\f$ and the covariance kernel is given by \f$k_g(x,x^\prime) = A k_f(x, x^\prime) A^T \f$.  Constructing this type of kernel with MUQ is straightforward:
-\code{.cpp}
-
-// First set up a vector-valued kernel (a coregional Kernel in this case)
-Eigen::MatrixXd marginalCov(2,2);
-marginalCov << 1.0, 0.8,
-               0.8, 1.0;
-
-auto k1 = SquaredExpKernel(2, var1, length1);
-auto k2 = SquaredExpKernel(2, var1, length1);
-
-auto kf = CoregionTie(marginalCov, k1, k2);
-
-// Now apply the linear operation
-Eigen::MatrixXd A(3,2);
-A << 1.0, 1.0,
-     0.5, 0.75,
-     1.0, 0.0;
-
-auto kg = A * kf;
 
 \endcode
 

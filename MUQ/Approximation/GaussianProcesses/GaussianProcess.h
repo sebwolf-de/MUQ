@@ -51,13 +51,11 @@ namespace muq
     ConstantMean mean(dim, 1);
 
     // Create the Gaussian Process
-    auto gp = ConstructGP(mean, kernel);
-
-    // Optimize the covariance kernel hyperparameters and store the training data
-    gp.Fit(trainLocs, trainData);
+    auto gp = GaussianProcess(mean, kernel);
 
     // Make a prediction at new locaitons
-    GaussianInformation post = gp.Predict(predLocs);
+    Eigen::MatrixXd postMean, postCov;
+    std::tie(postMean, postCov) = gp.Predict(predLocs);
 
 @endcode
 
@@ -288,6 +286,7 @@ namespace muq
         GaussianProcess(std::shared_ptr<MeanFunctionBase> meanIn,
                         std::shared_ptr<KernelBase>       covKernelIn);
 
+        /** Update this Gaussian process with with direct observations of the field at the columns of loc. */
         virtual GaussianProcess& Condition(Eigen::Ref<const Eigen::MatrixXd> const& loc,
                                            Eigen::Ref<const Eigen::MatrixXd> const& vals)
         {return Condition(loc,vals,0.0);};
@@ -304,15 +303,23 @@ namespace muq
         */
         std::shared_ptr<muq::Modeling::Gaussian> Discretize(Eigen::MatrixXd const& pts);
 
+        /** CURRENTLY NOT IMPLEMENTED */
         virtual void Optimize();
 
-        // Evaluate the mean and covariance
+        /**
+          Evaluate the mean and covariance at the locations in newLocs
+        */
         virtual std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Predict(Eigen::MatrixXd const& newLocs,
                                                                     CovarianceType         covType);
 
+        /**
+          Evaluate the GP mean at the locations in newPts
+        */
         virtual Eigen::MatrixXd PredictMean(Eigen::MatrixXd const& newPts);
 
-        // Draw a random sample from the GP
+        /**
+          Draw a random sample from the GP at the specified points.
+        */
         virtual Eigen::MatrixXd Sample(Eigen::MatrixXd const& newPts);
 
 

@@ -41,11 +41,12 @@ namespace muq{
       Eigen::VectorXd output;
     };
 
-    /** @brief A class to hold and analyze a collection of SamplingState's
+    /** @ingroup SamplingAlgorithms
+        @class SampleCollection
+        @brief A class to hold and analyze a collection of SamplingState objects
     */
     class SampleCollection{
     public:
-
       SampleCollection() = default;
 
       virtual ~SampleCollection() = default;

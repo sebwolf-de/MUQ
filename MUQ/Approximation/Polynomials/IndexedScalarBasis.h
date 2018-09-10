@@ -10,9 +10,11 @@
 namespace muq {
   namespace Approximation {
 
-    /// An abstract basis for scalar basis functions
     /**
-       Many basis functions can be naturally indexed by an integer.  For example,
+       @ingroup Polynomials
+       @class IndexScalarBasis
+       @brief An abstract basis for scalar basis functions
+       @details Many basis functions can be naturally indexed by an integer.  For example,
        polynomial families are naturally indexed by their order.  This class
        defines an abstract base class for polynomials and other functions with
        scalar arguments that can be naturally index by an integer.
