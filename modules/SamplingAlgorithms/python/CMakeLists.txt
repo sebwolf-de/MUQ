@@ -24,4 +24,5 @@ CreateCompileGroup(
     ProposalWrapper.cpp
     SampleWrapper.cpp
     MCMCWrapper.cpp
+    ProblemWrapper.cpp
 )

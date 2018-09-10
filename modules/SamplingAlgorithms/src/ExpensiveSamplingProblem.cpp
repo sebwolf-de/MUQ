@@ -12,7 +12,7 @@ using namespace muq::Modeling;
 using namespace muq::Approximation;
 using namespace muq::SamplingAlgorithms;
 
-ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, pt::ptree& pt) : SamplingProblem(target) {
+ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, pt::ptree pt) : SamplingProblem(target) {
   SetUp(pt);
 
   // create the local regressor
@@ -20,7 +20,7 @@ ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling
 }
 
 #if MUQ_HAS_PARCER
-ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree& pt, std::shared_ptr<parcer::Communicator> comm) : SamplingProblem(target) {
+ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> comm) : SamplingProblem(target) {
   SetUp(pt);
 
   // create the local regressor

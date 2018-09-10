@@ -20,7 +20,7 @@ namespace muq {
 	 @param[in] target The target distribution
 	 @param[in] pt Options for the sampling problem
        */
-      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree& pt);
+      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree pt);
 
 #if MUQ_HAS_PARCER
       /**
@@ -28,7 +28,7 @@ namespace muq {
 	 @param[in] pt Options for the sampling problem
 	 @param[in] comm Parallel communicator for regression
        */
-      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree& pt, std::shared_ptr<parcer::Communicator> comm);
+      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> comm);
 #endif
 
       ~ExpensiveSamplingProblem() = default;
