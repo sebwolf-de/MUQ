@@ -57,7 +57,8 @@ void PythonBindings::SampleWrapper(py::module &m)
     .def("ESS", &SampleCollection::ESS, py::arg("blockDim")=-1)
     .def("Add", &SampleCollection::Add)
     .def("Weights", &SampleCollection::Weights)
-    .def("AsMatrix", &SampleCollection::AsMatrix, py::arg("blockDim")=-1);
+    .def("AsMatrix", &SampleCollection::AsMatrix, py::arg("blockDim")=-1)
+    .def("WriteToFile", (void (SampleCollection::*)(std::string const&, std::string const&) const) &SampleCollection::WriteToFile, py::arg("filename"), py::arg("dataset") = "/");
 
   py::class_<SamplingState, std::shared_ptr<SamplingState>> sampState(m, "SamplingState");
   sampState
