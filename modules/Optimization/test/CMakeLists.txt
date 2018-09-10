@@ -3,4 +3,5 @@ CreateTestGroup(
 
     OptimizationTests.cpp
     CostFunctionTests.cpp
+    ModPieceCostFunctionTests.cpp
 )

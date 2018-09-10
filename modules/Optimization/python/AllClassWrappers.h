@@ -10,5 +10,4 @@ namespace muq {
   } // namespace Optimization
 } // namespace muq
 
-
 #endif

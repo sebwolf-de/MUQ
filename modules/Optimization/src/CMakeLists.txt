@@ -20,5 +20,6 @@ CreateCompileGroup(
     "NLOPT"
     ""
     CostFunction.cpp
+    ModPieceCostFunction.cpp
     Optimization.cpp
 )
