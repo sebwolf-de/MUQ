@@ -111,7 +111,7 @@ double ExpensiveSamplingProblem::ErrorThreshold(
     const double eps = 1.0e-12;
 
     // the tail scaling constant
-    const double rho = std::fmin(1.0-eps, std::exp(approxLogTarg)/nu);
+    const double rho = std::fmin(1.0-eps, std::exp(approxLogTarg-nu));
 
     // the tail scaling exponent
     const double etaexp = eta.first*std::pow(radius/radius_max, eta.second);
