@@ -15,7 +15,8 @@ Optimization::Optimization(std::shared_ptr<CostFunction> cost, pt::ptree const& 
   xtol_rel(pt.get<double>("Xtol.AbsoluteTolerance", 0.0)),
   xtol_abs(pt.get<double>("Xtol.RelativeTolerance", 0.0)),
   constraint_tol(pt.get<double>("ConstraintTolerance", 1.0e-8)),
-  maxEvals(pt.get<unsigned int>("MaxEvaluations", 100))
+  maxEvals(pt.get<unsigned int>("MaxEvaluations", 100)),
+  minimize(pt.get<bool>("Minimize", true))
 {}
 
 Optimization::~Optimization() {}
@@ -26,13 +27,13 @@ double Optimization::Cost(unsigned int n, const double* x, double* grad, void* f
   Eigen::Map<const Eigen::VectorXd> xmap(x, n);
   const Eigen::VectorXd& xeig = xmap;
   opt->inputs.at(0) = std::cref(xeig);
-  
+
   if( grad ) {
     Eigen::Map<Eigen::VectorXd> gradmap(grad, n);
     const Eigen::VectorXd& gradeig = opt->cost->Gradient(0, opt->inputs, (Eigen::VectorXd)Eigen::VectorXd::Ones(1));
     gradmap = gradeig;
   }
-  
+
   return opt->cost->Cost(opt->inputs);
 }
 
@@ -59,13 +60,17 @@ nlopt_algorithm Optimization::NLOptAlgorithm(std::string const& alg) const {
 
 void Optimization::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   opt.SetInputs(inputs);
+
   for( auto it=ineqConstraints.begin(); it!=ineqConstraints.end(); ++it ) { it->SetInputs(inputs); }
   for( auto it=eqConstraints.begin(); it!=eqConstraints.end(); ++it ) { it->SetInputs(inputs); }
-  
+
   // create the optimizer
   auto solver = nlopt_create(algorithm, opt.cost->inputSizes(0));
-  nlopt_set_min_objective(solver, Optimization::Cost, &opt);
-  
+  if( minimize )
+    nlopt_set_min_objective(solver, Optimization::Cost, &opt);
+  else
+    nlopt_set_max_objective(solver, Optimization::Cost, &opt);
+
   for( std::vector<CostFunction>::size_type i=0; i<ineqConstraints.size(); ++i ) { nlopt_add_inequality_constraint(solver, Optimization::Cost, &ineqConstraints[i], constraint_tol); }
   for( std::vector<CostFunction>::size_type i=0; i<eqConstraints.size(); ++i ) { nlopt_add_equality_constraint(solver, Optimization::Cost, &eqConstraints[i], constraint_tol); }
 
@@ -85,10 +90,21 @@ void Optimization::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   double minf;
   const nlopt_result check = nlopt_optimize(solver, xopt.data(), &minf);
   if( check<0 ) { throw muq::ExternalLibraryError("NLOPT has failed with flag "+std::to_string(check)); }
-  
+
   outputs[1] = minf;
 }
-      
+
+std::pair<Eigen::VectorXd, double> Optimization::Solve(std::vector<Eigen::VectorXd> const& inputs) {
+  std::vector<boost::any> anyins;
+  anyins.reserve(inputs.size());
+
+  for( auto in : inputs ) {
+    anyins.push_back(in);
+  }
+
+  return Solve(ToRefVector(anyins));
+}
+
 std::pair<Eigen::VectorXd, double> Optimization::Solve(ref_vector<boost::any> const& inputs) {
   Evaluate(inputs);
 
@@ -116,12 +132,13 @@ Optimization::CostHelper::~CostHelper() {}
 
 void Optimization::CostHelper::SetInputs(ref_vector<boost::any> const& ins) {
   inputs.clear();
-  
+
   // set initial condition
   inputs.push_back(std::cref(boost::any_cast<Eigen::VectorXd const&>(ins[0])));
 
   // set other inputs
   for( unsigned int i=firstin; i<firstin+cost->numInputs-1; ++i ) {
+    std::cout << i << std::endl;
     inputs.push_back(std::cref(boost::any_cast<Eigen::VectorXd const&>(ins[i])));
   }
 }

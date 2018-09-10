@@ -50,6 +50,13 @@ namespace muq {
 
       /// Solve the optimization problem
       /**
+   @param[in] inputs The first input is the variable we are optimizing over, then inputs to the cost function, and inputs to the constraints in the order they were added
+   \return First: the argmin, second: the minimum cost
+       */
+      std::pair<Eigen::VectorXd, double> Solve(std::vector<Eigen::VectorXd> const& inputs);
+
+      /// Solve the optimization problem
+      /**
 	 @param[in] args The first input is the variable we are optimizing over, then inputs to the cost function, and inputs to the constraints in the order they were added
 	 \return First: the argmin, second: the minimum cost
        */
@@ -72,7 +79,7 @@ namespace muq {
       /**
 	 @param[in] n The size of the input
 	 @param[in] x The current point
-	 @param[out] grad The gradient of the cost/constraint 
+	 @param[out] grad The gradient of the cost/constraint
 	 @param[in] f_data An Optimization::CostHelper
 	 \return The cost/constraint value
        */
@@ -110,7 +117,7 @@ namespace muq {
 	   @param[in] ins The inputs to the optimization problem
 	 */
 	void SetInputs(muq::Modeling::ref_vector<boost::any> const& ins);
-	
+
 	/// The cost function that we are trying to minimize or a cosntraint
 	std::shared_ptr<CostFunction> cost;
 
@@ -141,6 +148,12 @@ namespace muq {
 
       /// Maximum number of cost function evaluations
       const unsigned int maxEvals;
+
+      /// Are minimizing the objection function?
+      /**
+        true: minmize the objection function, false: maximize the objective function
+      */
+      const bool minimize;
     };
   } // namespace Optimization
 } // namespace muq

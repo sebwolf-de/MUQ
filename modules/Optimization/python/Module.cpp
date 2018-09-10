@@ -8,4 +8,6 @@ using namespace muq::Optimization::PythonBindings;
 namespace py = pybind11;
 
 PYBIND11_MODULE(pymuqOptimization, m) {
+  CostFunctionWrapper(m);
+  OptimizationWrapper(m);
 }

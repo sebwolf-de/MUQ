@@ -6,6 +6,8 @@
 namespace muq {
   namespace Optimization {
     namespace PythonBindings {
+      void CostFunctionWrapper(pybind11::module &m);
+      void OptimizationWrapper(pybind11::module &m);
     } // namespace PythonBindings
   } // namespace Optimization
 } // namespace muq

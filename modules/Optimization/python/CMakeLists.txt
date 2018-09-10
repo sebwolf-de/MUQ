@@ -20,4 +20,6 @@ CreateCompileGroup(
   "PYTHON"
   ""
   Module.cpp
+  CostFunctionWrapper.cpp
+  OptimizationWrapper.cpp
 )
