@@ -4,37 +4,6 @@
 
 using namespace muq::SamplingAlgorithms;
 
-
-std::shared_ptr<SamplingState> MarkovChain::at(unsigned i)
-{
-  double currWeight = 0;
-  for(int i=0; i<samples.size(); ++i){
-    currWeight += samples.at(i)->weight;
-    if(currWeight>i)
-      return samples.at(i);
-  }
-
-  throw std::runtime_error("Sample index out of range in MarkovChain::at(unsigned).  Tried to access sample " + std::to_string(i) + ", but there are only " + std::to_string(currWeight) + " samples in the Markov Chain.");
-  return samples.at(0);
-}
-
-const std::shared_ptr<SamplingState> MarkovChain::at(unsigned i) const
-{
-  double currWeight = 0;
-  for(int i=0; i<samples.size(); ++i){
-    currWeight += samples.at(i)->weight;
-    if(currWeight>i)
-      return samples.at(i);
-  }
-
-  throw std::runtime_error("Sample index out of range in MarkovChain::at(unsigned).  Tried to access sample " + std::to_string(i) + ", but there are only " + std::to_string(currWeight) + " samples in the Markov Chain.");
-  return samples.at(0);
-}
-
-unsigned MarkovChain::size() const{
-  return std::round(RecursiveWeightSum(samples.begin(), samples.end()).first);
-};
-
 Eigen::VectorXd MarkovChain::ESS(int blockDim) const
 {
   Eigen::MatrixXd sampMat = AsMatrix(blockDim);
@@ -45,58 +14,6 @@ Eigen::VectorXd MarkovChain::ESS(int blockDim) const
 
   return ess;
 }
-
-Eigen::MatrixXd MarkovChain::AsMatrix(int blockDim) const
-{
-  // Compute the sum of the weights, which we will assume is the total number of steps taken
-  double weightSum  = RecursiveWeightSum(samples.begin(), samples.end()).first;
-  assert(std::abs(double(int(weightSum)) - weightSum) < 1e-11);
-
-  if(blockDim<0){
-
-    const unsigned int sampDim = samples.at(0)->TotalDim();
-    const unsigned int numBlocks = samples.at(0)->state.size();
-
-    Eigen::MatrixXd sampMat(sampDim, int(weightSum));
-
-    int currInd = 0;
-    for(int i=0; i<samples.size(); ++i){
-      for(int j=0; j<samples.at(i)->weight; ++j, ++currInd){
-
-        int currComp = 0;
-        for(int k=0; k<numBlocks; ++k){
-          int blockSize = samples.at(i)->state.at(k).size();
-          sampMat.col(currInd).segment(currComp, blockSize) = samples.at(i)->state.at(k);
-          currComp += blockSize;
-        }
-      }
-    }
-
-    return sampMat;
-
-  }else{
-
-    const unsigned int sampDim = samples.at(0)->state.at(blockDim).size();
-    Eigen::MatrixXd sampMat(sampDim, int(weightSum));
-
-    int currInd = 0;
-    for(int i=0; i<samples.size(); ++i){
-      for(int j=0; j<samples.at(i)->weight; ++j, ++currInd)
-        sampMat.col(currInd) = samples.at(i)->state.at(blockDim);
-    }
-
-    return sampMat;
-  }
-}
-
-Eigen::VectorXd MarkovChain::Weights() const
-{
-  double weightSum  = RecursiveWeightSum(samples.begin(), samples.end()).first;
-  assert(std::abs(double(int(weightSum)) - weightSum) < 1e-11);
-
-  return Eigen::VectorXd::Constant(int(weightSum), 1.0/int(weightSum));
-}
-
 
 double MarkovChain::SingleComponentESS(Eigen::Ref<const Eigen::VectorXd> const& trace)
 {
@@ -134,7 +51,6 @@ double MarkovChain::SingleComponentESS(Eigen::Ref<const Eigen::VectorXd> const& 
     real       = freqVec(i).real() * freqVec(i).real() + freqVec(i).imag() * freqVec(i).imag();
     freqVec(i) = std::complex<double>(real, 0.0);
   }
-
 
   // now compute the inverse fft to get the autocorrelation (stored in timeVec)
   fft.inv(timeVec, freqVec);

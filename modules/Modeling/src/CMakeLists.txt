@@ -17,7 +17,7 @@ CreateCompileGroup(
     "The basic building blocks of the Modeling library."
     muqModeling
     "MODELING_LINEARALGEBRA;UTILITIES_CORE"
-    "EIGEN3;BOOST;SUNDIALS"
+    "EIGEN3;BOOST;SUNDIALS;NANOFLANN"
     ""
     WorkPiece.cpp
 

@@ -13,26 +13,42 @@
 # )
 
 CreateCompileGroup(
+    SAMPLING_PROBLEMS
+    "Implement sampling algorithms such as Monte Carlo, importance sampling, and Markov chain Monte Carlo"
+    muqSamplingAlgorithms
+    "MODELING_CORE;APPROXIMATION_REGRESSION"
+    ""
+    ""
+
+    SamplingProblem.cpp
+    ExpensiveSamplingProblem.cpp
+)
+
+
+CreateCompileGroup(
     SAMPLING_ALGORITHM
     "Implement sampling algorithms such as Monte Carlo, importance sampling, and Markov chain Monte Carlo"
     muqSamplingAlgorithms
-    "MODELING_CORE;UTILITIES_CORE"
+    "MODELING_CORE;UTILITIES_CORE;SAMPLING_PROBLEMS"
     ""
     ""
-    #SamplingAlgorithm.cpp
+    SamplingAlgorithm.cpp
     #MonteCarlo.cpp
     #ImportanceSampling.cpp
     SingleChainMCMC.cpp
 
     SamplingState.cpp
     SampleCollection.cpp
+    #DistributedCollection.cpp
     MarkovChain.cpp
 
     TransitionKernel.cpp
     #MCKernel.cpp
     #ISKernel.cpp
     MHKernel.cpp
+    GMHKernel.cpp
     #MCMCKernel.cpp
+    #ParallelMHKernel.cpp
 
     MCMCFactory.cpp
 
@@ -41,8 +57,21 @@ CreateCompileGroup(
     MCMCProposal.cpp
     MHProposal.cpp
     AMProposal.cpp
+    ParallelAMProposal.cpp
     InverseGammaProposal.cpp
     CrankNicolsonProposal.cpp
-
-    SamplingProblem.cpp
 )
+
+if(MUQ_USE_MPI)
+
+  CreateCompileGroup(
+      PARALLEL_SAMPLING_ALGORITHM
+      "Tools for sampling that require MPI distributed parallelism."
+      muqSamplingAlgorithms
+      "MODELING_CORE;UTILITIES_CORE;SAMPLING_ALGORITHM"
+      "PARCER"
+      ""
+      DistributedCollection.cpp
+  )
+
+endif()

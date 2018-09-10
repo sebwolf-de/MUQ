@@ -2,10 +2,9 @@
 
 using namespace muq::Modeling;
 
-FlannCache::FlannCache(std::shared_ptr<WorkPiece> function,
-                       int                        inputDim) : WorkPiece(1, 1), // can only have one input and output
-							                                                function(function),
-                                                              kdTree(std::make_shared<DynamicKDTreeAdaptor<>>(inputDim)) {
+FlannCache::FlannCache(std::shared_ptr<ModPiece> function) : ModPiece(function->inputSizes, function->outputSizes), // can only have one input and output
+							     function(function),
+							     kdTree(std::make_shared<DynamicKDTreeAdaptor<>>(function->inputSizes(0))) {
 
   // the target function can only have one input/output
   assert(function->numInputs==1);
@@ -14,29 +13,24 @@ FlannCache::FlannCache(std::shared_ptr<WorkPiece> function,
 
 FlannCache::~FlannCache() {}
 
-void FlannCache::EvaluateImpl(ref_vector<boost::any> const& inputs)
-{
+void FlannCache::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
     int cacheId = InCache(inputs.at(0));
+    outputs.resize(1);
     if(cacheId < 0){
-      Add(*boost::any_cast<Eigen::VectorXd>(&inputs.at(0).get()));
-      outputs.resize(1);
+      Add(inputs.at(0));
       outputs.at(0) = outputCache.at(outputCache.size()-1);
     }else{
-      outputs.resize(1);
       outputs.at(0) = outputCache.at(cacheId);
     }
 }
 
-int FlannCache::InCache(boost::any const& input) const {
+int FlannCache::InCache(Eigen::VectorXd const& input) const {
   if( Size()>0 ) { // if there are points in the cache
-
-    Eigen::VectorXd const& testPt = *boost::any_cast<Eigen::VectorXd>(&input);
-
     std::vector<size_t> indices;
     std::vector<double> squaredDists;
-    std::tie(indices, squaredDists) = kdTree->query(testPt,1);
+    std::tie(indices, squaredDists) = kdTree->query(input, 1);
 
-    if(squaredDists.at(0)<1e-10){
+    if(squaredDists.at(0)<std::numeric_limits<double>::epsilon()){
       return indices.at(0);
     }
   }
@@ -45,46 +39,144 @@ int FlannCache::InCache(boost::any const& input) const {
   return -1;
 }
 
-void FlannCache::Add(Eigen::VectorXd const& newPt) {
-  kdTree->add(newPt);
+Eigen::VectorXd FlannCache::Add(Eigen::VectorXd const& newPt) {
+  // evaluate the function
+  const Eigen::VectorXd& newOutput = function->Evaluate(newPt).at(0);
 
-  Eigen::VectorXd newOutput = boost::any_cast<Eigen::VectorXd>(function->Evaluate(newPt).at(0));
-  outputCache.push_back(newOutput);
+  // add the new point
+  Add(newPt, newOutput);
+
+  // return the result
+  return newOutput;
 }
 
-void FlannCache::Remove(boost::any const& input) {
+void FlannCache::Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result) {
+  assert(input.size()==function->inputSizes(0));
+  assert(result.size()==function->outputSizes(0));
 
+  kdTree->add(input);
+  outputCache.push_back(result);
+
+  assert(kdTree->m_data.size()==outputCache.size());
+
+	UpdateCentroid(input);
+}
+
+void FlannCache::Remove(Eigen::VectorXd const& input) {
   // get the index of the point
   const int id = InCache(input);
 
   // the point is not in the cache ... nothing to remove
   if( id<0 ) { return; }
 
+  // remove from output
+  outputCache.erase(outputCache.begin()+id);
+
+  // remove from input
   kdTree->m_data.erase(kdTree->m_data.begin()+id);
-  kdTree = std::make_shared<DynamicKDTreeAdaptor<>>(kdTree->m_data);
+  kdTree->UpdateIndex();
 }
 
-void FlannCache::NearestNeighbors(boost::any const& point,
-                                  unsigned int const k,
-                                  std::vector<Eigen::VectorXd>& neighbors,
-                                  std::vector<Eigen::VectorXd>& result) const {
-
-
+size_t FlannCache::NearestNeighborIndex(Eigen::VectorXd const& point) const {
   // make sure we have enough
-  assert(k<=Size());
-
-  Eigen::VectorXd const& testPt = *boost::any_cast<Eigen::VectorXd>(&point);
+  assert(1<=Size());
 
   std::vector<size_t> indices;
   std::vector<double> squaredDists;
-  std::tie(indices, squaredDists) = kdTree->query(testPt,k);
+  std::tie(indices, squaredDists) = kdTree->query(point, 1);
+  assert(indices.size()==1);
+  assert(squaredDists.size()==1);
+
+  return indices[0];
+}
+
+void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
+                                  unsigned int const k,
+                                  std::vector<Eigen::VectorXd>& neighbors,
+                                  std::vector<Eigen::VectorXd>& result) const {
+  // make sure we have enough
+  assert(k<=Size());
+
+  std::vector<size_t> indices;
+  std::vector<double> squaredDists;
+  std::tie(indices, squaredDists) = kdTree->query(point, k);
+  assert(indices.size()==k);
+  assert(squaredDists.size()==k);
 
   neighbors.resize(k);
   result.resize(k);
-  for(int i=0; i<k; ++i){
-    neighbors.at(i) = kdTree->m_data.at(i);
-    result.at(i) = outputCache.at(i);
+  for( unsigned int i=0; i<k; ++i ){
+    neighbors.at(i) = kdTree->m_data.at(indices[i]);
+    result.at(i) = outputCache.at(indices[i]);
   }
 }
 
-unsigned int FlannCache::Size() const { return kdTree->m_data.size(); }
+void FlannCache::NearestNeighbors(Eigen::VectorXd const& point,
+                                  unsigned int const k,
+                                  std::vector<Eigen::VectorXd>& neighbors) const {
+  // make sure we have enough
+  assert(k<=Size());
+
+  std::vector<size_t> indices;
+  std::vector<double> squaredDists;
+  std::tie(indices, squaredDists) = kdTree->query(point, k);
+  assert(indices.size()==k);
+  assert(squaredDists.size()==k);
+
+  neighbors.resize(k);
+  for( unsigned int i=0; i<k; ++i ){ neighbors.at(i) = kdTree->m_data.at(indices[i]); }
+}
+
+unsigned int FlannCache::Size() const {
+  // these two numbers should be the same unless we check the size after adding the input but before the model finishings running
+  return std::min(kdTree->m_data.size(), outputCache.size());
+}
+
+std::vector<Eigen::VectorXd> FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs) {
+  std::vector<Eigen::VectorXd> results(inputs.size());
+
+  for( unsigned int i=0; i<inputs.size(); ++i ) {
+    // see if the point is already there
+    const int index = InCache(inputs[i]);
+
+    // add the point if is not already there
+    results[i] = index<0? Add(inputs[i]) : outputCache.at(index);
+
+    // make sure it got added
+    assert(InCache(inputs[i])>=0);
+  }
+
+  assert(kdTree->m_data.size()==outputCache.size());
+
+  return results;
+}
+
+void FlannCache::Add(std::vector<Eigen::VectorXd> const& inputs, std::vector<Eigen::VectorXd> const& results) {
+  assert(inputs.size()==results.size());
+
+  for( unsigned int i=0; i<inputs.size(); ++i ) {
+    // add the point to cache (with result)
+    Add(inputs[i], results[i]);
+
+    // make sure it got added
+    assert(InCache(inputs[i])>=0);
+  }
+
+  assert(kdTree->m_data.size()==outputCache.size());
+}
+
+const Eigen::VectorXd FlannCache::at(unsigned int const index) const {
+  assert(index<kdTree->m_data.size());
+  return kdTree->m_data[index];
+}
+
+Eigen::VectorXd FlannCache::at(unsigned int const index) {
+  assert(index<kdTree->m_data.size());
+  return kdTree->m_data[index];
+}
+
+void FlannCache::UpdateCentroid(Eigen::VectorXd const& point) {
+	centroid = Size()==1? point : ((double)(Size()-1)*centroid+point)/(double)Size();
+}
+
+Eigen::VectorXd FlannCache::Centroid() const { return centroid; }

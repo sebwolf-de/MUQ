@@ -11,3 +11,5 @@ option(MUQ_USE_PYTHON "Compile Python bindings using pybind11" OFF)
 option(MUQ_USE_MKL "Use the Eigen wrapper around the Intel MKL" OFF)
 
 option(MUQ_USE_DOLFIN "If MUQ should be compiled with bindings to Fenics/Doflin." OFF)
+
+option(MUQ_USE_PARCER "Use ParCer (PARallel CEReal) MPI wrapper." OFF)

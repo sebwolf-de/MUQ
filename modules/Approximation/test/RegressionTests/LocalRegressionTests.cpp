@@ -7,23 +7,18 @@ using namespace muq::Modeling;
 using namespace muq::Approximation;
 
 /// A model to approximate (3 input dimensions, 2 output dimensions)
-class func : public WorkPiece {
+class func : public ModPiece {
 public:
 
-  inline func() :
-    WorkPiece(std::vector<std::string>({typeid(Eigen::Vector3d).name()}), // inputs: Eigen::Vector3d
-	      std::vector<std::string>({typeid(Eigen::Vector2d).name()})) // outputs: Eigen::Vector2d
-  {}
+  inline func() : ModPiece(Eigen::VectorXi::Constant(1,3), Eigen::VectorXi::Constant(1,2)) {}
 
   inline virtual ~func() {}
 
 private:
 
-  inline virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override {
-    const Eigen::Vector3d& in = boost::any_cast<Eigen::Vector3d const&>(inputs[0]);
-    
+  inline virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& ins) override {
     outputs.resize(1);
-    outputs[0] = Eigen::Vector2d(in(0)*in(1), in(2));
+    outputs[0] = (Eigen::VectorXd)Eigen::Vector2d(ins[0](0)*ins[0](1), ins[0](2));
   }
 };
 
@@ -40,10 +35,19 @@ public:
     pt.put<unsigned int>("LocalRegression.Order", 2);
 
     // create a local regressor
-    reg = std::make_shared<LocalRegression>(fn, pt);
+    reg = std::make_shared<LocalRegression>(fn, pt.get_child("LocalRegression"));
+
+    // generate some random inputs
+    std::vector<Eigen::VectorXd> inputs(M);
+    for( auto it=inputs.begin(); it!=inputs.end(); ++it ) { *it = Eigen::Vector3d::Random(); }
+
+    // add the random input points to the cache
+    reg->Add(inputs);
   }
 
   inline virtual ~LocalRegressionTest() {}
+
+protected:
 
   /// The function to approximate
   std::shared_ptr<func> fn;
@@ -51,31 +55,45 @@ public:
   /// The local regressor
   std::shared_ptr<LocalRegression> reg;
 
-private:
+  // The number of points we added
+  const unsigned int M = 25;
 };
 
 TEST_F(LocalRegressionTest, Basic) {
-  // generate some random inputs
-  std::vector<Eigen::Vector3d> inputs(25);
-  for( auto it=inputs.begin(); it!=inputs.end(); ++it ) { *it = Eigen::Vector3d::Random(); }
-
-  // add the random input points to the cache
-  reg->Add(inputs);
-
   // check the size
-  EXPECT_EQ(reg->CacheSize(), inputs.size());
+  EXPECT_EQ(reg->CacheSize(), M);
 
   // the input point
-  const Eigen::Vector3d input = Eigen::Vector3d::Random();
+  const Eigen::VectorXd input = Eigen::Vector3d::Random();
 
   // evaluate the local polynomial approximation
-  const std::vector<boost::any>& output = reg->Evaluate(input);
-  const Eigen::Vector2d& result = boost::any_cast<Eigen::Vector2d const&>(output[0]);
+  const std::vector<Eigen::VectorXd>& result = reg->Evaluate(input);
 
   // evaluate the truth
-  const std::vector<boost::any>& output_truth = fn->Evaluate(input);
-  const Eigen::Vector2d& truth = boost::any_cast<Eigen::Vector2d const&>(output_truth[0]);
-  
+  const std::vector<Eigen::VectorXd>& truth = fn->Evaluate(input);
+
   // the regression and the truth are the same---approximating a quadratic with a quardratic
-  EXPECT_NEAR((truth-result).norm(), 0.0, 1.0e-10);
+  EXPECT_NEAR((truth[0]-result[0]).norm(), 0.0, 1.0e-10);
+}
+
+TEST_F(LocalRegressionTest, Poisedness) {
+  // check the size
+  EXPECT_EQ(reg->CacheSize(), M);
+
+  for( unsigned int i=0; i<10; ++i ) {
+    // the input point
+    const Eigen::VectorXd input = Eigen::Vector3d::Random();
+
+    std::vector<Eigen::VectorXd> neighbors;
+    std::vector<Eigen::VectorXd> results;
+    reg->NearestNeighbors(input, neighbors, results);
+    EXPECT_TRUE(neighbors.size()==results.size());
+
+    // get the poisedness constant
+    std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(input, neighbors);
+    EXPECT_TRUE(std::get<2>(lambda)<neighbors.size());
+
+    const Eigen::VectorXd& newResult = reg->Add(std::get<0>(lambda));
+    EXPECT_EQ(reg->CacheSize(), M+i+1);
+  }
 }

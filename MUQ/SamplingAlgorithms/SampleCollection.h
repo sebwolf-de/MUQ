@@ -1,12 +1,14 @@
 #ifndef SAMPLECOLLECTION_H
 #define SAMPLECOLLECTION_H
 
+#include <memory>
+#include <vector>
+
+#include <Eigen/Core>
+
 #include "MUQ/SamplingAlgorithms/SamplingState.h"
 
-#include <memory>
-
-#include <vector>
-#include <Eigen/Core>
+#include "MUQ/Utilities/HDF5/HDF5File.h"
 
 namespace muq{
   namespace SamplingAlgorithms{
@@ -45,22 +47,30 @@ namespace muq{
     */
     class SampleCollection{
     public:
+      SampleCollection() = default;
 
-      /** @brief Add a new sample to the sample collection.
-      */
-      void Add(std::shared_ptr<SamplingState> newSamp);
+      virtual ~SampleCollection() = default;
+
+      virtual void Add(std::shared_ptr<SamplingState> newSamp);
 
       virtual std::shared_ptr<SamplingState> at(unsigned i);
       virtual const std::shared_ptr<SamplingState> at(unsigned i) const;
 
-      virtual unsigned size() const{return samples.size();};
+      virtual unsigned size() const;
 
-      //  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order
-      virtual Eigen::VectorXd CentralMoment(unsigned order, int blockDim=-1) const;
+      ///  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order
+      virtual Eigen::VectorXd CentralMoment(unsigned order, int blockNum=-1) const;
 
-      virtual Eigen::VectorXd Mean(int blockDim=-1) const;
-      virtual Eigen::VectorXd Variance(int blockDim=-1) const{return CentralMoment(2,blockDim);};
-      virtual Eigen::MatrixXd Covariance(int blockDim=-1) const;
+      ///  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order given that we already know the mean
+      virtual Eigen::VectorXd CentralMoment(unsigned order, Eigen::VectorXd const& mean, int blockNum=-1) const;
+
+      virtual Eigen::VectorXd Mean(int blockInd=-1) const;
+      virtual Eigen::VectorXd Variance(int blockInd=-1) const;
+      virtual Eigen::MatrixXd Covariance(int blockInd=-1) const;
+      virtual Eigen::MatrixXd Covariance(Eigen::VectorXd const& mean, int blockInd=-1) const;
+
+      virtual std::vector<Eigen::MatrixXd> RunningCovariance(int blockInd=-1) const;
+      virtual std::vector<Eigen::MatrixXd> RunningCovariance(Eigen::VectorXd const& mean, int blockInd=-1) const;
 
       /** @brief Returns the effective sample size of the samples
           @details For almost all random variables of interest, the central limit
@@ -100,9 +110,15 @@ namespace muq{
 
       virtual Eigen::VectorXd Weights() const;
 
+      /**
+	 @param[in] filename The name of the file
+	 @param[in] dataset The name of the group within the file
+       */
+      virtual void WriteToFile(std::string const& filename, std::string const& dataset = "/") const;
+
     protected:
 
-      std::vector<std::shared_ptr<SamplingState>> samples;
+      std::vector<std::shared_ptr<SamplingState> > samples;
 
       /** Returns the sum of the weights and the sum of the squared weights. */
       static std::pair<double,double> RecursiveWeightSum(std::vector<std::shared_ptr<SamplingState>>::const_iterator start,
@@ -141,12 +157,23 @@ namespace muq{
         }
       }
 
+      /**
+	 \return A map from meta data name to a matrix where each column corresponds to a sample
+       */
+      std::unordered_map<std::string, Eigen::MatrixXd> GetMeta() const;
 
+    private:
+
+      /**
+	 @param[in] hdf5file The hdf5 file where the data will be written
+	 @param[in] dataname The name of the data set we (may) want to create
+	 @param[in] dataSize The number of rows (the size of the data in one sample)
+	 @param[in] totSamps The total number of samples we need to write to the file (max. number of samples)
+	 \return true: the data set exists and is the right size, false: the data set does not exist or is the wrong size
+       */
+      bool CreateDataset(std::shared_ptr<muq::Utilities::HDF5File> hdf5file, std::string const& dataname, int const dataSize, int const totSamps) const;
     };
-
   }
 }
-
-
 
 #endif // SAMPLECOLLECTION_H

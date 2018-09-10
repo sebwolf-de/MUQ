@@ -16,10 +16,11 @@ protected:
 
       L.resize(2,2);
       L << 1.0, 0.0,
-           1.0, 2.0;
+	1.0, 2.0;
 
       samps = L * RandomGenerator::GetNormal(2,numWeightedSamps);
-      weights = (maxRepeat*RandomGenerator::GetUniform(numWeightedSamps)).array().ceil();
+      //weights = (maxRepeat*RandomGenerator::GetUniform(numWeightedSamps)).array().ceil();
+      weights = Eigen::VectorXd::Ones(numWeightedSamps);
       numSamps = weights.sum();
 
       for(int i=0; i<numWeightedSamps; ++i)
@@ -31,7 +32,7 @@ protected:
 
     const int maxRepeat = 10;
     int numSamps;
-    const int numWeightedSamps = 1e4;
+    const int numWeightedSamps = 1e5;
     Eigen::MatrixXd L;
 
     Eigen::MatrixXd samps;
@@ -94,8 +95,7 @@ TEST_F(MarkovChainTest, ToWeights)
 {
   Eigen::VectorXd sampWeights = collection.Weights();
   EXPECT_EQ(numSamps, sampWeights.size());
-  EXPECT_DOUBLE_EQ(1.0/sampWeights.size(), sampWeights.minCoeff());
-  EXPECT_DOUBLE_EQ(1.0/sampWeights.size(), sampWeights.maxCoeff());
+  for( unsigned int i=0; i<numSamps; ++i ) { EXPECT_DOUBLE_EQ(1.0, sampWeights(i)); }
 }
 
 TEST_F(MarkovChainTest, ESS)

@@ -1,18 +1,43 @@
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 
-#include "MUQ/SamplingAlgorithms/MarkovChain.h"
+#include <chrono>
 
 #include "MUQ/Utilities/StringUtilities.h"
 
-#include <chrono>
+#include "MUQ/SamplingAlgorithms/MarkovChain.h"
+#include "MUQ/SamplingAlgorithms/ExpensiveSamplingProblem.h"
 
-using namespace muq::SamplingAlgorithms;
+namespace pt = boost::property_tree;
 using namespace muq::Utilities;
+using namespace muq::SamplingAlgorithms;
 
-SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree             pt,
-                                 std::shared_ptr<AbstractSamplingProblem> problem) : SamplingAlgorithm(std::make_shared<MarkovChain>()),
-                                                                                     printLevel(pt.get("PrintLevel",3))
+SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem) :
+  SamplingAlgorithm(std::make_shared<MarkovChain>()),
+  printLevel(pt.get("PrintLevel",3))
 {
+  SetUp(pt, problem);
+}
+
+#if MUQ_HAS_PARCER
+SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<parcer::Communicator> comm) :
+  SamplingAlgorithm(std::make_shared<MarkovChain>(), comm),
+  printLevel(pt.get("PrintLevel",3))
+{
+  SetUp(pt, problem);
+}
+#endif
+
+SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree              pt,
+                std::shared_ptr<AbstractSamplingProblem> problem,
+                std::vector<std::shared_ptr<TransitionKernel>> kernelsIn) :
+                SamplingAlgorithm(std::make_shared<MarkovChain>()),
+                printLevel(pt.get("PrintLevel",3)),
+                kernels(kernels) {
+  numSamps = pt.get<unsigned int>("NumSamples");
+  burnIn = pt.get("BurnIn",0);
+}
+
+void SingleChainMCMC::SetUp(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem) {
   numSamps = pt.get<unsigned int>("NumSamples");
   burnIn = pt.get("BurnIn",0);
 
@@ -29,9 +54,13 @@ SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree             pt,
   for(int i=0; i<kernels.size(); ++i) {
     boost::property_tree::ptree subTree = pt.get_child(kernelNames.at(i));
     subTree.put("BlockIndex",i);
+    if( std::dynamic_pointer_cast<ExpensiveSamplingProblem>(problem) ) { subTree.put("ReevaluateAcceptedDensity", true); }
     kernels.at(i) = TransitionKernel::Construct(subTree, problem);
-  }
 
+#if MUQ_HAS_PARCER
+    kernels.at(i)->SetCommunicator(comm);
+#endif
+  }
 }
 
 void SingleChainMCMC::PrintStatus(std::string prefix, unsigned int currInd) const
@@ -51,10 +80,11 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
   std::vector<std::shared_ptr<SamplingState>> newStates;
   std::shared_ptr<SamplingState> prevState = std::make_shared<SamplingState>(x0);
 
-  std::shared_ptr<SamplingState> lastSavedState;
-
-  if(burnIn==0)
+  // save the first state
+  if(burnIn==0) {
     samples->Add(prevState);
+  }
+  std::shared_ptr<SamplingState> lastSavedState = prevState;
 
   // What is the next iteration that we want to print at
   const unsigned int printIncr = std::floor(numSamps / double(10));
@@ -77,36 +107,17 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
 
     // Loop through each parameter block
     for(int blockInd=0; blockInd<kernels.size(); ++blockInd){
-
+      // kernel prestep
       kernels.at(blockInd)->PreStep(sampNum, prevState);
 
+      // use the kernel to get the next state(s)
       newStates = kernels.at(blockInd)->Step(sampNum, prevState);
 
-      // Add the new states to the SampleCollection
-      for(int i=0; i<newStates.size(); ++i){
-        sampNum++;
-
-        if(newStates.at(i)!=prevState)
-          prevState = newStates.at(i);
-
-        if((sampNum>=burnIn)&&(scheduler->ShouldSave(sampNum))){
-
-          if(!lastSavedState){
-            lastSavedState = newStates.at(i);
-            samples->Add(newStates.at(i));
-
-          }else if(newStates.at(i)!=lastSavedState){
-              samples->Add(newStates.at(i));
-              lastSavedState = newStates.at(i);
-
-          }else{
-              lastSavedState->weight += 1;
-          }
-
-        }
-      }
-
+      // kernel post-processing
       kernels.at(blockInd)->PostStep(sampNum, newStates);
+
+      // add the new states to the SampleCollection (this also increments sampNum)
+      prevState = SaveSamples(newStates, lastSavedState, sampNum);
     }
   }
 
@@ -118,6 +129,19 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
     std::cout << "Completed in " << runTime << " seconds." << std::endl;
   }
 
-
   return samples;
 }
+
+std::shared_ptr<SamplingState> SingleChainMCMC::SaveSamples(std::vector<std::shared_ptr<SamplingState> > const& newStates, std::shared_ptr<SamplingState>& lastSavedState, unsigned int& sampNum) const {
+  for( auto it : newStates ) {
+    // save the sample, if we want to
+    if( ShouldSave(sampNum) ) { samples->Add(it); }
+
+    // increment the number of samples and break of we hit the max. number
+    if( ++sampNum>=numSamps ) { return it; }
+  }
+
+  return newStates.back();
+}
+
+bool SingleChainMCMC::ShouldSave(unsigned int const sampNum) const { return sampNum>=burnIn && scheduler->ShouldSave(sampNum); }

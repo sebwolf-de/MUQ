@@ -149,6 +149,25 @@ TEST(GaussianDistributionTests, ModPieceInputs) {
 
 }
 
+TEST(GaussianDistributionTests, Gradient) {
+
+  int dim = 20;
+
+  Eigen::VectorXd mu = Eigen::VectorXd::Random(dim);
+  Eigen::MatrixXd A = Eigen::MatrixXd::Random(dim,dim);
+  Eigen::MatrixXd cov = A*A.transpose() + 1e-8*Eigen::MatrixXd::Identity(dim,dim);
+
+  std::shared_ptr<Distribution> dist = std::make_shared<Gaussian>(mu,cov);
+
+  Eigen::VectorXd testPt = Eigen::VectorXd::Ones(dim);
+
+  Eigen::VectorXd grad = dist->GradLogDensity(0, testPt);
+  Eigen::VectorXd trueGrad = -1.0*cov.llt().solve(testPt-mu);
+
+  for(int i=0; i<dim; ++i)
+    EXPECT_NEAR(trueGrad(i), grad(i),1e-12);
+}
+
 
 TEST(GaussianDistributionTests, DiagonalCovPrec) {
   // the covariance or precision scale (variance in the cov. case and 1/variance in the prec. case)

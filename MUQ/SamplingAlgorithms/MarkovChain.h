@@ -20,28 +20,20 @@ namespace muq {
     {
     public:
 
-      virtual std::shared_ptr<SamplingState> at(unsigned i) override;
-      virtual const std::shared_ptr<SamplingState> at(unsigned i) const override;
+      MarkovChain() = default;
 
-      virtual unsigned size() const override;
+      virtual ~MarkovChain() = default;
 
       /** Computes the effective sample size using the method described
       Ulli Wolff's "Monte Carlo errors with less error"
       */
       virtual Eigen::VectorXd ESS(int blockDim=-1) const override;
 
-      /**
-      Returns points in the Markov chain as a matrix.  Each column of the matrix
-      is a different point.
-      */
-      virtual Eigen::MatrixXd AsMatrix(int blockDim=-1) const override;
-
-      /** Returns a constant vector with valued \f$1/N\f$, where \f$N\f$ is the number
-      of steps in the Markov chain.
-      */
-      virtual Eigen::VectorXd Weights() const override;
-
       static double SingleComponentESS(Eigen::Ref<const Eigen::VectorXd> const& trace);
+
+    private:
+
+      std::vector<std::unordered_map<std::string, boost::any> > meta;
 
     }; // class MarkovChain
   }

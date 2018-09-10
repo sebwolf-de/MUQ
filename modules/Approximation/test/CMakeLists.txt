@@ -22,11 +22,15 @@ CreateTestGroup(
   Quadrature/GaussQuadratureTests.cpp
 )
 
-#CreateTestGroup(
-#	APPROXIMATION_REGRESSION
-#
-#	RegressionTests/PolynomialTests.cpp
-#	RegressionTests/MultiIndexTests.cpp
-#	RegressionTests/RegressionTests.cpp
-#	RegressionTests/LocalRegressionTests.cpp
-#)
+CreateTestGroup(
+	APPROXIMATION_REGRESSION
+
+	RegressionTests/RegressionTests.cpp
+	RegressionTests/LocalRegressionTests.cpp
+)
+
+CreateParallelTestGroup(
+	APPROXIMATION_REGRESSION
+
+	RegressionTests/LocalRegressionParallelTests.cpp
+)

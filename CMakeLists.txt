@@ -77,7 +77,7 @@ FOREACH(BUILT_LIB ${MUQ_LIBRARIES})
 ENDFOREACH()
 message(STATUS "MUQ_EXPORT_LIBRARIES = ${MUQ_EXPORT_LIBRARIES}")
 
-export(PACKAGE ${CMAKE_PROJECT_NAME})
+#export(PACKAGE ${CMAKE_PROJECT_NAME})
 
 # Create the MUQConfig.cmake file
 configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake" @ONLY)

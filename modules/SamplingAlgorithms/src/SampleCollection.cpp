@@ -1,4 +1,5 @@
 #include "MUQ/SamplingAlgorithms/SampleCollection.h"
+
 #include "MUQ/Utilities/AnyHelpers.h"
 
 using namespace muq::SamplingAlgorithms;
@@ -46,7 +47,8 @@ Eigen::VectorXd const& SamplingStatePartialMoment::operator()(SamplingState cons
 
 void SampleCollection::Add(std::shared_ptr<SamplingState> newSamp)
 {
-  samples.push_back(newSamp);
+  // copy the sample
+  samples.push_back(std::make_shared<SamplingState>(*newSamp));
 }
 
 std::shared_ptr<SamplingState> SampleCollection::at(unsigned i)
@@ -58,17 +60,22 @@ const std::shared_ptr<SamplingState> SampleCollection::at(unsigned i) const
   return samples.at(i);
 }
 
-//  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order
-Eigen::VectorXd SampleCollection::CentralMoment(unsigned order, int blockNum) const
-{
-  Eigen::VectorXd mu = Mean(blockNum);
-  SamplingStatePartialMoment op(blockNum, order, mu);
-
+Eigen::VectorXd SampleCollection::CentralMoment(unsigned order, Eigen::VectorXd const& mean, int blockNum) const {
+  SamplingStatePartialMoment op(blockNum, order, mean);
+  
   Eigen::VectorXd stateSum;
   double weightSum;
 
   std::tie(weightSum, stateSum) = RecursiveSum(samples.begin(), samples.end(), op);
   return (stateSum / weightSum).eval();
+}
+
+//  Computes the componentwise central moments (e.g., variance, skewness, kurtosis, etc..) of a specific order
+Eigen::VectorXd SampleCollection::CentralMoment(unsigned order, int blockNum) const
+{
+  const Eigen::VectorXd& mu = Mean(blockNum);
+
+  return CentralMoment(order, mu, blockNum);
 }
 
 Eigen::VectorXd SampleCollection::Mean(int blockNum) const
@@ -84,6 +91,10 @@ Eigen::VectorXd SampleCollection::Mean(int blockNum) const
 
 Eigen::MatrixXd SampleCollection::Covariance(int blockInd) const
 {
+  return Covariance(Mean(blockInd), blockInd);
+}
+
+Eigen::MatrixXd SampleCollection::Covariance(Eigen::VectorXd const& mean, int blockInd) const {
   const int numSamps = samples.size();
   Eigen::MatrixXd samps;
   Eigen::VectorXd weights(numSamps);
@@ -118,9 +129,67 @@ Eigen::MatrixXd SampleCollection::Covariance(int blockInd) const
     }
   }
 
-  Eigen::VectorXd mu = (samps * weights) / weights.sum();
-  Eigen::MatrixXd cov = (samps.colwise() - mu) * weights.asDiagonal() * (samps.colwise()-mu).transpose() / weights.sum();
-  return cov;
+  return (samps.colwise() - mean) * weights.asDiagonal() * (samps.colwise()-mean).transpose() / weights.sum();
+}
+
+std::vector<Eigen::MatrixXd> SampleCollection::RunningCovariance(int blockInd) const {
+  return RunningCovariance(Mean(blockInd), blockInd);
+}
+
+std::vector<Eigen::MatrixXd> SampleCollection::RunningCovariance(Eigen::VectorXd const& mean, int blockInd) const {
+  const int numSamps = size();
+  std::vector<Eigen::MatrixXd> runCov(numSamps);
+
+  if(blockInd<0){
+    std::shared_ptr<SamplingState> s = at(0);
+
+    const int totalSize = s->TotalDim();
+    const int numBlocks = s->state.size();
+    double totWeight = s->weight;
+
+    Eigen::VectorXd samp(totalSize);
+
+    int currInd = 0;
+    for(int block = 0; block<numBlocks; ++block){
+      samp.segment(currInd, s->state.at(block).size()) = s->state.at(block);
+      currInd += s->state.at(block).size();
+    }
+
+    samp -= mean;
+    runCov[0] = totWeight*samp*samp.transpose();
+
+    for(int i=1; i<numSamps; ++i){
+      s = at(i);
+
+      int currInd = 0;
+      for(int block = 0; block<numBlocks; ++block){
+        samp.segment(currInd, s->state.at(block).size()) = s->state.at(block);
+        currInd += s->state.at(block).size();
+      }
+
+      totWeight += s->weight;
+      samp -= mean;
+      runCov[i] = ((totWeight-s->weight)*runCov[i-1] + s->weight*samp*samp.transpose())/totWeight;
+    }
+
+  }else{
+    std::shared_ptr<SamplingState> s = at(0);
+    
+    const int blockSize = s->state.at(blockInd).size();
+    double totWeight = s->weight;
+
+    Eigen::VectorXd samp = s->state.at(blockInd)-mean;
+    runCov[0] = totWeight*samp*samp.transpose();
+
+    for(int i=1; i<numSamps; ++i){
+      s = at(i);
+      totWeight += s->weight;
+      samp = s->state.at(blockInd);
+      runCov[i] = ((totWeight-s->weight)*runCov[i-1] + s->weight*samp*samp.transpose())/totWeight;
+    }
+  }
+
+  return runCov;
 }
 
 std::pair<double,double> SampleCollection::RecursiveWeightSum(std::vector<std::shared_ptr<SamplingState>>::const_iterator start,
@@ -153,7 +222,7 @@ std::pair<double,double> SampleCollection::RecursiveWeightSum(std::vector<std::s
 
 
 Eigen::VectorXd SampleCollection::ESS(int blockDim) const
-{
+{ 
   if(samples.size()==0)
     return Eigen::VectorXd();
 
@@ -167,6 +236,7 @@ Eigen::VectorXd SampleCollection::ESS(int blockDim) const
   }else{
     blockSize = samples.at(0)->state.at(blockDim).size();
   }
+  
   return (weightSum*weightSum / squaredSum) * Eigen::VectorXd::Ones(blockSize);
 }
 
@@ -204,4 +274,101 @@ Eigen::VectorXd SampleCollection::Weights() const
   for(int i=0; i<samples.size(); ++i)
     output(i) = samples.at(i)->weight;
   return output;
+}
+
+bool SampleCollection::CreateDataset(std::shared_ptr<muq::Utilities::HDF5File> hdf5file, std::string const& dataname, int const dataSize, int const totSamps) const {
+  if( !hdf5file->IsDataSet(dataname) ) { return true; }
+
+  Eigen::VectorXi size = hdf5file->GetDataSetSize(dataname);
+  if( size(0)!=dataSize || size(1)!=totSamps ) { return true; }
+
+  return false;
+}
+
+void SampleCollection::WriteToFile(std::string const& filename, std::string const& dataset) const {
+  if( size()==0 ) { return; }
+    
+  // open the hdf5 file
+  auto hdf5file = std::make_shared<HDF5File>(filename);
+
+  // write the sample matrix and weights
+  hdf5file->WriteMatrix(dataset+"/samples", AsMatrix());
+  hdf5file->WriteMatrix(dataset+"/weights", (Eigen::RowVectorXd)Weights());
+
+  // meta data
+  const std::unordered_map<std::string, Eigen::MatrixXd>& meta = GetMeta();
+
+  // write meta data to file
+  for( const auto& data : meta ) { hdf5file->WriteMatrix(dataset+"/"+data.first, data.second); }
+}
+
+unsigned SampleCollection::size() const { return samples.size(); }
+
+Eigen::VectorXd SampleCollection::Variance(int blockDim) const { return CentralMoment(2,blockDim); }
+
+std::unordered_map<std::string, Eigen::MatrixXd> SampleCollection::GetMeta() const {
+  std::unordered_map<std::string, Eigen::MatrixXd> meta;
+
+  for( unsigned int i=0; i<size(); ++i ) {
+    auto s = at(i);
+    for( auto it = s->meta.begin(); it!=s->meta.end(); ++it ) {
+      if( it->second.type()==typeid(Eigen::Vector2d) ) {
+	// create a matrix for the meta data 
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(2, size(), std::numeric_limits<double>::quiet_NaN())}); }
+	meta[it->first].col(i) = boost::any_cast<Eigen::Vector2d const&>(it->second);
+
+	continue;		
+      }
+      
+      if( it->second.type()==typeid(Eigen::Vector3d) ) {
+	// create a matrix for the meta data 
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(3, size(), std::numeric_limits<double>::quiet_NaN())}); }
+	meta[it->first].col(i) = boost::any_cast<Eigen::Vector3d const&>(it->second);
+
+	continue;		
+      }
+
+      if( it->second.type()==typeid(Eigen::Vector4d) ) {
+	// create a matrix for the meta data 
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(4, size(), std::numeric_limits<double>::quiet_NaN())}); }
+	meta[it->first].col(i) = boost::any_cast<Eigen::Vector4d const&>(it->second);
+
+	continue;		
+      }
+
+      if( it->second.type()==typeid(Eigen::VectorXd) ) {
+	// create a matrix for the meta data 
+	if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(boost::any_cast<Eigen::VectorXd const&>(it->second).size(), size(), std::numeric_limits<double>::quiet_NaN())}); }
+	
+	meta[it->first].col(i) = boost::any_cast<Eigen::VectorXd const&>(it->second);
+
+	continue;		
+      }
+      
+      // create a matrix, assuming scalar type, for the meta data
+      if( meta.find(it->first)==meta.end() ) { meta.insert({it->first, Eigen::MatrixXd::Constant(1, size(), std::numeric_limits<double>::quiet_NaN())}); }
+      
+      if( it->second.type()==typeid(double) ) { // doubles
+	meta[it->first](i) = boost::any_cast<double const>(it->second);
+	continue;
+      }
+
+      if( it->second.type()==typeid(float) ) { // floats
+	meta[it->first](i) = boost::any_cast<float const>(it->second);
+	continue;
+      }
+
+      if( it->second.type()==typeid(int) ) { // ints
+	meta[it->first](i) = boost::any_cast<int const>(it->second);
+	continue;
+      }
+
+      if( it->second.type()==typeid(unsigned int) ) { // unsigned ints
+	meta[it->first](i) = boost::any_cast<unsigned int const>(it->second);
+	continue;
+      }
+    }
+  }
+
+  return meta;
 }

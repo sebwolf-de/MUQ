@@ -186,7 +186,7 @@ TEST(Approximation_GP, SquaredExpKernel)
 
     // Check second derivative
     deriv = kernel.GetPosDerivative(pt1,pt2,{0,0})(0,0);
-    EXPECT_NEAR((rightVal - 2.0*centerVal + leftVal)/(eps*eps), deriv, 1e-3);
+    EXPECT_NEAR((rightVal - 2.0*centerVal + leftVal)/(eps*eps), deriv, 1e-4);
 }
 
 
