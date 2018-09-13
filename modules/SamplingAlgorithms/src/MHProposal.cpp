@@ -2,10 +2,6 @@
 
 #include "MUQ/Utilities/AnyHelpers.h"
 
-
-
-#include <mpi.h>
-
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
