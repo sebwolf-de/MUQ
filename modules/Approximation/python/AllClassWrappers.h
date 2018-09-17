@@ -11,7 +11,8 @@ namespace muq{
       void GaussianWrapper(pybind11::module &m);
       void PolynomialsWrapper(pybind11::module &m);
       void KLWrapper(pybind11::module &m);
-    
+      void QuadratureWrapper(pybind11::module &m);
+
     }
   }
 }

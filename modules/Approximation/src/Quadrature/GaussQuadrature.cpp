@@ -6,7 +6,10 @@ GaussQuadrature::GaussQuadrature() {}
 
 GaussQuadrature::GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
                                  int polyOrderIn)
-                                : poly(polyIn), polyOrder(polyOrderIn) {}
+                                : poly(polyIn), polyOrder(polyOrderIn)
+{
+  Compute();
+}
 
 void GaussQuadrature::Compute() {
 

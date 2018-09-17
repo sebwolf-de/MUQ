@@ -13,7 +13,7 @@
 #include "boost/any.hpp"
 #include "boost/optional.hpp"
 
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
 #include "MUQ/config.h"
 
@@ -32,7 +32,7 @@ namespace muq {
       @defgroup Modeling
       @brief Tools for constructing coupled physical and statistical models.
       @details
-      
+
     */
 
 

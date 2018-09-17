@@ -231,7 +231,7 @@ Eigen::MatrixXd ModPiece::JacobianByFD(unsigned int                const  output
   Eigen::VectorXd f;
 
   double eps;
-  Eigen::VectorXd newInput(input.at(inputDimWrt));
+  Eigen::VectorXd newInput(input.at(inputDimWrt).get());
   ref_vector<Eigen::VectorXd> newInputVec = input;
 
   Eigen::MatrixXd jac(outputSizes(outputDimWrt), inputSizes(inputDimWrt));

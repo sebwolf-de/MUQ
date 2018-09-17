@@ -13,4 +13,5 @@ PYBIND11_MODULE(pymuqApproximation, m) {
     GaussianWrapper(m);
     PolynomialsWrapper(m);
     KLWrapper(m);
+    QuadratureWrapper(m);
 }
