@@ -62,8 +62,9 @@ namespace muq {
      @param[in] radius The radus of the nearest neighbor ball
      @param[out] neighbors The nearest neighbors
      @param[out] results The log-target at the nearest neighbors
+     \return The poisedness constant \f$\Lambda\f$
          */
-        void RefineSurrogate(
+        double RefineSurrogate(
           std::shared_ptr<SamplingState> state,
           double const radius,
           std::vector<Eigen::VectorXd>& neighbors,
@@ -110,9 +111,9 @@ namespace muq {
         @param[in] step The current MCMC step
         @param[in] radius The distance from the centroid of the evaluated points
         @param[in] approxLogTarg The value of the surrogate model
-        \return The error threshold
+        \return first: the error scaling, second: the error scaling exponent, third: the error indicator
       */
-      double ErrorThreshold(unsigned int const step, double const radius, double const approxLogTarg) const;
+      std::tuple<double, double, double> ErrorThreshold(unsigned int const step, double const radius, double const approxLogTarg) const;
 
       std::shared_ptr<muq::Approximation::LocalRegression> reg;
 
@@ -134,6 +135,12 @@ namespace muq {
        */
       std::pair<double, double> gamma;
 
+      /// The maximum number of gamma refinements per interation
+      /**
+        Defaults to the number of nearest neighbors
+      */
+      unsigned int maxGammaRefine;
+
       /// An approximation for \f$\max{\pi(x)}\f$.
       /**
         \f$\nu\f$ is "TargetMax" and defaults to \f$1.0\f$.
@@ -145,6 +152,9 @@ namespace muq {
       \f$\eta_0\f$ is "EtaScale" and it defaults to \f$1.0\f$.  \f$\eta_1\f$ is "EtaExponent" and it defaults to \f$1.0\f$.
       */
       std::pair<double, double> eta;
+
+      /// Scaling for the poisedness constant
+      double lambdaScale;
 
       /// The current error threshold level
       unsigned int level = 1;

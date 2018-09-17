@@ -1,5 +1,7 @@
 #include "AllClassWrappers.h"
 
+#include "MUQ/config.h"
+
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 #include "MUQ/SamplingAlgorithms/SamplingAlgorithm.h"
 #include "MUQ/SamplingAlgorithms/MCMCFactory.h"
@@ -34,6 +36,9 @@ void PythonBindings::MCMCWrapper(py::module &m) {
   py::class_<SingleChainMCMC, SamplingAlgorithm, std::shared_ptr<SingleChainMCMC>> singleMCMC(m, "SingleChainMCMC");
   singleMCMC
     .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem) {return new SingleChainMCMC(ConvertDictToPtree(d), problem);}))
+#if MUQ_HAS_PARCER
+    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<parcer::Communicator> comm) {return new SingleChainMCMC(ConvertDictToPtree(d), problem, comm);}))
+#endif
     .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem, std::vector<std::shared_ptr<TransitionKernel>> kernelsIn) {return new SingleChainMCMC(ConvertDictToPtree(d), problem, kernelsIn);}))
     .def("Kernels", &SingleChainMCMC::Kernels)
     .def("RunImpl", &SingleChainMCMC::RunImpl);

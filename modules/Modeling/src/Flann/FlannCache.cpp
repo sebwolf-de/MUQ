@@ -9,6 +9,7 @@ FlannCache::FlannCache(std::shared_ptr<ModPiece> function) : ModPiece(function->
   // the target function can only have one input/output
   assert(function->numInputs==1);
   assert(function->numOutputs==1);
+	centroid = Eigen::VectorXd::Zero(inputSizes(0));
 }
 
 FlannCache::~FlannCache() {}
@@ -176,7 +177,7 @@ Eigen::VectorXd FlannCache::at(unsigned int const index) {
 }
 
 void FlannCache::UpdateCentroid(Eigen::VectorXd const& point) {
-	centroid = Size()==1? point : ((double)(Size()-1)*centroid+point)/(double)Size();
+	centroid = ((double)(Size()-1)*centroid+point)/(double)Size();
 }
 
 Eigen::VectorXd FlannCache::Centroid() const { return centroid; }

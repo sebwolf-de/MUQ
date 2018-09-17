@@ -37,6 +37,7 @@ void PythonBindings::ProblemWrapper(py::module &m) {
     py::class_<ExpensiveSamplingProblem, SamplingProblem, std::shared_ptr<ExpensiveSamplingProblem>> expenProb(m, "ExpensiveSamplingProblem");
     expenProb
       .def(py::init( [] (std::shared_ptr<muq::Modeling::ModPiece> target, py::dict d) { return new ExpensiveSamplingProblem(target, ConvertDictToPtree(d)); }))
+      .def(py::init( [] (std::shared_ptr<muq::Modeling::ModPiece> target, py::dict d, std::shared_ptr<parcer::Communicator> comm) { return new ExpensiveSamplingProblem(target, ConvertDictToPtree(d), comm); }))
       .def("LogDensity", &ExpensiveSamplingProblem::LogDensity)
       .def("CacheSize", &ExpensiveSamplingProblem::CacheSize);
 }

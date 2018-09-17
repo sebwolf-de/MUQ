@@ -115,6 +115,12 @@ namespace muq{
        */
       virtual void WriteToFile(std::string const& filename, std::string const& dataset = "/") const;
 
+      /**
+      @param[in] name Need the this piece of meta data for each sample
+      \return A matrix of meta data associated with in the input string
+      */
+      Eigen::MatrixXd GetMeta(std::string const& name) const;
+
     protected:
 
       std::vector<std::shared_ptr<SamplingState> > samples;

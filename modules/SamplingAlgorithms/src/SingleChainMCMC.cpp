@@ -113,6 +113,10 @@ std::shared_ptr<SampleCollection> SingleChainMCMC::RunImpl(std::vector<Eigen::Ve
       // use the kernel to get the next state(s)
       newStates = kernels.at(blockInd)->Step(sampNum, prevState);
 
+      // save when these samples where created
+      const double now = std::chrono::duration<double>(std::chrono::high_resolution_clock::now()-startTime).count();
+      for( auto it=newStates.begin(); it!=newStates.end(); ++it ) { (*it)->meta["time"] = now; }
+
       // kernel post-processing
       kernels.at(blockInd)->PostStep(sampNum, newStates);
 

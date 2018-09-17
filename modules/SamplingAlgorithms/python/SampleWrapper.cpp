@@ -45,6 +45,7 @@ void PythonBindings::SampleWrapper(py::module &m)
     .def("Add", &SampleCollection::Add)
     .def("Weights", &SampleCollection::Weights)
     .def("AsMatrix", &SampleCollection::AsMatrix, py::arg("blockDim")=-1)
+    .def("GetMeta", (Eigen::MatrixXd (SampleCollection::*)(std::string const&) const) &SampleCollection::GetMeta)
     .def("WriteToFile", (void (SampleCollection::*)(std::string const&, std::string const&) const) &SampleCollection::WriteToFile, py::arg("filename"), py::arg("dataset") = "/");
 
   py::class_<SamplingState, std::shared_ptr<SamplingState>> sampState(m, "SamplingState");
