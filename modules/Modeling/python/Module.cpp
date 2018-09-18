@@ -8,7 +8,7 @@ using namespace muq::Modeling::PythonBindings;
 namespace py = pybind11;
 
 
-PYBIND11_MODULE(pymuqModeling, m) {
+PYBIND11_MODULE(pymuqModeling_, m) {
 
     WorkPieceWrapper(m);
     ModPieceWrapper(m);
