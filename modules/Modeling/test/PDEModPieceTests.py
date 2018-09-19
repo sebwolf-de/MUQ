@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, 'modules/Modeling/python')
+
 # import unit testing framework
 import unittest
 
@@ -21,13 +24,13 @@ class PDEModPieceTests(unittest.TestCase):
         mesh = dfn.UnitIntervalMesh(Nelem)
 
         # create function spaces
-        Vh2 = dfn.FunctionSpace(mesh, 'Lagrange', 2) # quadratic
+        Vh2 = dfn.FunctionSpace(mesh, 'Lagrange', 1) # quadratic
         Vh1 = dfn.FunctionSpace(mesh, 'Lagrange', 1) # linear
         Vh = [Vh2, Vh1, Vh2] # function space for [state, parameter, adjoint]
 
         # define the weak form
         def weak_form(u, k, p):
-            return k*dfn.inner(dfn.grad(u), dfn.grad(p))*dfn.dx - p*dfn.dx + p*dfn.ds
+            return k*dfn.inner(dfn.grad(u), dfn.grad(p))*dfn.dx - p*dfn.dx #+ p*dfn.ds
 
         # define the Dirichlet boundary
         def boundary(x, on_boundary):
@@ -44,19 +47,38 @@ class PDEModPieceTests(unittest.TestCase):
         # create the PDE model
         pde = mm.PyPDEModPiece(Vh, weak_form, bc_fwd, bc_adj, is_fwd_linear=True)
 
+        # create a constant field for the parameter
         k = dfn.Function(Vh[1])
         k.vector()[:] = 0.5
 
+        # evaluate the pde model
         u = pde.Evaluate([k.vector()]) [0]
+
+        # import the solution into a function
         soln = dfn.Function(Vh[0])
         soln.vector().set_local(u)
 
-        for x in np.linspace(0.0, 1.0, num=50):
-            self.assertAlmostEqual(soln([x]), 1.0-x*x)
+        # plt.figure(figsize=(15,5))
+        # dfn.plot(soln)
+        # plt.show()
+
+        # check the numerical solution against the true solution
+        #for x in np.linspace(0.0, 1.0, num=50):
+        #    self.assertAlmostEqual(soln([x]), 1.0-x*x)
 
         gradFD = pde.GradientByFD(0, 0, [k.vector()], [1.0]*Vh[0].dim())
 
+        Fgrad = dfn.Function(Vh[1])
+        Fgrad.vector().set_local(np.array(gradFD))
+
+        #plt.figure(figsize=(15,5))
+        dfn.plot(Fgrad)
+        plt.show()
+
         grad = pde.Gradient(0, 0, [k.vector()], [1.0]*Vh[0].dim())
 
-        print(gradFD)
-        print(grad)
+        print()
+        print()
+        print('FD grad:')
+        #print(gradFD)
+        #print(grad)
