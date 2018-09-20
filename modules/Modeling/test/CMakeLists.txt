@@ -33,7 +33,7 @@ CreateTestGroup(
     MODELING_SUNDIALS_MODELS
 
     ODETests.cpp
-    RootfindingIVPTests.cpp
+    #RootfindingIVPTests.cpp
 )
 
 CreateTestGroup(

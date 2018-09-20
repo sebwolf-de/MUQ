@@ -89,14 +89,15 @@ CreateCompileGroup(
     Distributions/RandomVariable.cpp
 )
 
-#CreateCompileGroup(
-#    MODELING_SUNDIALS_MODELS
-#    "ODE integrators using Sundials"
-#    muqModeling
-#    "MODELING_CORE"
-#    "EIGEN3;BOOST;SUNDIALS"
-#    ""
-#    ODEData.cpp
-#    ODE.cpp
-#    RootfindingIVP.cpp
-#)
+CreateCompileGroup(
+    MODELING_SUNDIALS_MODELS
+    "ODE integrators using Sundials"
+    muqModeling
+    "MODELING_CORE"
+    "EIGEN3;BOOST;SUNDIALS"
+    ""
+    ODEBase.cpp
+    ODEData.cpp
+    ODE.cpp
+    #RootfindingIVP.cpp
+)

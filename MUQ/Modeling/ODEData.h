@@ -1,7 +1,7 @@
 #ifndef ODEDATA_H_
 #define ODEDATA_H_
 
-#include "MUQ/Modeling/WorkPiece.h"
+#include "MUQ/Modeling/ModPiece.h"
 
 namespace muq {
   namespace Modeling {
@@ -20,7 +20,7 @@ namespace muq {
 	 @param[in] wrtIn The input we are computing the derivative wrt --- negative indicates no derivative is being computed
 	 @param[in] wrtOut The output we are computing the derivative of --- negative indicates no derivative is being computed
        */
-      ODEData(std::shared_ptr<WorkPiece> rhs, ref_vector<boost::any> const& inputs, bool const autonomous, int const wrtIn, int const wrtOut);
+      ODEData(std::shared_ptr<ModPiece> rhs, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn, int const wrtOut);
 
       /// Construct with root function
       /**
@@ -31,16 +31,16 @@ namespace muq {
 	 @param[in] wrtIn The input we are computing the derivative wrt --- negative indicates no derivative is being computed
 	 @param[in] wrtOut The output we are computing the derivative of --- negative indicates no derivative is being computed
        */
-      ODEData(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, ref_vector<boost::any> const& inputs, bool const autonomous, int const wrtIn, int const wrtOut);
+      ODEData(std::shared_ptr<ModPiece> rhs, std::shared_ptr<ModPiece> root, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn, int const wrtOut);
 
       /// The right hand side of the ODE
-      std::shared_ptr<WorkPiece> rhs;
+      std::shared_ptr<ModPiece> rhs;
 
       /// A function we are trying to find the root of along an orbit of the ODE (nullptr if we are not doing a root finding problem)
-      std::shared_ptr<WorkPiece> root;
+      std::shared_ptr<ModPiece> root;
 
       /// The inputs to the rhs --- the first is the state, the rest are constant in time
-      ref_vector<boost::any> inputs;
+      std::vector<Eigen::VectorXd> inputs;
 
       /// Is the RHS autonomous?
       const bool autonomous;
@@ -50,7 +50,7 @@ namespace muq {
 
       /// The output we are computing the derivative of --- negative indicates no derivative is being computed
       const int wrtOut = -1;
-      
+
     private:
     };
   } // namespace Modeling
