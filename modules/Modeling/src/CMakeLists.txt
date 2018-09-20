@@ -49,16 +49,6 @@ CreateCompileGroup(
 )
 
 CreateCompileGroup(
-    MODELING_PDE
-    "Building PDE based models in MUQ."
-    muqModeling
-    "MODELING_CORE"
-    ""
-    ""
-    PDEModPiece.cpp
-)
-
-CreateCompileGroup(
     MODELING_LINEARALGEBRA
     "Extensions and generalizations of Eigen for linear algebra."
     muqModeling

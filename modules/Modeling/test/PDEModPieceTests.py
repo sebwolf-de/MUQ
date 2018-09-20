@@ -20,17 +20,17 @@ class PDEModPieceTests(unittest.TestCase):
     # the exact solution is u(x) = -x^2/(2k) + 1
     def test_Poisson(self):
         # create a 1D mesh
-        Nelem = 1000 # number of elements in the mesh
+        Nelem = 150 # number of elements in the mesh
         mesh = dfn.UnitIntervalMesh(Nelem)
 
         # create function spaces
-        Vh2 = dfn.FunctionSpace(mesh, 'Lagrange', 1) # quadratic
+        Vh2 = dfn.FunctionSpace(mesh, 'Lagrange', 2) # quadratic
         Vh1 = dfn.FunctionSpace(mesh, 'Lagrange', 1) # linear
-        Vh = [Vh2, Vh1, Vh2] # function space for [state, parameter, adjoint]
+        #Vh = [Vh2, Vh1, Vh2] # function space for [state, parameter, adjoint]
 
         # define the weak form
         def weak_form(u, k, p):
-            return k*dfn.inner(dfn.grad(u), dfn.grad(p))*dfn.dx - p*dfn.dx #+ p*dfn.ds
+            return k*dfn.inner(dfn.grad(u), dfn.grad(p))*dfn.dx - p*dfn.dx + p*dfn.ds
 
         # define the Dirichlet boundary
         def boundary(x, on_boundary):
@@ -38,47 +38,41 @@ class PDEModPieceTests(unittest.TestCase):
 
         # define the boundary condition for the forward problem
         u0 = dfn.Constant(1.0)
-        bc_fwd = dfn.DirichletBC(Vh[0], u0, boundary)
+        bc_fwd = dfn.DirichletBC(Vh2, u0, boundary)
 
         # define the boundary condition for the adjoint problem
         p0 = dfn.Constant(0.0)
-        bc_adj = dfn.DirichletBC(Vh[2], p0, boundary)
+        bc_adj = dfn.DirichletBC(Vh2, p0, boundary)
 
         # create the PDE model
-        pde = mm.PyPDEModPiece(Vh, weak_form, bc_fwd, bc_adj, is_fwd_linear=True)
+        pde = mm.PDEModPiece(Vh2, Vh1, weak_form, bc_fwd, bc_adj, is_fwd_linear=True)
 
         # create a constant field for the parameter
-        k = dfn.Function(Vh[1])
+        k = dfn.Function(Vh1)
         k.vector()[:] = 0.5
 
         # evaluate the pde model
         u = pde.Evaluate([k.vector()]) [0]
 
         # import the solution into a function
-        soln = dfn.Function(Vh[0])
+        soln = dfn.Function(Vh2)
         soln.vector().set_local(u)
 
-        # plt.figure(figsize=(15,5))
-        # dfn.plot(soln)
-        # plt.show()
-
         # check the numerical solution against the true solution
-        #for x in np.linspace(0.0, 1.0, num=50):
-        #    self.assertAlmostEqual(soln([x]), 1.0-x*x)
+        for x in np.linspace(0.0, 1.0, num=50):
+            self.assertAlmostEqual(soln([x]), 1.0-x*x)
 
-        gradFD = pde.GradientByFD(0, 0, [k.vector()], [1.0]*Vh[0].dim())
+        # create a sensitivity function
+        sens = dfn.Function(Vh2)
+        sens.vector()[:] = 1.0
 
-        Fgrad = dfn.Function(Vh[1])
-        Fgrad.vector().set_local(np.array(gradFD))
+        # comute the gradient with finite differences
+        gradFD = pde.GradientByFD(0, 0, [k.vector()], sens.vector())
 
-        #plt.figure(figsize=(15,5))
-        dfn.plot(Fgrad)
-        plt.show()
+        # compute the gradient with the adjoint method
+        grad = pde.Gradient(0, 0, [k.vector()], sens.vector())
 
-        grad = pde.Gradient(0, 0, [k.vector()], [2.0]*Vh[0].dim())
-
-        print()
-        print()
-        print('FD grad:')
-        #print(gradFD)
-        #print(grad)
+        # check to make sure that the adjoint and FD gradients are similar
+        self.assertEqual(len(grad), len(gradFD))
+        for i in range(len(grad)):
+            self.assertAlmostEqual(grad[i], gradFD[i], places=1)

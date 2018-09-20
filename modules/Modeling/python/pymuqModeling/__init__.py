@@ -1,3 +1,3 @@
 from pymuqModeling_ import *
 
-from pymuqModeling.PyPDEModPiece import PyPDEModPiece
+from pymuqModeling.PDEModPiece import PDEModPiece
