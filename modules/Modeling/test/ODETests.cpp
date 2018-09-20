@@ -14,7 +14,7 @@ public:
   inline RHS() : WorkPiece(std::vector<std::string>({typeid(N_Vector).name(), typeid(double).name()}), std::vector<std::string>({typeid(N_Vector).name()})) {}
 
   inline virtual ~RHS() {}
-  
+
 private:
 
   inline virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override {
@@ -42,7 +42,7 @@ private:
 
     if( wrtIn==0 ) { // wrt the state
       assert(NV_LENGTH_S(vecref)==2);
-      
+
       // get the parameter (spring constant)
       const double k = boost::any_cast<const double>(inputs[1]);
 
@@ -53,7 +53,7 @@ private:
       NV_Ith_S(jacAct, 1) = -k*NV_Ith_S(vecref, 0);
     } else if( wrtIn==1 ) {
       assert(NV_LENGTH_S(vecref)==1);
-      
+
       // get the state vector
       const N_Vector& state = boost::any_cast<const N_Vector>(inputs[0]);
 
@@ -64,7 +64,7 @@ private:
       NV_Ith_S(jacAct, 1) = -NV_Ith_S(state, 0)*NV_Ith_S(vecref, 0);
     }
   }
-  
+
   inline virtual void JacobianImpl(unsigned int const wrtIn, unsigned int const wrtOut, ref_vector<boost::any> const& inputs) override {
     // there is only one output
     assert(wrtOut==0);
@@ -120,7 +120,7 @@ TEST(ODEExample, RHS) {
 
   Eigen::MatrixXd expectedJac1 = Eigen::MatrixXd::Zero(2, 1);
   expectedJac1(1, 0) = -NV_Ith_S(state, 0);
-  
+
   { // test jacobian
     const boost::any& jac0 = rhs->Jacobian(0, 0, state, k);
     const DlsMat& jac0ref = boost::any_cast<const DlsMat>(jac0);
@@ -132,7 +132,7 @@ TEST(ODEExample, RHS) {
 	EXPECT_DOUBLE_EQ(DENSE_ELEM(jac0ref, i, j), expectedJac0(i,j));
       }
     }
-    
+
     const boost::any& jac1 = rhs->Jacobian(1, 0, state, k);
     const DlsMat& jac1ref = boost::any_cast<const DlsMat>(jac1);
 
@@ -143,28 +143,28 @@ TEST(ODEExample, RHS) {
     }
   }
 
-  
+
   { // test jacobian action
     const Eigen::Vector2d vec0eigen = Eigen::VectorXd::Random(2);
-    
+
     // a vector
     N_Vector vec0 = N_VNew_Serial(2);
     NV_Ith_S(vec0, 0) = vec0eigen(0);
     NV_Ith_S(vec0, 1) = vec0eigen(1);
-    
+
     const boost::any& jacact0 = rhs->JacobianAction(0, 0, vec0, state, k);
     const N_Vector& jacact0ref = boost::any_cast<const N_Vector>(jacact0);
 
     // expected value
     const Eigen::Vector2d expectedJacact0 = expectedJac0*vec0eigen;
 
-    EXPECT_EQ(NV_LENGTH_S(jacact0ref), 2); 
+    EXPECT_EQ(NV_LENGTH_S(jacact0ref), 2);
     for( unsigned int i=0; i<2; ++i ) {
       EXPECT_DOUBLE_EQ(NV_Ith_S(jacact0ref, i), expectedJacact0(i));
     }
 
     const Eigen::VectorXd vec1eigen = Eigen::VectorXd::Random(1);
-    
+
     // a vector
     N_Vector vec1 = N_VNew_Serial(1);
     NV_Ith_S(vec1, 0) = vec1eigen(0);
@@ -175,7 +175,7 @@ TEST(ODEExample, RHS) {
     // expected value
     const Eigen::Vector2d expectedJacact1 = expectedJac1*vec1eigen;
 
-    EXPECT_EQ(NV_LENGTH_S(jacact1ref), 2); 
+    EXPECT_EQ(NV_LENGTH_S(jacact1ref), 2);
     for( unsigned int i=0; i<2; ++i ) {
       EXPECT_DOUBLE_EQ(NV_Ith_S(jacact1ref, i), expectedJacact1(i));
     }
@@ -209,17 +209,17 @@ public:
     // the input/output number are unknown
     EXPECT_EQ(ode->numInputs, -1); // some of the inputs are the times where we need the state's value
     EXPECT_EQ(ode->numInputs, -1); // the outputs are the states at the specified times
-    
+
     // integrate the ODE
     const std::vector<boost::any>& result = ode->Evaluate(ic, k, outTimes0);
-    
+
     // check the result for the first vector of times
     const std::vector<N_Vector>& times0_state = boost::any_cast<const std::vector<N_Vector>&>(result[0]);
 
     EXPECT_EQ(times0_state.size(), outTimes0.size());
     for( unsigned int i=0; i<outTimes0.size(); ++i ) {
       const double time = outTimes0(i);
-      
+
       // check evaluate values
       EXPECT_NEAR(NV_Ith_S(times0_state[i], 0), ic0*std::cos(std::sqrt(k)*time)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
       EXPECT_NEAR(NV_Ith_S(times0_state[i], 1), -std::sqrt(k)*ic0*std::sin(std::sqrt(k)*time)+ic1*std::cos(std::sqrt(k)*time), 1.0e-6);
@@ -232,7 +232,7 @@ public:
 
     for( unsigned int i=0; i<outTimes0.size(); ++i ) {
       const double time = outTimes0(i);
-      
+
       // check jacobian wrt initial conditions
       EXPECT_EQ(jac0ref[i]->M, 2); // rows
       EXPECT_EQ(jac0ref[i]->N, 2); // cols
@@ -248,7 +248,7 @@ public:
 
     for( unsigned int i=0; i<outTimes0.size(); ++i ) {
       const double time = outTimes0(i);
-      
+
       // check jacobian wrt spring constant
       EXPECT_EQ(jac1ref[i]->M, 2); // rows
       EXPECT_EQ(jac1ref[i]->N, 1); // cols
@@ -270,7 +270,7 @@ public:
       EXPECT_NEAR(DENSE_ELEM(jac2ref[i], 0, 0), -std::sqrt(k)*ic0*std::sin(std::sqrt(k)*time)+ic1*std::cos(std::sqrt(k)*time), 1.0e-6);
       EXPECT_NEAR(DENSE_ELEM(jac2ref[i], 1, 0), -k*(ic0*std::cos(std::sqrt(k)*time)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*time)), 1.0e-6);
     }
-    
+
     // Jacobian action
     const Eigen::Vector2d eigenVec2 = Eigen::VectorXd::Random(2);
     N_Vector vec2 = N_VNew_Serial(2);
@@ -281,13 +281,13 @@ public:
 
     for( unsigned int i=0; i<outTimes0.size(); ++i ) {
       const double time = outTimes0(i);
-      
+
       // check action of the jacobian wrt initial conditions
       EXPECT_EQ(NV_LENGTH_S(jacact0ref[i]), 2);
       EXPECT_NEAR(NV_Ith_S(jacact0ref[i], 0), std::cos(std::sqrt(k)*time)*eigenVec2(0) + std::sin(std::sqrt(k)*time)/std::sqrt(k)*eigenVec2(1), 1.0e-6);
       EXPECT_NEAR(NV_Ith_S(jacact0ref[i], 1), -std::sqrt(k)*std::sin(std::sqrt(k)*time)*eigenVec2(0) + std::cos(std::sqrt(k)*time)*eigenVec2(1), 1.0e-6);
     }
-    
+
     const Eigen::VectorXd eigenVec1 = Eigen::VectorXd::Random(1);
     N_Vector vec1 = N_VNew_Serial(1);
     NV_Ith_S(vec1, 0) = eigenVec1(0);
@@ -297,13 +297,13 @@ public:
 
     for( unsigned int i=0; i<outTimes0.size(); ++i ) {
       const double time = outTimes0(i);
-      
+
       // check action of the jacobian wrt spring constant
       EXPECT_EQ(NV_LENGTH_S(jacact1ref[i]), 2);
       EXPECT_NEAR(NV_Ith_S(jacact1ref[i], 0), 0.5*eigenVec1(0)*(-ic0/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)+ic1/k*time*std::cos(std::sqrt(k)*time)-ic1/std::pow(k, 1.5)*std::sin(std::sqrt(k)*time)), 1.0e-6);
       EXPECT_NEAR(NV_Ith_S(jacact1ref[i], 1), 0.5*eigenVec1(0)*(-ic0*time*std::cos(std::sqrt(k)*time)-ic0/std::sqrt(k)*std::sin(std::sqrt(k)*time)-ic1/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)), 1.0e-6);
     }
-    
+
     const boost::any& jacact2 = ode->JacobianAction(2, 0, vec1, ic, k, outTimes0);
     const std::vector<N_Vector>& jacact2ref = boost::any_cast<const std::vector<N_Vector>&>(jacact2);
     EXPECT_EQ(jacact2ref.size(), outTimes0.size());
@@ -316,7 +316,7 @@ public:
       EXPECT_NEAR(NV_Ith_S(jacact2ref[i], 0), eigenVec1(0)*(-std::sqrt(k)*ic0*std::sin(std::sqrt(k)*time)+ic1*std::cos(std::sqrt(k)*time)), 1.0e-6);
       EXPECT_NEAR(NV_Ith_S(jacact2ref[i], 1), -eigenVec1(0)*k*(ic0*std::cos(std::sqrt(k)*time)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*time)), 1.0e-6);
     }
-    
+
     // Jacobian transpose action
     const boost::any& jactransact0 = ode->JacobianTransposeAction(0, 0, vec2, ic, k, outTimes0);
     const std::vector<N_Vector>& jactransact0ref = boost::any_cast<const std::vector<N_Vector>&>(jactransact0);
@@ -324,7 +324,7 @@ public:
 
     for( unsigned int i=0; i<outTimes0.size(); ++i ) {
       const double time = outTimes0(i);
-      
+
       // check action of the jacobian transpose wrt initial conditions
       EXPECT_EQ(NV_LENGTH_S(jactransact0ref[i]), 2);
       EXPECT_NEAR(NV_Ith_S(jactransact0ref[i], 0), eigenVec2(0)*std::cos(std::sqrt(k)*time)-eigenVec2(1)*std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
@@ -342,7 +342,7 @@ public:
       EXPECT_EQ(NV_LENGTH_S(jactransact1ref[i]), 1);
       EXPECT_NEAR(NV_Ith_S(jactransact1ref[i], 0), 0.5*eigenVec2(0)*(-ic0/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)+ic1/k*time*std::cos(std::sqrt(k)*time)-ic1/std::pow(k, 1.5)*std::sin(std::sqrt(k)*time)) + 0.5*eigenVec2(1)*(-ic0*time*std::cos(std::sqrt(k)*time)-ic0/std::sqrt(k)*std::sin(std::sqrt(k)*time)-ic1/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)), 1.0e-6);
     }
-    
+
     const boost::any& jactransact2 = ode->JacobianTransposeAction(2, 0, vec2, ic, k, outTimes0);
     const std::vector<N_Vector>& jactransact2ref = boost::any_cast<const std::vector<N_Vector>&>(jactransact2);
     EXPECT_EQ(jactransact2ref.size(), outTimes0.size());
@@ -377,7 +377,7 @@ public:
   /// The spring constant
   const double k = 0.12;
 
-  /// The output times 
+  /// The output times
   //const Eigen::VectorXd outTimes0 = Eigen::VectorXd::LinSpaced(10, 0.0, 2.0);
   const Eigen::VectorXd outTimes0 = Eigen::VectorXd::LinSpaced(2, 0.0, 2.0);
 
@@ -388,7 +388,7 @@ TEST_F(ODETests, BDFNewtonMethod) {
   pt.put<std::string>("ODESolver.MultistepMethod", "BDF");
   pt.put<std::string>("ODESolver.NonlinearSolver", "Newton");
   pt.put<std::string>("ODESolver.LinearSolver", "Dense");
-  
+
   // create the ODE integrator
   ode = std::make_shared<ODE>(rhs, pt);
 
@@ -406,22 +406,22 @@ TEST_F(ODETests, BDFNewtonMethod) {
 
   for( unsigned int i=0; i<outTimes0.size(); ++i ) {
     const double time = outTimes0(i);
-    
+
     // check evaluate values
     EXPECT_NEAR(NV_Ith_S(times0_state[i], 0), ic0*std::cos(std::sqrt(k)*time)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
     EXPECT_NEAR(NV_Ith_S(times0_state[i], 1), -std::sqrt(k)*ic0*std::sin(std::sqrt(k)*time)+ic1*std::cos(std::sqrt(k)*time), 1.0e-6);
   }
-  
+
   // check the result for the second vector of times
   const std::vector<N_Vector>& times1_state = boost::any_cast<const std::vector<N_Vector>&>(result[1]);
   EXPECT_EQ(times1_state.size(), outTimes1.size());
   for( unsigned int i=0; i<outTimes1.size(); ++i ) {
     const double time = outTimes1(i);
-    
+
     EXPECT_NEAR(NV_Ith_S(times1_state[i], 0), ic0*std::cos(std::sqrt(k)*time)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*time), 1.0e-6);
     EXPECT_NEAR(NV_Ith_S(times1_state[i], 1), -std::sqrt(k)*ic0*std::sin(std::sqrt(k)*time)+ic1*std::cos(std::sqrt(k)*time), 1.0e-6);
   }
-  
+
   // check the result for the first scalar output
   const N_Vector& t0_state = boost::any_cast<const N_Vector&>(result[2]);
   EXPECT_NEAR(NV_Ith_S(t0_state, 0), ic0*std::cos(std::sqrt(k)*t0)+ic1/std::sqrt(k)*std::sin(std::sqrt(k)*t0), 1.0e-6);
@@ -439,7 +439,7 @@ TEST_F(ODETests, BDFNewtonMethod) {
 
   for( unsigned int i=0; i<outTimes0.size(); ++i ) {
     const double time = outTimes0(i);
-    
+
     // check jacobian wrt initial conditions
     EXPECT_EQ(jac00ref[i]->M, 2); // rows
     EXPECT_EQ(jac00ref[i]->N, 2); // cols
@@ -471,7 +471,7 @@ TEST_F(ODETests, BDFNewtonMethod) {
   // check the result for the second vector of times
   for( unsigned int i=0; i<outTimes1.size(); ++i ) {
     const double time = outTimes1(i);
-    
+
     // check jacobian wrt initial conditions
     EXPECT_EQ(jac01ref[i]->M, 2); // rows
     EXPECT_EQ(jac01ref[i]->N, 2); // cols
@@ -488,7 +488,7 @@ TEST_F(ODETests, BDFNewtonMethod) {
   // check the result for the second vector of times
   for( unsigned int i=0; i<outTimes1.size(); ++i ) {
     const double time = outTimes1(i);
-    
+
     // check jacobian wrt spring constant
     EXPECT_EQ(jac11ref[i]->M, 2); // rows
     EXPECT_EQ(jac11ref[i]->N, 1); // cols
@@ -548,7 +548,7 @@ TEST_F(ODETests, BDFIterMethod) {
   pt.put<std::string>("ODESolver.MultistepMethod", "BDF");
   pt.put<std::string>("ODESolver.NonlinearSolver", "Iter");
   pt.put<std::string>("ODESolver.LinearSolver", "Dense");
-  
+
   // create the ODE integrator
   ode = std::make_shared<ODE>(rhs, pt);
 }
@@ -557,7 +557,7 @@ TEST_F(ODETests, AdamsNewtonMethod) {
   pt.put<std::string>("ODESolver.MultistepMethod", "Adams");
   pt.put<std::string>("ODESolver.NonlinearSolver", "Newton");
   pt.put<std::string>("ODESolver.LinearSolver", "Dense");
-  
+
   // create the ODE integrator
   ode = std::make_shared<ODE>(rhs, pt);
 }
@@ -566,7 +566,7 @@ TEST_F(ODETests, AdamsIterMethod) {
   pt.put<std::string>("ODESolver.MultistepMethod", "Adams");
   pt.put<std::string>("ODESolver.NonlinearSolver", "Iter");
   pt.put<std::string>("ODESolver.LinearSolver", "Dense");
-  
+
   // create the ODE integrator
   ode = std::make_shared<ODE>(rhs, pt);
 }
@@ -575,7 +575,7 @@ TEST_F(ODETests, SPGMR) {
   pt.put<std::string>("ODESolver.MultistepMethod", "BDF");
   pt.put<std::string>("ODESolver.NonlinearSolver", "Newton");
   pt.put<std::string>("ODESolver.LinearSolver", "SPGMR");
-  
+
   // create the ODE integrator
   ode = std::make_shared<ODE>(rhs, pt);
 }
@@ -584,7 +584,7 @@ TEST_F(ODETests, SPBCG) {
   pt.put<std::string>("ODESolver.MultistepMethod", "Adams");
   pt.put<std::string>("ODESolver.NonlinearSolver", "Newton");
   pt.put<std::string>("ODESolver.LinearSolver", "SPBCG");
-  
+
   // create the ODE integrator
   ode = std::make_shared<ODE>(rhs, pt);
 }
@@ -593,8 +593,7 @@ TEST_F(ODETests, SPTFQMR) {
   pt.put<std::string>("ODESolver.MultistepMethod", "Adams");
   pt.put<std::string>("ODESolver.NonlinearSolver", "Iter");
   pt.put<std::string>("ODESolver.LinearSolver", "SPTFQMR");
-  
+
   // create the ODE integrator
   ode = std::make_shared<ODE>(rhs, pt);
 }
-

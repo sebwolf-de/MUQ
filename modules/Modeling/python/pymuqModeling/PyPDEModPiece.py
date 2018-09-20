@@ -29,23 +29,21 @@ class PyPDEModPiece(mm.PyModPiece):
         mm.PyModPiece.__init__(self, [Vh[1].dim()], [Vh[0].dim()])
         self.pde = hip.PDEVariationalProblem(Vh, weak_form, bc_fwd, bc_adj, is_fwd_linear=is_fwd_linear)
 
-        self.Vh = Vh
+        #self.FunctionSpace = Vh
 
-        print()
-        print('bc0: ', self.pde.bc0)
-        print()
-        print()
+    def InitialGuess(self, para):
+        return self.pde.generate_state()
 
     def EvaluateImpl(self, inputs):
         # generate the soln vector
-        u = self.pde.generate_state()
+        u = self.InitialGuess(inputs[0])
 
         # generate the parameter
         m = self.pde.generate_parameter()
         m.set_local(inputs[0])
 
         # solve the forward model
-        self.pde.solveFwd(u, [None, m, None], 1.0e-9)
+        self.pde.solveFwd(u, [u, m, None], 1.0e-9)
 
         # set the outputs
         self.outputs = [np.array(u)]
@@ -59,7 +57,7 @@ class PyPDEModPiece(mm.PyModPiece):
         u = self.pde.generate_state()
 
         # solve the forward model
-        self.pde.solveFwd(u, [None, m, None], 1.0e-9)
+        self.pde.solveFwd(u, [u, m, None], 1.0e-9)
 
         print()
         print()

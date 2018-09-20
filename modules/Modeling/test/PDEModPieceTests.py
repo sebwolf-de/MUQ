@@ -75,7 +75,7 @@ class PDEModPieceTests(unittest.TestCase):
         dfn.plot(Fgrad)
         plt.show()
 
-        grad = pde.Gradient(0, 0, [k.vector()], [1.0]*Vh[0].dim())
+        grad = pde.Gradient(0, 0, [k.vector()], [2.0]*Vh[0].dim())
 
         print()
         print()
