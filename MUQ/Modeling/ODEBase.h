@@ -14,52 +14,12 @@ namespace muq {
     public:
 
       /**
-	 The first input is the initial state (at \f$t=0\f$).  It is also the first input to the right hand side muq::Modeling::WorkPiece.
-
-	 The next set of inputs are the inputs to the right hand side muq::Modeling::WorkPiece.  If the right hand side input takes 2 inputs besides the state, these correspond to inputs 2 and 3 of the muq::Modeling::ODEBase.
-
-	 Additional inputs depend on which child inherits from muq::Modeling::ODEBase
-
-	 Parameters options (for boost::property_tree::ptree):
-	 <ol>
-	 <li> The multistep method (<EM>ODESolver.MultistepMethod</EM>)
-	 <ul>
-	 <li> <EM>BDF</EM>: Backward differentiation formulas (BDF) linear mutlistep method (Default)
-	 <li> <EM>Adams</EM>: Adams-Moulton linear multistep method (for nonstiff problems)
-	 </ul>
-	 <li> The linear solver (<EM>ODESolver.LinearSolver</EM>)
-	 <ul>
-	 <li> <EM>Dense</EM>: Dense linear system solve (default)
-	 <li> <EM>SPGMR</EM>
-	 <li> <EM>SPBCG</EM>
-	 <li> <EM>SPTFQMR</EM>
-	 </ul>
-	 <li> The nonlinear solver (<EM>ODESolver.NonlinearSolver</EM>)
-	 <ul>
-	 <li> <EM>Newton</EM>: Nonlinear system solution through Newton's method (Default)
-	 <li> <EM>Iter</EM>: Nonlinear system solution through functional iterations
-	 </ul>
-	 <li> The relative tolerance (<EM>ODESolver.RelativeTolerance</EM>)
-	 <ul>
-	 <li> Defaults to 1e-8
-	 </ul>
-	 <li> The absolute tolerance (<EM>ODESolver.AbsoluteTolerance</EM>)
-	 <ul>
-	 <li> Defaults to 1e-8
-	 </ul>
-	 <li> The maximum time step size (<EM>ODESolver.MaxStepSize</EM>)
-	 <ul>
-	 <li> Defaults to 1.0
-	 </ul>
-	 <li> Is the RHS autonomous? (<EM>ODESolver.Autonomous</EM>)
-	 <ul>
-	 <li> Defaults to true
-	 </ul>
-	 </ol>
-	 @param[in] rhs The right hand side of the ODE
-	 @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
-       */
-      ODEBase(std::shared_ptr<ModPiece> rhs, boost::property_tree::ptree const& pt);
+	    @param[in] rhs The right hand side of the ODE
+      @param[in] inputSizes The input input sizes
+      @param[in] outputSizes The output sizes
+	    @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
+      */
+      ODEBase(std::shared_ptr<ModPiece> rhs, Eigen::VectorXi const& inputSizes, Eigen::VectorXi const& outputSizes, boost::property_tree::ptree const& pt);
 
       virtual ~ODEBase();
 
@@ -84,14 +44,6 @@ namespace muq {
        */
       bool CheckFlag(void* flagvalue, std::string const& funcname, unsigned int const opt) const;
 
-      /// Initialize the state vector to the initial conditions
-      /**
-	 @param[out] state The state vector (to be initialized)
-	 @param[in] ic The initial conditions
-	 @param[in] dim The dimension of the state
-       */
-      void InitializeState(N_Vector& state, Eigen::VectorXd const& ic, unsigned int const dim) const;
-
       /// Alloc memory and set up options for the Sundials solver
       /**
 	 @param[in] cvode_mem The Sundials solver
@@ -100,21 +52,14 @@ namespace muq {
        */
       void CreateSolverMemory(void* cvode_mem, N_Vector const& state, std::shared_ptr<ODEData> data) const;
 
+      int CreateSolverMemoryB(void* cvode_mem, double const timeFinal, N_Vector const& lambda, N_Vector const& nvGrad, std::shared_ptr<ODEData> data) const;
+
       /// Copy the values of an N_Vector
       /**
 	 @param[out] copy A new vector whose size and values are the same as orig
 	 @param[in] orig An existing vector to be copied
        */
       void DeepCopy(N_Vector& copy, N_Vector const& orig) const;
-
-      /// Initialize the derivative output (muq::Modeling::WorkPiece::jacobian, muq::Modeling::WorkPiece::jacobianAction, or muq::Modeling::WorkPiece::jacobianTransposeAction)
-      /**
-	 @param[in] ntimes The number of output times
-	 @param[in] stateSize The size of the state
-	 @param[in] paramSize The size of the input parameter we are differenating wrt
-	 @param[in] mode Are we computing the Jacobian, Jacobian action, or Jacobian transpose action?
-       */
-      void InitializeDerivative(unsigned int const ntimes, unsigned int const stateSize, unsigned int const paramSize, DerivativeMode const& mode);
 
       /// Deal with Sundials errors
       /**
@@ -136,6 +81,8 @@ namespace muq {
        */
       static int EvaluateRHS(realtype time, N_Vector state, N_Vector deriv, void *user_data);
 
+      static int AdjointRHS(realtype time, N_Vector state, N_Vector lambda, N_Vector deriv, void *user_data);
+
       /// Evaluate the Jacobian of the right hand side
       /**
 	 @param[in] N
@@ -150,6 +97,8 @@ namespace muq {
        */
       static int RHSJacobian(long int N, realtype time, N_Vector state, N_Vector rhs, DlsMat jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
+      static int AdjointJacobian(long int N, realtype time, N_Vector state, N_Vector lambda, N_Vector rhs, DlsMat jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+
       /// Evaluate the action of the Jacobian of the right hand side
       /**
 	 @param[in] v The vector the Jacobian is acting on
@@ -161,6 +110,8 @@ namespace muq {
 	 @param[in] tmp
        */
       static int RHSJacobianAction(N_Vector v, N_Vector Jv, realtype time, N_Vector state, N_Vector rhs, void *user_data, N_Vector tmp);
+
+      static int AdjointJacobianAction(N_Vector target, N_Vector output, realtype time, N_Vector state, N_Vector lambda, N_Vector adjRhs, void *user_data, N_Vector tmp);
 
       /// Sundials uses this function to compute the derivative of the state at each timestep
       /**
@@ -174,6 +125,8 @@ namespace muq {
        */
       static int ForwardSensitivityRHS(int Ns, realtype time, N_Vector y, N_Vector ydot, N_Vector *ys, N_Vector *ySdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
 
+      static int AdjointQuad(realtype time, N_Vector state, N_Vector lambda, N_Vector quadRhs, void *user_data);
+
       /// Set up the solver for sensitivity information
       /**
 	 @param[in] cvode_mem The Sundials solver
@@ -181,24 +134,6 @@ namespace muq {
 	 @param[in,out] sensState This will become the 'current' Jacobian
        */
       void SetUpSensitivity(void *cvode_mem, unsigned int const paramSize, N_Vector *sensState) const;
-
-      /// The current index and size of each output vector
-      /**
-	 @params[in] outputTimes The times the user has asked for
-	 \return A vector of pairs --- first: the current index of this output vector (starts at 0), second: the size of that output vector
-       */
-      //std::vector<std::pair<unsigned int, unsigned int> > TimeIndices(ref_vector<boost::any> const& outputTimes);
-
-      /// Compute the next time to integrate to
-      /**
-	 @param[out] nextTime first: the next time to integrate to, second: the output index
-	 @param[out] timeIndices Each element corresponds to a vector of desired times, first: the current index of that vector, second: the size of that vector
-	 @param[in] outputTimes We want the state at these times
-       */
-      //bool NextTime(std::pair<double, int>& nextTime, std::vector<std::pair<unsigned int, unsigned int> >& timeIndices, ref_vector<boost::any> const& outputTimes) const;
-
-      /// Clear the outputs, jacobian, jacobianAction, and jacobianTransposeAction
-      void ClearResults();
 
       /// Which linear solver should we use?
       enum LinearSolver {
@@ -216,7 +151,6 @@ namespace muq {
       std::shared_ptr<ModPiece> rhs;
 
       /// Linear solver method
-      const std::string linSolver;
       LinearSolver slvr;
 
       /// The relative tolerance
@@ -237,19 +171,11 @@ namespace muq {
       /// Is the RHS autonomous?
       const bool autonomous;
 
+      /// Check point gap
+      const unsigned int checkPtGap;
+
     private:
 
-      /// Clear the outputs
-      void ClearOutputs();
-
-      /// Clear the jacobian
-      void ClearJacobian();
-
-      /// Clear the jacobianAction
-      void ClearJacobianAction();
-
-      /// Clear the jacobianTransposeAction
-      void ClearJacobianTransposeAction();
     };
 
   } // namespace Modeling

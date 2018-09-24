@@ -18,9 +18,8 @@ namespace muq {
 	 @param[in] inputs The inputs to the rhs --- the first is the state, the rest are constant in time
 	 @param[in] autonomous Is the RHS autonomous?
 	 @param[in] wrtIn The input we are computing the derivative wrt --- negative indicates no derivative is being computed
-	 @param[in] wrtOut The output we are computing the derivative of --- negative indicates no derivative is being computed
        */
-      ODEData(std::shared_ptr<ModPiece> rhs, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn, int const wrtOut);
+      ODEData(std::shared_ptr<ModPiece> rhs, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn);
 
       /// Construct with root function
       /**
@@ -29,9 +28,13 @@ namespace muq {
 	 @param[in] inputs The inputs to the rhs --- the first is the state, the rest are constant in time
 	 @param[in] autonomous Is the RHS autonomous?
 	 @param[in] wrtIn The input we are computing the derivative wrt --- negative indicates no derivative is being computed
-	 @param[in] wrtOut The output we are computing the derivative of --- negative indicates no derivative is being computed
        */
-      ODEData(std::shared_ptr<ModPiece> rhs, std::shared_ptr<ModPiece> root, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn, int const wrtOut);
+      ODEData(std::shared_ptr<ModPiece> rhs, std::shared_ptr<ModPiece> root, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn);
+
+      virtual ~ODEData() = default;
+
+      /// Update the time and state inputs
+      void UpdateInputs(Eigen::VectorXd const& state, double const time);
 
       /// The right hand side of the ODE
       std::shared_ptr<ModPiece> rhs;
@@ -47,9 +50,6 @@ namespace muq {
 
       /// The input we are computing the derivative wrt --- negative indicates no derivative is being computed
       const int wrtIn = -1;
-
-      /// The output we are computing the derivative of --- negative indicates no derivative is being computed
-      const int wrtOut = -1;
 
     private:
     };
