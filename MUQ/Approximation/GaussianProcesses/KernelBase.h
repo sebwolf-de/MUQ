@@ -39,15 +39,15 @@ class KernelBase : public std::enable_shared_from_this<muq::Approximation::Kerne
 
 public:
 
-    KernelBase(unsigned inputDimIn,
-               unsigned coDimIn,
-               unsigned numParamsIn) : KernelBase(inputDimIn, BuildDimInds(inputDimIn), coDimIn, numParamsIn)
+    KernelBase(unsigned int inputDimIn,
+               unsigned int coDimIn,
+               unsigned int numParamsIn) : KernelBase(inputDimIn, BuildDimInds(inputDimIn), coDimIn, numParamsIn)
     {};
 
-    KernelBase(unsigned              inputDimIn,
-               std::vector<unsigned> dimIndsIn,
-               unsigned              coDimIn,
-               unsigned              numParamsIn) : dimInds(dimIndsIn), inputDim(inputDimIn), coDim(coDimIn), numParams(numParamsIn)
+    KernelBase(unsigned int              inputDimIn,
+               std::vector<unsigned int> dimIndsIn,
+               unsigned int              coDimIn,
+               unsigned int              numParamsIn) : dimInds(dimIndsIn), inputDim(inputDimIn), coDim(coDimIn), numParams(numParamsIn)
     {
       assert(inputDim>0);
       assert(coDim>0);
@@ -93,7 +93,7 @@ public:
                    spatial derivatives.  wrts.size() is the derivative order.
         @return A matrix containing the derivatives of the kernel output with
                 respect to the dimensions defined by wrts.
-    */ 
+    */
     virtual Eigen::MatrixXd GetPosDerivative(Eigen::VectorXd  const& x1,
                                              Eigen::VectorXd  const& x2,
                                              std::vector<int> const& wrts) const;
@@ -124,12 +124,12 @@ public:
     };
 
 
-    const std::vector<unsigned> dimInds;
+    const std::vector<unsigned int> dimInds;
 
 
-    const unsigned inputDim;
-    const unsigned coDim;
-    const unsigned numParams;
+    const unsigned int inputDim;
+    const unsigned int coDim;
+    const unsigned int numParams;
 
     /** Evaluates a first or higher order derivative of the covariance kernel
         with respect to one of the position variables.
@@ -159,8 +159,8 @@ private:
 
     static std::vector<unsigned> BuildDimInds(unsigned dim)
     {
-      std::vector<unsigned> output(dim);
-      for(int i=0; i<dim; ++i)
+      std::vector<unsigned int> output(dim);
+      for(unsigned int i=0; i<dim; ++i)
         output[i] = i;
       return output;
     }

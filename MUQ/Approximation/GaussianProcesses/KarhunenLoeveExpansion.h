@@ -4,6 +4,7 @@
 #include <Eigen/Core>
 
 #include "MUQ/Approximation/GaussianProcesses/KernelBase.h"
+#include "MUQ/Approximation/GaussianProcesses/KarhunenLoeveBase.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -15,6 +16,7 @@ namespace Approximation
     /** @class KarhunenLoeveExpansion
         @ingroup GaussianProcesses
         @brief Used to compute and evaluate the Karhunen-Loeve decomposition of a zero mean Gaussian process.
+        @sealso SeperableKarhunenLoeve
         @details
 
 ## Background ##
@@ -93,7 +95,7 @@ int main(){
 }
 \endcode
     */
-    class KarhunenLoeveExpansion
+    class KarhunenLoeveExpansion : public KarhunenLoeveBase
     {
 
     public:
@@ -105,19 +107,9 @@ int main(){
 
         /** Evaluates the KL modes at one or more locations.  Each column of the pts matrix contains a point where we want to evaluate the modes.  Each column of the output contains a mode.  Each row of the output corresponds to an input point.
         */
-        Eigen::MatrixXd GetModes(Eigen::Ref<const Eigen::MatrixXd> const& pts);
+        virtual Eigen::MatrixXd GetModes(Eigen::Ref<const Eigen::MatrixXd> const& pts) const override;
 
-        /** @brief Evaluate the KL expansion at a new pt given known coefficients.
-            @details Recall that a truncated KL expansion of a random process \f$u(x,\omega)\f$ takes the form
-\f[
-u(x,\omega) = \sum_{k=1}^N \phi_k(x) z_k(\omega),
-\f]
-where \f$\phi_k(x)\f$ is the \f$k^{th}\f$ KL mode and each \f$z_k(\omega)\f$ is an independent standard normal random variable. This function evaluates the expansion given a point \f$x\f$ and a vector containing each \f$z_k\f$.   Thus, by fixing the coefficient vector \f$z_k\f$, it is possible to evaluate the sample of the Gaussian process at many different points.
-@param[in] pt The point \f$x\f$ that where you want to evaluate the KL expansion.
-@param[in] coeffs The coefficients in the expansion.  The coefficients should be drawn as iid standard normal random variables to generate a sample of the Gaussian process.
-        */
-        Eigen::VectorXd Evaluate(Eigen::Ref<const Eigen::MatrixXd> const& pt,
-                                 Eigen::Ref<const Eigen::VectorXd> const& coeffs);
+        virtual unsigned int NumModes() const override;
 
     private:
 
@@ -132,7 +124,6 @@ where \f$\phi_k(x)\f$ is the \f$k^{th}\f$ KL mode and each \f$z_k(\omega)\f$ is 
         // Values of the KL modes at the seed points.  Each column corresponds to a basis function and each row to a pt function
         Eigen::MatrixXd modeVecs;
         Eigen::VectorXd modeEigs;
-
 
     }; // class KarhuneLoeveExpansion
 

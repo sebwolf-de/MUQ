@@ -96,7 +96,12 @@ install(EXPORT ${CMAKE_PROJECT_NAME}Depends
 # install all the MUQ headers -- may be better off installing for each package individually
 install(DIRECTORY MUQ
         DESTINATION "${CMAKE_INSTALL_PREFIX}/include"
-	    FILES_MATCHING PATTERN "*.h")
+	      FILES_MATCHING PATTERN "*.h")
+
+# install the python libraries -- Is there a way to avoid copying this for each library?
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/modules/Approximation/python/pymuqApproximation/"
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pymuqApproximation"
+        PATTERN "wrappers/" EXCLUDE)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})
