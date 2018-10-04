@@ -16,7 +16,11 @@ namespace muq {
 	 @param[in] rhs The right hand side of the ODE
 	 @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
        */
-      ODE(std::shared_ptr<ModPiece> rhs,  boost::property_tree::ptree const& pt);
+#if MUQ_HAS_PARCER==1
+      ODE(std::shared_ptr<ModPiece> const& rhs,  boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm = nullptr);
+#else
+      ODE(std::shared_ptr<ModPiece> const& rhs,  boost::property_tree::ptree pt);
+#endif
 
       virtual ~ODE();
 
@@ -26,13 +30,13 @@ namespace muq {
       @param[in] rhs The right hand side of the ODE
    	  @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
       */
-      static Eigen::VectorXi InputSizes(std::shared_ptr<ModPiece> rhs,  boost::property_tree::ptree const& pt);
+      static Eigen::VectorXi InputSizes(std::shared_ptr<ModPiece> const& rhs,  boost::property_tree::ptree pt);
 
       /**
       @param[in] rhs The right hand side of the ODE
       @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
       */
-      static Eigen::VectorXi OutputSizes(std::shared_ptr<ModPiece> rhs,  boost::property_tree::ptree const& pt);
+      static Eigen::VectorXi OutputSizes(std::shared_ptr<ModPiece> const& rhs,  boost::property_tree::ptree pt);
 
       /// Integrate the ODE forward in time
       /**

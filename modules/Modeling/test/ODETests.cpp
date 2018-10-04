@@ -13,7 +13,7 @@ public:
   /// Constructor
   inline RHS() : ModPiece(Eigen::Vector2i(2, 1), Eigen::VectorXi::Constant(1, 2)) {}
 
-  inline virtual ~RHS() {}
+  inline virtual ~RHS() = default;
 
 private:
 
@@ -168,12 +168,16 @@ public:
     pt.put<double>("ODE.AbsoluteTolerance", 1.0e-10);
     pt.put<double>("ODE.MaxStepSize", 1.0);
     pt.put<unsigned int>("ODE.NumObservations", outTimes.size());
+    pt.put<unsigned int>("ODE.MaxNumSteps", 1000);
   }
 
   /// Default destructor
-  virtual ~ODETests() {}
+  virtual ~ODETests() = default;
 
   virtual void TearDown() override {
+    // create the ODE integrator
+    auto ode = std::make_shared<ODE>(rhs, pt.get_child("ODE"));
+
     // integrate the ODE
     const std::vector<Eigen::VectorXd>& result = ode->Evaluate(ic, (Eigen::VectorXd)Eigen::VectorXd::Constant(1, k), outTimes);
 
@@ -275,9 +279,6 @@ public:
   /// The right hand side
   std::shared_ptr<RHS> rhs;
 
-  /// The ode
-  std::shared_ptr<ODE> ode;
-
   /// Options for the ODE integrator
   pt::ptree pt;
 
@@ -297,61 +298,40 @@ TEST_F(ODETests, BDFNewtonMethod) {
   pt.put<std::string>("ODE.MultistepMethod", "BDF");
   pt.put<std::string>("ODE.NonlinearSolver", "Newton");
   pt.put<std::string>("ODE.LinearSolver", "Dense");
-
-  // create the ODE integrator
-  ode = std::make_shared<ODE>(rhs, pt.get_child("ODE"));
 }
 
 TEST_F(ODETests, BDFIterMethod) {
   pt.put<std::string>("ODE.MultistepMethod", "BDF");
   pt.put<std::string>("ODE.NonlinearSolver", "Iter");
   pt.put<std::string>("ODE.LinearSolver", "Dense");
-
-  // create the ODE integrator
-  ode = std::make_shared<ODE>(rhs, pt.get_child("ODE"));
 }
 
 TEST_F(ODETests, AdamsNewtonMethod) {
   pt.put<std::string>("ODE.MultistepMethod", "Adams");
   pt.put<std::string>("ODE.NonlinearSolver", "Newton");
   pt.put<std::string>("ODE.LinearSolver", "Dense");
-
-  // create the ODE integrator
-  ode = std::make_shared<ODE>(rhs, pt.get_child("ODE"));
 }
 
 TEST_F(ODETests, AdamsIterMethod) {
   pt.put<std::string>("ODE.MultistepMethod", "Adams");
   pt.put<std::string>("ODE.NonlinearSolver", "Iter");
   pt.put<std::string>("ODE.LinearSolver", "Dense");
-
-  // create the ODE integrator
-  ode = std::make_shared<ODE>(rhs, pt.get_child("ODE"));
 }
 
 TEST_F(ODETests, SPGMR) {
   pt.put<std::string>("ODE.MultistepMethod", "BDF");
   pt.put<std::string>("ODE.NonlinearSolver", "Newton");
   pt.put<std::string>("ODE.LinearSolver", "SPGMR");
-
-  // create the ODE integrator
-  ode = std::make_shared<ODE>(rhs, pt.get_child("ODE"));
 }
 
 TEST_F(ODETests, SPBCG) {
   pt.put<std::string>("ODE.MultistepMethod", "Adams");
   pt.put<std::string>("ODE.NonlinearSolver", "Newton");
   pt.put<std::string>("ODE.LinearSolver", "SPBCG");
-
-  // create the ODE integrator
-  ode = std::make_shared<ODE>(rhs, pt.get_child("ODE"));
 }
 
 TEST_F(ODETests, SPTFQMR) {
   pt.put<std::string>("ODE.MultistepMethod", "Adams");
   pt.put<std::string>("ODE.NonlinearSolver", "Iter");
   pt.put<std::string>("ODE.LinearSolver", "SPTFQMR");
-
-  // create the ODE integrator
-  ode = std::make_shared<ODE>(rhs, pt.get_child("ODE"));
 }

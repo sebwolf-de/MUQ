@@ -36,6 +36,13 @@ CreateTestGroup(
     #RootfindingIVPTests.cpp
 )
 
+CreateParallelTestGroup(
+    MODELING_SUNDIALS_MODELS
+
+    ODEParallelTests.cpp
+)
+
+
 CreateTestGroup(
     MODELING_FLANN
 

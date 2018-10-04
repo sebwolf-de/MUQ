@@ -9,17 +9,32 @@
 #include <sundials/sundials_types.h> // definition of type
 #include <sundials/sundials_math.h>  // contains the macros ABS, SQR, and EXP
 
+#if MUQ_HAS_PARCER==1
+#include <nvector/nvector_parallel.h>
+#endif
+
 namespace pt = boost::property_tree;
-//using namespace muq::Utilities;
 using namespace muq::Modeling;
 
-ODEBase::ODEBase(std::shared_ptr<ModPiece> rhs, Eigen::VectorXi const& inputSizes, Eigen::VectorXi const& outputSizes, pt::ptree const& pt) :
+#if MUQ_HAS_PARCER==1
+ODEBase::ODEBase(std::shared_ptr<ModPiece> const& rhs, Eigen::VectorXi const& inputSizes, Eigen::VectorXi const& outputSizes, pt::ptree const& pt, std::shared_ptr<parcer::Communicator> const& comm) :
+#else
+ODEBase::ODEBase(std::shared_ptr<ModPiece> const& rhs, Eigen::VectorXi const& inputSizes, Eigen::VectorXi const& outputSizes, pt::ptree const& pt) :
+#endif
   ModPiece(inputSizes, outputSizes),
   rhs(rhs),
-  reltol(pt.get<double>("RelativeTolerance", 1.0e-8)), abstol(pt.get<double>(".AbsoluteTolerance", 1.0e-8)), maxStepSize(pt.get<double>("MaxStepSize", 1.0)), autonomous(pt.get<bool>("Autonomous", true)),
-  checkPtGap(pt.get<unsigned int>("CheckPointGap", 50)) {
-  // we must know the number of inputs for the rhs and it must have at least one (the state)
-  assert(rhs->numInputs>0);
+  reltol(pt.get<double>("RelativeTolerance", 1.0e-8)),
+  abstol(pt.get<double>("AbsoluteTolerance", 1.0e-8)), maxStepSize(pt.get<double>("MaxStepSize", 1.0)),
+  maxNumSteps(pt.get<unsigned int>("MaxNumSteps", 500)),
+  autonomous(pt.get<bool>("Autonomous", true)),
+  checkPtGap(pt.get<unsigned int>("CheckPointGap", 50))
+#if MUQ_HAS_PARCER==1
+  , globalSize(pt.get<unsigned int>("GlobalSize", std::numeric_limits<unsigned int>::quiet_NaN())),
+  comm(comm)
+#endif
+   {
+    // we must know the number of inputs for the rhs and it must have at least one (the state)
+    assert(rhs->numInputs>0);
 
   // determine the multistep method and the nonlinear solver
   const std::string& multiStepMethod = pt.get<std::string>("MultistepMethod", "BDF");
@@ -106,10 +121,17 @@ int ODEBase::CreateSolverMemoryB(void* cvode_mem, double const timeFinal, N_Vect
   flag = CVodeSetMaxStepB(cvode_mem, indexB, maxStepSize);
   assert(CheckFlag(&flag, "CVodeSetMaxStepB", 1));
 
+  flag = CVodeSetMaxNumStepsB(cvode_mem, indexB, 10000000);
+  assert(CheckFlag(&flag, "CVodesSetMaxNumStepsB", 1));
+
   // determine which linear solver to use
   if( slvr==LinearSolver::Dense ) { // dense linear solver
     // specify the dense linear solver
+#if MUQ_HAS_PARCER==1
+    flag = CVDenseB(cvode_mem, indexB, comm? NV_GLOBLENGTH_P(lambda) : NV_LENGTH_S(lambda));
+#else
     flag = CVDenseB(cvode_mem, indexB, NV_LENGTH_S(lambda));
+#endif
     assert(CheckFlag(&flag, "CVDenseB", 1));
 
     // set the Jacobian routine to Jac (user-supplied)
@@ -172,10 +194,17 @@ void ODEBase::CreateSolverMemory(void* cvode_mem, N_Vector const& state, std::sh
   flag = CVodeSetMaxStep(cvode_mem, maxStepSize);
   assert(CheckFlag(&flag, "CVodeSetMaxStep", 1));
 
+  flag = CVodeSetMaxNumSteps(cvode_mem, maxNumSteps);
+  assert(CheckFlag(&flag, "CVodesSetMaxNumSteps", 1));
+
   // determine which linear solver to use
   if( slvr==LinearSolver::Dense ) { // dense linear solver
     // specify the dense linear solver
+#if MUQ_HAS_PARCER==1
+    flag = CVDense(cvode_mem, comm? NV_GLOBLENGTH_P(state) : NV_LENGTH_S(state));
+#else
     flag = CVDense(cvode_mem, NV_LENGTH_S(state));
+#endif
     assert(CheckFlag(&flag, "CVDense", 1));
 
     // set the Jacobian routine to Jac (user-supplied)
@@ -202,6 +231,10 @@ void ODEBase::CreateSolverMemory(void* cvode_mem, N_Vector const& state, std::sh
   }
 }
 
+#define NVectorMap(eigenmap, comm, vec) Eigen::Map<Eigen::VectorXd> eigenmap( \
+  comm? NV_DATA_P(vec) : NV_DATA_S(vec), \
+  comm? NV_LOCLENGTH_P(vec) : NV_LENGTH_S(vec));
+
 int ODEBase::EvaluateRHS(realtype time, N_Vector state, N_Vector statedot, void *user_data) {
   // get the data type
   ODEData* data = (ODEData*)user_data;
@@ -209,11 +242,19 @@ int ODEBase::EvaluateRHS(realtype time, N_Vector state, N_Vector statedot, void 
   assert(data->rhs);
 
   // set the state input
-  Eigen::Map<Eigen::VectorXd> stateref(NV_DATA_S(state), NV_LENGTH_S(state));
+#if MUQ_HAS_PARCER==1
+  NVectorMap(stateref, data->comm, state);
+#else
+  Eigen::Map<Eigen::VectorXd> stateref(V_DATA_S(state), NV_LENGTH_S(state));
+#endif
   data->UpdateInputs(stateref, time);
 
   // evaluate the rhs
-  Eigen::Map<Eigen::VectorXd> statedotref(NV_DATA_S(statedot), NV_LENGTH_S(statedot));
+#if MUQ_HAS_PARCER==1
+  NVectorMap(statedotref, data->comm, statedot);
+#else
+  Eigen::Map<Eigen::VectorXd> statedotref(V_DATA_S(statedot), NV_LENGTH_S(statedot));
+#endif
   statedotref = data->rhs->Evaluate(data->inputs) [0];
 
   return 0;
@@ -226,15 +267,44 @@ int ODEBase::AdjointRHS(realtype time, N_Vector state, N_Vector lambda, N_Vector
   assert(data->rhs);
 
   // set the state input
+#if MUQ_HAS_PARCER==1
+  NVectorMap(stateref, data->comm, state);
+#else
   Eigen::Map<Eigen::VectorXd> stateref(NV_DATA_S(state), NV_LENGTH_S(state));
+#endif
   data->UpdateInputs(stateref, time);
 
-  Eigen::Map<Eigen::VectorXd> stateMap(NV_DATA_S(state), NV_LENGTH_S(state));
+#if MUQ_HAS_PARCER==1
+  NVectorMap(lambdaMap, data->comm, lambda);
+#else
   Eigen::Map<Eigen::VectorXd> lambdaMap(NV_DATA_S(lambda), NV_LENGTH_S(lambda));
+#endif
   const Eigen::VectorXd& lam = lambdaMap;
-  Eigen::Map<Eigen::VectorXd> derivMap(NV_DATA_S(deriv), NV_LENGTH_S(deriv));
 
-  derivMap = -1.0*data->rhs->Gradient(0, data->autonomous? 0 : 1, data->inputs, lam);
+#if MUQ_HAS_PARCER==1
+  NVectorMap(derivMap, data->comm, deriv);
+#else
+  Eigen::Map<Eigen::VectorXd> derivMap(NV_DATA_S(deriv), NV_LENGTH_S(deriv));
+#endif
+
+#if MUQ_HAS_PARCER==1
+  int globalind = 0;
+  int localSize = 0;
+  if( data->comm ) {
+    localSize = NV_LOCLENGTH_P(state);
+    for( unsigned int i=0; i<data->comm->GetSize(); ++i ) {
+      int temp = localSize;
+      data->comm->Bcast(temp, i);
+      globalind += i<data->comm->GetRank()? temp : 0;
+    }
+  } else {
+    localSize = NV_LENGTH_S(state);
+  }
+#else
+  int globalind = 0;
+  int localSize = NV_LENGTH_S(state);
+#endif
+  derivMap = -1.0*data->rhs->Gradient(0, data->autonomous? 0 : 1, data->inputs, lam).segment(globalind, localSize);
 
   return 0;
 }
@@ -246,14 +316,26 @@ int ODEBase::RHSJacobianAction(N_Vector v, N_Vector Jv, realtype time, N_Vector 
   assert(data->rhs);
 
   // set the state input
+#if MUQ_HAS_PARCER==1
+  NVectorMap(stateref, data->comm, state);
+#else
   Eigen::Map<Eigen::VectorXd> stateref(NV_DATA_S(state), NV_LENGTH_S(state));
+#endif
   data->UpdateInputs(stateref, time);
 
+#if MUQ_HAS_PARCER==1
+  NVectorMap(vref, data->comm, v);
+#else
   Eigen::Map<Eigen::VectorXd> vref(NV_DATA_S(v), NV_LENGTH_S(v));
+#endif
   const Eigen::VectorXd& veig = vref;
 
   // compute the jacobain wrt the state
+#if MUQ_HAS_PARCER==1
+  NVectorMap(Jvref, data->comm, Jv);
+#else
   Eigen::Map<Eigen::VectorXd> Jvref(NV_DATA_S(Jv), NV_LENGTH_S(Jv));
+#endif
   Jvref = data->rhs->ApplyJacobian(0, data->autonomous? 0 : 1, data->inputs, veig);
 
   return 0;
@@ -266,12 +348,24 @@ int ODEBase::AdjointJacobianAction(N_Vector target, N_Vector output, realtype ti
   assert(data->rhs);
 
   // set the state input
+#if MUQ_HAS_PARCER==1
+  NVectorMap(stateref, data->comm, state);
+#else
   Eigen::Map<Eigen::VectorXd> stateref(NV_DATA_S(state), NV_LENGTH_S(state));
+#endif
   data->UpdateInputs(stateref, time);
 
+#if MUQ_HAS_PARCER==1
+  NVectorMap(targetMap, data->comm, target);
+#else
   Eigen::Map<Eigen::VectorXd> targetMap(NV_DATA_S(target), NV_LENGTH_S(target));
+#endif
   const Eigen::VectorXd& targ = targetMap;
+#if MUQ_HAS_PARCER==1
+  NVectorMap(outputMap, data->comm, output);
+#else
   Eigen::Map<Eigen::VectorXd> outputMap(NV_DATA_S(output), NV_LENGTH_S(output));
+#endif
 
   outputMap = -1.0*data->rhs->Gradient(0, data->autonomous? 0 : 1, data->inputs, targ);
 
@@ -285,7 +379,11 @@ int ODEBase::RHSJacobian(long int N, realtype time, N_Vector state, N_Vector rhs
   assert(data->rhs);
 
   // set the state input
+#if MUQ_HAS_PARCER==1
+  NVectorMap(stateref, data->comm, state);
+#else
   Eigen::Map<Eigen::VectorXd> stateref(NV_DATA_S(state), NV_LENGTH_S(state));
+#endif
   data->UpdateInputs(stateref, time);
 
   // evaluate the jacobian
@@ -302,7 +400,11 @@ int ODEBase::AdjointJacobian(long int N, realtype time, N_Vector state, N_Vector
   assert(data->rhs);
 
   // set the state input
+#if MUQ_HAS_PARCER==1
+  NVectorMap(stateref, data->comm, state);
+#else
   Eigen::Map<Eigen::VectorXd> stateref(NV_DATA_S(state), NV_LENGTH_S(state));
+#endif
   data->UpdateInputs(stateref, time);
 
   // evaluate the jacobian
@@ -319,26 +421,29 @@ int ODEBase::AdjointQuad(realtype time, N_Vector state, N_Vector lambda, N_Vecto
   assert(data->rhs);
 
   // set the state input
+#if MUQ_HAS_PARCER==1
+  NVectorMap(stateref, data->comm, state);
+#else
   Eigen::Map<Eigen::VectorXd> stateref(NV_DATA_S(state), NV_LENGTH_S(state));
+#endif
   data->UpdateInputs(stateref, time);
 
+#if MUQ_HAS_PARCER==1
+  NVectorMap(lambdaMap, data->comm, lambda);
+#else
   Eigen::Map<Eigen::VectorXd> lambdaMap(NV_DATA_S(lambda), NV_LENGTH_S(lambda));
+#endif
   const Eigen::VectorXd& lam = lambdaMap;
+
+#if MUQ_HAS_PARCER==1
+  NVectorMap(nvQuadMap, data->comm, quadRhs);
+#else
   Eigen::Map<Eigen::VectorXd> nvQuadMap(NV_DATA_S(quadRhs), NV_LENGTH_S(quadRhs));
+#endif
 
   nvQuadMap = data->rhs->Gradient(0, data->autonomous? data->wrtIn : data->wrtIn+1, data->inputs, lam);
 
   return 0;
-}
-
-void ODEBase::DeepCopy(N_Vector& copy, N_Vector const& orig) const {
-  // initialize the copy
-  copy = N_VNew_Serial(NV_LENGTH_S(orig));
-
-  // copy each value
-  for( unsigned int i=0; i<NV_LENGTH_S(orig); ++i ) {
-    NV_Ith_S(copy, i) = NV_Ith_S(orig, i);
-  }
 }
 
 void ODEBase::SetUpSensitivity(void *cvode_mem, unsigned int const paramSize, N_Vector *sensState) const {
@@ -363,21 +468,23 @@ int ODEBase::ForwardSensitivityRHS(int Ns, realtype time, N_Vector y, N_Vector y
   assert(data->rhs);
 
   // set the state input
+#if MUQ_HAS_PARCER==1
+  NVectorMap(stateref, data->comm, y);
+#else
   Eigen::Map<Eigen::VectorXd> stateref(NV_DATA_S(y), NV_LENGTH_S(y));
-  if( data->autonomous ) {
-    data->inputs[0] = stateref;
-  } else {
-    data->inputs[0] = Eigen::VectorXd::Constant(1, time);
-    data->inputs[1] = stateref;
-  }
-
-  // the derivative of the rhs wrt the state
-  const Eigen::MatrixXd& dfdy = data->rhs->Jacobian(0, data->autonomous? 0 : 1, data->inputs);
+#endif
+  data->UpdateInputs(stateref, time);
 
   for( unsigned int i=0; i<Ns; ++i ) {
+#if MUQ_HAS_PARCER==1
+    NVectorMap(rhsMap, data->comm, ySdot[i]);
+    NVectorMap(sensMap, data->comm, ys[i]);
+#else
     Eigen::Map<Eigen::VectorXd> rhsMap(NV_DATA_S(ySdot[i]), stateref.size());
     Eigen::Map<Eigen::VectorXd> sensMap(NV_DATA_S(ys[i]), stateref.size());
-    rhsMap = dfdy*sensMap;
+#endif
+
+    rhsMap = data->rhs->ApplyJacobian(0, data->autonomous? 0 : 1, data->inputs, (Eigen::VectorXd)sensMap);
   }
 
   // the derivative of the rhs wrt the parameter
@@ -385,8 +492,13 @@ int ODEBase::ForwardSensitivityRHS(int Ns, realtype time, N_Vector y, N_Vector y
 
   // now, loop through and fill in the rhs vectors stored in ySdot
   for( unsigned int i=0; i<Ns; ++i ) {
+#if MUQ_HAS_PARCER==1
+    Eigen::Map<Eigen::VectorXd> rhsMap(data->comm? NV_DATA_P(ySdot[i]) : NV_DATA_S(ySdot[i]), stateref.size());
+    Eigen::Map<Eigen::VectorXd> sensMap(data->comm? NV_DATA_P(ys[i]) : NV_DATA_S(ys[i]), stateref.size());
+#else
     Eigen::Map<Eigen::VectorXd> rhsMap(NV_DATA_S(ySdot[i]), stateref.size());
     Eigen::Map<Eigen::VectorXd> sensMap(NV_DATA_S(ys[i]), stateref.size());
+#endif
     rhsMap += dfdp.col(i);
   }
 

@@ -1,6 +1,12 @@
 #ifndef ODEDATA_H_
 #define ODEDATA_H_
 
+#include "MUQ/config.h"
+
+#if MUQ_HAS_PARCER==1
+#include <parcer/Communicator.h>
+#endif
+
 #include "MUQ/Modeling/ModPiece.h"
 
 namespace muq {
@@ -19,7 +25,11 @@ namespace muq {
 	 @param[in] autonomous Is the RHS autonomous?
 	 @param[in] wrtIn The input we are computing the derivative wrt --- negative indicates no derivative is being computed
        */
-      ODEData(std::shared_ptr<ModPiece> rhs, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn);
+#if MUQ_HAS_PARCER==1
+      ODEData(std::shared_ptr<ModPiece> const& rhs, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn, std::shared_ptr<parcer::Communicator> const& comm);
+#else
+      ODEData(std::shared_ptr<ModPiece> const& rhs, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn);
+#endif
 
       /// Construct with root function
       /**
@@ -29,7 +39,7 @@ namespace muq {
 	 @param[in] autonomous Is the RHS autonomous?
 	 @param[in] wrtIn The input we are computing the derivative wrt --- negative indicates no derivative is being computed
        */
-      ODEData(std::shared_ptr<ModPiece> rhs, std::shared_ptr<ModPiece> root, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn);
+      ODEData(std::shared_ptr<ModPiece> const& rhs, std::shared_ptr<ModPiece> const& root, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn);
 
       virtual ~ODEData() = default;
 
@@ -50,6 +60,10 @@ namespace muq {
 
       /// The input we are computing the derivative wrt --- negative indicates no derivative is being computed
       const int wrtIn = -1;
+
+#if MUQ_HAS_PARCER==1
+      std::shared_ptr<parcer::Communicator> comm = nullptr;
+#endif
 
     private:
     };

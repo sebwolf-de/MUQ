@@ -1,7 +1,7 @@
 #ifndef ODEBASE_H_
 #define ODEBASE_H_
 
-#include "boost/property_tree/ptree.hpp"
+#include <boost/property_tree/ptree.hpp>
 
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/ODEData.h"
@@ -19,7 +19,11 @@ namespace muq {
       @param[in] outputSizes The output sizes
 	    @param[in] pt A boost::property_tree::ptree with options/tolerances for the ODE integrator
       */
-      ODEBase(std::shared_ptr<ModPiece> rhs, Eigen::VectorXi const& inputSizes, Eigen::VectorXi const& outputSizes, boost::property_tree::ptree const& pt);
+#if MUQ_HAS_PARCER==1
+  ODEBase(std::shared_ptr<ModPiece> const& rhs, Eigen::VectorXi const& inputSizes, Eigen::VectorXi const& outputSizes, boost::property_tree::ptree const& pt, std::shared_ptr<parcer::Communicator> const& comm = nullptr);
+#else
+      ODEBase(std::shared_ptr<ModPiece> const& rhs, Eigen::VectorXi const& inputSizes, Eigen::VectorXi const& outputSizes, boost::property_tree::ptree const& pt);
+#endif
 
       virtual ~ODEBase();
 
@@ -53,13 +57,6 @@ namespace muq {
       void CreateSolverMemory(void* cvode_mem, N_Vector const& state, std::shared_ptr<ODEData> data) const;
 
       int CreateSolverMemoryB(void* cvode_mem, double const timeFinal, N_Vector const& lambda, N_Vector const& nvGrad, std::shared_ptr<ODEData> data) const;
-
-      /// Copy the values of an N_Vector
-      /**
-	 @param[out] copy A new vector whose size and values are the same as orig
-	 @param[in] orig An existing vector to be copied
-       */
-      void DeepCopy(N_Vector& copy, N_Vector const& orig) const;
 
       /// Deal with Sundials errors
       /**
@@ -162,6 +159,9 @@ namespace muq {
       /// The maximum time step size
       const double maxStepSize;
 
+      /// The maximum number of time steps
+      const unsigned int maxNumSteps;
+
       /// Multistep method
       int multiStep;
 
@@ -173,6 +173,13 @@ namespace muq {
 
       /// Check point gap
       const unsigned int checkPtGap;
+
+#if MUQ_HAS_PARCER==1
+      /// The global size of the state vector
+      const unsigned int globalSize = std::numeric_limits<unsigned int>::quiet_NaN();
+
+      std::shared_ptr<parcer::Communicator> comm = nullptr;
+#endif
 
     private:
 
