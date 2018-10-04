@@ -15,5 +15,6 @@ PYBIND11_MODULE(pymuqModeling_, m) {
     DistributionWrapper(m);
     CwiseUnaryOperatorsWrapper(m);
     LinearOperatorWrapper(m);
+    ODEWrapper(m);
 
 }

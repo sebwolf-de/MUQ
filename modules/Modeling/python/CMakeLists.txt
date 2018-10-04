@@ -28,6 +28,16 @@ CreateCompileGroup(
 )
 
 CreateCompileGroup(
+    MODELING_SUNDIALS_MODELS_PYTHON
+    "Python interface for the ODE integrators using Sundials"
+    pymuqModeling_
+    "MODELING_SUNDIALS_MODELS"
+    "PYTHON"
+    ""
+    ODEWrapper.cpp
+)
+
+CreateCompileGroup(
     MODELING_PDE_PYTHON
     "Building PDE based models in MUQ."
     pymuqModeling_
