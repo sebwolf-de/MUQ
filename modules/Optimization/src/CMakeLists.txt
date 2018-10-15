@@ -21,4 +21,5 @@ CreateCompileGroup(
     ""
     CostFunction.cpp
     Optimization.cpp
+    NLoptOptimizer.cpp
 )

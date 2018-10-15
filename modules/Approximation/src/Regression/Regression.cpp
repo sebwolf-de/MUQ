@@ -5,7 +5,7 @@
 
 #include "MUQ/Utilities/RandomGenerator.h"
 
-#include "MUQ/Optimization/Optimization.h"
+#include "MUQ/Optimization/NLoptOptimizer.h"
 
 #include "MUQ/Approximation/Polynomials/IndexedScalarBasis.h"
 
@@ -220,10 +220,12 @@ std::pair<Eigen::VectorXd, double> Regression::PoisednessConstant(std::vector<Ei
   auto cost = std::make_shared<PoisednessCost>(shared_from_this(), lagrangeCoeff, inputDim);
   auto constraint = std::make_shared<PoisednessConstraint>(inputDim);
 
-  auto opt = std::make_shared<muq::Optimization::Optimization>(cost, optPt);
+  std::shared_ptr<muq::Optimization::Optimization> opt =
+    std::make_shared<muq::Optimization::NLoptOptimizer>(cost, optPt);
   opt->AddInequalityConstraint(constraint);
 
-  const std::pair<Eigen::VectorXd, double>& soln = opt->Solve((Eigen::VectorXd)Eigen::VectorXd::Zero(inputDim));
+  const std::pair<Eigen::VectorXd, double>& soln =
+    opt->Solve<Eigen::VectorXd>((Eigen::VectorXd)Eigen::VectorXd::Zero(inputDim));
   assert(soln.second<=0.0); // we are minimizing a negative inner product so the optimal solution should be negative
 
   return std::pair<Eigen::VectorXd, double>(radius*soln.first+center, -soln.second);

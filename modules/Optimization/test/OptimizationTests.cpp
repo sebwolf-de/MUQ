@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "MUQ/Optimization/Optimization.h"
+#include "MUQ/Optimization/NLoptOptimizer.h"
 
 #include "RosenbrockFunction.h"
 
@@ -27,7 +27,8 @@ public:
     const Eigen::VectorXd x = Eigen::Vector2d(0.85, 1.2);
     const Eigen::VectorXd a = Eigen::VectorXd::Constant(1, 5.0);
     
-    auto opt = std::make_shared<Optimization>(cost, pt.get_child("Optimization"));
+    std::shared_ptr<Optimization> opt =
+      std::make_shared<NLoptOptimizer>(cost, pt.get_child("Optimization"));
     
     std::vector<boost::any> soln0 = opt->Evaluate(x, a);
     std::pair<Eigen::VectorXd, double> soln1 = opt->Solve(x, a);
@@ -178,7 +179,8 @@ public:
     const Eigen::VectorXd a = Eigen::VectorXd::Constant(1, 5.0);
     const Eigen::VectorXd b = Eigen::VectorXd::Constant(1, 2.0);
 	    
-    auto opt = std::make_shared<Optimization>(cost, pt.get_child("Optimization"));
+    std::shared_ptr<Optimization> opt =
+      std::make_shared<NLoptOptimizer>(cost, pt.get_child("Optimization"));
     opt->AddInequalityConstraint(ineqconstraint);
     opt->AddEqualityConstraint(eqconstraint);
     
