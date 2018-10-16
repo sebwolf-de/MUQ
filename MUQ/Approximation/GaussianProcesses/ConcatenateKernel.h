@@ -22,43 +22,26 @@ k(x,x^\prime) = \left[\begin{array}{cc}k_1(x,x^\prime) & 0\\ 0 & k_2(x,x^\prime)
     {
 
     public:
+
         ConcatenateKernel(std::shared_ptr<KernelBase> const& kernel1In,
-                          std::shared_ptr<KernelBase> const& kernel2In) : KernelBase(kernel1In->inputDim,
-                                                                                     kernel1In->coDim + kernel2In->coDim,
-                                                                                     kernel1In->numParams + kernel2In->numParams),
-                                                                          kernel1(kernel1In),
-                                                                          kernel2(kernel2In)
-        {
-            assert(kernel1->inputDim == kernel2->inputDim);
-            cachedParams.resize(numParams);
-            cachedParams.head(kernel1->numParams) = kernel1->GetParams();
-            cachedParams.tail(kernel2->numParams) = kernel2->GetParams();
-        };
+                          std::shared_ptr<KernelBase> const& kernel2In) : ConcatenateKernel(std::vector<std::shared_ptr<KernelBase>>({kernel1In, kernel2In})){};
 
-        virtual ~ConcatenateKernel(){};
+        ConcatenateKernel(std::vector<std::shared_ptr<KernelBase>> const& kernelsIn);
 
-        virtual std::shared_ptr<KernelBase> Clone() const override{return std::make_shared<ConcatenateKernel>(kernel1,kernel2);};
+        virtual ~ConcatenateKernel() = default;
+
+        virtual std::shared_ptr<KernelBase> Clone() const override{return std::make_shared<ConcatenateKernel>(kernels);};
 
         virtual void FillBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
                                Eigen::Ref<const Eigen::VectorXd> const& x2,
                                Eigen::Ref<const Eigen::VectorXd> const& params,
-                               Eigen::Ref<Eigen::MatrixXd>              block) const override
-        {
-          block = Eigen::MatrixXd::Zero(coDim, coDim);
-          kernel1->FillBlock(x1, x2, params, block.block(0,0,kernel1->coDim, kernel1->coDim));
-          kernel2->FillBlock(x1, x2, params, block.block(kernel1->coDim,kernel1->coDim,kernel2->coDim, kernel2->coDim));
-        }
+                               Eigen::Ref<Eigen::MatrixXd>              block) const override;
 
         virtual void FillPosDerivBlock(Eigen::Ref<const Eigen::VectorXd> const& x1,
                                        Eigen::Ref<const Eigen::VectorXd> const& x2,
                                        Eigen::Ref<const Eigen::VectorXd> const& params,
                                        std::vector<int>                  const& wrts,
-                                       Eigen::Ref<Eigen::MatrixXd>              block) const override
-        {
-          block = Eigen::MatrixXd::Zero(coDim, coDim);
-          kernel1->FillPosDerivBlock(x1, x2, params, wrts, block.block(0,0,kernel1->coDim, kernel1->coDim));
-          kernel2->FillPosDerivBlock(x1, x2, params, wrts, block.block(kernel1->coDim,kernel1->coDim,kernel2->coDim, kernel2->coDim));
-        };
+                                       Eigen::Ref<Eigen::MatrixXd>              block) const override;
 
         // template<typename VecType1, typename VecType2, typename MatType>
         //     inline void GetDerivative(VecType1 const& x1, VecType2 const& x2, int wrt, MatType & derivs) const
@@ -85,8 +68,11 @@ k(x,x^\prime) = \left[\begin{array}{cc}k_1(x,x^\prime) & 0\\ 0 & k_2(x,x^\prime)
         // }
 
     private:
-        std::shared_ptr<KernelBase> kernel1;
-        std::shared_ptr<KernelBase> kernel2;
+
+        static unsigned int CountCoDims(std::vector<std::shared_ptr<KernelBase>> kernels);
+        static unsigned int CountParams(std::vector<std::shared_ptr<KernelBase>> kernels);
+
+        std::vector<std::shared_ptr<KernelBase>> kernels;
     };
 
 
