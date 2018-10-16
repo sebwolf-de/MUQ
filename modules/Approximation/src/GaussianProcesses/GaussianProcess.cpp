@@ -98,10 +98,8 @@ void GaussianProcess::ProcessObservations()
                 observations.at(i)->FillCrossCov(observations.at(j), covKernel, trainCov.block(currRow, currCol, observations.at(i)->H->rows(), observations.at(j)->H->rows()));
                 currRow += observations.at(i)->H->rows();
             }
-
             //covKernel->BuildCovariance(observations.at(j)->loc, observations.at(j)->loc);
             observations.at(j)->FillSelfCov(covKernel, trainCov.block(currRow, currRow, observations.at(j)->H->rows(), observations.at(j)->H->rows()));
-
             currCol += observations.at(j)->H->rows();
         }
 
@@ -162,12 +160,12 @@ void GaussianProcess::Optimize()
 
 Eigen::MatrixXd GaussianProcess::BuildCrossCov(Eigen::MatrixXd const& newLocs)
 {
-    Eigen::MatrixXd crossCov( coDim*newLocs.cols(), obsDim);
+    Eigen::MatrixXd crossCov( obsDim, coDim*newLocs.cols());
     int currCol = 0;
 
     for(int j=0; j<observations.size(); ++j){
         for(int i=0; i<newLocs.cols(); ++i){
-          observations.at(j)->FillCrossCov(newLocs.col(i), covKernel, crossCov.block(i*coDim, currCol, coDim, observations.at(j)->H->rows()));
+          observations.at(j)->FillCrossCov(newLocs.col(i), covKernel, crossCov.block(currCol, i*coDim, observations.at(j)->H->rows(), coDim));
 
             // Eigen::MatrixXd temp = covKernel
             // Eigen::MatrixXd temp = covKernel->BuildCovariance(newLocs.col(i), observations.at(j)->loc);
@@ -177,7 +175,7 @@ Eigen::MatrixXd GaussianProcess::BuildCrossCov(Eigen::MatrixXd const& newLocs)
         currCol += observations.at(j)->H->rows();
     }
 
-    return crossCov;
+    return crossCov.transpose();
 }
 std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::MatrixXd const& newLocs,
                                                                      CovarianceType         covType)
@@ -266,7 +264,6 @@ Eigen::MatrixXd GaussianProcess::PredictMean(Eigen::MatrixXd const& newPts)
         return mean->Evaluate(newPts);
 
     ProcessObservations();
-
 
     // Construct the cross covariance
     Eigen::MatrixXd crossCov = BuildCrossCov(newPts);

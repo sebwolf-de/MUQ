@@ -30,6 +30,9 @@ k(x,x^\prime) = \left[\begin{array}{cc}k_1(x,x^\prime) & 0\\ 0 & k_2(x,x^\prime)
                                                                           kernel2(kernel2In)
         {
             assert(kernel1->inputDim == kernel2->inputDim);
+            cachedParams.resize(numParams);
+            cachedParams.head(kernel1->numParams) = kernel1->GetParams();
+            cachedParams.tail(kernel2->numParams) = kernel2->GetParams();
         };
 
         virtual ~ConcatenateKernel(){};
