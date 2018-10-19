@@ -23,14 +23,14 @@ namespace muq {
       /**
          @param[in] ineq The constraint
       */
-      void AddInequalityConstraint(std::shared_ptr<CostFunction> ineq);
+      virtual void AddInequalityConstraint(std::shared_ptr<CostFunction> ineq) override;
       
       /// Add an equality constraint to the optimization
       /**
          NOTE: the NLOPT algorithm used must be able to handle equality constraints
          @param[in] ineq The constraint
       */
-      void AddEqualityConstraint(std::shared_ptr<CostFunction> eq);
+      virtual void AddEqualityConstraint(std::shared_ptr<CostFunction> eq) override;
 
       virtual std::pair<Eigen::VectorXd, double>
       Solve(muq::Modeling::ref_vector<boost::any> const& inputs) override;

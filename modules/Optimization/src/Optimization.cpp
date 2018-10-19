@@ -19,3 +19,14 @@ Optimization::Optimization(std::shared_ptr<CostFunction> cost,
 
 
 Optimization::~Optimization() {}
+
+
+void Optimization::AddInequalityConstraint(std::shared_ptr<CostFunction> ineq) {
+  std::cerr << "ERROR: This optimization method does not handle inequality constraints." << std::endl;
+}
+
+
+void Optimization::AddEqualityConstraint(std::shared_ptr<CostFunction> eq) {
+  std::cerr << "ERROR: This optimization method does not handle equality constraints." << std::endl;
+}
+  

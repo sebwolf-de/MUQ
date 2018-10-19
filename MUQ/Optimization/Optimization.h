@@ -22,6 +22,20 @@ namespace Optimization {
                  boost::property_tree::ptree const& pt);
 
     virtual ~Optimization();
+
+    /// Add an inequality constraint to the optimization
+    /**
+       @param[in] ineq The constraint
+    */
+    virtual void AddInequalityConstraint(std::shared_ptr<CostFunction> ineq);
+    
+    /// Add an equality constraint to the optimization
+    /**
+       NOTE: the NLOPT algorithm used must be able to handle equality constraints
+       @param[in] ineq The constraint
+    */
+    virtual void AddEqualityConstraint(std::shared_ptr<CostFunction> eq);
+
     
     /// Solve the optimization problem
     /**
