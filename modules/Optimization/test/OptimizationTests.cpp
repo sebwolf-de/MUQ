@@ -181,8 +181,8 @@ public:
 	    
     std::shared_ptr<Optimization> opt =
       std::make_shared<NLoptOptimizer>(cost, pt.get_child("Optimization"));
-    opt->AddInequalityConstraint(ineqconstraint);
-    opt->AddEqualityConstraint(eqconstraint);
+    std::dynamic_pointer_cast<NLoptOptimizer>(opt)->AddInequalityConstraint(ineqconstraint);
+    std::dynamic_pointer_cast<NLoptOptimizer>(opt)->AddEqualityConstraint(eqconstraint);
     
     std::vector<boost::any> soln0 = opt->Evaluate(x, a, b);
     std::pair<Eigen::VectorXd, double> soln1 = opt->Solve(x, a, b);

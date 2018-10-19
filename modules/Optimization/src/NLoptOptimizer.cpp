@@ -10,8 +10,8 @@ using namespace muq::Optimization;
 NLoptOptimizer::NLoptOptimizer(std::shared_ptr<CostFunction> cost,
                                pt::ptree const& pt) :
   Optimization(cost, pt),
-  algorithm(NLOptAlgorithm(pt.get<std::string>("Algorithm"))) {}
-
+  algorithm(NLOptAlgorithm(pt.get<std::string>("Algorithm"))),
+  opt(cost, 1) {}
 
 
 NLoptOptimizer::~NLoptOptimizer() {}
@@ -50,12 +50,12 @@ void NLoptOptimizer::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   
   // create the optimizer
   auto solver = nlopt_create(algorithm, opt.cost->inputSizes(0));
-  nlopt_set_min_objective(solver, Optimization::Cost, &opt);
+  nlopt_set_min_objective(solver, Cost, &opt);
   
   for( std::vector<CostFunction>::size_type i=0; i<ineqConstraints.size(); ++i )
-    nlopt_add_inequality_constraint(solver, Optimization::Cost, &ineqConstraints[i], constraint_tol); 
+    nlopt_add_inequality_constraint(solver, Cost, &ineqConstraints[i], constraint_tol); 
   for( std::vector<CostFunction>::size_type i=0; i<eqConstraints.size(); ++i )
-    nlopt_add_equality_constraint(solver, Optimization::Cost, &eqConstraints[i], constraint_tol); 
+    nlopt_add_equality_constraint(solver, Cost, &eqConstraints[i], constraint_tol); 
 
   // set the tolerances
   nlopt_set_ftol_rel(solver, ftol_rel);
@@ -103,3 +103,45 @@ void NLoptOptimizer::UpdateInputs(unsigned int const numNewIns) {
   numInputs += numNewIns;
 }
 
+double NLoptOptimizer::Cost(unsigned int n,
+                          const double* x,
+                          double* grad,
+                          void* f_data) {
+
+  
+  CostHelper* opt = (CostHelper*)f_data;
+
+  Eigen::Map<const Eigen::VectorXd> xmap(x, n);
+  const Eigen::VectorXd& xeig = xmap;
+  opt->inputs.at(0) = std::cref(xeig);
+  
+  if( grad ) {
+    Eigen::Map<Eigen::VectorXd> gradmap(grad, n);
+    const Eigen::VectorXd& gradeig =
+      opt->cost->Gradient(0,
+                          opt->inputs,
+                          (Eigen::VectorXd)Eigen::VectorXd::Ones(1));
+    gradmap = gradeig;
+  }
+  
+  return opt->cost->Cost(opt->inputs);
+
+}
+
+NLoptOptimizer::CostHelper::CostHelper(std::shared_ptr<CostFunction> cost,
+                                     unsigned int const firstin) :
+  cost(cost), firstin(firstin) {}
+
+NLoptOptimizer::CostHelper::~CostHelper() {}
+
+void NLoptOptimizer::CostHelper::SetInputs(ref_vector<boost::any> const& ins) {
+  inputs.clear();
+  
+  // set initial condition
+  inputs.push_back(std::cref(boost::any_cast<Eigen::VectorXd const&>(ins[0])));
+
+  // set other inputs
+  for( unsigned int i=firstin; i<firstin+cost->numInputs-1; ++i ) {
+    inputs.push_back(std::cref(boost::any_cast<Eigen::VectorXd const&>(ins[i])));
+  }
+}

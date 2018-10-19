@@ -222,7 +222,7 @@ std::pair<Eigen::VectorXd, double> Regression::PoisednessConstant(std::vector<Ei
 
   std::shared_ptr<muq::Optimization::Optimization> opt =
     std::make_shared<muq::Optimization::NLoptOptimizer>(cost, optPt);
-  opt->AddInequalityConstraint(constraint);
+  std::dynamic_pointer_cast<muq::Optimization::NLoptOptimizer>(opt)->AddInequalityConstraint(constraint);
 
   const std::pair<Eigen::VectorXd, double>& soln =
     opt->Solve<Eigen::VectorXd>((Eigen::VectorXd)Eigen::VectorXd::Zero(inputDim));
