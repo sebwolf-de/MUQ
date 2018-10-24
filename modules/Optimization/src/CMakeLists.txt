@@ -20,6 +20,6 @@ CreateCompileGroup(
     "NLOPT"
     ""
     CostFunction.cpp
-    Optimization.cpp
+    OptimizerBase.cpp
     NLoptOptimizer.cpp
 )

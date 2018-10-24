@@ -1,12 +1,12 @@
-#include "MUQ/Optimization/Optimization.h"
+#include "MUQ/Optimization/OptimizerBase.h"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::Optimization;
 
 
-Optimization::Optimization(std::shared_ptr<CostFunction> cost,
-                           pt::ptree const& pt) :
+OptimizerBase::OptimizerBase(std::shared_ptr<CostFunction> cost,
+                             pt::ptree const& pt) :
   WorkPiece(cost->InputTypes(),
             cost->numInputs,
             std::vector<std::string>({typeid(Eigen::VectorXd).name(), typeid(double).name()})),
@@ -18,15 +18,15 @@ Optimization::Optimization(std::shared_ptr<CostFunction> cost,
   maxEvals(pt.get<unsigned int>("MaxEvaluations", 100)) {}
 
 
-Optimization::~Optimization() {}
+OptimizerBase::~OptimizerBase() {}
 
 
-void Optimization::AddInequalityConstraint(std::shared_ptr<CostFunction> ineq) {
+void OptimizerBase::AddInequalityConstraint(std::shared_ptr<ModPiece> const& ineq) {
   std::cerr << "ERROR: This optimization method does not handle inequality constraints." << std::endl;
 }
 
 
-void Optimization::AddEqualityConstraint(std::shared_ptr<CostFunction> eq) {
+void OptimizerBase::AddEqualityConstraint(std::shared_ptr<ModPiece> const& eq) {
   std::cerr << "ERROR: This optimization method does not handle equality constraints." << std::endl;
 }
   

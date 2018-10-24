@@ -69,25 +69,31 @@ namespace muq {
       /**
          @param[in] inputDimWrt Which input are we taking the 2nd derivative with respect to?
          @param[in] input The inputs \f$x\f$, \f$\theta_{1:n}\f$
-         @param[in] senstivity The sensitivity vector
          \return The Hessian of the cost function
       */
       Eigen::MatrixXd Hessian(unsigned int const inputDimWrt,
-                              std::vector<Eigen::VectorXd> const& input,
-                              Eigen::VectorXd const& sensitivity);
+                              std::vector<Eigen::VectorXd> const& input);
 
 
+      /// The Hessian of the cost function using finite difference
+      /**
+         @param[in] inputDimWrt Which input are we taking the 2nd derivative with respect to?
+         @param[in] input The inputs \f$x\f$, \f$\theta_{1:n}\f$
+         \return The Hessian of the cost function
+      */
+      Eigen::MatrixXd HessianByFD(unsigned int const inputDimWrt,
+                                  std::vector<Eigen::VectorXd> const& input);
+
+      
       /// The Hessian of the cost function
       /**
          @param[in] inputDimWrt Which input are we taking the 2nd derivative with respect to?
          @param[in] input The inputs \f$x\f$, \f$\theta_{1:n}\f$
-         @param[in] senstivity The sensitivity vector
          @param[in] vec Vector to which the Hessian is applied
          \return The Hessian action on vec
       */
       Eigen::MatrixXd ApplyHessian(unsigned int const inputDimWrt,
                                    std::vector<Eigen::VectorXd> const& input,
-                                   Eigen::VectorXd const& sensitivity,
                                    Eigen::VectorXd const& vec);
 
     private:

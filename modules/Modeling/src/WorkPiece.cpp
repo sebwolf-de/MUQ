@@ -267,6 +267,9 @@ std::vector<boost::any> const& WorkPiece::Evaluate(ref_vector<boost::any> const&
 
 std::vector<boost::any> const& WorkPiece::Evaluate(std::vector<boost::any> const& ins) {
   // make sure we have the correct number of inputs
+  for (auto i : inputSizes)
+    std::cout << i.first << std::endl;
+  
   assert(numInputs<0 || ins.size()==numInputs);
 
   // make sure the input types are correct

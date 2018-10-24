@@ -9,9 +9,9 @@ using namespace muq::Optimization;
 
 NLoptOptimizer::NLoptOptimizer(std::shared_ptr<CostFunction> cost,
                                pt::ptree const& pt) :
-  Optimization(cost, pt),
+  OptimizerBase(cost, pt),
   algorithm(NLOptAlgorithm(pt.get<std::string>("Algorithm"))),
-  opt(cost, 1) {}
+  opt(cost) {}
 
 
 NLoptOptimizer::~NLoptOptimizer() {}
@@ -40,22 +40,37 @@ nlopt_algorithm NLoptOptimizer::NLOptAlgorithm(std::string const& alg) const {
 
 void NLoptOptimizer::EvaluateImpl(ref_vector<boost::any> const& inputs) {
 
-  opt.SetInputs(inputs);
-
-  for( auto it=ineqConstraints.begin(); it!=ineqConstraints.end(); ++it )
-    it->SetInputs(inputs); 
-
-  for( auto it=eqConstraints.begin(); it!=eqConstraints.end(); ++it )
-    it->SetInputs(inputs);
-  
   // create the optimizer
-  auto solver = nlopt_create(algorithm, opt.cost->inputSizes(0));
+  auto solver = nlopt_create(algorithm, opt->inputSizes(0));
   nlopt_set_min_objective(solver, Cost, &opt);
-  
-  for( std::vector<CostFunction>::size_type i=0; i<ineqConstraints.size(); ++i )
-    nlopt_add_inequality_constraint(solver, Cost, &ineqConstraints[i], constraint_tol); 
-  for( std::vector<CostFunction>::size_type i=0; i<eqConstraints.size(); ++i )
-    nlopt_add_equality_constraint(solver, Cost, &eqConstraints[i], constraint_tol); 
+
+  if (ineqConstraints) {
+
+    double ineqTol[ineqConstraints->numOutputs];
+    Eigen::Map<const Eigen::VectorXd> ineqTolmap(ineqTol, ineqConstraints->numOutputs);
+    const Eigen::VectorXd ineqTolEig = constraint_tol*Eigen::VectorXd::Ones(ineqConstraints->numOutputs);
+
+    nlopt_add_inequality_mconstraint(solver,
+                                     ineqConstraints->numOutputs,
+                                     Constraint,
+                                     &ineqConstraints,
+                                     ineqTol); 
+    
+  }
+
+  if (eqConstraints) {
+    
+    double eqTol[eqConstraints->numOutputs];
+    Eigen::Map<const Eigen::VectorXd> eqTolmap(eqTol, eqConstraints->numOutputs);
+    const Eigen::VectorXd eqTolEig = constraint_tol*Eigen::VectorXd::Ones(eqConstraints->numOutputs);
+
+    nlopt_add_equality_mconstraint(solver,
+                                   eqConstraints->numOutputs,
+                                   Constraint,
+                                   &eqConstraints,
+                                   eqTol);
+
+  }
 
   // set the tolerances
   nlopt_set_ftol_rel(solver, ftol_rel);
@@ -71,77 +86,101 @@ void NLoptOptimizer::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   Eigen::VectorXd& xopt = boost::any_cast<Eigen::VectorXd&>(outputs.at(0));
 
   double minf;
-  const nlopt_result check = nlopt_optimize(solver, xopt.data(), &minf);
-  if( check<0 ) { throw muq::ExternalLibraryError("NLOPT has failed with flag "+std::to_string(check)); }
-  
-  outputs[1] = minf;
 
+  const nlopt_result check = nlopt_optimize(solver, xopt.data(), &minf);
+
+  if( check<0 )
+    muq::ExternalLibraryError("NLOPT has failed with flag " + std::to_string(check));
+
+  outputs[1] = minf;
+  
 }
       
 std::pair<Eigen::VectorXd, double>
-NLoptOptimizer::Solve(ref_vector<boost::any> const& inputs) {
+NLoptOptimizer::Solve(std::vector<Eigen::VectorXd> const& input) {
 
-  Evaluate(inputs);
+  std::vector<boost::any> ins;
+  for (auto i : input)
+    ins.push_back(i);
+    
+  Evaluate(ins);
 
   return std::pair<Eigen::VectorXd, double>(boost::any_cast<Eigen::VectorXd const&>(outputs[0]),
                                             boost::any_cast<double const>(outputs[1]));
 
 }
 
-void NLoptOptimizer::AddInequalityConstraint(std::shared_ptr<CostFunction> ineq) {
-  ineqConstraints.push_back(CostHelper(ineq, numInputs));
+void NLoptOptimizer::AddInequalityConstraint(std::shared_ptr<ModPiece> const& ineq) {
+  ineqConstraints = ineq;
   UpdateInputs(ineq->numInputs-1);
 }
 
-void NLoptOptimizer::AddEqualityConstraint(std::shared_ptr<CostFunction> eq) {
-  eqConstraints.push_back(CostHelper(eq, numInputs));
+void NLoptOptimizer::AddEqualityConstraint(std::shared_ptr<ModPiece> const& eq) {
+  eqConstraints = eq;
   UpdateInputs(eq->numInputs-1);
 }
 
 void NLoptOptimizer::UpdateInputs(unsigned int const numNewIns) {
-  for( unsigned int i=numInputs; i<numInputs+numNewIns; ++i ) { inputTypes[i] = typeid(Eigen::VectorXd).name(); }
+
+  for( unsigned int i=numInputs; i<numInputs+numNewIns; ++i )
+    inputTypes[i] = typeid(Eigen::VectorXd).name(); 
+
   numInputs += numNewIns;
+
 }
 
 double NLoptOptimizer::Cost(unsigned int n,
-                          const double* x,
-                          double* grad,
-                          void* f_data) {
+                            const double* x,
+                            double* grad,
+                            void* f_data) {
 
-  
-  CostHelper* opt = (CostHelper*)f_data;
+  // The constraint
+  std::shared_ptr<CostFunction> opt = *((std::shared_ptr<CostFunction>*) f_data);
 
   Eigen::Map<const Eigen::VectorXd> xmap(x, n);
   const Eigen::VectorXd& xeig = xmap;
-  opt->inputs.at(0) = std::cref(xeig);
   
-  if( grad ) {
+  if (grad) {
+
     Eigen::Map<Eigen::VectorXd> gradmap(grad, n);
     const Eigen::VectorXd& gradeig =
-      opt->cost->Gradient(0,
-                          opt->inputs,
-                          (Eigen::VectorXd)Eigen::VectorXd::Ones(1));
+      opt->Gradient(0, xeig, (Eigen::VectorXd)Eigen::VectorXd::Ones(1));
     gradmap = gradeig;
+
   }
-  
-  return opt->cost->Cost(opt->inputs);
+
+  return opt->Cost(xeig);
 
 }
 
-NLoptOptimizer::CostHelper::CostHelper(std::shared_ptr<CostFunction> cost,
-                                     unsigned int const firstin) :
-  cost(cost), firstin(firstin) {}
 
-NLoptOptimizer::CostHelper::~CostHelper() {}
+void NLoptOptimizer::Constraint(unsigned int m,
+                                double* result,
+                                unsigned int n,
+                                const double* x,
+                                double* grad,
+                                void* f_data) {
 
-void NLoptOptimizer::CostHelper::SetInputs(ref_vector<boost::any> const& ins) {
-  inputs.clear();
-  
-  // set initial condition
-  inputs.push_back(std::cref(boost::any_cast<Eigen::VectorXd const&>(ins[0])));
+  // The constraint
+  std::shared_ptr<ModPiece> opt =
+    *((std::shared_ptr<ModPiece>*) f_data);
 
-  // set other inputs
-  for( unsigned int i=firstin; i<firstin+cost->numInputs-1; ++i ) {
-    inputs.push_back(std::cref(boost::any_cast<Eigen::VectorXd const&>(ins[i])));
+  Eigen::Map<const Eigen::VectorXd> xmap(x, n);
+  const Eigen::VectorXd& xeig = xmap;
+
+  if( grad ) {
+
+    Eigen::Map<Eigen::MatrixXd> gradmap(grad, n, m);
+    const Eigen::MatrixXd& gradeig =
+      opt->Jacobian(0, 0, xeig);
+
+    gradmap = gradeig;
+
   }
+
+  Eigen::Map<Eigen::VectorXd> resultmap(result, m);
+  std::vector<Eigen::VectorXd> resulteig = opt->Evaluate(xeig);
+  resultmap = resulteig.at(0);
+
 }
+

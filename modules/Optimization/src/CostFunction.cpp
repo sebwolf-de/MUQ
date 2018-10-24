@@ -39,12 +39,19 @@ CostFunction::Gradient(unsigned int const inputDimWrt,
 }
 
 
-
 Eigen::MatrixXd
 CostFunction::Hessian(unsigned int const inputDimWrt,
-                      std::vector<Eigen::VectorXd> const& input,
-                      Eigen::VectorXd const& sensitivity) {
+                      std::vector<Eigen::VectorXd> const& input) {
+  return HessianByFD(inputDimWrt, input);
+}
+  
 
+Eigen::MatrixXd
+CostFunction::HessianByFD(unsigned int const inputDimWrt,
+                          std::vector<Eigen::VectorXd> const& input) {
+
+  const Eigen::VectorXd sensitivity = Eigen::VectorXd::Ones(input[0].size());
+  
   Eigen::VectorXd f0 = ModPiece::Gradient(0, inputDimWrt, input, sensitivity);
   Eigen::VectorXd f;
 
@@ -78,10 +85,9 @@ CostFunction::Hessian(unsigned int const inputDimWrt,
 Eigen::MatrixXd
 CostFunction::ApplyHessian(unsigned int const inputDimWrt,
                            std::vector<Eigen::VectorXd> const& input,
-                           Eigen::VectorXd const& sensitivity,
                            Eigen::VectorXd const& vec) {
 
-  return Hessian(inputDimWrt, input, sensitivity)*vec;
+  return Hessian(inputDimWrt, input)*vec;
 
 }
 
