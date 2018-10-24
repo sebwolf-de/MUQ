@@ -35,7 +35,11 @@ namespace Optimization {
        @param[in] ineq The constraint
     */
     virtual void AddInequalityConstraint(std::shared_ptr<muq::Modeling::ModPiece> const& ineq);
-    
+
+
+    /// Clear all inequality constraints
+    void ClearInequalityConstraint();
+
     /// Add an equality constraint to the optimization
     /**
        NOTE: the NLOPT algorithm used must be able to handle equality constraints
@@ -49,6 +53,9 @@ namespace Optimization {
        @param[in] ineq The constraint
     */
     virtual void AddEqualityConstraint(std::shared_ptr<muq::Modeling::ModPiece> const& eq);
+
+    /// Clear all equality constraints
+    void ClearEqualityConstraint();
     
     /// Solve the optimization problem
     /**

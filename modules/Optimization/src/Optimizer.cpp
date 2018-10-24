@@ -22,17 +22,25 @@ Optimizer::Optimizer(std::shared_ptr<CostFunction> cost,
 Optimizer::~Optimizer() {}
 
 void Optimizer::AddInequalityConstraint(std::vector<std::shared_ptr<ModPiece>> const& ineq) {
-  ineqConstraints = ineq;
+  ineqConstraints.insert(ineqConstraints.end(), ineq.begin(), ineq.end());
 }
 
 void Optimizer::AddInequalityConstraint(std::shared_ptr<ModPiece> const& ineq) {
   ineqConstraints.push_back(ineq);
 }
 
+void Optimizer::ClearInequalityConstraint() {
+  ineqConstraints.clear();
+}
+
 void Optimizer::AddEqualityConstraint(std::vector<std::shared_ptr<ModPiece>> const& eq) {
-  eqConstraints = eq;
+  eqConstraints.insert(eqConstraints.end(), eq.begin(), eq.end());
 }
 
 void Optimizer::AddEqualityConstraint(std::shared_ptr<ModPiece> const& eq) {
   eqConstraints.push_back(eq);
+}
+
+void Optimizer::ClearEqualityConstraint() {
+  eqConstraints.clear();
 }
