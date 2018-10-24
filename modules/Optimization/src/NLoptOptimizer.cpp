@@ -9,10 +9,10 @@ using namespace muq::Optimization;
 
 NLoptOptimizer::NLoptOptimizer(std::shared_ptr<CostFunction> cost,
                                pt::ptree const& pt) :
-  OptimizerBase(cost, pt),
-  algorithm(NLOptAlgorithm(pt.get<std::string>("Algorithm"))),
-  opt(cost) {}
-
+  Optimizer(cost, pt),
+  algorithm(NLOptAlgorithm(pt.get<std::string>("Algorithm"))) {
+  opt = cost;
+}
 
 NLoptOptimizer::~NLoptOptimizer() {}
 
@@ -44,32 +44,36 @@ void NLoptOptimizer::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   auto solver = nlopt_create(algorithm, opt->inputSizes(0));
   nlopt_set_min_objective(solver, Cost, &opt);
 
-  if (ineqConstraints) {
+  if (!ineqConstraints.empty()) {
 
-    double ineqTol[ineqConstraints->numOutputs];
-    Eigen::Map<const Eigen::VectorXd> ineqTolmap(ineqTol, ineqConstraints->numOutputs);
-    const Eigen::VectorXd ineqTolEig = constraint_tol*Eigen::VectorXd::Ones(ineqConstraints->numOutputs);
-
-    nlopt_add_inequality_mconstraint(solver,
-                                     ineqConstraints->numOutputs,
-                                     Constraint,
-                                     &ineqConstraints,
-                                     ineqTol); 
+    for (int i; i<ineqConstraints.size(); ++i) {
     
+      double ineqTol[ineqConstraints[i]->numOutputs];
+      Eigen::Map<const Eigen::VectorXd> ineqTolmap(ineqTol, ineqConstraints[i]->numOutputs);
+      const Eigen::VectorXd ineqTolEig = constraint_tol*Eigen::VectorXd::Ones(ineqConstraints[i]->numOutputs);
+
+      nlopt_add_inequality_mconstraint(solver,
+                                       ineqConstraints[i]->numOutputs,
+                                       Constraint,
+                                       &ineqConstraints[i],
+                                       ineqTol);
+    }
   }
 
-  if (eqConstraints) {
+  if (!eqConstraints.empty()) {
+
+    for (int i; i<eqConstraints.size(); ++i) {
     
-    double eqTol[eqConstraints->numOutputs];
-    Eigen::Map<const Eigen::VectorXd> eqTolmap(eqTol, eqConstraints->numOutputs);
-    const Eigen::VectorXd eqTolEig = constraint_tol*Eigen::VectorXd::Ones(eqConstraints->numOutputs);
-
-    nlopt_add_equality_mconstraint(solver,
-                                   eqConstraints->numOutputs,
-                                   Constraint,
-                                   &eqConstraints,
-                                   eqTol);
-
+      double eqTol[eqConstraints[i]->numOutputs];
+      Eigen::Map<const Eigen::VectorXd> eqTolmap(eqTol, eqConstraints[i]->numOutputs);
+      const Eigen::VectorXd eqTolEig = constraint_tol*Eigen::VectorXd::Ones(eqConstraints[i]->numOutputs);
+      
+      nlopt_add_equality_mconstraint(solver,
+                                     eqConstraints[i]->numOutputs,
+                                     Constraint,
+                                     &eqConstraints[i],
+                                     eqTol);
+    }
   }
 
   // set the tolerances
@@ -107,25 +111,6 @@ NLoptOptimizer::Solve(std::vector<Eigen::VectorXd> const& input) {
 
   return std::pair<Eigen::VectorXd, double>(boost::any_cast<Eigen::VectorXd const&>(outputs[0]),
                                             boost::any_cast<double const>(outputs[1]));
-
-}
-
-void NLoptOptimizer::AddInequalityConstraint(std::shared_ptr<ModPiece> const& ineq) {
-  ineqConstraints = ineq;
-  UpdateInputs(ineq->numInputs-1);
-}
-
-void NLoptOptimizer::AddEqualityConstraint(std::shared_ptr<ModPiece> const& eq) {
-  eqConstraints = eq;
-  UpdateInputs(eq->numInputs-1);
-}
-
-void NLoptOptimizer::UpdateInputs(unsigned int const numNewIns) {
-
-  for( unsigned int i=numInputs; i<numInputs+numNewIns; ++i )
-    inputTypes[i] = typeid(Eigen::VectorXd).name(); 
-
-  numInputs += numNewIns;
 
 }
 

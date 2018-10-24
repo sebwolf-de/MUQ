@@ -1,5 +1,5 @@
-#ifndef OPTIMIZATION_H_
-#define OPTIMIZATION_H_
+#ifndef OPTIMIZER_H_
+#define OPTIMIZER_H_
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -16,13 +16,19 @@ namespace Optimization {
      g_i(x) &=& 0
      \f}
   */
-  class OptimizerBase : public muq::Modeling::WorkPiece {
+  class Optimizer : public muq::Modeling::WorkPiece {
   public:
 
-    OptimizerBase(std::shared_ptr<CostFunction> cost,
+    Optimizer(std::shared_ptr<CostFunction> cost,
                  boost::property_tree::ptree const& pt);
 
-    virtual ~OptimizerBase();
+    virtual ~Optimizer();
+
+    /// Add an inequality constraint to the optimization
+    /**
+       @param[in] ineq The constraint
+    */
+    virtual void AddInequalityConstraint(std::vector<std::shared_ptr<muq::Modeling::ModPiece>> const& ineq);
 
     /// Add an inequality constraint to the optimization
     /**
@@ -35,8 +41,14 @@ namespace Optimization {
        NOTE: the NLOPT algorithm used must be able to handle equality constraints
        @param[in] ineq The constraint
     */
-    virtual void AddEqualityConstraint(std::shared_ptr<muq::Modeling::ModPiece> const& eq);
+    virtual void AddEqualityConstraint(std::vector<std::shared_ptr<muq::Modeling::ModPiece>> const& eq);
 
+    /// Add an equality constraint to the optimization
+    /**
+       NOTE: the NLOPT algorithm used must be able to handle equality constraints
+       @param[in] ineq The constraint
+    */
+    virtual void AddEqualityConstraint(std::shared_ptr<muq::Modeling::ModPiece> const& eq);
     
     /// Solve the optimization problem
     /**
@@ -48,13 +60,17 @@ namespace Optimization {
 
   protected:
 
-    /// Update the inputs if a constraint is added
-    /**
-       Adding a constraint (potentially) increases the number of inputs to the optimization problem.  If the constraint requires inputs, add them to the optimization.
-       @param[in] numNewIns The number of inputs (not the state) that the constraint requires
-    */
-    virtual void UpdateInputs(unsigned int const numNewIns)=0;
+    /// The cost function that we are trying to minimize
+    std::shared_ptr<CostFunction> opt;
     
+    /// Inequality constraints
+    std::vector<std::shared_ptr<muq::Modeling::ModPiece>> ineqConstraints;
+    
+    /// Equality constraints
+    /**
+       NOTE: the solver muq::Optimization::Optimization::algorithm must be able to handle equality constraints
+    */
+    std::vector<std::shared_ptr<muq::Modeling::ModPiece>> eqConstraints;
     
     /// Relative and absolute tolerances on the cost function value and on the difference between successive values of the state
     const double ftol_rel, ftol_abs, xtol_rel, xtol_abs;

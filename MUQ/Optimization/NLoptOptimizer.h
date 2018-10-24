@@ -5,32 +5,19 @@
 
 #include <nlopt.h>
 
-#include "MUQ/Optimization/OptimizerBase.h"
+#include "MUQ/Optimization/Optimizer.h"
 #include "MUQ/Optimization/CostFunction.h"
 
 namespace muq {
   namespace Optimization {
 
-    class NLoptOptimizer : public OptimizerBase {
+    class NLoptOptimizer : public Optimizer {
     public:
 
       NLoptOptimizer(std::shared_ptr<CostFunction> cost,
                      boost::property_tree::ptree const& pt);
 
       virtual ~NLoptOptimizer();
-
-      /// Add an inequality constraint to the optimization
-      /**
-         @param[in] ineq The constraint
-      */
-      virtual void AddInequalityConstraint(std::shared_ptr<muq::Modeling::ModPiece> const& ineq) override;
-      
-      /// Add an equality constraint to the optimization
-      /**
-         NOTE: the NLOPT algorithm used must be able to handle equality constraints
-         @param[in] ineq The constraint
-      */
-      virtual void AddEqualityConstraint(std::shared_ptr<muq::Modeling::ModPiece> const& eq) override;
 
       virtual std::pair<Eigen::VectorXd, double>
         Solve(std::vector<Eigen::VectorXd> const& inputs) override;
@@ -65,9 +52,7 @@ namespace muq {
 	 @param[in] args The first input is the variable we are optimizing over
        */
       virtual void
-        EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
-
-      virtual void UpdateInputs(unsigned int const numNewIns) override;
+      EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
       /// Get the NLOPT algorithm we are using
       /**
@@ -79,17 +64,6 @@ namespace muq {
       /// The algorithm used to solve the problem
       const nlopt_algorithm algorithm;
 
-      /// The cost function that we are trying to minimize
-      std::shared_ptr<CostFunction> opt;
-      
-      /// Inequality constraints
-      std::shared_ptr<muq::Modeling::ModPiece> ineqConstraints;
-      
-      /// Equality constraints
-      /**
-         NOTE: the solver muq::Optimization::Optimization::algorithm must be able to handle equality constraints
-      */
-      std::shared_ptr<muq::Modeling::ModPiece> eqConstraints;
       
     }; // class NLoptOptimizer
       
