@@ -25,7 +25,7 @@ TEST(CostFunctionTests, RosenbrockCost) {
 
   // compute the gradient
   const Eigen::VectorXd& grad_test0 =
-    rosen->Gradient(0, x, (Eigen::VectorXd)Eigen::VectorXd::Ones(2));
+    rosen->Gradient(0, x, (Eigen::VectorXd)Eigen::VectorXd::Ones(1));
   
   EXPECT_DOUBLE_EQ((grad_true-grad_test0).norm(), 0.0);
 
