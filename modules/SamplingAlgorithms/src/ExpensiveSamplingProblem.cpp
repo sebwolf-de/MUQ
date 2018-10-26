@@ -58,10 +58,12 @@ double ExpensiveSamplingProblem::LogDensity(unsigned int const step, std::shared
   const double threshold = RefineSurrogate(step, state, neighbors, results);
   assert(neighbors.size()==results.size());
   assert(neighbors.size()>=reg->kn);
-  bool addThreshold = (type==AbstractSamplingProblem::SampleType::Proposed) && (lastAcceptedRadius<(state->state[0]-reg->CacheCentroid()).norm());
+  bool addThreshold = (type==AbstractSamplingProblem::SampleType::Proposed) && (lastAcceptedRadius<state->state[0].norm());
+  //bool addThreshold = (type==AbstractSamplingProblem::SampleType::Proposed) && (lastAcceptedRadius<(state->state[0]-reg->CacheCentroid()).norm());
   //bool addThreshold = (type==AbstractSamplingProblem::SampleType::Proposed) && (0.75*radius_max<(state->state[0]-reg->CacheCentroid()).norm());
   if( type==AbstractSamplingProblem::SampleType::Accepted && reg->CacheSize()>0 ) {
-    lastAcceptedRadius = (state->state[0]-reg->CacheCentroid()).norm();
+    //lastAcceptedRadius = (state->state[0]-reg->CacheCentroid()).norm();
+    lastAcceptedRadius = state->state[0].norm();
   }
 
   /*if( type==AbstractSamplingProblem::SampleType::Accepted ) {
@@ -78,7 +80,7 @@ double ExpensiveSamplingProblem::LogDensity(unsigned int const step, std::shared
   state->meta["cumulative gamma refinement"] = cumgamma;
   state->meta["global radius"] = radius_max;
 
-  return (addThreshold ? 1.0-0.1*threshold : 1.0)*reg->EvaluateRegressor(state->state[0],
+  return (addThreshold ? 1.0+500.0*threshold : 1.0)*reg->EvaluateRegressor(state->state[0],
                                 std::vector<Eigen::VectorXd>(neighbors.begin(), neighbors.begin()+reg->kn),
                                 std::vector<Eigen::VectorXd>(results.begin(), results.begin()+reg->kn)) (0);
 }
