@@ -112,6 +112,7 @@ namespace muq {
       */
       void SetLength(unsigned newLength);
 
+      std::string ToString() const;
 
       /** Get the number of components in the index.  When used to define a
           multivariate polynomial, this will return the dimension of the

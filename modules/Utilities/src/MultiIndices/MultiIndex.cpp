@@ -220,6 +220,16 @@ MultiIndex MultiIndex::operator-(const MultiIndex &b) {
   return ret -= b;
 }
 
+std::string MultiIndex::ToString() const {
+  std::string out;
+  for(int i=0; i<GetLength(); ++i){
+    if (i > 0)
+      out += " ";
+    out += std::to_string(GetValue(i));
+  }
+  return out;
+}
+
 std::ostream& operator<< (std::ostream &out, const MultiIndex &ind)
 {
   for(int i=0; i<ind.GetLength(); ++i){
