@@ -25,11 +25,11 @@ namespace muq {
 
       void Sample();
 
-      Eigen::VectorXd Mean();
+      Eigen::VectorXd MeanQOI();
 
       void drawChain(std::shared_ptr<SingleChainMCMC> chain, std::string chainid, std::ofstream& graphfile) const;
 
-      void draw(std::ofstream& graphfile) const;
+      void draw(std::ofstream& graphfile, bool drawSamples = true) const;
 
       std::shared_ptr<SingleChainMCMC> finestChain();
 

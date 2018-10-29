@@ -15,9 +15,14 @@ namespace muq {
     public:
       MIMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory);
 
-      void draw();
+      void run();
+
+      Eigen::VectorXd meanQOI();
+
+      void draw(bool drawSamples = true);
 
     private:
+      std::shared_ptr<MultiIndexSet> gridIndices;
       std::shared_ptr<MIComponentFactory> componentFactory;
       const int samples;
       std::vector<std::shared_ptr<MIMCMCBox>> boxes;

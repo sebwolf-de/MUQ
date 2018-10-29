@@ -24,13 +24,14 @@ namespace muq {
       Eigen::VectorXd startPtCoarse = componentFactory->startingPoint(rootIndex);
       auto coarse_chain = std::make_shared<SingleChainMCMC>(ptChains,coarse_kernels,startPtCoarse);
 
-      tailChains.push_back(coarse_chain);
-
       // Construct path to lowest index of box
       boxLowestIndex = MultiIndex::Copy(boxHighestIndex);
       --(*boxLowestIndex);
       std::shared_ptr<MultiIndexSet> rootPath = CreateRootPath(boxLowestIndex);
-      for (int i = rootPath->Size()-1; i >= 0; i--) {
+      for (int i = rootPath->Size()-2; i >= 0; i--) {
+
+        tailChains.push_back(coarse_chain);
+
         std::shared_ptr<MultiIndex> index = (*rootPath)[i];
 
         auto problem = componentFactory->samplingProblem(index);
@@ -43,12 +44,11 @@ namespace muq {
         kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
 
         auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels,startingPoint);
-        tailChains.push_back(chain);
 
         coarse_problem = problem;
         coarse_chain = chain;
       }
-      tailChains.pop_back();
+
 
       std::shared_ptr<MultiIndex> boxSize = std::make_shared<MultiIndex>(*boxHighestIndex - *boxLowestIndex);
 
@@ -92,7 +92,7 @@ namespace muq {
       }
     }
 
-    Eigen::VectorXd MIMCMCBox::Mean() {
+    Eigen::VectorXd MIMCMCBox::MeanQOI() {
       auto finestIndex = componentFactory->finestIndex();
       auto finestProblem = componentFactory->samplingProblem(finestIndex);
       Eigen::VectorXd sampMean = Eigen::VectorXd::Zero(finestProblem->blockSizesQOI.sum());
@@ -119,7 +119,7 @@ namespace muq {
       graphfile << "label=\"Chain " << chainid << "\"" << std::endl;
       for (int s = 0; s < chain->GetSamples()->samples.size(); s++) {
         std::shared_ptr<SamplingState> sample = chain->GetSamples()->samples[s];
-        std::string nodeid = "s" + chainid + "node" + std::to_string(s);
+        std::string nodeid = "\"s" + chainid + "node" + std::to_string(s) + "\"";
         sample->meta["gvizid"] = nodeid;
 
         double logTarget = AnyCast(sample->meta["LogTarget"]);
@@ -135,10 +135,10 @@ namespace muq {
       graphfile << "}" << std::endl;
       for (int s = 0; s < chain->GetSamples()->samples.size(); s++) {
         std::shared_ptr<SamplingState> sample = chain->GetSamples()->samples[s];
-        std::string nodeid = "s" + chainid + "node" + std::to_string(s);
+        std::string nodeid = "\"s" + chainid + "node" + std::to_string(s) + "\"";
 
         if (s < chain->GetSamples()->samples.size() - 1)
-          graphfile << nodeid << " -> " << "s" << chainid << "node" << s+1 << std::endl;
+          graphfile << nodeid << " -> " << "\"s" << chainid << "node" << s+1 << "\"" << std::endl;
 
         if (sample->HasMeta("coarseSample")) {
           std::shared_ptr<SamplingState> coarseSample = AnyCast(sample->meta["coarseSample"]);
@@ -150,23 +150,48 @@ namespace muq {
           }
         }
       }
-
     }
 
-    void MIMCMCBox::draw(std::ofstream& graphfile) const {
+    void MIMCMCBox::draw(std::ofstream& graphfile, bool drawSamples) const {
 
-      for (int i = 0; i < tailChains.size(); i++) {
-        std::string chainid = "box" + std::to_string(boxHighestIndex->GetValue(0)) + "_tail" + std::to_string(i);
+      if (drawSamples) {
+        for (int i = 0; i < tailChains.size(); i++) {
+          std::string chainid = "box" + boxHighestIndex->ToString() + "_tail" + std::to_string(i) + "";
 
-        drawChain (tailChains[i], chainid, graphfile);
-      }
+          drawChain (tailChains[i], chainid, graphfile);
+        }
 
-      for (int i = 0; i < boxIndices->Size(); i++) {
-        std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
-        std::shared_ptr<SingleChainMCMC> singleChain = boxChains[boxIndices->MultiToIndex(boxIndex)];
+        for (int i = 0; i < boxIndices->Size(); i++) {
+          std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
+          std::shared_ptr<SingleChainMCMC> singleChain = boxChains[boxIndices->MultiToIndex(boxIndex)];
 
-        std::string chainid = "box" + std::to_string(boxHighestIndex->GetValue(0)) + "_node" + std::to_string(boxIndex->GetValue(0));
-        drawChain (singleChain, chainid, graphfile);
+          std::string chainid = "box" + boxHighestIndex->ToString() + "_node" + boxIndex->ToString() + "";
+          drawChain (singleChain, chainid, graphfile);
+        }
+      } else {
+        std::string previd = "";
+        for (int i = 0; i < tailChains.size(); i++) {
+          std::string chainid = "\"box" + boxHighestIndex->ToString() + "_tail" + std::to_string(i) + "\"";
+          if (i > 0)
+            graphfile << chainid << " -> " << previd << std::endl;
+          else
+            graphfile << chainid << std::endl;
+          previd = chainid;
+        }
+
+        for (int i = 0; i < boxIndices->Size(); i++) {
+          std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
+          std::shared_ptr<SingleChainMCMC> singleChain = boxChains[boxIndices->MultiToIndex(boxIndex)];
+
+          std::string chainid = "\"box" + boxHighestIndex->ToString() + "_node" + boxIndex->ToString() + "\"";
+
+          if (previd != "")
+            graphfile << chainid << " -> " << previd << std::endl;
+          else
+            graphfile << chainid << std::endl;
+          if (i == 0)
+            previd = chainid;
+        }
       }
     }
 

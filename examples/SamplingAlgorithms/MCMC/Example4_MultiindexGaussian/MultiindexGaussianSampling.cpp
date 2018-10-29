@@ -166,11 +166,15 @@ int main(){
   std::cout << std::endl << "*************** multiindex chain" << std::endl << std::endl;
 
   MIMCMC mimcmc (pt, componentFactory);
-
+  mimcmc.run();
+  mimcmc.draw(false);
+  std::cout << "mean QOI: " << mimcmc.meanQOI().transpose() << std::endl;
 
   std::cout << std::endl << "*************** single chain reference" << std::endl << std::endl;
 
   SLMCMC slmcmc (pt, componentFactory);
+  slmcmc.run();
+  std::cout << "mean QOI: " << slmcmc.meanQOI().transpose() << std::endl;
 
   return 0;
 }

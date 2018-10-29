@@ -16,9 +16,17 @@ namespace muq {
     public:
       SLMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory);
 
+      void run();
+
+      Eigen::VectorXd meanQOI();
+
+      Eigen::VectorXd meanParameter();
+
+
     private:
       std::shared_ptr<MIComponentFactory> componentFactory;
 
+      std::shared_ptr<SingleChainMCMC> coarse_chain;
     };
 
   }

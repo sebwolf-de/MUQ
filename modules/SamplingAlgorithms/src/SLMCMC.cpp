@@ -18,13 +18,20 @@ namespace muq {
 
       Eigen::VectorXd startingPoint = componentFactory->startingPoint(index);
 
-      auto coarse_chain = std::make_shared<SingleChainMCMC>(pt,kernels,startingPoint);
+      coarse_chain = std::make_shared<SingleChainMCMC>(pt,kernels,startingPoint);
+    }
+
+    void SLMCMC::run() {
       coarse_chain->Run();
-      auto samps = coarse_chain->GetQOIs();
+    }
 
-      Eigen::VectorXd sampMean = samps->Mean();
+    Eigen::VectorXd SLMCMC::meanQOI() {
+      return coarse_chain->GetQOIs()->Mean();
+    }
 
-      std::cout << "Sample Mean = \n" << sampMean.transpose() << std::endl;
+    Eigen::VectorXd SLMCMC::meanParameter() {
+      auto samps = coarse_chain->GetSamples();
+      return samps->Mean();
     }
 
   }

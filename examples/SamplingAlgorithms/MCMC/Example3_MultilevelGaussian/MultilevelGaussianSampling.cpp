@@ -151,11 +151,15 @@ int main(){
   std::cout << std::endl << "*************** greedy multillevel chain" << std::endl << std::endl;
 
   GreedyMLMCMC greedymlmcmc (pt, componentFactory);
-
+  greedymlmcmc.run();
+  std::cout << "mean QOI: " << greedymlmcmc.meanQOI().transpose() << std::endl;
+  greedymlmcmc.draw(false);
 
   std::cout << std::endl << "*************** single chain reference" << std::endl << std::endl;
 
   SLMCMC slmcmc (pt, componentFactory);
+  slmcmc.run();
+  std::cout << "mean QOI: " << slmcmc.meanQOI().transpose() << std::endl;
 
   return 0;
 }

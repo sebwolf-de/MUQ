@@ -5,28 +5,35 @@ namespace muq {
 
     GreedyMLMCMC::GreedyMLMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory)
     : componentFactory(componentFactory),
-      numInitialSamples(pt.get("NumInitialSamples",1000))
+      numInitialSamples(pt.get("NumInitialSamples",1000)),
+      e(pt.get("GreedyTargetVariance",0.1)),
+      beta(pt.get("GreedyResamplingFactor",0.5)),
+      levels(componentFactory->finestIndex()->GetValue(0))
     {
-
-      const int levels = componentFactory->finestIndex()->GetValue(0);
-      const auto rootIndex = std::make_shared<MultiIndex>(1);
-
-
-      const double e = pt.get("GreedyTargetVariance",0.1);
-      const double beta = pt.get("GreedyResamplingFactor",0.5);
 
 
       for (int level = 0; level <= levels; level++) {
+        std::cout << "Setting up level " << level << std::endl;
 
         auto boxHighestIndex = std::make_shared<MultiIndex>(1,level);
         auto box = std::make_shared<MIMCMCBox>(componentFactory, boxHighestIndex);
         boxes.push_back(box);
+      }
+    }
 
+    void GreedyMLMCMC::run() {
+
+
+      const int levels = componentFactory->finestIndex()->GetValue(0);
+
+      std::cout << "Computing " << numInitialSamples << " initial samples per level" << std::endl;
+
+      for (auto box : boxes) {
         for (int samp = 0; samp < numInitialSamples; samp++) {
           box->Sample();
         }
       }
-
+      std::cout << "Initial samples done" << std::endl;
 
       while(true) {
         double var_mle = 0.0;
@@ -34,8 +41,10 @@ namespace muq {
           auto qois = boxes[i]->finestChain()->GetQOIs();
           var_mle += qois->Variance().cwiseQuotient(qois->ESS()).maxCoeff();
         }
-        if (var_mle <= std::pow(e,2))
+        if (var_mle <= std::pow(e,2)) {
+          std::cout << "val_mle " << var_mle << " below " << std::pow(e,2) << std::endl;
           break;
+        }
 
         // Find level with largest payoff ratio
         int l = -1;
@@ -66,28 +75,35 @@ namespace muq {
           boxes[l]->Sample();
       }
 
+    }
+
+    std::shared_ptr<MIMCMCBox> GreedyMLMCMC::getBox(int index) {
+      return boxes[index];
+    }
+
+
+    Eigen::VectorXd GreedyMLMCMC::meanQOI() {
       // Compute full QOI estimate
       Eigen::VectorXd MImean(componentFactory->samplingProblem(componentFactory->finestIndex())->blockSizesQOI.sum());
       MImean.setZero();
 
       for (auto box : boxes) {
-        Eigen::VectorXd sampMean = box->Mean();
+        Eigen::VectorXd sampMean = box->MeanQOI();
 
-        std::cout << "Sample Mean = \n" << sampMean.transpose() << std::endl;
         MImean += sampMean;
       }
 
-      std::cout << "ML Mean = \n" << MImean.transpose() << std::endl;
+      return MImean;
     }
 
-    void GreedyMLMCMC::draw() {
+    void GreedyMLMCMC::draw(bool drawSamples) {
       std::ofstream graphfile;
       graphfile.open ("graph");
       graphfile << "digraph {" << std::endl;
       graphfile << "nodesep=1.2;" << std::endl;
       graphfile << "splines=false;" << std::endl;
       for (auto box : boxes) {
-        box->draw(graphfile);
+        box->draw(graphfile, drawSamples);
       }
       graphfile << "}" << std::endl;
       graphfile.close();
