@@ -34,14 +34,9 @@ public:
   virtual ~MySamplingProblem() = default;
 
 
-  virtual double LogDensity(std::shared_ptr<SamplingState> state) override {
+  virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) override {
     lastState = state;
     return target->Evaluate(state->state).at(0)(0);
-  };
-
-  virtual Eigen::VectorXd GradLogDensity(std::shared_ptr<SamplingState> state,
-                                         unsigned                       blockWrt) override {
-    assert (false);
   };
 
   virtual std::shared_ptr<SamplingState> QOI() override {

@@ -32,21 +32,22 @@ macro (GetDependency name)
 
             endif()
 
-	    if(USE_INTERNAL_${name})
-		include(Build${name})
-	    endif()
+      	    if(USE_INTERNAL_${name})
+      		    include(Build${name})
+      	    endif()
 
-	    # store include directory information
-	    include_directories(${${name}_INCLUDE_DIRS})
-	    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${${name}_INCLUDE_DIRS})
+      	    # store include directory information
+      	    include_directories(${${name}_INCLUDE_DIRS})
+      	    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${${name}_INCLUDE_DIRS})
 
-	    # store library information
-	    LIST(APPEND MUQ_LINK_LIBS ${${name}_LIBRARIES})
-	    LIST(APPEND MUQ_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
+      	    # store library information
+      	    LIST(APPEND MUQ_LINK_LIBS ${${name}_LIBRARIES})
+      	    LIST(APPEND MUQ_LINK_LIBS_STATIC ${${name}_LIBRARIES_STATIC})
 
+            set(MUQ_HAS_${name} 1)
         else()
             set(MUQ_NEEDS_${name} OFF)
-	    set(MUQ_HAS_${name} 1)
+	          set(MUQ_HAS_${name} 0)
         endif()
 
 endmacro(GetDependency)
@@ -68,6 +69,18 @@ GetDependency(STANMATH)
 ########################################
 GetDependency(SUNDIALS)
 
+
+########################################
+##### LOOK FOR AND/OR BUILD NLOPT ###
+########################################
+GetDependency(NLOPT)
+
+########################################
+##### LOOK FOR AND/OR BUILD PARCER ###
+########################################
+GetDependency(PARCER)
+
+
 ########################################
 ##### LOOK FOR AND/OR BUILD HDF5  ######
 ########################################
@@ -86,11 +99,11 @@ if(MUQ_USE_OPENMPI)
 
 endif()
 
-########################################
-##### LOOK FOR AND/OR BUILD FLANN ######
-########################################
+############################################
+##### LOOK FOR AND/OR BUILD NANOFLANN ######
+############################################
 
-GetDependency(FLANN)
+GetDependency(NANOFLANN)
 
 ###############################################
 ##### LOOK FOR BOOST                     ######

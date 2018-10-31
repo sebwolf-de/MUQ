@@ -1,9 +1,10 @@
-#include "MUQ/SamplingAlgorithms/AMProposal.h"
 #include "MUQ/Utilities/AnyHelpers.h"
 
+#include "MUQ/SamplingAlgorithms/AMProposal.h"
+
 namespace pt = boost::property_tree;
-using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
+using namespace muq::SamplingAlgorithms;
 
 REGISTER_MCMC_PROPOSAL(AMProposal)
 AMProposal::AMProposal(pt::ptree const& pt , std::shared_ptr<AbstractSamplingProblem> prob) : MHProposal(pt, prob),
@@ -15,7 +16,6 @@ AMProposal::AMProposal(pt::ptree const& pt , std::shared_ptr<AbstractSamplingPro
 AMProposal::~AMProposal() {}
 
 void AMProposal::Adapt(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& states) {
-
   // always update the sample mean and covariance
   Update(t, states);
 

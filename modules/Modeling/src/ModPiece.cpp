@@ -6,10 +6,11 @@
 using namespace muq::Modeling;
 
 ModPiece::ModPiece(Eigen::VectorXi const& inputSizesIn,
-                   Eigen::VectorXi const& outputSizesIn) : WorkPiece(std::vector<std::string>(inputSizesIn.size(), typeid(Eigen::VectorXd).name()),
-                                                                     std::vector<std::string>(outputSizesIn.size(), typeid(Eigen::VectorXd).name())),
-                                                           inputSizes(inputSizesIn),
-                                                           outputSizes(outputSizesIn){};
+                   Eigen::VectorXi const& outputSizesIn) :
+  WorkPiece(std::vector<std::string>(inputSizesIn.size(), typeid(Eigen::VectorXd).name()),
+            std::vector<std::string>(outputSizesIn.size(), typeid(Eigen::VectorXd).name())),
+  inputSizes(inputSizesIn),
+  outputSizes(outputSizesIn){};
 
 
 std::vector<Eigen::VectorXd> const& ModPiece::Evaluate(std::vector<Eigen::VectorXd> const& input)
@@ -231,7 +232,7 @@ Eigen::MatrixXd ModPiece::JacobianByFD(unsigned int                const  output
   Eigen::VectorXd f;
 
   double eps;
-  Eigen::VectorXd newInput(input.at(inputDimWrt));
+  Eigen::VectorXd newInput(input.at(inputDimWrt).get());
   ref_vector<Eigen::VectorXd> newInputVec = input;
 
   Eigen::MatrixXd jac(outputSizes(outputDimWrt), inputSizes(inputDimWrt));

@@ -1,4 +1,3 @@
-
 ########################################
 ##### LOOK FOR GTEST              ######
 ########################################
@@ -29,37 +28,6 @@ ELSE(MUQ_USE_GTEST)
     set(MUQ_BUILD_TESTS OFF)
     set(MUQ_NEEDS_GTEST OFF)
 ENDIF(MUQ_USE_GTEST)
-
-
-########################################
-##### LOOK FOR NLOPT              ######
-########################################
-list (FIND MUQ_REQUIRES NLOPT dindex)
-if (${dindex} GREATER -1)
-    set(MUQ_NEEDS_NLOPT ON)
-
-    IF(MUQ_USE_NLOPT)
-
-      FIND_PACKAGE(NLOPT)
-
-      IF (NLOPT_FOUND)
-        add_definitions(-DMUQ_USE_NLOPT)
-
-        # include the sacado library for linking
-        LIST(APPEND MUQ_LINK_LIBS ${NLOPT_LIBRARIES})
-        LIST(APPEND MUQ_LINK_LIBS_STATIC ${NLOPT_LIBRARIES_STATIC})
-
-        include_directories(${NLOPT_INCLUDE_DIRS})
-        LIST(APPEND MUQ_EXTERNAL_INCLUDES ${NLOPT_INCLUDE_DIRS})
-
-      ELSE()
-        set(MUQ_USE_NLOPT OFF)
-      ENDIF()
-
-    ENDIF(MUQ_USE_NLOPT)
-else()
-    set(MUQ_NEEDS_NLOPT OFF)
-endif()
 
 
 ########################################

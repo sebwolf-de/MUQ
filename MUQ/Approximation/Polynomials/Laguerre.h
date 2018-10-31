@@ -5,6 +5,11 @@
 
 namespace muq {
     namespace Approximation {
+
+      /** @ingroup Polynomials
+          @class Laguerre
+          @brief Family of Laguerre orthogonal polynomials.
+      */
         class Laguerre : public OrthogonalPolynomial {
         public:
 

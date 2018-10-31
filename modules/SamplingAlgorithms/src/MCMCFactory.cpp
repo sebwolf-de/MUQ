@@ -13,3 +13,13 @@ MCMCFactory::CreateSingleChain(pt::ptree& pt,
 
   return singleChain;
 }
+
+std::shared_ptr<SingleChainMCMC>
+MCMCFactory::CreateSingleChain(pt::ptree& pt,
+                               std::shared_ptr<AbstractSamplingProblem> problem,
+                               Eigen::VectorXd const& x0) {
+  std::shared_ptr<SingleChainMCMC> singleChain =
+    std::make_shared<SingleChainMCMC>(pt, problem, x0);
+
+  return singleChain;
+}

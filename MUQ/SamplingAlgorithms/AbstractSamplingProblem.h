@@ -27,6 +27,7 @@ namespace muq{
     class AbstractSamplingProblem
     {
     public:
+
       AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn,
                               Eigen::VectorXi const& blockSizesQOIIn)
        : numBlocks(blockSizesIn.size()),
@@ -37,13 +38,14 @@ namespace muq{
 
       AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn) : AbstractSamplingProblem(blockSizesIn, Eigen::VectorXi::Zero(0)) {}
 
+      enum SampleType {
+        Proposed,
+        Accepted
+      };
 
       virtual ~AbstractSamplingProblem() = default;
 
-      virtual double LogDensity(std::shared_ptr<SamplingState> state) = 0;
-
-      virtual Eigen::VectorXd GradLogDensity(std::shared_ptr<SamplingState> state,
-                                             unsigned                       blockWrt) = 0;
+      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) = 0;
 
       virtual std::shared_ptr<SamplingState> QOI() {
         return nullptr;

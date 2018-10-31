@@ -20,4 +20,7 @@ CreateTestGroup(
     RandomGeneratorTest.cpp
     AnyCastTest.cpp
     StringUtilitiesTest.cpp
+
+    Cereal/CerealizeEigenTests.cpp
+    Cereal/BoostAnyTests.cpp
 )

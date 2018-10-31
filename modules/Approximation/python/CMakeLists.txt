@@ -24,4 +24,5 @@ CreateCompileGroup(
     GaussianWrapper.cpp
     PolynomialsWrapper.cpp
     KLWrapper.cpp
+    QuadratureWrapper.cpp
 )

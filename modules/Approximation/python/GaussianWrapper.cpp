@@ -53,6 +53,13 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
     .def("Kernel", &GaussianProcess::Kernel)
     .def("Discretize", &GaussianProcess::Discretize);
 
+  py::enum_<GaussianProcess::CovarianceType>(gaussProc, "CovarianceType")
+        .value("DiagonalCov", GaussianProcess::CovarianceType::DiagonalCov)
+        .value("BlockCov", GaussianProcess::CovarianceType::BlockCov)
+        .value("FullCov", GaussianProcess::CovarianceType::FullCov)
+        .value("NoCov", GaussianProcess::CovarianceType::NoCov)
+        .export_values();
+
   // MeanFunctionBase class
   py::class_<MeanFunctionBase,
              std::shared_ptr<MeanFunctionBase>>
@@ -106,8 +113,18 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
     .def(py::init<std::shared_ptr<muq::Modeling::LinearOperator>,
                            Eigen::Ref<const Eigen::VectorXd> const&,
                            Eigen::Ref<const Eigen::VectorXd> const&,
-                           Eigen::Ref<const Eigen::MatrixXd> const&>())
-    .def("FillCrossCov", &ObservationInformation::FillCrossCov);
+                           Eigen::Ref<const Eigen::MatrixXd> const&>());
+
+    // virtual void FillSelfCov(std::shared_ptr<KernelBase> kernel,
+    //                          Eigen::Ref<Eigen::MatrixXd> covBlock);
+    //
+    // virtual void FillCrossCov(Eigen::Ref<const Eigen::VectorXd> const& otherLoc,
+    //                           std::shared_ptr<KernelBase>              kernel,
+    //                           Eigen::Ref<Eigen::MatrixXd>              covBlock);
+    //
+    // virtual void FillCrossCov(std::shared_ptr<ObservationInformation> otherObs,
+    //                           std::shared_ptr<KernelBase>             kernel,
+    //                           Eigen::Ref<Eigen::MatrixXd>             covBlock);
 
   // DerivativeObservation class
   py::class_<DerivativeObservation, ObservationInformation,
@@ -118,8 +135,7 @@ void muq::Approximation::PythonBindings::GaussianWrapper(py::module &m)
                           Eigen::Ref<const Eigen::VectorXd> const&,
                           Eigen::Ref<const Eigen::VectorXd> const&,
                           Eigen::Ref<const Eigen::MatrixXd> const&,
-                          std::vector<int>>())
-    .def("FillCrossCov", &DerivativeObservation::FillCrossCov);
+                          std::vector<std::vector<int>>>());
 
   //StateSpaceGP class
   py::class_<StateSpaceGP, GaussianProcess, std::shared_ptr<StateSpaceGP>>

@@ -327,3 +327,15 @@ std::shared_ptr<Gaussian> Gaussian::Condition(Eigen::MatrixXd const& obsMat,
 
   return std::make_shared<Gaussian>(postMu, postCov);
 }
+
+
+Eigen::VectorXd Gaussian::GradLogDensity(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs)
+{
+  Eigen::VectorXd delta = inputs.at(0).get() - mean;
+  if(wrt==0){
+    return -1.0 * ApplyPrecision(delta);
+  }else{
+    std::cerr << "ERROR: Gradient wrt mean and covariance has not been implemented." << std::endl;
+    assert(false);
+  }
+}

@@ -58,7 +58,7 @@ namespace muq {
 
       template<typename... Args>
 	    Eigen::VectorXd GradLogDensity(unsigned int wrt, Args... args) {
-	      ref_vector<boost::any> inputs;
+	      ref_vector<Eigen::VectorXd> inputs;
 	      return GradLogDensity(wrt, inputs, args...);
       }
 
@@ -182,8 +182,6 @@ boost::any sample3 = rv->Evaluate(x);
       	inputs.push_back(std::cref(in));
       	return GradLogDensity(wrt, inputs, args...);
       }
-
-
     };
   } // namespace Modeling
 } // namespace muq

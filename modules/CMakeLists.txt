@@ -1,8 +1,6 @@
-# begin accumulating the tests
-set(all_gtest_sources RunTests.cpp)
-
 add_subdirectory(Utilities)
 add_subdirectory(Modeling)
+add_subdirectory(Optimization)
 add_subdirectory(Approximation)
 add_subdirectory(SamplingAlgorithms)
 add_subdirectory(Inference)

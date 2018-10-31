@@ -21,7 +21,7 @@ using namespace muq::Utilities;
 
 TEST(MCMC, CrankNicolson) {
 
-  const unsigned int N = 1e5;
+  const unsigned int N = 5e5;
 
   // parameters for the sampler
   pt::ptree pt;
@@ -75,7 +75,7 @@ TEST(MCMC, CrankNicolson) {
 
   // evaluate
   // create an instance of MCMC
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt,problem);
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt,problem,start);
 
   // Make sure the kernel and proposal are correct
   EXPECT_EQ(1,mcmc->Kernels().size());
@@ -88,7 +88,7 @@ TEST(MCMC, CrankNicolson) {
   std::shared_ptr<CrankNicolsonProposal> proposalCN = std::dynamic_pointer_cast<CrankNicolsonProposal>(proposalBase);
   EXPECT_TRUE(proposalCN);
 
-  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run();
 
   Eigen::VectorXd sampMean = samps->Mean();
   Eigen::MatrixXd sampCov = samps->Covariance();
@@ -162,10 +162,10 @@ TEST(MCMC, CrankNicolsonInGibbs) {
 
   // evaluate
   // create an instance of MCMC
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt,problem);
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt,problem,start);
 
   // Make sure the kernel and proposal are correct
   EXPECT_EQ(2,mcmc->Kernels().size());
 
-  mcmc->Run(start);
+  mcmc->Run();
 }

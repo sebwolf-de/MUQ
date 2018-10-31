@@ -22,7 +22,6 @@ void PythonBindings::SampleWrapper(py::module &m)
   py::class_<AbstractSamplingProblem, std::shared_ptr<AbstractSamplingProblem>> absSamp(m, "AbstractSamplingProblem");
   absSamp
     .def("LogDensity", &AbstractSamplingProblem::LogDensity)
-    .def("GradLogDensity", &AbstractSamplingProblem::GradLogDensity)
     .def_readonly("numBlocks", &AbstractSamplingProblem::numBlocks)
     .def_readonly("blockSizes", &AbstractSamplingProblem::blockSizes);
 
@@ -49,14 +48,17 @@ void PythonBindings::SampleWrapper(py::module &m)
   sampColl
     .def("__getitem__", (const std::shared_ptr<SamplingState> (SampleCollection::*)(unsigned) const) &SampleCollection::at)
     .def("size", &SampleCollection::size)
-    .def("CentralMoment", &SampleCollection::CentralMoment, py::arg("order"), py::arg("blockDim") = -1)
+    .def("CentralMoment", (Eigen::VectorXd (SampleCollection::*)(unsigned, int) const) &SampleCollection::CentralMoment, py::arg("order"), py::arg("blockDim") = -1)
+    .def("CentralMoment", (Eigen::VectorXd (SampleCollection::*)(unsigned, Eigen::VectorXd const&, int) const) &SampleCollection::CentralMoment, py::arg("order"), py::arg("mean"), py::arg("blockDim") = -1)
     .def("Mean", &SampleCollection::Mean, py::arg("blockDim") = -1)
     .def("Variance", &SampleCollection::Variance, py::arg("blockDim") = -1)
-    .def("Covariance", &SampleCollection::Covariance, py::arg("blockDim") = -1)
+    .def("Covariance", (Eigen::MatrixXd (SampleCollection::*)(int) const) &SampleCollection::Covariance, py::arg("blockDim") = -1)
+    .def("Covariance", (Eigen::MatrixXd (SampleCollection::*)(Eigen::VectorXd const&, int) const) &SampleCollection::Covariance, py::arg("mean"), py::arg("blockDim") = -1)
     .def("ESS", &SampleCollection::ESS, py::arg("blockDim")=-1)
     .def("Add", &SampleCollection::Add)
     .def("Weights", &SampleCollection::Weights)
-    .def("AsMatrix", &SampleCollection::AsMatrix, py::arg("blockDim")=-1);
+    .def("AsMatrix", &SampleCollection::AsMatrix, py::arg("blockDim")=-1)
+    .def("WriteToFile", (void (SampleCollection::*)(std::string const&, std::string const&) const) &SampleCollection::WriteToFile, py::arg("filename"), py::arg("dataset") = "/");
 
   py::class_<SamplingState, std::shared_ptr<SamplingState>> sampState(m, "SamplingState");
   sampState

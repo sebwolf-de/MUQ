@@ -1,10 +1,21 @@
 #ifndef SAMPLINGALGORITHM_H_
 #define SAMPLINGALGORITHM_H_
 
+#include "MUQ/config.h"
+
+#if MUQ_HAS_PARCER
+#include <parcer/Communicator.h>
+#endif
+
 #include "MUQ/Modeling/WorkPiece.h"
 
 #include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
 #include "MUQ/SamplingAlgorithms/SampleCollection.h"
+
+/**
+@defgroup SamplingAlgorithms
+
+*/
 
 namespace muq {
   namespace SamplingAlgorithms {
@@ -13,24 +24,26 @@ namespace muq {
     public:
 
       SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn,
-                        std::shared_ptr<SampleCollection> QOIsIn)
-       : samples(samplesIn),
-         QOIs(QOIsIn)
-       {}
+                        std::shared_ptr<SampleCollection> QOIsIn);
 
-      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn)
-       : SamplingAlgorithm (samplesIn, std::make_shared<SampleCollection>())
-      {}
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn);
+
+#if MUQ_HAS_PARCER
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn, std::shared_ptr<parcer::Communicator> comm);
+#endif
 
       virtual ~SamplingAlgorithm() = default;
 
-      std::shared_ptr<SampleCollection> GetSamples() const{return samples;};
-      std::shared_ptr<SampleCollection> GetQOIs() const{return QOIs;};
+      std::shared_ptr<SampleCollection> GetSamples() const;
+      std::shared_ptr<SampleCollection> GetQOIs() const;
 
-      virtual std::shared_ptr<SampleCollection> Run(){return RunImpl();};
-
+      virtual std::shared_ptr<SampleCollection> Run();
 
       virtual std::shared_ptr<SampleCollection> RunImpl() = 0;
+
+#if MUQ_HAS_PARCER
+      std::shared_ptr<parcer::Communicator> GetCommunicator() const;
+#endif
 
     protected:
 
@@ -48,6 +61,12 @@ namespace muq {
 
       std::shared_ptr<SampleCollection> QOIs;
 
+#if MUQ_HAS_PARCER
+      std::shared_ptr<parcer::Communicator> comm = std::make_shared<parcer::Communicator>();
+#endif
+
+    private:
+      
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

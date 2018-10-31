@@ -8,7 +8,10 @@
 namespace muq {
   namespace Approximation {
 
-    /// A 1D hermite function based on Physicist Hermite Polynomials
+    /** @ingroup Polynomials
+         @class HermiteFunction
+         @brief A 1D hermite function based on Physicist Hermite Polynomials
+    */
     class HermiteFunction : public IndexedScalarBasis {
     public:
 

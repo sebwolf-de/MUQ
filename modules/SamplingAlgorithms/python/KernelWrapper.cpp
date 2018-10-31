@@ -31,6 +31,7 @@ void PythonBindings::KernelWrapper(py::module &m) {
   py::class_<MHKernel, TransitionKernel, std::shared_ptr<MHKernel>> mhKern(m, "MHKernel");
   mhKern
     .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem) {return new MHKernel(ConvertDictToPtree(d), problem);}))
+    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<MCMCProposal> proposalIn) {return new MHKernel(ConvertDictToPtree(d), problem, proposalIn);}))
     .def("Proposal", &MHKernel::Proposal)
     .def("PostStep", &MHKernel::PostStep)
     .def("Step", &MHKernel::Step);

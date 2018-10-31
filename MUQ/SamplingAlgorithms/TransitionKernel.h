@@ -7,6 +7,12 @@
 #include <boost/function.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include "MUQ/config.h"
+
+#if MUQ_HAS_PARCER
+#include <parcer/Communicator.h>
+#endif
+
 #include "MUQ/Utilities/RegisterClassName.h"
 
 #include "MUQ/Modeling/WorkPiece.h"
@@ -16,12 +22,26 @@
 
 namespace muq {
   namespace SamplingAlgorithms {
+
+    /** @defgroup MCMCKernels
+        @ingroup MCMC
+        @brief Transition kernels used in MCMC algorithms.
+    */
+
+    /** @ingroup MCMCKernels
+        @class TransitionKernel
+        @brief Defines the transition kernel used by an MCMC algorithm.
+    */
     class TransitionKernel { //: public muq::Modeling::WorkPiece {
     public:
 
       TransitionKernel(boost::property_tree::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem);
 
       virtual ~TransitionKernel() = default;
+
+#if MUQ_HAS_PARCER
+      virtual void SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm);
+#endif
 
       /// Static constructor for the transition kernel
       /**
@@ -34,8 +54,13 @@ namespace muq {
       typedef std::map<std::string, TransitionKernelConstructor> TransitionKernelMap;
       static std::shared_ptr<TransitionKernelMap> GetTransitionKernelMap();
 
-
-      virtual void PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {};
+      /// Allow the kernel to preprocess the current step
+      /**
+	 By default this function does nothing but children can override it to adapt the kernel
+	 @param[in] t The current step
+	 @param[in] state The current state
+       */
+      virtual inline void PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {};
 
       /// Allow the kernel to adapt given a new state
       /**
@@ -43,12 +68,16 @@ namespace muq {
 	 @param[in] t The current step
 	 @param[in] state The current state
        */
-      virtual void PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) {};
+      virtual inline void PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) {};
 
+      /**
+	 @param[in] t The current step
+	 @param[in] state The current state
+       */
       virtual std::vector<std::shared_ptr<SamplingState>> Step(unsigned int const t, std::shared_ptr<SamplingState> prevState) = 0;
 
-      virtual void PrintStatus() const {PrintStatus("");};
-      virtual void PrintStatus(std::string prefix) const {};
+      virtual inline void PrintStatus() const {PrintStatus("");};
+      virtual inline void PrintStatus(std::string prefix) const {};
 
       // What block of the state does this kernel work on?
       const int blockInd = 0;
@@ -57,6 +86,10 @@ namespace muq {
 
       /// The sampling problem that evaluates/samples the target distribution
       std::shared_ptr<AbstractSamplingProblem> problem;
+
+#if MUQ_HAS_PARCER
+      std::shared_ptr<parcer::Communicator> comm;
+#endif
 
     private:
     };

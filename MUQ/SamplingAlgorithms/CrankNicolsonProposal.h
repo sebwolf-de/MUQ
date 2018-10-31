@@ -9,6 +9,27 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /**
+    @ingroup MCMCProposals
+    @class CrankNicolsonProposal
+    @brief An implement of the dimension-independent pCN proposal.
+
+    @details
+    This class implements the preconditioned Crank Nicolson proposal (pCN) out
+    Cotter et al., 2013.  The proposal takes the form
+    \f[
+    u^\prime = \sqrt{ 1 - \beta^2} u_c + \beta z,
+    \f]
+    where \f$u_c\f$ is the current state of the chain, \f$z\sim N(0,C)\f$ is a normal
+    random variable with a strategically chosen covariance \f$C\f$ (often the prior covariance), and \f$u^\prime\f$
+    is the propsed point.  The parameter \f$\beta\f$ is a tuning parameter.
+
+    <B>Configuration Parameters:</B>
+    Parameter Key | Type | Default Value | Description |
+    ------------- | ------------- | ------------- | ------------- |
+    "Beta"  | Double | 0.5 | The proposal scaling \f$\beta\f$ defined above. |
+    "PriorNode" | String | - | (Optional.)  If specified, this class assumes the target density was constructed from a WorkGraph and will look set the value of the covariance \f$C\f$ to the covariance of the Gaussian density at the specified node. |
+    */
     class CrankNicolsonProposal : public MCMCProposal {
     public:
 
@@ -47,7 +68,7 @@ namespace muq {
 
       virtual double LogDensity(std::shared_ptr<SamplingState> currState,
                                 std::shared_ptr<SamplingState> propState) override;
-
+      
       void ExtractPrior(std::shared_ptr<AbstractSamplingProblem> prob, std::string nodeName);
     };
 
