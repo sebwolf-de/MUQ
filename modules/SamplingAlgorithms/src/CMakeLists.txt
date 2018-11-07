@@ -32,6 +32,7 @@ CreateCompileGroup(
     "MODELING_CORE;UTILITIES_CORE;SAMPLING_PROBLEMS"
     ""
     ""
+    AbstractSamplingProblem.cpp
     SamplingAlgorithm.cpp
     #MonteCarlo.cpp
     #ImportanceSampling.cpp

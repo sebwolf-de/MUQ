@@ -12,6 +12,12 @@ using namespace muq::Utilities;
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /** @brief Interface defining models on a multiindex structure.
+        @details Defines all components of a multiindex model. MLMCMC and MIMCMC
+        work on this structure.
+        In particular, a sampling problem is defined for each multiindex along with
+        associated proposal densities and other required components.
+     */
     class MIComponentFactory {
     public:
       virtual ~MIComponentFactory() = default;
@@ -19,10 +25,10 @@ namespace muq {
       virtual std::shared_ptr<MCMCProposal> coarseProposal (std::shared_ptr<MultiIndex> index,
                                                             std::shared_ptr<AbstractSamplingProblem> coarseProblem,
                                                             std::shared_ptr<SingleChainMCMC> coarseChain) = 0;
-                                                            virtual std::shared_ptr<AbstractSamplingProblem> samplingProblem (std::shared_ptr<MultiIndex> index) = 0;
-                                                            virtual std::shared_ptr<MIInterpolation> interpolation (std::shared_ptr<MultiIndex> index) = 0;
-                                                            virtual Eigen::VectorXd startingPoint (std::shared_ptr<MultiIndex> index) = 0;
-                                                            virtual std::shared_ptr<MultiIndex> finestIndex() = 0;
+      virtual std::shared_ptr<AbstractSamplingProblem> samplingProblem (std::shared_ptr<MultiIndex> index) = 0;
+      virtual std::shared_ptr<MIInterpolation> interpolation (std::shared_ptr<MultiIndex> index) = 0;
+      virtual Eigen::VectorXd startingPoint (std::shared_ptr<MultiIndex> index) = 0;
+      virtual std::shared_ptr<MultiIndex> finestIndex() = 0;
 
     };
 

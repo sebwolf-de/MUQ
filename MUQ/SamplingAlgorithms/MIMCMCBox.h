@@ -18,6 +18,13 @@ using namespace muq::Utilities;
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /** @brief Representation of a Multiindex MCMC telescoping sum component.
+        @details This holds Markov chains whose differences are estimated
+        in one component of the telescoping sum of an MIMCMC method.
+        In the multilevel case, this contains two neighboring chains and
+        allows computing their difference in expectation value; for multiindex,
+        it extends to arbitrary dimensions.
+     */
     class MIMCMCBox {
     public:
 

@@ -29,14 +29,9 @@ namespace muq{
     public:
 
       AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn,
-                              Eigen::VectorXi const& blockSizesQOIIn)
-       : numBlocks(blockSizesIn.size()),
-         blockSizes(blockSizesIn),
-         numBlocksQOI(blockSizesQOIIn.size()),
-         blockSizesQOI(blockSizesQOIIn)
-         {assert(blockSizes.size()==numBlocks); assert(blockSizesQOI.size()==numBlocksQOI);}
+                              Eigen::VectorXi const& blockSizesQOIIn);
 
-      AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn) : AbstractSamplingProblem(blockSizesIn, Eigen::VectorXi::Zero(0)) {}
+      AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn);
 
       enum SampleType {
         Proposed,
@@ -47,9 +42,7 @@ namespace muq{
 
       virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) = 0;
 
-      virtual std::shared_ptr<SamplingState> QOI() {
-        return nullptr;
-      }
+      virtual std::shared_ptr<SamplingState> QOI();
 
 
       const int numBlocks;

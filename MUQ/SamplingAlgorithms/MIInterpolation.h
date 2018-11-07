@@ -6,6 +6,10 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /** @brief Interpolation interface combining coarse and fine samples.
+        @details This interface defines how coarse and fine samples are
+        combined, as needed for Multiindex MCMC proposals.
+     */
     class MIInterpolation {
     public:
 

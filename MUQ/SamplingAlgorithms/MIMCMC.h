@@ -11,6 +11,10 @@ namespace pt = boost::property_tree;
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /** @brief Multiindex MCMC method.
+        @details A basic MIMCMC method based on a fixed
+        number of samples for all model indices.
+     */
     class MIMCMC {
     public:
       MIMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory);

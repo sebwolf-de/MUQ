@@ -11,6 +11,12 @@ namespace pt = boost::property_tree;
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /** @brief Greedy Multilevel MCMC method.
+        @details A Multilevel MCMC method choosing
+        the number of samples adaptively at runtime,
+        estimating the most profitable level from
+        statistical information on samples.
+     */
     class GreedyMLMCMC {
     public:
       GreedyMLMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory);

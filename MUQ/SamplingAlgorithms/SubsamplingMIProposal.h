@@ -10,6 +10,12 @@ namespace pt = boost::property_tree;
 
 namespace muq {
   namespace SamplingAlgorithms {
+
+    /** @brief Subsampling Multiindex proposal.
+        @details This proposal draws samples from a given chain,
+        applying a given amount of subsampling. If necessary not enough
+        samples are available, new ones are drawn in the chain.
+     */
     class SubsamplingMIProposal : public MCMCProposal {
     public:
       SubsamplingMIProposal (pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<SingleChainMCMC> coarseChain)

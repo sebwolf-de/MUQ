@@ -11,9 +11,10 @@
 
 namespace muq {
   namespace SamplingAlgorithms {
-    /// Monte Carlo transition kernel
-    /**
-       Samples from the target distirbution directly and returns that state.
+
+    /** @brief MCMC kernel for Multiindex methods.
+        @details This kernel combines a coarse proposal from a coarse chain
+        with a fine one, as needed for MIMCMC.
      */
     class MIKernel : public TransitionKernel {
     public:
