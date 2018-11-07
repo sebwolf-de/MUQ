@@ -2,6 +2,11 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    SubsamplingMIProposal::SubsamplingMIProposal (pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<SingleChainMCMC> coarseChain)
+     : MCMCProposal(pt,prob), coarseChain(coarseChain),
+       subsampling(pt.get("subsampling",1))
+    {}
+
     std::shared_ptr<SamplingState> SubsamplingMIProposal::Sample(std::shared_ptr<SamplingState> currentState) {
 
       // Consider samples' weights in subsampling, as rejects lead to increased
@@ -29,6 +34,12 @@ namespace muq {
 
     return coarseChain->GetSamples()->at(sampleID);*/
     }
+
+    double SubsamplingMIProposal::LogDensity(std::shared_ptr<SamplingState> currState,
+                                             std::shared_ptr<SamplingState> propState) {
+      return 0;
+    }
+
 
   }
 }

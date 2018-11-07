@@ -30,8 +30,6 @@ namespace muq{
 
     public:
 
-      //SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem);
-
 #if MUQ_HAS_PARCER
       SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem, std::vector<Eigen::VectorXd> x0, std::shared_ptr<parcer::Communicator> comm);
 #endif

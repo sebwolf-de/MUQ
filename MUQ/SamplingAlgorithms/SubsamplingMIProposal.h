@@ -18,17 +18,12 @@ namespace muq {
      */
     class SubsamplingMIProposal : public MCMCProposal {
     public:
-      SubsamplingMIProposal (pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<SingleChainMCMC> coarseChain)
-      : MCMCProposal(pt,prob), coarseChain(coarseChain),
-        subsampling(pt.get("subsampling",1))
-      {}
+      SubsamplingMIProposal (pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<SingleChainMCMC> coarseChain);
 
       virtual std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> currentState) override;
 
       virtual double LogDensity(std::shared_ptr<SamplingState> currState,
-                                std::shared_ptr<SamplingState> propState) override {
-        return 0;
-      }
+                                std::shared_ptr<SamplingState> propState) override;
 
     private:
       std::shared_ptr<SingleChainMCMC> coarseChain;
