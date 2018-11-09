@@ -6,6 +6,19 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /** @ingroup MCMCProposals
+        @class AMProposal
+        @brief An implemental of the Adaptive Metropolis algorithm
+        @details <B>Configuration Parameters:</B>
+
+        Parameter Key | Type | Default Value | Description |
+        ------------- | ------------- | ------------- | ------------- |
+        "AdaptSteps"  | Integer | - | How often the proposal covariance should be updated. |
+        "AdaptStart"  | Integer | - | How many steps should be taken before beginning to adapt the covariance. |
+        "AdaptScale"  | Double  | - | Scaling of the sample covariance used to define the proposal covariance: \f$\Sigma_{prop} = \alpha \hat{\Sigma}\f$ |
+
+
+    */
     class AMProposal : public MHProposal {
     public:
 

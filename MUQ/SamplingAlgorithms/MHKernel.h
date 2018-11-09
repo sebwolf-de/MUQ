@@ -7,9 +7,17 @@
 
 namespace muq {
   namespace SamplingAlgorithms {
-    /// Monte Carlo transition kernel
+
     /**
-       Samples from the target distirbution directly and returns that state.
+      @ingroup MCMCKernels
+      @class MHKernel
+      @brief An implementation of the standard Metropolis-Hastings transition kernel.
+      @details <B>Configuration Parameters:</B>
+
+      Parameter Key | Type | Default Value | Description |
+      ------------- | ------------- | ------------- | ------------- |
+      "Proposal"  | String | - | A string pointing to a block of proposal options. |
+      
      */
     class MHKernel : public TransitionKernel {
     public:

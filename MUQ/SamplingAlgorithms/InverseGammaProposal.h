@@ -10,6 +10,8 @@ namespace muq {
   namespace SamplingAlgorithms {
 
     /**
+      @ingroup MCMCProposals
+      @class InverseGammaProposal
       @brief Defines a proposal using the analytic conditional Inverse Gamma distribution for the variance of a Gaussian distribution
       @details Consider a Metropolis-Within-Gibbs sampler for a problem where
       the inverse Gamma distribution is used to model the variance of a Gaussian

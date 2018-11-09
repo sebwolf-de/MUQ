@@ -11,9 +11,11 @@ namespace muq {
 
     class GaussQuadrature;
 
-    /// A 1D polynomial (monomial, Hermite, or Legendre)
     /**
-       In general, we use an recursive formula to evaluate a \f$d^{th}\f$ degree
+    @ingroup Polynomials
+    @class OrthogonalPolynomial
+    @brief A 1D orthogonal polynomial
+    @details In general, we use an recursive formula to evaluate a \f$d^{th}\f$ degree
         polynomial using a three term recurrence:
        \f{eqnarray*}{
        p_0(x) &=& \phi_0(x) \\

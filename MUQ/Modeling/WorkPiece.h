@@ -13,7 +13,7 @@
 #include "boost/any.hpp"
 #include "boost/optional.hpp"
 
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
 #include "MUQ/config.h"
 
@@ -27,6 +27,14 @@
 
 namespace muq {
   namespace Modeling {
+
+    /**
+      @defgroup Modeling
+      @brief Tools for constructing coupled physical and statistical models.
+      @details
+
+    */
+
 
     // Forward declaration of WorkGraphPiece
     class WorkGraphPiece;

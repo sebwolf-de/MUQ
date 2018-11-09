@@ -5,6 +5,11 @@
 
 namespace muq {
     namespace Approximation {
+
+        /** @ingroup Polynomials
+            @class Jacobi
+            @brief Family of Jacobi orthogonal polynomials.
+        */
         class Jacobi : public OrthogonalPolynomial {
         public:
 

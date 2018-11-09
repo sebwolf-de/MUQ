@@ -6,7 +6,11 @@
 namespace muq {
   namespace SamplingAlgorithms{
 
-    /** The MarkovChain class is a child of SampleCollection where the sample
+    /**
+    @ingroup MCMC
+    @class MarkovChain
+    @brief A class for storing and working with the results of Markov chain Monte Carlo algorithms.
+    @details The MarkovChain class is a child of SampleCollection where the sample
     weights correspond to the number of consecutive steps taking the same value,
     and the weights are unnormalized (i.e., do not sum to one).  This is a useful
     class for storing the chain produced by an MCMC algorithm without storing the

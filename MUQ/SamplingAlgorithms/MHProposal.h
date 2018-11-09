@@ -8,6 +8,15 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /** @ingroup MCMCProposals
+        @class MHProposal
+        @brief Implementation of the classic Random Walk Metropolis proposal
+        @details <B>Configuration Parameters:</B>
+
+        Parameter Key | Type | Default Value | Description |
+        ------------- | ------------- | ------------- | ------------- |
+        "ProposalVariance"  | Double | - | The variance of an isotropic random walk proposal. |
+    */
     class MHProposal : public MCMCProposal {
     public:
 
