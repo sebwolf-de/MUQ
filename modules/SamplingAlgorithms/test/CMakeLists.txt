@@ -8,7 +8,7 @@ CreateTestGroup(
     GMHKernelTests.cpp
 
     #MonteCarloTests.cpp
-    #ImportanceSamplingTests.cpp
+    ImportanceSamplingTests.cpp
     MCMCTests.cpp
     CrankNicolsonTests.cpp
 
@@ -19,9 +19,9 @@ CreateParallelTestGroup(
     SAMPLING_ALGORITHM
 
     SamplingStateParallelTests.cpp
-    
+
     DistributedCollectionTests.cpp
-    
+
     GMHKernelParallelTests.cpp
 
     SingleChainMCMCParallelTests.cpp

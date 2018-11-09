@@ -23,16 +23,16 @@ namespace muq {
     class SamplingAlgorithm {//} : public muq::Modeling::WorkPiece {
     public:
 
-      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn);
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samplesIn);
 
 #if MUQ_HAS_PARCER
-      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn, std::shared_ptr<parcer::Communicator> comm);
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samplesIn, std::shared_ptr<parcer::Communicator> const& comm);
 #endif
 
       virtual ~SamplingAlgorithm() = default;
 
       std::shared_ptr<SampleCollection> GetSamples() const;
-      
+
       virtual std::shared_ptr<SampleCollection> Run();
       virtual std::shared_ptr<SampleCollection> Run(Eigen::VectorXd const& x0);
       virtual std::shared_ptr<SampleCollection> Run(std::vector<Eigen::VectorXd> const& x0);
@@ -62,7 +62,7 @@ namespace muq {
 #endif
 
     private:
-      
+
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

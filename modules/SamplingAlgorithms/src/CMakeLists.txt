@@ -34,7 +34,7 @@ CreateCompileGroup(
     ""
     SamplingAlgorithm.cpp
     #MonteCarlo.cpp
-    #ImportanceSampling.cpp
+    ImportanceSampling.cpp
     SingleChainMCMC.cpp
 
     SamplingState.cpp
