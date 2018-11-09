@@ -94,7 +94,7 @@ private:
 
   virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) override {
     outputs.resize(1);
-    outputs[0] = 2.0*inputs[0];
+    outputs[0] = inputs[0];
   }
 };
 
@@ -104,7 +104,7 @@ TEST_F(SampleCollectionTest, ExpectedValue)
 
   Eigen::VectorXd mu = collection.ExpectedValue(f);
 
-  double mcStd = 2.0*L(0,0)*L(0,0)/sqrt(double(numSamps));
+  double mcStd = L(0,0)*L(0,0)/sqrt(double(numSamps));
   EXPECT_NEAR(0.0, mu(0), 3*mcStd);
   mcStd = (L(1,0)*L(1,0) + L(1,1)*L(1,1))/sqrt(double(numSamps));
   EXPECT_NEAR(0.0, mu(1), 3*mcStd);
