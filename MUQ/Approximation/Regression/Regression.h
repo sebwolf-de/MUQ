@@ -140,6 +140,8 @@ namespace muq {
 	virtual void JacobianImpl(unsigned int const outputDimWrt,
                                   unsigned int const inputDimWrt,
                                   muq::Modeling::ref_vector<Eigen::VectorXd> const& input) override;
+
+          const double alpha;
       };
 
       /// The input dimension

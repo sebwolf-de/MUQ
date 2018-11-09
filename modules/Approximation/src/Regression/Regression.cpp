@@ -315,13 +315,13 @@ void Regression::PoisednessCost::GradientImpl(unsigned int const inputDimWrt, mu
     }*/
 }
 
-Regression::PoisednessConstraint::PoisednessConstraint(unsigned int const inDim) :
-  ModPiece(Eigen::VectorXi::Constant(1, inDim), Eigen::VectorXi::Ones(1)) {}
+Regression::PoisednessConstraint::PoisednessConstraint(unsigned int const inDim, double const alpha) :
+  ModPiece(Eigen::VectorXi::Constant(1, inDim), Eigen::VectorXi::Ones(1)), alpha(alpha) {}
 
 void Regression::PoisednessConstraint::EvaluateImpl(ref_vector<Eigen::VectorXd> const& input) {
   const Eigen::VectorXd& x = input[0];
   outputs.resize(outputSizes[0]);
-  outputs[0] = (x.dot(x)-1.0)*Eigen::VectorXd::Ones(1);
+  outputs[0] = (x.dot(x)-alpha)*Eigen::VectorXd::Ones(1);
 }
 
 void Regression::PoisednessConstraint::JacobianImpl(unsigned int const outputDimWrt,
