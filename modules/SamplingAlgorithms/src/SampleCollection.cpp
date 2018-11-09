@@ -5,6 +5,17 @@
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
+ExpectedModPieceValue::ExpectedModPieceValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) : f(f) {
+  assert(f->numOutputs==1);
+}
+
+Eigen::VectorXd const& ExpectedModPieceValue::operator()(SamplingState const& a) {
+  assert(f->numInputs==a.state.size());
+  for( unsigned int i=0; i<a.state.size(); ++i ) { assert(a.state[i].size()==f->inputSizes(i)); }
+
+  return f->Evaluate(a.state) [0];
+}
+
 Eigen::VectorXd const& SamplingStateIdentity::operator()(SamplingState const& a)
 {
   if(blockInd<0){
@@ -401,4 +412,14 @@ std::unordered_map<std::string, Eigen::MatrixXd> SampleCollection::GetMeta() con
   }
 
   return meta;
+}
+
+Eigen::VectorXd SampleCollection::ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const {
+  ExpectedModPieceValue op(f);
+
+  Eigen::VectorXd val;
+  double weight;
+
+  std::tie(weight, val) = RecursiveSum(samples.begin(), samples.end(), op);
+  return (val / weight).eval();
 }

@@ -6,6 +6,8 @@
 
 #include <Eigen/Core>
 
+#include "MUQ/Modeling/ModPiece.h"
+
 #include "MUQ/SamplingAlgorithms/SamplingState.h"
 
 #include "MUQ/Utilities/HDF5/HDF5File.h"
@@ -23,6 +25,20 @@ namespace muq{
 
     private:
       Eigen::VectorXd output;
+    };
+
+    class ExpectedModPieceValue {
+    public:
+      ExpectedModPieceValue(std::shared_ptr<muq::Modeling::ModPiece> const& f);
+
+      virtual ~ExpectedModPieceValue() = default;
+
+      Eigen::VectorXd const& operator()(SamplingState const& a);
+
+    private:
+      // Eigen::VectorXd output;
+
+      std::shared_ptr<muq::Modeling::ModPiece> f;
     };
 
     class SamplingStatePartialMoment{
@@ -121,6 +137,8 @@ namespace muq{
       \return A matrix of meta data associated with in the input string
       */
       Eigen::MatrixXd GetMeta(std::string const& name) const;
+
+      virtual Eigen::VectorXd ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const;
 
     protected:
 
