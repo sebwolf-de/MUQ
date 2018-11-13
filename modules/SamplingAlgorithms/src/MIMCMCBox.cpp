@@ -49,9 +49,9 @@ namespace muq {
         coarse_chain = chain;
       }
 
+      finestProblem = coarse_problem;
 
       std::shared_ptr<MultiIndex> boxSize = std::make_shared<MultiIndex>(*boxHighestIndex - *boxLowestIndex);
-
 
       // Set up Multiindex box
       boxIndices = MultiIndexFactory::CreateFullTensor(boxSize->GetVector());
@@ -80,9 +80,15 @@ namespace muq {
 
         boxChains[boxIndices->MultiToIndex(boxIndex)] = chain;
 
-        coarse_problem = problem;
+        if (boxIndex->Max() == 1)
+          finestProblem = problem;
       }
     }
+
+    std::shared_ptr<AbstractSamplingProblem> MIMCMCBox::GetFinestProblem() {
+      return finestProblem;
+    }
+
 
     void MIMCMCBox::Sample() {
       for (int i = 0; i < boxIndices->Size(); i++) {
@@ -93,9 +99,7 @@ namespace muq {
     }
 
     Eigen::VectorXd MIMCMCBox::MeanQOI() {
-      auto finestIndex = componentFactory->finestIndex();
-      auto finestProblem = componentFactory->samplingProblem(finestIndex);
-      Eigen::VectorXd sampMean = Eigen::VectorXd::Zero(finestProblem->blockSizesQOI.sum());
+      Eigen::VectorXd sampMean = Eigen::VectorXd::Zero(GetFinestProblem()->blockSizesQOI.sum());
 
       for (int i = 0; i < boxIndices->Size(); i++) {
         std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];

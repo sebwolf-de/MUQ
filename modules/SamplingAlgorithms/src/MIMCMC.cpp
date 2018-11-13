@@ -30,9 +30,8 @@ namespace muq {
     }
 
     Eigen::VectorXd MIMCMC::meanQOI() {
-      // TODO: Avoid samplingProblem setup for retreiving QOI dimensions?
       // Compute full QOI estimate
-      Eigen::VectorXd MImean(componentFactory->samplingProblem(componentFactory->finestIndex())->blockSizesQOI.sum());
+      Eigen::VectorXd MImean(boxes[0]->GetFinestProblem()->blockSizesQOI.sum());
       MImean.setZero();
 
       for (auto box : boxes) {

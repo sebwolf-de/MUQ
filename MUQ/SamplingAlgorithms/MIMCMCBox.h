@@ -40,6 +40,8 @@ namespace muq {
 
       std::shared_ptr<SingleChainMCMC> finestChain();
 
+      std::shared_ptr<AbstractSamplingProblem> GetFinestProblem();
+
     private:
 
       // Creates a path of multiindices back to zero, preferring a route along the diagonal
@@ -52,6 +54,7 @@ namespace muq {
       std::shared_ptr<MultiIndexSet> boxIndices;
       std::vector<std::shared_ptr<SingleChainMCMC>> boxChains;
       std::vector<std::shared_ptr<SingleChainMCMC>> tailChains;
+      std::shared_ptr<AbstractSamplingProblem> finestProblem;
     };
 
   }
