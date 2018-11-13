@@ -129,10 +129,10 @@ Eigen::VectorXd const& ModPiece::ApplyJacobian(unsigned int                const
 }
 
 void ModPiece::EvaluateImpl(ref_vector<boost::any> const& inputs){
-
   ref_vector<Eigen::VectorXd> eigenInputs;
-  for(int i=0; i<inputs.size(); ++i)
+  for(int i=0; i<inputs.size(); ++i) {
     eigenInputs.push_back( std::cref(boost::any_cast<Eigen::VectorXd const&>(inputs.at(i))) );
+  }
 
   EvaluateImpl(eigenInputs);
 

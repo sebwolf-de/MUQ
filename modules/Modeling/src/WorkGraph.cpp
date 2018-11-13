@@ -691,8 +691,17 @@ void WorkGraph::BindNode(std::string             const& nodeName,
   // next, delete all incoming edges
   boost::remove_in_edge_if(*nodeDesc, TrueOp(), graph);
 
-  // finally, replace the WorkPiece ptr
-  (graph)[*nodeDesc]->piece = std::make_shared<ConstantPiece>(x);
+  // try to cast the node as a ModPiece
+  auto mod = std::dynamic_pointer_cast<ModPiece>((graph)[*nodeDesc]->piece);
+  if( mod ) {
+    // replace the ModPiece ptr
+    std::vector<Eigen::VectorXd> vec(x.size());
+    for( unsigned int i=0; i<x.size(); ++i ) { vec[i] = boost::any_cast<std::__1::reference_wrapper<Eigen::VectorXd const> >(x[i]).get(); }
+    (graph)[*nodeDesc]->piece = std::make_shared<ConstantVector>(vec);
+  } else {
+    // replace the WorkPiece ptr
+    (graph)[*nodeDesc]->piece = std::make_shared<ConstantPiece>(x);
+  }
 }
 
 void WorkGraph::BindEdge(std::string const& nodeName,
