@@ -5,6 +5,7 @@
 
 #include "MUQ/SamplingAlgorithms/MIMCMCBox.h"
 #include "MUQ/SamplingAlgorithms/MIComponentFactory.h"
+#include "MUQ/SamplingAlgorithms/SamplingAlgorithm.h"
 
 namespace pt = boost::property_tree;
 
@@ -17,11 +18,14 @@ namespace muq {
         estimating the most profitable level from
         statistical information on samples.
      */
-    class GreedyMLMCMC {
+    class GreedyMLMCMC : public SamplingAlgorithm {
     public:
       GreedyMLMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory);
 
-      void run();
+      virtual std::shared_ptr<SampleCollection> RunImpl() override;
+
+      virtual std::shared_ptr<SampleCollection> GetSamples() const override;
+      virtual std::shared_ptr<SampleCollection> GetQOIs() const override;
 
       Eigen::VectorXd meanQOI();
 

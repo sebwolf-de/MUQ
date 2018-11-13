@@ -4,7 +4,8 @@ namespace muq {
   namespace SamplingAlgorithms {
 
     SLMCMC::SLMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory)
-     : componentFactory(componentFactory)
+     : SamplingAlgorithm(nullptr, nullptr),
+       componentFactory(componentFactory)
     {
       auto index = componentFactory->finestIndex();
 
@@ -21,7 +22,14 @@ namespace muq {
       coarse_chain = std::make_shared<SingleChainMCMC>(pt,kernels,startingPoint);
     }
 
-    void SLMCMC::run() {
+    std::shared_ptr<SampleCollection> SLMCMC::GetSamples() const {
+      return nullptr;
+    }
+    std::shared_ptr<SampleCollection> SLMCMC::GetQOIs() const {
+      return nullptr;
+    }
+
+    std::shared_ptr<SampleCollection> SLMCMC::RunImpl() {
       coarse_chain->Run();
     }
 

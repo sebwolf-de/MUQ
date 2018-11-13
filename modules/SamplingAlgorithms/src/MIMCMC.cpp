@@ -4,8 +4,9 @@ namespace muq {
   namespace SamplingAlgorithms {
 
     MIMCMC::MIMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory)
-    : componentFactory(componentFactory),
-     samples(pt.get("NumSamples",1000))
+    : SamplingAlgorithm(nullptr, nullptr),
+      componentFactory(componentFactory),
+      samples(pt.get("NumSamples",1000))
     {
 
       gridIndices = MultiIndexFactory::CreateFullTensor(componentFactory->finestIndex()->GetVector());
@@ -19,7 +20,14 @@ namespace muq {
 
     }
 
-    void MIMCMC::run() {
+    std::shared_ptr<SampleCollection> MIMCMC::GetSamples() const {
+      return nullptr;
+    }
+    std::shared_ptr<SampleCollection> MIMCMC::GetQOIs() const {
+      return nullptr;
+    }
+
+    std::shared_ptr<SampleCollection> MIMCMC::RunImpl() {
 
       for (auto box : boxes) {
         for (int samp = 0; samp < samples; samp++) {
@@ -27,6 +35,7 @@ namespace muq {
         }
       }
 
+      return nullptr;
     }
 
     Eigen::VectorXd MIMCMC::meanQOI() {

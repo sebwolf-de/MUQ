@@ -5,6 +5,7 @@
 
 #include "MUQ/SamplingAlgorithms/MIMCMCBox.h"
 #include "MUQ/SamplingAlgorithms/MIComponentFactory.h"
+#include "MUQ/SamplingAlgorithms/SamplingAlgorithm.h"
 
 namespace pt = boost::property_tree;
 
@@ -18,12 +19,15 @@ namespace muq {
         multilevel/multiindex MCMC methods.
     */
 
-    class SLMCMC {
+    class SLMCMC : public SamplingAlgorithm {
 
     public:
       SLMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory);
 
-      void run();
+      virtual std::shared_ptr<SampleCollection> RunImpl() override;
+
+      virtual std::shared_ptr<SampleCollection> GetSamples() const override;
+      virtual std::shared_ptr<SampleCollection> GetQOIs() const override;
 
       Eigen::VectorXd meanQOI();
 

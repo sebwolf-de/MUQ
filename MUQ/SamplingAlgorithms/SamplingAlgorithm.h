@@ -34,8 +34,8 @@ namespace muq {
 
       virtual ~SamplingAlgorithm() = default;
 
-      std::shared_ptr<SampleCollection> GetSamples() const;
-      std::shared_ptr<SampleCollection> GetQOIs() const;
+      virtual std::shared_ptr<SampleCollection> GetSamples() const;
+      virtual std::shared_ptr<SampleCollection> GetQOIs() const;
 
       virtual std::shared_ptr<SampleCollection> Run();
 

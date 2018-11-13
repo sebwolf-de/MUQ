@@ -4,7 +4,8 @@ namespace muq {
   namespace SamplingAlgorithms {
 
     GreedyMLMCMC::GreedyMLMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory)
-    : componentFactory(componentFactory),
+    : SamplingAlgorithm(nullptr, nullptr),
+      componentFactory(componentFactory),
       numInitialSamples(pt.get("NumInitialSamples",1000)),
       e(pt.get("GreedyTargetVariance",0.1)),
       beta(pt.get("GreedyResamplingFactor",0.5)),
@@ -21,8 +22,14 @@ namespace muq {
       }
     }
 
-    void GreedyMLMCMC::run() {
+    std::shared_ptr<SampleCollection> GreedyMLMCMC::GetSamples() const {
+      return nullptr;
+    }
+    std::shared_ptr<SampleCollection> GreedyMLMCMC::GetQOIs() const {
+      return nullptr;
+    }
 
+    std::shared_ptr<SampleCollection> GreedyMLMCMC::RunImpl() {
 
       const int levels = componentFactory->finestIndex()->GetValue(0);
 
@@ -75,6 +82,7 @@ namespace muq {
           boxes[l]->Sample();
       }
 
+      return nullptr;
     }
 
     std::shared_ptr<MIMCMCBox> GreedyMLMCMC::getBox(int index) {

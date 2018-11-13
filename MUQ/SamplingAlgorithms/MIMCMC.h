@@ -5,6 +5,7 @@
 
 #include "MUQ/SamplingAlgorithms/MIMCMCBox.h"
 #include "MUQ/SamplingAlgorithms/MIComponentFactory.h"
+#include "MUQ/SamplingAlgorithms/SamplingAlgorithm.h"
 
 namespace pt = boost::property_tree;
 
@@ -15,11 +16,14 @@ namespace muq {
         @details A basic MIMCMC method based on a fixed
         number of samples for all model indices.
      */
-    class MIMCMC {
+    class MIMCMC : public SamplingAlgorithm {
     public:
       MIMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory);
 
-      void run();
+      virtual std::shared_ptr<SampleCollection> RunImpl() override;
+
+      virtual std::shared_ptr<SampleCollection> GetSamples() const;
+      virtual std::shared_ptr<SampleCollection> GetQOIs() const;
 
       Eigen::VectorXd meanQOI();
 
