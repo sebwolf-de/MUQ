@@ -117,8 +117,8 @@ namespace muq {
     void MIMCMCBox::drawChain(std::shared_ptr<SingleChainMCMC> chain, std::string chainid, std::ofstream& graphfile) const {
       graphfile << "subgraph cluster_" << chainid << " {" << std::endl;
       graphfile << "label=\"Chain " << chainid << "\"" << std::endl;
-      for (int s = 0; s < chain->GetSamples()->samples.size(); s++) {
-        std::shared_ptr<SamplingState> sample = chain->GetSamples()->samples[s];
+      for (int s = 0; s < chain->GetSamples()->size(); s++) {
+        std::shared_ptr<SamplingState> sample = chain->GetSamples()->at(s);
         std::string nodeid = "\"s" + chainid + "node" + std::to_string(s) + "\"";
         sample->meta["gvizid"] = nodeid;
 
@@ -133,11 +133,11 @@ namespace muq {
         graphfile << "\"]" << std::endl;
       }
       graphfile << "}" << std::endl;
-      for (int s = 0; s < chain->GetSamples()->samples.size(); s++) {
-        std::shared_ptr<SamplingState> sample = chain->GetSamples()->samples[s];
+      for (int s = 0; s < chain->GetSamples()->size(); s++) {
+        std::shared_ptr<SamplingState> sample = chain->GetSamples()->at(s);
         std::string nodeid = "\"s" + chainid + "node" + std::to_string(s) + "\"";
 
-        if (s < chain->GetSamples()->samples.size() - 1)
+        if (s < chain->GetSamples()->size() - 1)
           graphfile << nodeid << " -> " << "\"s" << chainid << "node" << s+1 << "\"" << std::endl;
 
         if (sample->HasMeta("coarseSample")) {

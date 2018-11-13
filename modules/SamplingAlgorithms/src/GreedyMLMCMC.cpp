@@ -63,8 +63,8 @@ namespace muq {
         // Beta percent new samples on largest payoff level
         double weight_sum = 0.0;
         auto finestChain = boxes[l]->finestChain();
-        for (int s = 0; s < finestChain->GetSamples()->samples.size(); s++) {
-          std::shared_ptr<SamplingState> sample = finestChain->GetSamples()->samples[s];
+        for (int s = 0; s < finestChain->GetSamples()->size(); s++) {
+          std::shared_ptr<SamplingState> sample = finestChain->GetSamples()->at(s);
           weight_sum += sample->weight;
         }
         int n_samples = std::ceil(weight_sum);

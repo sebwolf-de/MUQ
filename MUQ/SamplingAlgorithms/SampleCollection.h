@@ -110,10 +110,6 @@ namespace muq{
 
       virtual Eigen::VectorXd Weights() const;
 
-      // TODO: Make samples protected again; currently needed by SubsamplingMIProposal for performant access.
-      // This will become obsolete when iterators allow sufficiently fast access to samples of a MarkovChain
-      std::vector<std::shared_ptr<SamplingState>> samples;
-
       /**
 	 @param[in] filename The name of the file
 	 @param[in] dataset The name of the group within the file
@@ -121,6 +117,8 @@ namespace muq{
       virtual void WriteToFile(std::string const& filename, std::string const& dataset = "/") const;
 
     protected:
+
+      std::vector<std::shared_ptr<SamplingState>> samples;
 
       /** Returns the sum of the weights and the sum of the squared weights. */
       static std::pair<double,double> RecursiveWeightSum(std::vector<std::shared_ptr<SamplingState>>::const_iterator start,
