@@ -62,7 +62,7 @@ if(MUQ_USE_OPENMPI)
       MPI_Info info     = MPI_INFO_NULL;
       hid_t    plist_id = H5Pcreate(H5P_FILE_ACCESS);
       H5Pset_fapl_mpio(plist_id, comm, info);
-      retun 0;
+      return 0;
     }     
     "
     HDF5_MPI_COMPILES)
