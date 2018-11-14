@@ -9,7 +9,7 @@ namespace muq {
       samples(pt.get("NumSamples",1000))
     {
 
-      gridIndices = MultiIndexFactory::CreateFullTensor(componentFactory->finestIndex()->GetVector());
+      gridIndices = MultiIndexFactory::CreateFullTensor(componentFactory->FinestIndex()->GetVector());
 
       for (int i = 0; i < gridIndices->Size(); i++) {
         std::shared_ptr<MultiIndex> boxHighestIndex = (*gridIndices)[i];
@@ -38,7 +38,7 @@ namespace muq {
       return nullptr;
     }
 
-    Eigen::VectorXd MIMCMC::meanQOI() {
+    Eigen::VectorXd MIMCMC::MeanQOI() {
       // Compute full QOI estimate
       Eigen::VectorXd MImean(boxes[0]->GetFinestProblem()->blockSizesQOI.sum());
       MImean.setZero();
@@ -52,14 +52,14 @@ namespace muq {
       return MImean;
     }
 
-    void MIMCMC::draw(bool drawSamples) {
+    void MIMCMC::Draw(bool drawSamples) {
       std::ofstream graphfile;
       graphfile.open ("graph");
       graphfile << "digraph {" << std::endl;
       graphfile << "nodesep=1.2;" << std::endl;
       graphfile << "splines=false;" << std::endl;
       for (auto box : boxes) {
-        box->draw(graphfile, drawSamples);
+        box->Draw(graphfile, drawSamples);
       }
       graphfile << "}" << std::endl;
       graphfile.close();

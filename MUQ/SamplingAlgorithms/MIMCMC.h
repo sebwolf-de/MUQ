@@ -47,9 +47,9 @@ namespace muq {
       virtual std::shared_ptr<SampleCollection> GetSamples() const;
       virtual std::shared_ptr<SampleCollection> GetQOIs() const;
 
-      Eigen::VectorXd meanQOI();
+      Eigen::VectorXd MeanQOI();
 
-      void draw(bool drawSamples = true);
+      void Draw(bool drawSamples = true);
 
     private:
       std::shared_ptr<MultiIndexSet> gridIndices;

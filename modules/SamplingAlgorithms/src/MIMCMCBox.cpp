@@ -15,13 +15,13 @@ namespace muq {
       const auto rootIndex = std::make_shared<MultiIndex>(boxHighestIndex->GetLength());
 
       // Set up root index sampling
-      auto coarse_problem = componentFactory->samplingProblem(rootIndex);
-      auto proposal_coarse = componentFactory->proposal(rootIndex, coarse_problem);
+      auto coarse_problem = componentFactory->SamplingProblem(rootIndex);
+      auto proposal_coarse = componentFactory->Proposal(rootIndex, coarse_problem);
 
       std::vector<std::shared_ptr<TransitionKernel>> coarse_kernels(1);
       coarse_kernels[0] = std::make_shared<MHKernel>(ptBlockID,coarse_problem,proposal_coarse);
 
-      Eigen::VectorXd startPtCoarse = componentFactory->startingPoint(rootIndex);
+      Eigen::VectorXd startPtCoarse = componentFactory->StartingPoint(rootIndex);
       auto coarse_chain = std::make_shared<SingleChainMCMC>(ptChains,coarse_kernels,startPtCoarse);
 
       // Construct path to lowest index of box
@@ -34,11 +34,11 @@ namespace muq {
 
         std::shared_ptr<MultiIndex> index = (*rootPath)[i];
 
-        auto problem = componentFactory->samplingProblem(index);
-        auto proposal = componentFactory->proposal(index, problem);
-        auto coarse_proposal = componentFactory->coarseProposal(index, coarse_problem, coarse_chain);
-        auto proposalInterpolation = componentFactory->interpolation(index);
-        auto startingPoint = componentFactory->startingPoint(index);
+        auto problem = componentFactory->SamplingProblem(index);
+        auto proposal = componentFactory->Proposal(index, problem);
+        auto coarse_proposal = componentFactory->CoarseProposal(index, coarse_problem, coarse_chain);
+        auto proposalInterpolation = componentFactory->Interpolation(index);
+        auto startingPoint = componentFactory->StartingPoint(index);
 
         std::vector<std::shared_ptr<TransitionKernel>> kernels(1);
         kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
@@ -67,11 +67,11 @@ namespace muq {
 
         std::shared_ptr<MultiIndex> index = std::make_shared<MultiIndex>(*boxLowestIndex + *boxIndex);
 
-        auto problem = componentFactory->samplingProblem(index);
-        auto proposal = componentFactory->proposal(index, problem);
-        auto coarse_proposal = componentFactory->coarseProposal(index, coarse_problem, coarse_chain);
-        auto proposalInterpolation = componentFactory->interpolation(index);
-        auto startingPoint = componentFactory->startingPoint(index);
+        auto problem = componentFactory->SamplingProblem(index);
+        auto proposal = componentFactory->Proposal(index, problem);
+        auto coarse_proposal = componentFactory->CoarseProposal(index, coarse_problem, coarse_chain);
+        auto proposalInterpolation = componentFactory->Interpolation(index);
+        auto startingPoint = componentFactory->StartingPoint(index);
 
         std::vector<std::shared_ptr<TransitionKernel>> kernels(1);
         kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
@@ -118,7 +118,7 @@ namespace muq {
       return sampMean;
     }
 
-    void MIMCMCBox::drawChain(std::shared_ptr<SingleChainMCMC> chain, std::string chainid, std::ofstream& graphfile) const {
+    void MIMCMCBox::DrawChain(std::shared_ptr<SingleChainMCMC> chain, std::string chainid, std::ofstream& graphfile) const {
       graphfile << "subgraph cluster_" << chainid << " {" << std::endl;
       graphfile << "label=\"Chain " << chainid << "\"" << std::endl;
       for (int s = 0; s < chain->GetSamples()->size(); s++) {
@@ -156,13 +156,13 @@ namespace muq {
       }
     }
 
-    void MIMCMCBox::draw(std::ofstream& graphfile, bool drawSamples) const {
+    void MIMCMCBox::Draw(std::ofstream& graphfile, bool drawSamples) const {
 
       if (drawSamples) {
         for (int i = 0; i < tailChains.size(); i++) {
           std::string chainid = "box" + boxHighestIndex->ToString() + "_tail" + std::to_string(i) + "";
 
-          drawChain (tailChains[i], chainid, graphfile);
+          DrawChain (tailChains[i], chainid, graphfile);
         }
 
         for (int i = 0; i < boxIndices->Size(); i++) {
@@ -170,7 +170,7 @@ namespace muq {
           std::shared_ptr<SingleChainMCMC> singleChain = boxChains[boxIndices->MultiToIndex(boxIndex)];
 
           std::string chainid = "box" + boxHighestIndex->ToString() + "_node" + boxIndex->ToString() + "";
-          drawChain (singleChain, chainid, graphfile);
+          DrawChain (singleChain, chainid, graphfile);
         }
       } else {
         std::string previd = "";
@@ -199,7 +199,7 @@ namespace muq {
       }
     }
 
-    std::shared_ptr<SingleChainMCMC> MIMCMCBox::finestChain() {
+    std::shared_ptr<SingleChainMCMC> MIMCMCBox::FinestChain() {
       std::shared_ptr<MultiIndex> boxSize = std::make_shared<MultiIndex>(*boxHighestIndex - *boxLowestIndex);
       return boxChains[boxIndices->MultiToIndex(boxSize)];
     }

@@ -47,7 +47,7 @@ std::vector<std::shared_ptr<SamplingState>> MIKernel::Step(unsigned int const t,
   // New fine proposal
   std::shared_ptr<SamplingState> prop = proposal->Sample(prevState);
   std::shared_ptr<SamplingState> coarseProp = coarse_proposal->Sample(coarsePrevState);
-  std::shared_ptr<SamplingState> fineProp = proposalInterpolation->interpolate (coarseProp, prop);
+  std::shared_ptr<SamplingState> fineProp = proposalInterpolation->Interpolate (coarseProp, prop);
 
   // compute acceptance probability
   double propTarget;

@@ -17,7 +17,7 @@ namespace muq {
 
       virtual ~MIInterpolation() = default;
 
-      virtual std::shared_ptr<SamplingState> interpolate (std::shared_ptr<SamplingState> coarseProposal, std::shared_ptr<SamplingState> fineProposal) = 0;
+      virtual std::shared_ptr<SamplingState> Interpolate (std::shared_ptr<SamplingState> coarseProposal, std::shared_ptr<SamplingState> fineProposal) = 0;
 
 
     };

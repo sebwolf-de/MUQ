@@ -27,11 +27,11 @@ namespace muq {
       virtual std::shared_ptr<SampleCollection> GetSamples() const override;
       virtual std::shared_ptr<SampleCollection> GetQOIs() const override;
 
-      Eigen::VectorXd meanQOI();
+      Eigen::VectorXd MeanQOI();
 
-      void draw(bool drawSamples = true);
+      void Draw(bool drawSamples = true);
 
-      std::shared_ptr<MIMCMCBox> getBox(int index);
+      std::shared_ptr<MIMCMCBox> GetBox(int index);
 
     private:
       const double e;
