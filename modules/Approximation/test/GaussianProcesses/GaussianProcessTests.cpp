@@ -39,6 +39,36 @@ TEST(Approximation_GP, Discretize)
 
 }
 
+
+TEST(Approximation_GP, DiscretizeConcatenate)
+{
+  auto kernel1 = SquaredExpKernel(1, 2.0, 0.35);
+  auto kernel2 = MaternKernel(1, 2.0, 0.2, 5.0/2.0);
+  auto kernel = Concatenate(kernel1, kernel2);
+
+  // Create the GP
+  ZeroMean mean(2, 2);
+  GaussianProcess gp(mean, kernel);
+
+  Eigen::RowVectorXd pts = Eigen::RowVectorXd::LinSpaced(100, 0, 1);
+
+  std::shared_ptr<Gaussian> gauss = gp.Discretize(pts);
+
+  Eigen::MatrixXd gaussCov = gauss->GetCovariance();
+  Eigen::VectorXd gaussMean = gauss->GetMean();
+
+  Eigen::MatrixXd gpMean, gpCov;
+  std::tie(gpMean, gpCov) = gp.Predict(pts, GaussianProcess::FullCov);
+
+  for(int i=0; i<gpMean.size(); ++i){
+    EXPECT_DOUBLE_EQ(gpMean(i), gaussMean(i));
+    for(int j=0; j<=i; ++j)
+      EXPECT_DOUBLE_EQ(gpCov(i,j), gaussCov(i,j));
+  }
+
+}
+
+
 TEST(Approximation_GP, HyperFit1d)
 {
     const unsigned numPred  = 50;
