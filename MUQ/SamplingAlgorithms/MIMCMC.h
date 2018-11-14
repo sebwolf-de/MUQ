@@ -44,8 +44,8 @@ namespace muq {
 
       virtual std::shared_ptr<SampleCollection> RunImpl() override;
 
-      virtual std::shared_ptr<SampleCollection> GetSamples() const;
-      virtual std::shared_ptr<SampleCollection> GetQOIs() const;
+      virtual std::shared_ptr<SampleCollection> GetSamples() const override;
+      virtual std::shared_ptr<SampleCollection> GetQOIs() const override;
 
       Eigen::VectorXd MeanQOI();
 
