@@ -22,8 +22,6 @@ namespace muq {
     public:
       GreedyMLMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory);
 
-      virtual std::shared_ptr<SampleCollection> RunImpl() override;
-
       virtual std::shared_ptr<SampleCollection> GetSamples() const override;
       virtual std::shared_ptr<SampleCollection> GetQOIs() const override;
 
@@ -32,6 +30,9 @@ namespace muq {
       void Draw(bool drawSamples = true);
 
       std::shared_ptr<MIMCMCBox> GetBox(int index);
+
+    protected:
+      virtual std::shared_ptr<SampleCollection> RunImpl() override;
 
     private:
       const double e;

@@ -24,8 +24,6 @@ namespace muq {
     public:
       SLMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory);
 
-      virtual std::shared_ptr<SampleCollection> RunImpl() override;
-
       virtual std::shared_ptr<SampleCollection> GetSamples() const override;
       virtual std::shared_ptr<SampleCollection> GetQOIs() const override;
 
@@ -33,6 +31,8 @@ namespace muq {
 
       Eigen::VectorXd MeanParameter();
 
+    protected:
+      virtual std::shared_ptr<SampleCollection> RunImpl() override;
 
     private:
       std::shared_ptr<MIComponentFactory> componentFactory;

@@ -39,13 +39,13 @@ namespace muq {
 
       virtual std::shared_ptr<SampleCollection> Run();
 
-      virtual std::shared_ptr<SampleCollection> RunImpl() = 0;
-
 #if MUQ_HAS_PARCER
       std::shared_ptr<parcer::Communicator> GetCommunicator() const;
 #endif
 
     protected:
+
+      virtual std::shared_ptr<SampleCollection> RunImpl() = 0;
 
       /**
 	 Inputs:

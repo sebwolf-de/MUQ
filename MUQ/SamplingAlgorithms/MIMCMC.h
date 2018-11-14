@@ -42,14 +42,15 @@ namespace muq {
     public:
       MIMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory);
 
-      virtual std::shared_ptr<SampleCollection> RunImpl() override;
-
       virtual std::shared_ptr<SampleCollection> GetSamples() const override;
       virtual std::shared_ptr<SampleCollection> GetQOIs() const override;
 
       Eigen::VectorXd MeanQOI();
 
       void Draw(bool drawSamples = true);
+
+    protected:
+      virtual std::shared_ptr<SampleCollection> RunImpl() override;
 
     private:
       std::shared_ptr<MultiIndexSet> gridIndices;
