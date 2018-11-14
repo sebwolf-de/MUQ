@@ -38,6 +38,7 @@ CreateCompileGroup(
     ConstantVector.cpp
     IdentityPiece.cpp
     ProductPiece.cpp
+    SplitVector.cpp
 
     MultiLogisticLikelihood.cpp
 
