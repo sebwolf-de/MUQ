@@ -9,12 +9,14 @@ namespace muq {
       numInitialSamples(pt.get("NumInitialSamples",1000)),
       e(pt.get("GreedyTargetVariance",0.1)),
       beta(pt.get("GreedyResamplingFactor",0.5)),
-      levels(componentFactory->FinestIndex()->GetValue(0))
+      levels(componentFactory->FinestIndex()->GetValue(0)),
+      verbosity(pt.get("verbosity",0))
     {
 
 
       for (int level = 0; level <= levels; level++) {
-        std::cout << "Setting up level " << level << std::endl;
+        if (verbosity > 0)
+          std::cout << "Setting up level " << level << std::endl;
 
         auto boxHighestIndex = std::make_shared<MultiIndex>(1,level);
         auto box = std::make_shared<MIMCMCBox>(componentFactory, boxHighestIndex);
@@ -33,14 +35,16 @@ namespace muq {
 
       const int levels = componentFactory->FinestIndex()->GetValue(0);
 
-      std::cout << "Computing " << numInitialSamples << " initial samples per level" << std::endl;
+      if (verbosity > 0)
+        std::cout << "Computing " << numInitialSamples << " initial samples per level" << std::endl;
 
       for (auto box : boxes) {
         for (int samp = 0; samp < numInitialSamples; samp++) {
           box->Sample();
         }
       }
-      std::cout << "Initial samples done" << std::endl;
+      if (verbosity > 0)
+        std::cout << "Initial samples done" << std::endl;
 
       while(true) {
         double var_mle = 0.0;
@@ -49,7 +53,8 @@ namespace muq {
           var_mle += qois->Variance().cwiseQuotient(qois->ESS()).maxCoeff();
         }
         if (var_mle <= std::pow(e,2)) {
-          std::cout << "val_mle " << var_mle << " below " << std::pow(e,2) << std::endl;
+          if (verbosity > 0)
+            std::cout << "val_mle " << var_mle << " below " << std::pow(e,2) << std::endl;
           break;
         }
 
@@ -77,7 +82,8 @@ namespace muq {
         int n_samples = std::ceil(weight_sum);
         int n_new_samples = std::ceil(n_samples * beta);
 
-        std::cout << "var_mle " << var_mle << "\t" << n_new_samples << " new samples on level " << l << std::endl;
+        if (verbosity > 0)
+          std::cout << "var_mle " << var_mle << "\t" << n_new_samples << " new samples on level " << l << std::endl;
         for (int i = 0; i < n_new_samples; i++)
           boxes[l]->Sample();
       }

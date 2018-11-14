@@ -41,6 +41,7 @@ namespace muq {
       std::shared_ptr<MIComponentFactory> componentFactory;
       const int numInitialSamples;
       std::vector<std::shared_ptr<MIMCMCBox>> boxes;
+      int verbosity;
     };
 
   }
