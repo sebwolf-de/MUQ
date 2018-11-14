@@ -24,13 +24,12 @@ MultiIndex::MultiIndex(Eigen::RowVectorXi const& indIn) : MultiIndex(indIn.size(
   totalOrder = 0;
 
   for(int i=0; i<indIn.size(); ++i){
-    if( indIn[i]>=0 ){
+    if( indIn[i] > 0 ){
       nzInds[i] = indIn[i];
       maxValue = std::max<int>(maxValue, indIn[i]);
       totalOrder += indIn[i];
     }
   }
-
 }
 
 MultiIndex::MultiIndex(std::initializer_list<unsigned> const& indIn) : MultiIndex(indIn.size())
@@ -40,7 +39,7 @@ MultiIndex::MultiIndex(std::initializer_list<unsigned> const& indIn) : MultiInde
 
   unsigned i = 0;
   for(auto it = indIn.begin(); it != indIn.end(); ++it){
-    if( *it >= 0 ){
+    if( *it > 0 ){
       nzInds[i] = *it;
 
       maxValue = std::max<int>(maxValue, *it);
@@ -68,11 +67,17 @@ bool MultiIndex::SetValue(unsigned ind, unsigned val)
     throw std::out_of_range("Tried to set the value of index " + std::to_string(ind) + " on an multiindex with only " + std::to_string(length) + " components.");
   }else{
 
-    auto it = nzInds.find(ind);
-    if(it != nzInds.end()){
-      it->second = val;
-    }else{
-      nzInds[ind] = val;
+    bool foundIndex;
+    if (val > 0) {
+      auto it = nzInds.find(ind);
+      foundIndex = it!=nzInds.end();
+      if(it != nzInds.end()){
+        it->second = val;
+      }else{
+        nzInds[ind] = val;
+      }
+    } else {
+      foundIndex = nzInds.erase(ind) > 0;
     }
 
 
@@ -85,7 +90,7 @@ bool MultiIndex::SetValue(unsigned ind, unsigned val)
       maxValue = std::max(maxValue, value.second);
     }
 
-    return it!=nzInds.end();
+    return foundIndex;
   }
 }
 
