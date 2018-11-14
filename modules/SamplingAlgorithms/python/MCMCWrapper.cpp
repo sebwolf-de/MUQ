@@ -25,20 +25,25 @@ void PythonBindings::MCMCWrapper(py::module &m) {
   sampAlg
     .def("Run", (std::shared_ptr<SampleCollection>  (SamplingAlgorithm::*)()) &SamplingAlgorithm::Run,
                  py::call_guard<py::scoped_ostream_redirect,py::scoped_estream_redirect>())
-    .def("Run", (std::shared_ptr<SampleCollection>  (SamplingAlgorithm::*)(Eigen::VectorXd const&)) &SamplingAlgorithm::Run,
-                 py::call_guard<py::scoped_ostream_redirect,py::scoped_estream_redirect>())
-    .def("Run", (std::shared_ptr<SampleCollection>  (SamplingAlgorithm::*)(std::vector<Eigen::VectorXd> const&)) &SamplingAlgorithm::Run,
-                 py::call_guard<py::scoped_ostream_redirect,py::scoped_estream_redirect>())
     .def("GetSamples", &SamplingAlgorithm::GetSamples);
 
   py::class_<SingleChainMCMC, SamplingAlgorithm, std::shared_ptr<SingleChainMCMC>> singleMCMC(m, "SingleChainMCMC");
   singleMCMC
-    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem) {return new SingleChainMCMC(ConvertDictToPtree(d), problem);}))
-    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem, std::vector<std::shared_ptr<TransitionKernel>> kernelsIn) {return new SingleChainMCMC(ConvertDictToPtree(d), problem, kernelsIn);}))
+    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem, Eigen::VectorXd x0) {return new SingleChainMCMC(ConvertDictToPtree(d), problem, x0);}))
+    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem, std::vector<Eigen::VectorXd> x0) {return new SingleChainMCMC(ConvertDictToPtree(d), problem, x0);}))
+    .def(py::init( [](py::dict d, std::vector<std::shared_ptr<TransitionKernel>> kernels, Eigen::VectorXd x0) {return new SingleChainMCMC(ConvertDictToPtree(d), kernels, x0);}))
+    .def(py::init( [](py::dict d, std::vector<std::shared_ptr<TransitionKernel>> kernels, std::vector<Eigen::VectorXd> x0) {return new SingleChainMCMC(ConvertDictToPtree(d), kernels, x0);}))
     .def("Kernels", &SingleChainMCMC::Kernels)
     .def("RunImpl", &SingleChainMCMC::RunImpl);
 
   py::class_<MCMCFactory, std::shared_ptr<MCMCFactory>> fact(m, "MCMCFactory");
   fact
-    .def_static("CreateSingleChain", &MCMCFactory::CreateSingleChain);
+    .def_static("CreateSingleChain", (std::shared_ptr<SingleChainMCMC> (*)(
+                boost::property_tree::ptree& pt, std::shared_ptr<AbstractSamplingProblem> problem, std::vector<Eigen::VectorXd> const& x0 )) &MCMCFactory::CreateSingleChain,
+                py::call_guard<py::scoped_ostream_redirect,py::scoped_estream_redirect>() )
+    .def_static("CreateSingleChain", (std::shared_ptr<SingleChainMCMC> (*)(
+                boost::property_tree::ptree& pt, std::shared_ptr<AbstractSamplingProblem> problem, Eigen::VectorXd const& x0 )) &MCMCFactory::CreateSingleChain,
+                py::call_guard<py::scoped_ostream_redirect,py::scoped_estream_redirect>() );
+
+
 }

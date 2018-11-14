@@ -16,7 +16,7 @@ namespace muq{
     /** @ingroup MCMC
         @class SingleChainMCMC
         @brief Defines an MCMC sampler with a single chain
-        @details 
+        @details
         <B>Configuration Parameters:</B>
         Parameter Key | Type | Default Value | Description |
         ------------- | ------------- | ------------- | ------------- |
@@ -43,11 +43,11 @@ namespace muq{
                       Eigen::VectorXd x0)
                     : SingleChainMCMC(pt, problem, std::vector<Eigen::VectorXd>(1,x0)) {};
 
-      SingleChainMCMC(boost::property_tree::ptree& pt,
+      SingleChainMCMC(boost::property_tree::ptree pt,
                       std::vector<std::shared_ptr<TransitionKernel>> kernels,
                       std::vector<Eigen::VectorXd> x0);
 
-      SingleChainMCMC(boost::property_tree::ptree& pt,
+      SingleChainMCMC(boost::property_tree::ptree pt,
                       std::vector<std::shared_ptr<TransitionKernel>> kernels,
                       Eigen::VectorXd x0)
                     : SingleChainMCMC(pt, kernels, std::vector<Eigen::VectorXd>(1,x0)) {};

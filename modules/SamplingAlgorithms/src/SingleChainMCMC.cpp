@@ -30,7 +30,7 @@ SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingP
 }
 #endif
 
-SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree& pt,
+SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree pt,
                 //std::shared_ptr<AbstractSamplingProblem> problem,
                 std::vector<std::shared_ptr<TransitionKernel>> kernelsIn,
                 std::vector<Eigen::VectorXd> x0) :
