@@ -7,8 +7,10 @@ namespace muq {
   namespace SamplingAlgorithms {
 
     /** @brief Interpolation interface combining coarse and fine samples.
-        @details This interface defines how coarse and fine samples are
-        combined, as needed for Multiindex MCMC proposals.
+        @details This interface defines how samples drawn from coarse chains
+        and fine proposals are combined to form a fine chain proposal,
+        as needed for Multiindex MCMC.
+        In many cases, this simply means concatenating the associated state vectors.
      */
     class MIInterpolation {
     public:
