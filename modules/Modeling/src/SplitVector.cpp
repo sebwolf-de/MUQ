@@ -5,7 +5,7 @@ using namespace muq::Modeling;
 SplitVector::SplitVector(Eigen::VectorXi const& ind, Eigen::VectorXi const& size, unsigned int const insize) : ModPiece(Eigen::VectorXi::Constant(1, insize), size), ind(ind), size(size) {
   assert(ind.size()==size.size());
   assert(size.sum()<=insize);
-  assert(ind.maxCoeff()<insize-1);
+  assert(ind.maxCoeff()<insize);
 }
 
 void SplitVector::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {

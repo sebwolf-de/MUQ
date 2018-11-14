@@ -10,6 +10,7 @@ CreateTestGroup(
     ConstantPieceTests.cpp
     IdentityPieceTests.cpp
     SplitVectorTests.cpp
+    ScaleVectorTests.cpp
 
     MultiLogisticTest.cpp
 
