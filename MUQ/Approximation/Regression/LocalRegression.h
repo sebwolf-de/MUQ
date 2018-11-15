@@ -154,7 +154,6 @@ namespace muq {
 #if MUQ_HAS_PARCER
       std::shared_ptr<parcer::Communicator> comm = nullptr;
       const int tagSingle = 0;
-      const int tagMulti = 1;
 #endif
     };
   } // namespace Approximation

@@ -4,7 +4,7 @@
 
 #if MUQ_HAS_PARCER
 #include "parcer/Eigen.h"
-#endif 
+#endif
 
 using namespace muq::Utilities;
 using namespace muq::SamplingAlgorithms;
@@ -180,34 +180,12 @@ Eigen::VectorXd DistributedCollection::GlobalWeights() const {
   return global;
 }
 
-Eigen::VectorXd DistributedCollection::Weights() const { return GlobalWeights(); }
+Eigen::VectorXd DistributedCollection::Weights() const {
+  return GlobalWeights();
+}
 
 void DistributedCollection::WriteToFile(std::string const& filename, std::string const& dataset) const {
-  WriteToFile(0, filename, dataset);
+  collection->WriteToFile(filename, dataset);
 }
-
-void DistributedCollection::WriteToFile(unsigned int const rank, std::string const& filename, std::string const& dataset) const {
-  if( size()==0 ) { return; }
-
-  // get the sample matrix and weights
-  const Eigen::MatrixXd& mat = AsMatrix();
-  const Eigen::RowVectorXd& w = Weights();
-
-  // get the meta data
-  const std::unordered_map<std::string, Eigen::MatrixXd>& meta = GetMeta();
-
-  if( comm->GetRank()==rank ) {
-    // open the hdf5 file
-    auto hdf5file = std::make_shared<HDF5File>(filename);
-
-    // write samples and weights
-    hdf5file->WriteMatrix(dataset+"/samples", mat);
-    hdf5file->WriteMatrix(dataset+"/weights", w);
-
-    // write meta data to file
-    for( const auto& data : meta ) { hdf5file->WriteMatrix(dataset+"/"+data.first, data.second); }
-  }
-}
-
 
 #endif // end MUQ_HAS_MPI
