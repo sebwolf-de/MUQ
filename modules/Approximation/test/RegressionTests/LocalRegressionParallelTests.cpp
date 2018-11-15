@@ -34,7 +34,7 @@ TEST(LocalRegressionTest, SharedCache) {
   pt::ptree pt;
   pt.put<unsigned int>("LocalRegression.NumNeighbors", 11);
   pt.put<unsigned int>("LocalRegression.Order", 2);
-  
+
   // create a local regressor
   auto reg = std::make_shared<LocalRegression>(fn, pt.get_child("LocalRegression"), comm);
 
@@ -51,11 +51,14 @@ TEST(LocalRegressionTest, SharedCache) {
   // check the size
   EXPECT_EQ(reg->CacheSize(), comm->GetSize()*N);
 
+  // make sure they all have evalauted the function
+  comm->Barrier();
+
   // add points as a group
   const unsigned int M = 25;
   std::vector<Eigen::VectorXd> inputs(M);
   for( auto it=inputs.begin(); it!=inputs.end(); ++it ) { *it = Eigen::Vector3d::Random(); }
-  
+
   // add the random input points to the cache
   reg->Add(inputs);
 
@@ -68,4 +71,3 @@ TEST(LocalRegressionTest, SharedCache) {
   // check the size
   EXPECT_EQ(reg->CacheSize(), comm->GetSize()*(N+M));
 }
-

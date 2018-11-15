@@ -102,21 +102,7 @@ Eigen::VectorXd LocalRegression::Add(Eigen::VectorXd const& input) const {
 }
 
 void LocalRegression::Add(std::vector<Eigen::VectorXd> const& inputs) const {
-  assert(cache);
-  const std::vector<Eigen::VectorXd>& results = cache->Add(inputs);
-
-#if MUQ_HAS_PARCER
-  if( comm ) {
-    for( unsigned int i=0; i<comm->GetSize(); ++i ) {
-      if( i==comm->GetRank() ) { continue; }
-
-      parcer::SendRequest sendReq;
-      comm->Isend(std::pair<std::vector<Eigen::VectorXd>, std::vector<Eigen::VectorXd> >(inputs, results), i, tagMulti, sendReq);
-    }
-  }
-
-  Probe();
-#endif
+  for( auto it : inputs ) { Add(it); }
 }
 
 std::tuple<Eigen::VectorXd, double, unsigned int> LocalRegression::PoisednessConstant(Eigen::VectorXd const& input) const {
@@ -204,22 +190,6 @@ void LocalRegression::Probe() const {
 	      cache->Add(point.first, point.second);
 
 	      recvReq.Clear();
-      }
-    }
-
-    { // get multi adds
-      parcer::RecvRequest recvReq;
-      while( comm->Iprobe(i, tagMulti, recvReq) ) {
-        // get the point
-        comm->Irecv(i, tagSingle, recvReq);
-        const std::pair<std::vector<Eigen::VectorXd>, std::vector<Eigen::VectorXd> >& points = recvReq.GetObject<std::pair<std::vector<Eigen::VectorXd>, std::vector<Eigen::VectorXd> > >();
-
-	      assert(points.first.size()==points.second.size());
-
-	      // add the points
-	      cache->Add(points.first, points.second);
-
-        recvReq.Clear();
       }
     }
   }
