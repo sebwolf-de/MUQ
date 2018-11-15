@@ -135,7 +135,7 @@ class ParallelODETests : public::testing::Test {
     const Eigen::VectorXd expectedGrad = fulljac.transpose()*Eigen::VectorXd::Ones(comm->GetSize()*sizeLocal*outTimes.size());
 
     // check the gradients
-    EXPECT_NEAR((grad-expectedGrad).norm(), 0.0, 1.0e-6);
+    EXPECT_NEAR((grad-expectedGrad).norm(), 0.0, 1.0e-4);
   }
 
   /// The communicator
