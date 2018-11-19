@@ -324,9 +324,19 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
 
   // for each sample
   for( unsigned int i=0; i<size(); ++i ) {
+    std::cout << "i: " << i << " of " << size() << std::endl;
+    //std::cout << it->second.type().name() << std::endl;
     // get the meta data for that sample
+    std::cout << name << std::endl;
+    std::cout << "META SIZE: " << meta.size() << std::endl;
     auto it = at(i)->meta.find(name);
-    if( it==at(i)->meta.end() ) { continue; }
+    if( it==at(i)->meta.end() ) {
+      std::cout << "AT END" << std::endl;
+      continue; }
+    std::cout << "THIS" << std::endl;
+    std::cout << boost::core::demangle(it->second.type().name()) << std::endl;
+
+
 
     if( it->second.type()==typeid(Eigen::Vector2d) ) {
       // create a matrix for the meta data
@@ -337,7 +347,7 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
 
       continue;
     }
-
+    std::cout << "GHWOI" << std::endl;
     if( it->second.type()==typeid(Eigen::Vector3d) ) {
       // create a matrix for the meta data
       if( meta.size()==0 ) {
@@ -347,7 +357,7 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
 
       continue;
     }
-
+    std::cout << "BLAH" << std::endl;
     if( it->second.type()==typeid(Eigen::Vector4d) ) {
       // create a matrix for the meta data
       if( meta.size()==0 ) {
@@ -357,7 +367,7 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
 
       continue;
     }
-
+    std::cout << "OKAY HERE" << std::endl;
     if( it->second.type()==typeid(Eigen::VectorXd) ) {
       // create a matrix for the meta data
       if( meta.size()==0 ) {
@@ -369,15 +379,22 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
       continue;
     }
 
+    std::cout << "GOT IT!" << std::endl << std::flush;
+
     // create a matrix, assuming scalar type, for the meta data
     if( meta.size()==0 ) {
+      std::cout << "!!!HERE" << std::endl << std::flush;
+      std::cout << "size: " << size() << std::endl << std::flush;
       meta = Eigen::MatrixXd::Constant(1, size(), std::numeric_limits<double>::quiet_NaN());
+      std::cout << "!!!HERE" << std::endl << std::flush;
     }
 
     if( it->second.type()==typeid(double) ) { // doubles
       meta(i) = boost::any_cast<double const>(it->second);
       continue;
     }
+
+    std::cout << "HMM" << std::endl << std::flush;
 
     if( it->second.type()==typeid(float) ) { // floats
       meta(i) = boost::any_cast<float const>(it->second);
@@ -389,7 +406,10 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
       continue;
     }
 
+    std::cout << "FLY" << std::endl << std::flush;
+
     if( it->second.type()==typeid(unsigned int) ) { // unsigned ints
+      std::cout << "this far" << std::endl;
       meta(i) = boost::any_cast<unsigned int const>(it->second);
       continue;
     }

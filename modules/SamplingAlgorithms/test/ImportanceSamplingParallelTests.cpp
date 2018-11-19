@@ -12,6 +12,9 @@ using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
 TEST(ImportanceSamplingTests, Setup) {
+  // parallel communicator
+  auto comm = std::make_shared<parcer::Communicator>();
+
   // the number of samples
   const unsigned int n = 250000;
 
@@ -26,7 +29,7 @@ TEST(ImportanceSamplingTests, Setup) {
   auto bias = std::make_shared<Gaussian>(Eigen::VectorXd::Constant(1, 0.25));
 
   // create an instance of importance sampling
-  auto is = std::make_shared<ImportanceSampling>(target, bias, pt.get_child("ImportanceSampling"));
+  auto is = std::make_shared<ImportanceSampling>(target, bias, pt.get_child("ImportanceSampling"), comm);
 
   // generate the samples
   std::shared_ptr<SampleCollection> samps = is->Run();

@@ -27,4 +27,6 @@ CreateParallelTestGroup(
     SingleChainMCMCParallelTests.cpp
 
     ExpensiveSamplingProblemParallelTests.cpp
+
+    ImportanceSamplingParallelTests.cpp
 )
