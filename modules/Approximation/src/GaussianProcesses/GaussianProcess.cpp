@@ -241,7 +241,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> GaussianProcess::Predict(Eigen::Matr
     // Compute the full joint covariance of all predictions
     }else if(covType==GaussianProcess::FullCov){
 
-        Eigen::MatrixXd priorCov(newLocs.cols(), newLocs.cols());
+        Eigen::MatrixXd priorCov(coDim*newLocs.cols(), coDim*newLocs.cols());
         covKernel->FillCovariance(newLocs,priorCov);
 
         // Solve for the posterior covariance
