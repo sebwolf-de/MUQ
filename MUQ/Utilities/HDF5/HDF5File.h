@@ -457,7 +457,8 @@ namespace Utilities
 
                 // create a dataset for each process
                 dataID = H5Dcreate(fileID, name.c_str(), HDF5_Type<scalarType>::GetFlag(), filespace, H5P_DEFAULT, prop, H5P_DEFAULT);
-
+                assert(dataID>0);
+                
                 // close the creation properties
                 H5Pclose(prop);
             }
