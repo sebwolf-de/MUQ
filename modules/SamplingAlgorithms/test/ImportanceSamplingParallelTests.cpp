@@ -6,6 +6,7 @@
 #include "MUQ/Modeling/Distributions/Gaussian.h"
 
 #include "MUQ/SamplingAlgorithms/ImportanceSampling.h"
+#include "MUQ/SamplingAlgorithms/DistributedCollection.h"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
@@ -29,10 +30,11 @@ TEST(ImportanceSamplingTests, Setup) {
   auto bias = std::make_shared<Gaussian>(Eigen::VectorXd::Constant(1, 0.25));
 
   // create an instance of importance sampling
-  auto is = std::make_shared<ImportanceSampling>(target, bias, pt.get_child("ImportanceSampling"), comm);
+  auto is = std::make_shared<ImportanceSampling>(target, bias, pt.get_child("ImportanceSampling"));
 
   // generate the samples
-  std::shared_ptr<SampleCollection> samps = is->Run();
+  auto localSamps = is->Run();
+  auto samps = std::make_shared<DistributedCollection>(localSamps, comm);
 
   // make sure the mean matches
   const Eigen::VectorXd& mean = samps->Mean();

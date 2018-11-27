@@ -188,4 +188,28 @@ void DistributedCollection::WriteToFile(std::string const& filename, std::string
   collection->WriteToFile(filename, dataset);
 }
 
+Eigen::VectorXd DistributedCollection::GlobalExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const {
+  const Eigen::VectorXd& local = LocalExpectedValue(f);
+  Eigen::VectorXd global = Eigen::VectorXd::Zero(f->outputSizes(0));
+
+  int numSamps = 0;
+  for( unsigned int i=0; i<comm->GetSize(); ++i ) {
+    Eigen::VectorXd l(f->outputSizes(0));
+    if( comm->GetRank()==i ) { l = local; }
+
+    comm->Bcast(l, i);
+    global += l;
+  }
+
+  return global/(double)comm->GetSize();
+}
+
+Eigen::VectorXd DistributedCollection::LocalExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const {
+  return collection->ExpectedValue(f);
+}
+
+Eigen::VectorXd DistributedCollection::ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const {
+  return GlobalExpectedValue(f);
+}
+
 #endif // end MUQ_HAS_MPI

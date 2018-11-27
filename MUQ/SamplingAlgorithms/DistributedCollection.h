@@ -245,6 +245,12 @@ namespace muq {
       */
       virtual void WriteToFile(std::string const& filename, std::string const& dataset = "/") const override;
 
+      Eigen::VectorXd GlobalExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const;
+
+      Eigen::VectorXd LocalExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const;
+
+      virtual Eigen::VectorXd ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const override;
+
     private:
 
       template <class scalar, int rows, int cols, int options, int maxRows, int maxCols>
