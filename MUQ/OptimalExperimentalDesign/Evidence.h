@@ -38,7 +38,7 @@ namespace muq {
       std::shared_ptr<muq::Modeling::WorkGraph> graph;
 
 #if MUQ_HAS_PARCER==1
-      std::shared_ptr<parcer::Communicator> comm;
+      std::shared_ptr<parcer::Communicator> comm = nullptr;
 #endif
 
     };

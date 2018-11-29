@@ -2,10 +2,12 @@
 
 using namespace muq::SamplingAlgorithms;
 
-SamplingAlgorithm::SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samplesIn) : samples(samplesIn) {}
+SamplingAlgorithm::SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samples) : samples(samples) {}
 
 #if MUQ_HAS_PARCER
-SamplingAlgorithm::SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samplesIn, std::shared_ptr<parcer::Communicator> const& comm) : samples(samplesIn), comm(comm) {};
+SamplingAlgorithm::SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samplesIn, std::shared_ptr<parcer::Communicator> const& comm) : samples(samplesIn), comm(comm) {
+  std::cout << "CREATING SAMPLING ALGORITHM with comm" << std::endl;
+};
 #endif
 
 std::shared_ptr<SampleCollection> SamplingAlgorithm::GetSamples() const { return samples; }

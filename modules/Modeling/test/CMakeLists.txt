@@ -11,6 +11,7 @@ CreateTestGroup(
     IdentityPieceTests.cpp
     SplitVectorTests.cpp
     ScaleVectorTests.cpp
+    CombineVectorsTests.cpp
 
     MultiLogisticTest.cpp
 

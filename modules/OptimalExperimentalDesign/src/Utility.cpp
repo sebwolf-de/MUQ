@@ -1,7 +1,10 @@
 #include "MUQ/OptimalExperimentalDesign/Utility.h"
 
-#include "MUQ/Modeling/ScaleVector.h"
+#include "MUQ/Utilities/RandomGenerator.h"
+
 #include "MUQ/Modeling/SplitVector.h"
+#include "MUQ/Modeling/CombineVectors.h"
+#include "MUQ/Modeling/ConstantVector.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
 #include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
 #include "MUQ/Modeling/Distributions/DensityProduct.h"
@@ -13,41 +16,96 @@
 #if MUQ_HAS_MPI==1
 #include "MUQ/SamplingAlgorithms/DistributedCollection.h"
 #endif
+
 #include "MUQ/OptimalExperimentalDesign/LogDifference.h"
 
 namespace pt = boost::property_tree;
+using namespace muq::Utilities;
 using namespace muq::Modeling;
 using namespace muq::Optimization;
+using namespace muq::Approximation;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::OptimalExperimentalDesign;
 
-Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, std::shared_ptr<Distribution> const& biasing, boost::property_tree::ptree pt) : ModPiece(Eigen::VectorXi::Ones(1), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), evidence(evidence), biasing(biasing) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, std::shared_ptr<Distribution> const& biasing, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing) {
   CreateGraph(prior, likelihood, evidence);
 }
 
+Utility::Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<muq::Modeling::Distribution> const& biasing, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing) {
+  CreateGraph(prior, resid, pt);
+}
+
 #if MUQ_HAS_PARCER==1
-Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, std::shared_ptr<Distribution> const& biasing, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Ones(1), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), evidence(evidence), biasing(biasing), comm(comm) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, std::shared_ptr<Distribution> const& biasing, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing), comm(comm) {
   CreateGraph(prior, likelihood, evidence);
 }
+
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<Distribution> const& biasing, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing), comm(comm) {
+  CreateGraph(prior, resid, pt);
+}
 #endif
+
+void Utility::CreateGraph(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, pt::ptree pt) {
+  // make a graph to estimate the evidence
+  graph = std::make_shared<WorkGraph>();
+
+  // add the input parameters to the graph
+  graph->AddNode(std::make_shared<IdentityOperator>(resid->inputSizes(1)), "design");
+  graph->AddNode(std::make_shared<IdentityOperator>(resid->inputSizes(0)), "parameter");
+
+  // add the densities
+  graph->AddNode(prior->AsDensity(), "log prior"); // x
+
+  // add a node to split the parameters
+  graph->AddNode(std::make_shared<SplitVector>(Eigen::Vector2i(0, resid->inputSizes(0)), Eigen::Vector2i(resid->inputSizes(0), resid->inputSizes(1)), resid->inputSizes(0)+resid->inputSizes(1)), "parameter-design");
+
+  // add the residual
+  graph->AddNode(resid, "residual");
+
+  // link the parameters and design variables
+  graph->AddEdge("parameter-design", 0, "parameter", 0);
+  graph->AddEdge("parameter-design", 1, "design", 0);
+
+  // link the residual
+  graph->AddEdge("parameter", 0, "residual", 0);
+  graph->AddEdge("design", 0, "residual", 1);
+
+  // link the prior
+  graph->AddEdge("parameter", 0, "log prior", 0);
+
+  // create the local regression
+#if MUQ_HAS_MPI==1
+  if( comm ) {
+    reg = std::make_shared<LocalRegression>(graph->CreateModPiece("residual"), pt.get_child(pt.get<std::string>("LocalRegression")), comm);
+  } else {
+    reg = std::make_shared<LocalRegression>(graph->CreateModPiece("residual"), pt.get_child(pt.get<std::string>("LocalRegression")));
+  }
+#else
+  reg = std::make_shared<LocalRegression>(graph->CreateModPiece("residual"), pt.get_child(pt.get<std::string>("LocalRegression")));
+#endif
+
+  TEST = graph->CreateModPiece("residual");
+
+  // remove the combined parameter/design node
+  graph->RemoveNode("parameter-design");
+}
 
 void Utility::CreateGraph(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence) {
   // make a graph to estimate the evidence
   graph = std::make_shared<WorkGraph>();
 
   // add the input parameters to the graph
-  graph->AddNode(std::make_shared<IdentityOperator>(1), "design");
-  graph->AddNode(std::make_shared<IdentityOperator>(1), "data");
-  graph->AddNode(std::make_shared<IdentityOperator>(1), "parameter");
+  graph->AddNode(std::make_shared<IdentityOperator>(likelihood->hyperSizes(1)), "design");
+  graph->AddNode(std::make_shared<IdentityOperator>(likelihood->varSize), "data");
+  graph->AddNode(std::make_shared<IdentityOperator>(likelihood->hyperSizes(0)), "parameter");
 
   // add a node to split the parameters
-  graph->AddNode(std::make_shared<SplitVector>(Eigen::Vector2i(0, 1), Eigen::VectorXi::Ones(2), 2), "parameter-data");
+  graph->AddNode(std::make_shared<SplitVector>(Eigen::Vector2i(0, likelihood->hyperSizes(0)), Eigen::Vector2i(likelihood->hyperSizes(0), likelihood->varSize), likelihood->hyperSizes(0)+likelihood->varSize), "parameter-data");
 
   // add the densities
   graph->AddNode(prior->AsDensity(), "log prior"); // x
   graph->AddNode(likelihood->AsDensity(), "log likelihood"); // y | x, d
   graph->AddNode(std::make_shared<DensityProduct>(2), "log joint"); // x, y | d
-  graph->AddNode(std::make_shared<ScaleVector>(-1.0, 1), "negative log joint");
 
   // the log difference between the evidence and the likelihood
   graph->AddNode(std::make_shared<LogDifference>(likelihood, evidence), "log difference");
@@ -67,7 +125,6 @@ void Utility::CreateGraph(std::shared_ptr<Distribution> const& prior, std::share
   // connect the joint
   graph->AddEdge("log prior", 0, "log joint", 0);
   graph->AddEdge("log likelihood", 0, "log joint", 1);
-  graph->AddEdge("log joint", 0, "negative log joint", 0);
 
   // connect the difference
   graph->AddEdge("parameter", 0, "log difference", 0);
@@ -76,16 +133,145 @@ void Utility::CreateGraph(std::shared_ptr<Distribution> const& prior, std::share
 }
 
 void Utility::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
+  if( reg ) {
+    EvaluateSurrogate(inputs);
+    return;
+  }
+
+  EvaluateBruteForce(inputs);
+}
+
+void Utility::RandomlyRefineNear(Eigen::VectorXd const& xd, double const radius) const {
+  assert(reg);
+
+  while( true ) {
+    // choose a random point
+    Eigen::VectorXd point = RandomGenerator::GetNormal(xd.size());
+    point *= RandomGenerator::GetUniform()*radius/point.norm();
+    point += xd;
+    if( !reg->InCache(point) ) {
+      reg->Add(point);
+      break;
+    }
+  }
+}
+
+void Utility::RefineNear(Eigen::VectorXd const& xd, double const radius) const {
+  assert(reg);
+
+  const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
+
+  if( reg->InCache(std::get<0>(lambda)) ) { return RandomlyRefineNear(xd, radius); }
+
+  reg->Add(std::get<0>(lambda));
+}
+
+void Utility::EvaluateSurrogate(ref_vector<Eigen::VectorXd> const& inputs) {
+  auto logprior = graph->CreateModPiece("log prior");
+  assert(logprior);
+  assert(biasing);
+
+  // run the importance sampler
+  pt::ptree pt;
+  pt.put("NumSamples", numImportanceSamples);
+  auto is = std::make_shared<ImportanceSampling>(logprior, biasing, std::vector<Eigen::VectorXd>(1, inputs[0]), pt);
+
+  #if MUQ_HAS_MPI==1
+    std::shared_ptr<SampleCollection> samps;
+    std::shared_ptr<SampleCollection> localSamps;
+    if( comm ) {
+      localSamps = is->Run();
+      samps = std::make_shared<DistributedCollection>(localSamps, comm);
+    } else {
+      samps = is->Run();
+      localSamps = samps;
+    }
+  #else
+    auto samps = is->Run();
+    auto localSize = samps;
+  #endif
+  assert(samps);
+  assert(localSamps);
+
+  const double gamma0 = 1.0e-2;
+  const double radius0 = 1.0;
+  const unsigned int n2 = samps->size();
+  const double threshold = gamma0*std::pow((double)n2, -0.5);
+
+  // loop through the samples
+  Eigen::VectorXd xd(inputSizes(0)+logprior->inputSizes(0));
+  xd.tail(inputSizes(0)) = inputs[0].get();
+
+  for( unsigned int i=0; i<localSamps->size(); ++i ) {
+    // the current point for the surrogate model
+    xd.head(logprior->inputSizes(0)) = localSamps->at(i)->state[0];
+
+    // make sure there are enough points in the cache
+    while( reg->CacheSize()<reg->kn ) {
+      if( comm )
+        std::cout << "process " << comm->GetRank() << " is refining, needs more neighbors " << std::endl;
+      else
+        std::cout << "refining, needs more neighbors " << std::endl;
+      RandomlyRefineNear(xd, radius0);
+    }
+
+    const std::pair<double, double> error = reg->ErrorIndicator(xd);
+    if( error.first>threshold ) {
+      if( comm )
+        std::cout << "process " << comm->GetRank() << " is refining, indicator: " << error.first << " threshold: " << threshold << std::endl;
+      else
+        std::cout << "refining, indicator: " << error.first << " threshold: " << threshold << std::endl;
+      RefineNear(xd, error.second);
+    }
+  }
+  auto g = std::make_shared<WorkGraph>();
+
+  g->AddNode(reg, "residual approx");
+  g->AddNode(std::make_shared<CombineVectors>(Eigen::Vector2i(logprior->inputSizes(0), inputSizes(0))), "combine");
+  g->AddNode(std::make_shared<IdentityOperator>(logprior->inputSizes(0)), "parameter");
+  g->AddNode(std::make_shared<ConstantVector>(std::vector<Eigen::VectorXd>(1, inputs[0])), "design");
+
+  g->AddEdge("parameter", 0, "combine", 0);
+  g->AddEdge("design", 0, "combine", 1);
+  g->AddEdge("combine", 0, "residual approx", 0);
+
+  auto mod = g->CreateModPiece("residual approx");
+
+  outputs.resize(1);
+  outputs[0] = samps->ExpectedValue(mod);
+
+  //Eigen::VectorXd xd(inputSizes(0)+logprior->inputSizes(0));
+  //xd.tail(inputSizes(0)) = inputs[0].get();
+  /*Eigen::VectorXd expected = Eigen::VectorXd::Zero(1);
+  for( unsigned int i=0; i<samps->size(); ++i ) {
+    std::cout << i+1 << " of " << samps->size() << std::endl;
+    // the current point for the surrogate model
+    xd.head(logprior->inputSizes(0)) = samps->at(i)->state[0];
+
+    const Eigen::VectorXd truth = TEST->Evaluate(xd) [0];
+    expected += truth;
+
+    const Eigen::VectorXd approx = reg->Evaluate(xd) [0];
+    std::cout << "truth: " << truth.transpose() << std::endl;
+    std::cout << "approx: " << approx.transpose() << std::endl;
+    std::cout << std::endl;
+  }
+  outputs.resize(1);
+  outputs[0] = (Eigen::VectorXd)(expected/samps->size());*/
+}
+
+void Utility::EvaluateBruteForce(ref_vector<Eigen::VectorXd> const& inputs) {
+  // bind the design node
   const boost::any& design = inputs[0];
   graph->BindNode("design", std::vector<boost::any>(1, design));
 
-  auto logjoint = std::make_shared<ModPieceCostFunction>(graph->CreateModPiece("log joint"));
+  auto logjoint = graph->CreateModPiece("log joint");
   assert(logjoint);
   assert(biasing);
 
   pt::ptree pt;
-  pt.put<unsigned int>("ImportanceSampling.NumSamples", numImportanceSamples);
-  auto is = std::make_shared<ImportanceSampling>(logjoint, biasing, std::vector<Eigen::VectorXd>(1, inputs[0]), pt.get_child("ImportanceSampling"));
+  pt.put("NumSamples", numImportanceSamples);
+  auto is = std::make_shared<ImportanceSampling>(logjoint, biasing, std::vector<Eigen::VectorXd>(1, inputs[0]), pt);
 
   #if MUQ_HAS_MPI==1
     std::shared_ptr<SampleCollection> samps;

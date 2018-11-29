@@ -15,7 +15,7 @@ using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::OptimalExperimentalDesign;
 
-Evidence::Evidence(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& biasing, pt::ptree pt) : Distribution(1, Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing) {
+Evidence::Evidence(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& biasing, pt::ptree pt) : Distribution(likelihood->varSize, Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1))), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing) {
   CreateGraph(prior, likelihood);
 }
 
@@ -85,5 +85,10 @@ double Evidence::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) {
 #endif
   assert(samps);
 
-  return std::log(samps->Weights().sum()/samps->size());
+  double evidence = samps->Weights().sum();
+  if( evidence<std::numeric_limits<double>::min() ) { evidence = std::numeric_limits<double>::min(); }
+
+  //std::cout << "LOG EVIDENCE: " << std::log(evidence/samps->size()) << std::endl;
+
+  return std::log(evidence/samps->size());
 }

@@ -19,6 +19,8 @@ namespace muq{
     public:
       SamplingStateIdentity(int blockIndIn) : blockInd(blockIndIn){};
 
+      virtual ~SamplingStateIdentity() = default;
+
       Eigen::VectorXd const& operator()(SamplingState const& a);
 
       const int blockInd;
@@ -46,6 +48,8 @@ namespace muq{
       SamplingStatePartialMoment(int                    blockIndIn,
                                  int                    momentPowerIn,
                                  Eigen::VectorXd const& muIn) : blockInd(blockIndIn), momentPower(momentPowerIn), mu(muIn){};
+
+      virtual ~SamplingStatePartialMoment() = default;
 
       Eigen::VectorXd const& operator()(SamplingState const& a);
 

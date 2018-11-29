@@ -42,6 +42,7 @@ int FlannCache::InCache(Eigen::VectorXd const& input) const {
 
 Eigen::VectorXd FlannCache::Add(Eigen::VectorXd const& newPt) {
   // evaluate the function
+	assert(function);
   const Eigen::VectorXd& newOutput = function->Evaluate(newPt).at(0);
 
   // add the new point

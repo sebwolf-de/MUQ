@@ -40,6 +40,7 @@ CreateCompileGroup(
     ProductPiece.cpp
     SplitVector.cpp
     ScaleVector.cpp
+    CombineVectors.cpp
 
     MultiLogisticLikelihood.cpp
 

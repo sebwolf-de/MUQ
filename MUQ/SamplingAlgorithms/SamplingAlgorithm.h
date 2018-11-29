@@ -23,7 +23,7 @@ namespace muq {
     class SamplingAlgorithm {//} : public muq::Modeling::WorkPiece {
     public:
 
-      SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samplesIn);
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samples);
 
 #if MUQ_HAS_PARCER
       SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samplesIn, std::shared_ptr<parcer::Communicator> const& comm);
@@ -58,7 +58,7 @@ namespace muq {
       std::shared_ptr<SampleCollection> samples;
 
 #if MUQ_HAS_PARCER
-      std::shared_ptr<parcer::Communicator> comm = std::make_shared<parcer::Communicator>();
+      std::shared_ptr<parcer::Communicator> comm = nullptr;
 #endif
 
     private:

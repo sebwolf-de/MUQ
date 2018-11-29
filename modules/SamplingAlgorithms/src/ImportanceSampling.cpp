@@ -13,8 +13,6 @@ ImportanceSampling::ImportanceSampling(std::shared_ptr<ModPiece> const& target, 
 
 ImportanceSampling::ImportanceSampling(std::shared_ptr<ModPiece> const& target, std::shared_ptr<Distribution> const& bias, std::vector<Eigen::VectorXd> hyperparameters, pt::ptree const& pt) : SamplingAlgorithm(std::make_shared<SampleCollection>()), numSamps(pt.get<unsigned int>("NumSamples")), target(target), bias(bias), hyperparameters(hyperparameters) {}
 
-ImportanceSampling::~ImportanceSampling() {}
-
 std::shared_ptr<SampleCollection> ImportanceSampling::RunImpl(std::vector<Eigen::VectorXd> const& x0) {
   // store a copy of the biasing distribution hyper parameters
   std::vector<Eigen::VectorXd> biasingPara = hyperparameters;

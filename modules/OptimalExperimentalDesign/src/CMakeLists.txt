@@ -22,4 +22,5 @@ CreateCompileGroup(
     Evidence.cpp
     LogDifference.cpp
     Utility.cpp
+    OEDResidual.cpp
 )
