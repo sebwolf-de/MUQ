@@ -90,14 +90,14 @@ namespace muq {
       Center the input points around currentCenter
       @param[in] xs Input points
       */
-      double CenterPoints(std::vector<Eigen::VectorXd>& xs);
+      Eigen::ArrayXd CenterPoints(std::vector<Eigen::VectorXd>& xs);
 
       /// Center the input points
       /**
       @param[in] xs Input points
       @param[in] center The center point
       */
-      double CenterPoints(std::vector<Eigen::VectorXd>& xs, Eigen::VectorXd const& center) const;
+      Eigen::ArrayXd CenterPoints(std::vector<Eigen::VectorXd>& xs, Eigen::VectorXd const& center) const;
 
       /// Center the input points
       /**
@@ -106,7 +106,7 @@ namespace muq {
       @param[in] center The center point
       @param[in] kn The first \f$kn\f$ points are in the unit ball
       */
-      double CenterPoints(std::vector<Eigen::VectorXd>& xs, Eigen::VectorXd const& center, unsigned int const kn) const;
+      Eigen::ArrayXd CenterPoints(std::vector<Eigen::VectorXd>& xs, Eigen::VectorXd const& center, unsigned int const kn) const;
 
       class PoisednessCost : public muq::Optimization::CostFunction {
       public:
@@ -163,10 +163,7 @@ namespace muq {
       Eigen::VectorXd currentCenter;
 
       /// Current radius of inputs
-      /**
-	 Defaults to zero.
-       */
-      double currentRadius = 0.0;
+      Eigen::ArrayXd currentRadius;
 
       /// Coeffients for the polynomial basis
       Eigen::MatrixXd coeff;

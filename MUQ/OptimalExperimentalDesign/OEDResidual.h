@@ -18,9 +18,15 @@ namespace muq {
     class OEDResidual : public muq::Modeling::ModPiece {
     public:
 
+      /// Use the likelihood as the baising distribution---Monte Carlo estimate
+      OEDResidual(std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& evidence, boost::property_tree::ptree pt);
+
       OEDResidual(std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& evidence, std::shared_ptr<muq::Modeling::Distribution> const& biasing, boost::property_tree::ptree pt);
 
 #if MUQ_HAS_PARCER==1
+      /// Use the likelihood as the baising distribution---Monte Carlo estimate
+      OEDResidual(std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& evidence, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm);
+
       OEDResidual(std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& evidence, std::shared_ptr<muq::Modeling::Distribution> const& biasing, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm);
 #endif
 

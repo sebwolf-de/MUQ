@@ -21,12 +21,24 @@ namespace muq {
   namespace OptimalExperimentalDesign {
     class Utility : public muq::Modeling::ModPiece {
     public:
+      /// Use the prior as the biasing distribution---Monte Carlo estimate
+      Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& evidence, boost::property_tree::ptree pt);
+
       Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& evidence, std::shared_ptr<muq::Modeling::Distribution> const& biasing, boost::property_tree::ptree pt);
+
+      /// Use the prior as the biasing distribution---Monte Carlo estimate
+      Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, boost::property_tree::ptree pt);
 
       Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<muq::Modeling::Distribution> const& biasing, boost::property_tree::ptree pt);
 
 #if MUQ_HAS_PARCER==1
+      /// Use the prior as the biasing distribution---Monte Carlo estimate
+      Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& evidence, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm);
+
       Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& evidence, std::shared_ptr<muq::Modeling::Distribution> const& biasing, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm);
+
+      /// Use the prior as the biasing distribution---Monte Carlo estimate
+      Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm);
 
       Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<muq::Modeling::Distribution> const& biasing, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm);
 #endif
@@ -45,9 +57,11 @@ namespace muq {
 
       void RandomlyRefineNear(Eigen::VectorXd const& xd, double const radius) const;
 
-      void RefineNear(Eigen::VectorXd const& xd, double const radius) const;
+      void RefineAt(Eigen::VectorXd const& pnt, double const radius) const;
 
       const unsigned int numImportanceSamples;
+      const double gamma0 = 1.0;
+      const double radius0 = 1.0;
 
       std::shared_ptr<muq::Modeling::Distribution> biasing;
 

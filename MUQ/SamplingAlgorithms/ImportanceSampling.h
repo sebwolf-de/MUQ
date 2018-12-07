@@ -23,6 +23,13 @@ namespace muq {
     public:
 
       /**
+      Use the target distribution as the baising distribution.  This is equivalent to Monte Carlo
+      @param[in] target The target distribution
+      @param[in] pt Options for the importance sampler
+      */
+      ImportanceSampling(std::shared_ptr<muq::Modeling::Distribution> const& target, boost::property_tree::ptree const& pt);
+
+      /**
       @param[in] target The target distribution
       @param[in] bias The biasing distribution
       @param[in] pt Options for the importance sampler

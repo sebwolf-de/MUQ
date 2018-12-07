@@ -182,3 +182,5 @@ void FlannCache::UpdateCentroid(Eigen::VectorXd const& point) {
 }
 
 Eigen::VectorXd FlannCache::Centroid() const { return centroid; }
+
+std::shared_ptr<ModPiece> FlannCache::Function() const { return function; }

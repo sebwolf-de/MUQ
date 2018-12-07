@@ -8,14 +8,12 @@ namespace muq {
   namespace OptimalExperimentalDesign {
     class LogDifference : public muq::Modeling::ModPiece {
     public:
-      LogDifference(std::shared_ptr<muq::Modeling::Distribution> const& like, std::shared_ptr<muq::Modeling::Distribution> const& evidence);
+      LogDifference(std::shared_ptr<muq::Modeling::Distribution> const& evidence);
 
 
       virtual ~LogDifference() = default;
     private:
       virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) override;
-
-      std::shared_ptr<muq::Modeling::Distribution> likelihood;
 
       std::shared_ptr<muq::Modeling::Distribution> evidence;
     };

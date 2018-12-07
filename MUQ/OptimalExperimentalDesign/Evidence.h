@@ -18,9 +18,15 @@ namespace muq {
     class Evidence : public muq::Modeling::Distribution {
     public:
 
+      /// Use the prior as the biasing distribution---Monte Carlo estimate
+      Evidence(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, boost::property_tree::ptree pt);
+
       Evidence(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& biasing, boost::property_tree::ptree pt);
 
 #if MUQ_HAS_PARCER==1
+      /// Use the prior as the biasing distribution---Monte Carlo estimate
+      Evidence(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm);
+
       Evidence(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& biasing, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm);
 #endif
 

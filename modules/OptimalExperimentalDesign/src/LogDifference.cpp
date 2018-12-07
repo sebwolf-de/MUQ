@@ -3,13 +3,13 @@
 using namespace muq::Modeling;
 using namespace muq::OptimalExperimentalDesign;
 
-LogDifference::LogDifference(std::shared_ptr<Distribution> const& like, std::shared_ptr<Distribution> const& evidence) :  ModPiece(Eigen::VectorXi::Ones(3), Eigen::VectorXi::Ones(1)), likelihood(like), evidence(evidence) {}
+LogDifference::LogDifference(std::shared_ptr<Distribution> const& evidence) :  ModPiece(Eigen::Vector3i(evidence->varSize, evidence->hyperSizes(0), 1), Eigen::VectorXi::Ones(1)), evidence(evidence) {}
 
 void LogDifference::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
-  const Eigen::VectorXd& x = inputs[0];
-  const Eigen::VectorXd& y = inputs[1];
-  const Eigen::VectorXd& d = inputs[2];
+  const Eigen::VectorXd& y = inputs[0];
+  const Eigen::VectorXd& d = inputs[1];
+  const double loglike = inputs[2] (0);
 
   outputs.resize(1);
-  outputs[0] = Eigen::VectorXd::Constant(1, likelihood->LogDensity(y, x, d)-evidence->LogDensity(y, d));
+  outputs[0] = Eigen::VectorXd::Constant(1, loglike-evidence->LogDensity(y, d));
 }

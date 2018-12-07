@@ -188,8 +188,8 @@ void DistributedCollection::WriteToFile(std::string const& filename, std::string
   collection->WriteToFile(filename, dataset);
 }
 
-Eigen::VectorXd DistributedCollection::GlobalExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const {
-  const Eigen::VectorXd& local = LocalExpectedValue(f);
+Eigen::VectorXd DistributedCollection::GlobalExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains) const {
+  const Eigen::VectorXd& local = LocalExpectedValue(f, metains);
   Eigen::VectorXd global = Eigen::VectorXd::Zero(f->outputSizes(0));
 
   int numSamps = 0;
@@ -204,12 +204,12 @@ Eigen::VectorXd DistributedCollection::GlobalExpectedValue(std::shared_ptr<muq::
   return global/(double)comm->GetSize();
 }
 
-Eigen::VectorXd DistributedCollection::LocalExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const {
-  return collection->ExpectedValue(f);
+Eigen::VectorXd DistributedCollection::LocalExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains) const {
+  return collection->ExpectedValue(f, metains);
 }
 
-Eigen::VectorXd DistributedCollection::ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const {
-  return GlobalExpectedValue(f);
+Eigen::VectorXd DistributedCollection::ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains) const {
+  return GlobalExpectedValue(f, metains);
 }
 
 #endif // end MUQ_HAS_MPI

@@ -8,6 +8,8 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
+ImportanceSampling::ImportanceSampling(std::shared_ptr<muq::Modeling::Distribution> const& target, boost::property_tree::ptree const& pt) : SamplingAlgorithm(std::make_shared<SampleCollection>()),   numSamps(pt.get<unsigned int>("NumSamples")), bias(bias) {}
+
 ImportanceSampling::ImportanceSampling(std::shared_ptr<ModPiece> const& target, std::shared_ptr<Distribution> const& bias, pt::ptree const& pt) : SamplingAlgorithm(std::make_shared<SampleCollection>()),
   numSamps(pt.get<unsigned int>("NumSamples")), target(target), bias(bias) {}
 
@@ -26,10 +28,16 @@ std::shared_ptr<SampleCollection> ImportanceSampling::RunImpl(std::vector<Eigen:
     biasingPara[0] = bias->Sample(hyperparameters);
 
     // compute the weight
-    const double logweight = target->Evaluate(biasingPara[0])[0](0) - bias->LogDensity(biasingPara);
+    const double logbias = bias->LogDensity(biasingPara);
+    const double logtarget = target? target->Evaluate(biasingPara[0])[0](0) : logbias;
+    const double logweight = logtarget - logbias;
+
+    auto state = std::make_shared<SamplingState>(biasingPara[0], std::exp(logweight));
+    state->meta["log target"] = logtarget;
+    state->meta["log bias"] = logbias;
 
     // store the sample
-    samples->Add(std::make_shared<SamplingState>(biasingPara[0], std::exp(logweight)));
+    samples->Add(state);
   }
 
   return samples;

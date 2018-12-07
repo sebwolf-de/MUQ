@@ -27,20 +27,36 @@ using namespace muq::Approximation;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::OptimalExperimentalDesign;
 
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(prior) {
+  CreateGraph(prior, likelihood, evidence);
+}
+
 Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, std::shared_ptr<Distribution> const& biasing, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing) {
   CreateGraph(prior, likelihood, evidence);
 }
 
-Utility::Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<muq::Modeling::Distribution> const& biasing, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(prior) {
+  CreateGraph(prior, resid, pt);
+}
+
+Utility::Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<muq::Modeling::Distribution> const& biasing, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(biasing) {
   CreateGraph(prior, resid, pt);
 }
 
 #if MUQ_HAS_PARCER==1
-Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, std::shared_ptr<Distribution> const& biasing, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing), comm(comm) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(prior), comm(comm) {
   CreateGraph(prior, likelihood, evidence);
 }
 
-Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<Distribution> const& biasing, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing), comm(comm) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, std::shared_ptr<Distribution> const& biasing, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing), comm(comm) {
+  CreateGraph(prior, likelihood, evidence);
+}
+
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(prior), comm(comm) {
+  CreateGraph(prior, resid, pt);
+}
+
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<Distribution> const& biasing, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(biasing), comm(comm) {
   CreateGraph(prior, resid, pt);
 }
 #endif
@@ -84,7 +100,8 @@ void Utility::CreateGraph(std::shared_ptr<muq::Modeling::Distribution> const& pr
   reg = std::make_shared<LocalRegression>(graph->CreateModPiece("residual"), pt.get_child(pt.get<std::string>("LocalRegression")));
 #endif
 
-  TEST = graph->CreateModPiece("residual");
+  //TEST = graph->CreateModPiece("residual");
+  TEST = resid;
 
   // remove the combined parameter/design node
   graph->RemoveNode("parameter-design");
@@ -108,7 +125,7 @@ void Utility::CreateGraph(std::shared_ptr<Distribution> const& prior, std::share
   graph->AddNode(std::make_shared<DensityProduct>(2), "log joint"); // x, y | d
 
   // the log difference between the evidence and the likelihood
-  graph->AddNode(std::make_shared<LogDifference>(likelihood, evidence), "log difference");
+  graph->AddNode(std::make_shared<LogDifference>(evidence), "log difference");
 
   // connect the parameters
   graph->AddEdge("parameter-data", 0, "parameter", 0);
@@ -127,9 +144,8 @@ void Utility::CreateGraph(std::shared_ptr<Distribution> const& prior, std::share
   graph->AddEdge("log likelihood", 0, "log joint", 1);
 
   // connect the difference
-  graph->AddEdge("parameter", 0, "log difference", 0);
-  graph->AddEdge("data", 0, "log difference", 1);
-  graph->AddEdge("design", 0, "log difference", 2);
+  graph->AddEdge("data", 0, "log difference", 0);
+  graph->AddEdge("design", 0, "log difference", 1);
 }
 
 void Utility::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
@@ -149,21 +165,25 @@ void Utility::RandomlyRefineNear(Eigen::VectorXd const& xd, double const radius)
     Eigen::VectorXd point = RandomGenerator::GetNormal(xd.size());
     point *= RandomGenerator::GetUniform()*radius/point.norm();
     point += xd;
+    std::cout << "GENEREATED RANDOM REFINE NEAR POINT" << std::endl;
     if( !reg->InCache(point) ) {
       reg->Add(point);
+      std::cout << "Added a random point" << std::endl;
       break;
     }
   }
 }
 
-void Utility::RefineNear(Eigen::VectorXd const& xd, double const radius) const {
+void Utility::RefineAt(Eigen::VectorXd const& pnt, double const radius) const {
   assert(reg);
 
-  const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
+  //const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
 
-  if( reg->InCache(std::get<0>(lambda)) ) { return RandomlyRefineNear(xd, radius); }
+  //std::cout << "\tprocess " << comm->GetRank() << " poisedness constant: " << std::get<1>(lambda) << std::endl;
 
-  reg->Add(std::get<0>(lambda));
+  if( reg->InCache(pnt) ) { return RandomlyRefineNear(pnt, radius); }
+
+  reg->Add(pnt);
 }
 
 void Utility::EvaluateSurrogate(ref_vector<Eigen::VectorXd> const& inputs) {
@@ -193,8 +213,6 @@ void Utility::EvaluateSurrogate(ref_vector<Eigen::VectorXd> const& inputs) {
   assert(samps);
   assert(localSamps);
 
-  const double gamma0 = 1.0e-2;
-  const double radius0 = 1.0;
   const unsigned int n2 = samps->size();
   const double threshold = gamma0*std::pow((double)n2, -0.5);
 
@@ -203,27 +221,37 @@ void Utility::EvaluateSurrogate(ref_vector<Eigen::VectorXd> const& inputs) {
   xd.tail(inputSizes(0)) = inputs[0].get();
 
   for( unsigned int i=0; i<localSamps->size(); ++i ) {
+    std::cout << "starting step " << i+1 << " of " << localSamps->size() << std::endl;
     // the current point for the surrogate model
     xd.head(logprior->inputSizes(0)) = localSamps->at(i)->state[0];
 
     // make sure there are enough points in the cache
     while( reg->CacheSize()<reg->kn ) {
       if( comm )
-        std::cout << "process " << comm->GetRank() << " is refining, needs more neighbors " << std::endl;
+        std::cout << "process " << comm->GetRank() << " is refining, needs more neighbors: step " << i << std::endl;
       else
-        std::cout << "refining, needs more neighbors " << std::endl;
+        std::cout << "refining, needs more neighbors; step " << i << std::endl;
       RandomlyRefineNear(xd, radius0);
     }
 
     const std::pair<double, double> error = reg->ErrorIndicator(xd);
-    if( error.first>threshold ) {
-      if( comm )
-        std::cout << "process " << comm->GetRank() << " is refining, indicator: " << error.first << " threshold: " << threshold << std::endl;
-      else
-        std::cout << "refining, indicator: " << error.first << " threshold: " << threshold << std::endl;
-      RefineNear(xd, error.second);
+    const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
+
+    /*if( std::get<1>(lambda)>100.0 ) {
+      std::cout << "\tprocess " << comm->GetRank() << " poisedness constant: " << std::get<1>(lambda) << " step: " << i << std::endl;
+    }*/
+
+    if( std::get<1>(lambda)*error.first>threshold /*|| std::get<1>(lambda)>lammax*/ ) {
+      //const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
+      //if( comm )
+      std::cout << "process " << comm->GetRank() << " is refining, indicator: " << error.first << " threshold: " << threshold << " step: " << i << std::endl;
+      //else
+      //  std::cout << "refining, indicator: " << error.first << " threshold: " << threshold << " step: " << i << std::endl;
+      RefineAt(std::get<0>(lambda), error.second);
     }
+    std::cout << "finishing step " << i+1 << " of " << localSamps->size() << std::endl;
   }
+
   auto g = std::make_shared<WorkGraph>();
 
   g->AddNode(reg, "residual approx");
@@ -240,24 +268,25 @@ void Utility::EvaluateSurrogate(ref_vector<Eigen::VectorXd> const& inputs) {
   outputs.resize(1);
   outputs[0] = samps->ExpectedValue(mod);
 
-  //Eigen::VectorXd xd(inputSizes(0)+logprior->inputSizes(0));
-  //xd.tail(inputSizes(0)) = inputs[0].get();
-  /*Eigen::VectorXd expected = Eigen::VectorXd::Zero(1);
+  /*Eigen::VectorXd d = inputs[0].get();
+  Eigen::VectorXd expected = Eigen::VectorXd::Zero(1);
   for( unsigned int i=0; i<samps->size(); ++i ) {
     std::cout << i+1 << " of " << samps->size() << std::endl;
     // the current point for the surrogate model
     xd.head(logprior->inputSizes(0)) = samps->at(i)->state[0];
+    Eigen::VectorXd x = samps->at(i)->state[0];
 
-    const Eigen::VectorXd truth = TEST->Evaluate(xd) [0];
+    //const Eigen::VectorXd truth = TEST->Evaluate(xd) [0];
+    const Eigen::VectorXd truth = TEST->Evaluate(x, d) [0];
     expected += truth;
 
     const Eigen::VectorXd approx = reg->Evaluate(xd) [0];
     std::cout << "truth: " << truth.transpose() << std::endl;
     std::cout << "approx: " << approx.transpose() << std::endl;
     std::cout << std::endl;
-  }
-  outputs.resize(1);
-  outputs[0] = (Eigen::VectorXd)(expected/samps->size());*/
+  }*/
+  //outputs.resize(1);
+  //outputs[0] = (Eigen::VectorXd)(expected/samps->size());
 }
 
 void Utility::EvaluateBruteForce(ref_vector<Eigen::VectorXd> const& inputs) {
@@ -290,5 +319,5 @@ void Utility::EvaluateBruteForce(ref_vector<Eigen::VectorXd> const& inputs) {
   assert(diff);
 
   outputs.resize(1);
-  outputs[0] = samps->ExpectedValue(diff);
+  outputs[0] = samps->ExpectedValue(diff, std::vector<std::string>({"log target"}));
 }

@@ -352,3 +352,12 @@ unsigned long int ModPiece::GetNumCalls(const std::string& method) const
 //
 //   return (f-f0)/eps;
 // }
+
+std::vector<Eigen::VectorXd> ModPiece::ToStdVec(ref_vector<Eigen::VectorXd> const& input) {
+  std::vector<Eigen::VectorXd> newIns(input.size());
+
+  for (int i=0; i<input.size(); ++i)
+    newIns.at(i) = input.at(i).get();
+
+  return newIns;
+}

@@ -84,6 +84,7 @@ CreateCompileGroup(
     ""
 
     Distributions/Distribution.cpp
+    Distributions/PyDistribution.cpp
     Distributions/UniformBox.cpp
     Distributions/Gaussian.cpp
     Distributions/InverseGamma.cpp

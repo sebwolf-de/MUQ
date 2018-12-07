@@ -7,14 +7,11 @@
 using namespace muq::Modeling::PythonBindings;
 namespace py = pybind11;
 
-
 PYBIND11_MODULE(pymuqModeling_, m) {
-
-    WorkPieceWrapper(m);
-    ModPieceWrapper(m);
-    DistributionWrapper(m);
-    CwiseUnaryOperatorsWrapper(m);
-    LinearOperatorWrapper(m);
-    ODEWrapper(m);
-
+  WorkPieceWrapper(m);
+  ModPieceWrapper(m);
+  DistributionWrapper(m);
+  CwiseUnaryOperatorsWrapper(m);
+  LinearOperatorWrapper(m);
+  ODEWrapper(m);
 }

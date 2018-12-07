@@ -15,22 +15,32 @@ using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::OptimalExperimentalDesign;
 
-Evidence::Evidence(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& biasing, pt::ptree pt) : Distribution(likelihood->varSize, Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1))), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing) {
+Evidence::Evidence(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, boost::property_tree::ptree pt) : Distribution(likelihood->varSize, Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1))), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(prior) {
   CreateGraph(prior, likelihood);
 }
 
-Evidence::Evidence(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& biasing, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : Distribution(1, Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing), comm(comm) {
+Evidence::Evidence(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& biasing, pt::ptree pt) : Distribution(likelihood->varSize, Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1))), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing) {
   CreateGraph(prior, likelihood);
 }
+
+#if MUQ_HAS_PARCER==1
+Evidence::Evidence(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : Distribution(1, Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(prior), comm(comm) {
+  CreateGraph(prior, likelihood);
+}
+
+Evidence::Evidence(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& biasing, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : Distribution(1, Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing), comm(comm) {
+  CreateGraph(prior, likelihood);
+}
+#endif
 
 void Evidence::CreateGraph(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood) {
   // make a graph to estimate the evidence
   graph = std::make_shared<WorkGraph>();
 
   // add the input parameters to the graph
-  graph->AddNode(std::make_shared<muq::Modeling::IdentityOperator>(1), "design");
-  graph->AddNode(std::make_shared<muq::Modeling::IdentityOperator>(1), "data");
-  graph->AddNode(std::make_shared<muq::Modeling::IdentityOperator>(1), "parameter");
+  graph->AddNode(std::make_shared<muq::Modeling::IdentityOperator>(likelihood->hyperSizes(1)), "design");
+  graph->AddNode(std::make_shared<muq::Modeling::IdentityOperator>(varSize), "data");
+  graph->AddNode(std::make_shared<muq::Modeling::IdentityOperator>(prior->varSize), "parameter");
 
   // add the densities
   auto priorDens = prior->AsDensity();
@@ -69,7 +79,7 @@ double Evidence::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) {
   // create the importance sampler
   pt::ptree pt;
   pt.put("NumSamples", numImportanceSamples);
-  auto is = std::make_shared<ImportanceSampling>(logjoint, biasing, pt);
+  auto is =std::make_shared<ImportanceSampling>(logjoint, biasing, pt);
 
   // compute the importance sampling estimate
 #if MUQ_HAS_MPI==1
@@ -87,8 +97,6 @@ double Evidence::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) {
 
   double evidence = samps->Weights().sum();
   if( evidence<std::numeric_limits<double>::min() ) { evidence = std::numeric_limits<double>::min(); }
-
-  //std::cout << "LOG EVIDENCE: " << std::log(evidence/samps->size()) << std::endl;
 
   return std::log(evidence/samps->size());
 }

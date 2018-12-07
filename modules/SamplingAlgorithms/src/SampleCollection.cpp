@@ -5,15 +5,54 @@
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
-ExpectedModPieceValue::ExpectedModPieceValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) : f(f) {
+ExpectedModPieceValue::ExpectedModPieceValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains) : f(f), metains(metains) {
   assert(f->numOutputs==1);
 }
 
 Eigen::VectorXd const& ExpectedModPieceValue::operator()(SamplingState const& a) {
-  assert(f->numInputs==a.state.size());
+  assert(f->numInputs==a.state.size()+metains.size());
   for( unsigned int i=0; i<a.state.size(); ++i ) { assert(a.state[i].size()==f->inputSizes(i)); }
 
-  return f->Evaluate(a.state) [0];
+  std::vector<Eigen::VectorXd> ins = a.state;
+  for( auto metain : metains ) {
+    auto it = a.meta.find(metain);
+    assert(it!=a.meta.end());
+
+    if( it->second.type()==typeid(Eigen::Vector2d) ) {
+      ins.push_back(boost::any_cast<Eigen::Vector2d const&>(it->second));
+      continue;
+    }
+    if( it->second.type()==typeid(Eigen::Vector3d) ) {
+      ins.push_back(boost::any_cast<Eigen::Vector3d const&>(it->second));
+      continue;
+    }
+    if( it->second.type()==typeid(Eigen::Vector4d) ) {
+      ins.push_back(boost::any_cast<Eigen::Vector4d const&>(it->second));
+      continue;
+    }
+    if( it->second.type()==typeid(Eigen::VectorXd) ) {
+      ins.push_back(boost::any_cast<Eigen::VectorXd const&>(it->second));
+      continue;
+    }
+    if( it->second.type()==typeid(double) ) {
+      ins.push_back(Eigen::VectorXd::Constant(1, boost::any_cast<double const>(it->second)));
+      continue;
+    }
+    if( it->second.type()==typeid(float) ) {
+      ins.push_back(Eigen::VectorXd::Constant(1, boost::any_cast<float const>(it->second)));
+      continue;
+    }
+    if( it->second.type()==typeid(int) ) {
+      ins.push_back(Eigen::VectorXd::Constant(1, boost::any_cast<int const>(it->second)));
+      continue;
+    }
+    if( it->second.type()==typeid(unsigned int) ) {
+      ins.push_back(Eigen::VectorXd::Constant(1, boost::any_cast<unsigned int const>(it->second)));
+      continue;
+    }
+  }
+
+  return f->Evaluate(ins) [0];
 }
 
 Eigen::VectorXd const& SamplingStateIdentity::operator()(SamplingState const& a)
@@ -324,19 +363,9 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
 
   // for each sample
   for( unsigned int i=0; i<size(); ++i ) {
-    std::cout << "i: " << i << " of " << size() << std::endl;
-    //std::cout << it->second.type().name() << std::endl;
     // get the meta data for that sample
-    std::cout << name << std::endl;
-    std::cout << "META SIZE: " << meta.size() << std::endl;
     auto it = at(i)->meta.find(name);
-    if( it==at(i)->meta.end() ) {
-      std::cout << "AT END" << std::endl;
-      continue; }
-    std::cout << "THIS" << std::endl;
-    std::cout << boost::core::demangle(it->second.type().name()) << std::endl;
-
-
+    if( it==at(i)->meta.end() ) { continue; }
 
     if( it->second.type()==typeid(Eigen::Vector2d) ) {
       // create a matrix for the meta data
@@ -347,7 +376,7 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
 
       continue;
     }
-    std::cout << "GHWOI" << std::endl;
+
     if( it->second.type()==typeid(Eigen::Vector3d) ) {
       // create a matrix for the meta data
       if( meta.size()==0 ) {
@@ -357,7 +386,7 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
 
       continue;
     }
-    std::cout << "BLAH" << std::endl;
+
     if( it->second.type()==typeid(Eigen::Vector4d) ) {
       // create a matrix for the meta data
       if( meta.size()==0 ) {
@@ -367,7 +396,7 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
 
       continue;
     }
-    std::cout << "OKAY HERE" << std::endl;
+
     if( it->second.type()==typeid(Eigen::VectorXd) ) {
       // create a matrix for the meta data
       if( meta.size()==0 ) {
@@ -379,22 +408,15 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
       continue;
     }
 
-    std::cout << "GOT IT!" << std::endl << std::flush;
-
     // create a matrix, assuming scalar type, for the meta data
     if( meta.size()==0 ) {
-      std::cout << "!!!HERE" << std::endl << std::flush;
-      std::cout << "size: " << size() << std::endl << std::flush;
       meta = Eigen::MatrixXd::Constant(1, size(), std::numeric_limits<double>::quiet_NaN());
-      std::cout << "!!!HERE" << std::endl << std::flush;
     }
 
     if( it->second.type()==typeid(double) ) { // doubles
       meta(i) = boost::any_cast<double const>(it->second);
       continue;
     }
-
-    std::cout << "HMM" << std::endl << std::flush;
 
     if( it->second.type()==typeid(float) ) { // floats
       meta(i) = boost::any_cast<float const>(it->second);
@@ -406,10 +428,7 @@ Eigen::MatrixXd SampleCollection::GetMeta(std::string const& name) const {
       continue;
     }
 
-    std::cout << "FLY" << std::endl << std::flush;
-
     if( it->second.type()==typeid(unsigned int) ) { // unsigned ints
-      std::cout << "this far" << std::endl;
       meta(i) = boost::any_cast<unsigned int const>(it->second);
       continue;
     }
@@ -434,8 +453,8 @@ std::unordered_map<std::string, Eigen::MatrixXd> SampleCollection::GetMeta() con
   return meta;
 }
 
-Eigen::VectorXd SampleCollection::ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const {
-  ExpectedModPieceValue op(f);
+Eigen::VectorXd SampleCollection::ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains) const {
+  ExpectedModPieceValue op(f, metains);
 
   Eigen::VectorXd val;
   double weight;

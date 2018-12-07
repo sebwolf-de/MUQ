@@ -135,6 +135,9 @@ namespace muq {
       */
       Eigen::VectorXd CacheCentroid() const;
 
+      /// Clear the cache
+      void ClearCache();
+
     private:
 
       virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) override;

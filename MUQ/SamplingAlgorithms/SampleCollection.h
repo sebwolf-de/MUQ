@@ -31,16 +31,16 @@ namespace muq{
 
     class ExpectedModPieceValue {
     public:
-      ExpectedModPieceValue(std::shared_ptr<muq::Modeling::ModPiece> const& f);
+      ExpectedModPieceValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains);
 
       virtual ~ExpectedModPieceValue() = default;
 
       Eigen::VectorXd const& operator()(SamplingState const& a);
 
     private:
-      // Eigen::VectorXd output;
-
       std::shared_ptr<muq::Modeling::ModPiece> f;
+
+      const std::vector<std::string> metains;
     };
 
     class SamplingStatePartialMoment{
@@ -142,7 +142,7 @@ namespace muq{
       */
       Eigen::MatrixXd GetMeta(std::string const& name) const;
 
-      virtual Eigen::VectorXd ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f) const;
+      virtual Eigen::VectorXd ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains = std::vector<std::string>()) const;
 
     protected:
 
