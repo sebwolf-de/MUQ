@@ -148,14 +148,29 @@ std::pair<double, double> LocalRegression::ErrorIndicator(Eigen::VectorXd const&
   // create a local factorial function (caution: may be problematic if n is sufficiently large)
   std::function<int(int)> factorial = [&factorial](int const n) { return ((n==2 || n==1)? n : n*factorial(n-1)); };
 
+  // compute the center
+  Eigen::VectorXd center = Eigen::VectorXd::Zero(input.size());
+  for( auto n : neighbors) { center += n; }
+  center /= (double)neighbors.size();
+  //std::cout << "center: " << center.transpose() << std::endl;
+
   // compute the radius
   /*double radius = 0.0;
   for( auto n : neighbors) { radius = std::max(radius, (n-input).norm()); }*/
   Eigen::ArrayXd radius = Eigen::ArrayXd::Zero(input.size());
-  for( auto n : neighbors) { radius = radius.max(n.array().abs()); }
+  for( auto n : neighbors) {
+    //std::cout << n.transpose() << std::endl;
+    radius = radius.max((n-center).array().abs());
+  }
+
+  //std::cout << "radius: " << radius.transpose() << std::endl;
+  //std::cout << "radius: " << radius.matrix().norm() << std::endl;
+  //std::cout << "radius: " << radius.matrix().lpNorm<Eigen::Infinity>() << std::endl;
+
+  const double delta = radius.matrix().lpNorm<Eigen::Infinity>();
 
   // compute the error indicator
-  return std::pair<double, double>(std::pow(radius.matrix().norm(), (double)reg->order+1.0)/(double)factorial(reg->order+1), radius.matrix().norm());
+  return std::pair<double, double>(std::pow(delta, (double)reg->order+1.0)/(double)factorial(reg->order+1), delta);
 }
 
 void LocalRegression::NearestNeighbors(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd>& neighbors) const {
@@ -183,35 +198,51 @@ Eigen::VectorXd LocalRegression::EvaluateRegressor(Eigen::VectorXd const& input,
 #if MUQ_HAS_PARCER
 void LocalRegression::Probe() const {
   if( !comm ) { return; }
+  //std::cout << "START PROBE!!! ";// /*<< comm->GetRank() */<< std::endl;
 
   for( unsigned int i=0; i<comm->GetSize(); ++i ) {
-    //std::cout << "START RECIEVING " << i+1 << " of " << comm->GetSize() << std::endl;
+  //  std::cout << "CHECKING " << i << " of " << comm->GetSize() << " rank: " << comm->GetRank();// << std::endl;
     //std::cout << "START RECIEVING " << i+1 << " of " << 2 << std::endl;
     if( i==comm->GetRank() ) { continue; }
+    //std::cout << "START RECIEVING " << i << " of " << comm->GetSize() << " rank: " << comm->GetRank();// << std::endl;
 
-    { // get single adds
-      parcer::RecvRequest recvReq;
-      while( comm->Iprobe(i, tagSingle, recvReq) ) {
+    //{ // get single adds
+      //parcer::RecvRequest recvReq;
+      //bool enter = comm->Iprobe(i, tagSingle, recvReq);
+      while( true ) {
+        parcer::RecvRequest recvReq;
+        if( !comm->Iprobe(i, tagSingle, recvReq) ) { break; }
+        //std::cout << "PROBED ";
 	      // get the point
         comm->Irecv(i, tagSingle, recvReq);
         //std::cout << "RECIEVED, proc: " << std::endl << std::flush;
         //std::cout << "RECIEVED, proc: " << comm->GetRank() << std::endl << std::flush;
         const std::pair<Eigen::VectorXd, Eigen::VectorXd> point = recvReq.GetObject<std::pair<Eigen::VectorXd, Eigen::VectorXd> >();
+        //std::cout << std::flush;
         //auto point = recvReq.GetObject<std::pair<Eigen::VectorXd, Eigen::VectorXd> >();
-        //std::cout << "GOT OBJECT!" << std::endl << std::flush;
+        //std::cout << "GOT OBJECT!" << " rank: " << comm->GetRank() << " ";
         //std::cout << "GOT OBJECT!" << std::endl;
 
 	      // add the point
 	      cache->Add(point.first, point.second);
 
-	      recvReq.Clear();
-      }
-    }
+        //std::cout << "ADDED!" << " rank: " << comm->GetRank() << " ";
 
-    std::cout << "DONE RECIEVING " << i+1 << " of " << comm->GetSize() << std::endl;
+	      recvReq.Clear();
+
+        //std::cout << "CLEARED!" << " rank: " << comm->GetRank() << " ";
+
+        //enter = comm->Iprobe(i, tagSingle, recvReq);
+
+      //  std::cout << "PROBED!" << " rank: " << comm->GetRank();
+      }
+    //}
+
+    //std::cout << "DONE WITH THIS BIT" << " rank: " << comm->GetRank() << " ";
+    //std::cout << "DONE RECIEVING " << i << " of " << comm->GetSize() << " ";// << std::endl;
   }
 
-  std::cout << "DONE WITH PROBE!!!" << std::endl;
+//  std::cout << "DONE WITH PROBE!!!" << std::endl;
 }
 #endif
 

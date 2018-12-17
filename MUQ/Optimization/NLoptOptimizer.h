@@ -24,12 +24,12 @@ namespace muq {
 
     private:
 
-      
+
       /// Evaluate either the cost function or a constraint
       /**
          @param[in] n The size of the input
          @param[in] x The current point
-         @param[out] grad The gradient of the cost/constraint 
+         @param[out] grad The gradient of the cost/constraint
          @param[in] f_data A CostHelper
          \return The cost/constraint value
       */
@@ -45,8 +45,8 @@ namespace muq {
                              const double* x,
                              double* grad,
                              void* f_data);
-                       
-      
+
+
       /// Override the evaluate impl method (solve the optimization problem)
       /**
 	 @param[in] args The first input is the variable we are optimizing over
@@ -64,9 +64,12 @@ namespace muq {
       /// The algorithm used to solve the problem
       const nlopt_algorithm algorithm;
 
-      
+      /// True: minimize the cost function, False: maximize the cost function
+      const bool minimize = true;
+
+
     }; // class NLoptOptimizer
-      
+
   } // namespace Optimization
 } // namespace muq
 

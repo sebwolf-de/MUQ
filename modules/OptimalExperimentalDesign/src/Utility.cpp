@@ -165,10 +165,8 @@ void Utility::RandomlyRefineNear(Eigen::VectorXd const& xd, double const radius)
     Eigen::VectorXd point = RandomGenerator::GetNormal(xd.size());
     point *= RandomGenerator::GetUniform()*radius/point.norm();
     point += xd;
-    std::cout << "GENEREATED RANDOM REFINE NEAR POINT" << std::endl;
     if( !reg->InCache(point) ) {
       reg->Add(point);
-      std::cout << "Added a random point" << std::endl;
       break;
     }
   }
@@ -176,11 +174,6 @@ void Utility::RandomlyRefineNear(Eigen::VectorXd const& xd, double const radius)
 
 void Utility::RefineAt(Eigen::VectorXd const& pnt, double const radius) const {
   assert(reg);
-
-  //const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
-
-  //std::cout << "\tprocess " << comm->GetRank() << " poisedness constant: " << std::get<1>(lambda) << std::endl;
-
   if( reg->InCache(pnt) ) { return RandomlyRefineNear(pnt, radius); }
 
   reg->Add(pnt);
@@ -221,7 +214,6 @@ void Utility::EvaluateSurrogate(ref_vector<Eigen::VectorXd> const& inputs) {
   xd.tail(inputSizes(0)) = inputs[0].get();
 
   for( unsigned int i=0; i<localSamps->size(); ++i ) {
-    std::cout << "starting step " << i+1 << " of " << localSamps->size() << std::endl;
     // the current point for the surrogate model
     xd.head(logprior->inputSizes(0)) = localSamps->at(i)->state[0];
 
@@ -235,21 +227,20 @@ void Utility::EvaluateSurrogate(ref_vector<Eigen::VectorXd> const& inputs) {
     }
 
     const std::pair<double, double> error = reg->ErrorIndicator(xd);
-    const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
+    //const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
 
     /*if( std::get<1>(lambda)>100.0 ) {
       std::cout << "\tprocess " << comm->GetRank() << " poisedness constant: " << std::get<1>(lambda) << " step: " << i << std::endl;
     }*/
 
-    if( std::get<1>(lambda)*error.first>threshold /*|| std::get<1>(lambda)>lammax*/ ) {
-      //const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
+    if( error.first>threshold /*|| std::get<1>(lambda)>lammax*/ ) {
+      const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
       //if( comm )
       std::cout << "process " << comm->GetRank() << " is refining, indicator: " << error.first << " threshold: " << threshold << " step: " << i << std::endl;
       //else
       //  std::cout << "refining, indicator: " << error.first << " threshold: " << threshold << " step: " << i << std::endl;
       RefineAt(std::get<0>(lambda), error.second);
     }
-    std::cout << "finishing step " << i+1 << " of " << localSamps->size() << std::endl;
   }
 
   auto g = std::make_shared<WorkGraph>();

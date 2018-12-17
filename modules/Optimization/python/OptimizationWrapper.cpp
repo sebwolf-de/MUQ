@@ -10,7 +10,7 @@
 #include <functional>
 #include <vector>
 
-#include "MUQ/Optimization/Optimization.h"
+#include "MUQ/Optimization/NLoptOptimizer.h"
 
 #include "MUQ/Utilities/PyDictConversion.h"
 
@@ -21,9 +21,8 @@ using namespace muq::Optimization;
 namespace py = pybind11;
 
 void PythonBindings::OptimizationWrapper(pybind11::module &m) {
-  py::class_<Optimization, std::shared_ptr<Optimization> > opt(m, "Optimization");
-  opt
-  .def(py::init( [](std::shared_ptr<CostFunction> cost, py::dict d) { return new Optimization(cost, ConvertDictToPtree(d)); }))
-  .def("AddInequalityConstraint", &Optimization::AddInequalityConstraint)
-  .def("Solve", (std::pair<Eigen::VectorXd, double> (Optimization::*)(std::vector<Eigen::VectorXd> const&)) &Optimization::Solve);
+  py::class_<NLoptOptimizer, std::shared_ptr<NLoptOptimizer> > opt(m, "NLoptOptimizer");
+  opt.def(py::init( [](std::shared_ptr<CostFunction> cost, py::dict d) { return new NLoptOptimizer(cost, ConvertDictToPtree(d)); }));
+  //opt.def("AddInequalityConstraint", &NLoptOptimizer::AddInequalityConstraint);
+  opt.def("Solve", (std::pair<Eigen::VectorXd, double> (NLoptOptimizer::*)(std::vector<Eigen::VectorXd> const&)) &NLoptOptimizer::Solve);
 }
