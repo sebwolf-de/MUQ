@@ -19,8 +19,19 @@ Regression::Regression(pt::ptree const& pt) : WorkPiece(), order(pt.get<unsigned
   assert(alpha>0.0);
   poly = IndexedScalarBasis::Construct(pt.get<std::string>("PolynomialBasis", "Legendre"));
 
+  multi = std::make_shared<MultiIndexSet>(inputDim);
+  for( unsigned int i=1; i<=order; ++i ) {
+    std::cout << "order: " << i << std::endl;
+    for( unsigned int d=0; d<inputDim; ++d ) {
+      auto singleIndex = MultiIndexFactory::CreateSingleTerm(inputDim, d, i);
+      multi->AddActive(singleIndex);
+      std::cout << "\tdimension: " << d << std::endl;
+    }
+  }
+  std::cout << "size: " << multi->Size() << std::endl;
+
   // initalize the multi-index
-  multi = MultiIndexFactory::CreateTotalOrder(inputDim, order);
+  //multi = MultiIndexFactory::CreateTotalOrder(inputDim, order);
 
   // set algorithm parameters for poisedness optimization with default values
   optPt.put("Ftol.AbsoluteTolerance", pt.get<double>("PoisednessConstant.Ftol.AbsoluteTolerance", 1.0e-8));
@@ -76,7 +87,7 @@ void Regression::Fit(std::vector<Eigen::VectorXd> xs, std::vector<Eigen::VectorX
   // center the input points
   CenterPoints(xs);
 
-  // Compute basis coefficients
+  // compute basis coefficients
   coeff = ComputeCoefficients(xs, ys);
 }
 

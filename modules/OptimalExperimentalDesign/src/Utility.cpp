@@ -237,6 +237,7 @@ void Utility::EvaluateSurrogate(ref_vector<Eigen::VectorXd> const& inputs) {
       const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
       //if( comm )
       std::cout << "process " << comm->GetRank() << " is refining, indicator: " << error.first << " threshold: " << threshold << " step: " << i << std::endl;
+      std::cout << "\tpoisedness: " << std::get<1>(lambda) << std::endl;
       //else
       //  std::cout << "refining, indicator: " << error.first << " threshold: " << threshold << " step: " << i << std::endl;
       RefineAt(std::get<0>(lambda), error.second);
@@ -306,7 +307,7 @@ void Utility::EvaluateBruteForce(ref_vector<Eigen::VectorXd> const& inputs) {
   #endif
     assert(samps);
 
-  auto diff = graph->CreateModPiece("log difference");
+  auto diff = graph->CreateModPiece("log difference", std::vector<std::string>({"parameter-data", "log difference"}));
   assert(diff);
 
   outputs.resize(1);
