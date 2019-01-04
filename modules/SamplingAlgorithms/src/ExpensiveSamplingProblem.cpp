@@ -55,9 +55,17 @@ void ExpensiveSamplingProblem::SetUp(boost::property_tree::ptree& pt) {
 
 double ExpensiveSamplingProblem::LogDensity(unsigned int const step, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) {
   std::vector<Eigen::VectorXd> neighbors, results;
-  RefineSurrogate(step, state, neighbors, results);
+  const double threshold = RefineSurrogate(step, state, neighbors, results);
   assert(neighbors.size()==results.size());
   assert(neighbors.size()>=reg->kn);
+  bool addThreshold = (type==AbstractSamplingProblem::SampleType::Proposed) && (lastAcceptedRadius<state->state[0].norm());
+  //bool addThreshold = (type==AbstractSamplingProblem::SampleType::Proposed) && (lastAcceptedRadius<(state->state[0]-reg->CacheCentroid()).norm());
+  //bool addThreshold = (type==AbstractSamplingProblem::SampleType::Proposed) && (0.75*radius_max<(state->state[0]-reg->CacheCentroid()).norm());
+  if( type==AbstractSamplingProblem::SampleType::Accepted && reg->CacheSize()>0 ) {
+    //lastAcceptedRadius = (state->state[0]-reg->CacheCentroid()).norm();
+    lastAcceptedRadius = state->state[0].norm();
+  }
+
   /*if( type==AbstractSamplingProblem::SampleType::Accepted ) {
     // refine and get nearest neighbors
     RefineSurrogate(step, state, neighbors, results);
@@ -72,7 +80,7 @@ double ExpensiveSamplingProblem::LogDensity(unsigned int const step, std::shared
   state->meta["cumulative gamma refinement"] = cumgamma;
   state->meta["global radius"] = radius_max;
 
-  return reg->EvaluateRegressor(state->state[0],
+  return (addThreshold ? 1.0+500.0*threshold : 1.0)*reg->EvaluateRegressor(state->state[0],
                                 std::vector<Eigen::VectorXd>(neighbors.begin(), neighbors.begin()+reg->kn),
                                 std::vector<Eigen::VectorXd>(results.begin(), results.begin()+reg->kn)) (0);
 }
@@ -145,7 +153,7 @@ double ExpensiveSamplingProblem::RefineSurrogate(
   return std::get<1>(lambda);
 }
 
-void ExpensiveSamplingProblem::RefineSurrogate(
+double ExpensiveSamplingProblem::RefineSurrogate(
   unsigned int const step,
   std::shared_ptr<SamplingState> state,
   std::vector<Eigen::VectorXd>& neighbors,
@@ -195,6 +203,8 @@ void ExpensiveSamplingProblem::RefineSurrogate(
       ++cumgamma; ++n;
     }
   }
+
+  return threshold;
 }
 
 void ExpensiveSamplingProblem::RefineSurrogate(Eigen::VectorXd const& point, unsigned int const index, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) {

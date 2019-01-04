@@ -50,8 +50,9 @@ namespace muq {
 	 @param[in] state The state where we are evalauting the log target
 	 @param[out] neighbors The nearest neighbors
 	 @param[out] results The log-target at the nearest neighbors
+   \return The error threshold
        */
-      void RefineSurrogate(
+      double RefineSurrogate(
         unsigned int const step,
         std::shared_ptr<SamplingState> state,
         std::vector<Eigen::VectorXd>& neighbors,
@@ -170,6 +171,8 @@ namespace muq {
 
       /// Maximum distance between the globalMean and an evaluated point
       double radius_max = 0.0;
+
+      double lastAcceptedRadius = 0.0;
     };
   } // namespace SamplingAlgorithms
 } // namespace muq
