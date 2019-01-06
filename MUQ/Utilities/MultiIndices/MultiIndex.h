@@ -48,6 +48,13 @@ namespace muq {
        */
       MultiIndex(unsigned lengthIn);
 
+      /** Constructor that creates a multiindex with some default value.
+       *          @param[in] lengthIn The length (i.e., number of components) in the
+       *           multiindex.
+       *          @param[in] val The value to be set for all entries.
+       */
+      MultiIndex(unsigned lengthIn, unsigned val);
+
       /** Takes a dense vector description of the multiindex and extracts the
           nonzero components.
           @param[in] indIn Row vector of unsigned integers defining the
@@ -105,6 +112,7 @@ namespace muq {
       */
       void SetLength(unsigned newLength);
 
+      std::string ToString() const;
 
       /** Get the number of components in the index.  When used to define a
           multivariate polynomial, this will return the dimension of the
@@ -116,6 +124,12 @@ namespace muq {
       bool operator==(const MultiIndex &b);
       bool operator!=(const MultiIndex &b);
       bool operator<(const MultiIndex &b);
+      MultiIndex& operator+=(const MultiIndex &b);
+      MultiIndex& operator++();
+      MultiIndex operator+(const MultiIndex &b);
+      MultiIndex& operator-=(const MultiIndex &b);
+      MultiIndex& operator--();
+      MultiIndex operator-(const MultiIndex &b);
 
       std::unordered_map<unsigned, unsigned>::const_iterator GetNzBegin() const{return nzInds.begin();};
       std::unordered_map<unsigned, unsigned>::const_iterator GetNzEnd()   const{return nzInds.end();};
@@ -142,5 +156,7 @@ namespace muq {
 
   } // namespace Utilities
 } // namespace muq
+
+std::ostream& operator<< (std::ostream &out, const muq::Utilities::MultiIndex &ind);
 
 #endif

@@ -16,7 +16,7 @@ namespace muq{
     /** @ingroup MCMC
         @class SingleChainMCMC
         @brief Defines an MCMC sampler with a single chain
-        @details 
+        @details
         <B>Configuration Parameters:</B>
         Parameter Key | Type | Default Value | Description |
         ------------- | ------------- | ------------- | ------------- |
@@ -30,21 +30,38 @@ namespace muq{
 
     public:
 
-      SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem);
-
 #if MUQ_HAS_PARCER
-      SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<parcer::Communicator> comm);
+      SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem, std::vector<Eigen::VectorXd> x0, std::shared_ptr<parcer::Communicator> comm);
 #endif
 
       SingleChainMCMC(boost::property_tree::ptree              pt,
                       std::shared_ptr<AbstractSamplingProblem> problem,
-                      std::vector<std::shared_ptr<TransitionKernel>> kernelsIn);
+                      std::vector<Eigen::VectorXd> x0);
+
+      SingleChainMCMC(boost::property_tree::ptree              pt,
+                      std::shared_ptr<AbstractSamplingProblem> problem,
+                      Eigen::VectorXd x0)
+                    : SingleChainMCMC(pt, problem, std::vector<Eigen::VectorXd>(1,x0)) {};
+
+      SingleChainMCMC(boost::property_tree::ptree pt,
+                      std::vector<std::shared_ptr<TransitionKernel>> kernels,
+                      std::vector<Eigen::VectorXd> x0);
+
+      SingleChainMCMC(boost::property_tree::ptree pt,
+                      std::vector<std::shared_ptr<TransitionKernel>> kernels,
+                      Eigen::VectorXd x0)
+                    : SingleChainMCMC(pt, kernels, std::vector<Eigen::VectorXd>(1,x0)) {};
+
 
       virtual ~SingleChainMCMC() = default;
 
       virtual std::vector<std::shared_ptr<TransitionKernel>>& Kernels(){return kernels;};
 
-      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
+      virtual std::shared_ptr<SampleCollection> RunImpl() override;
+
+      virtual void Sample();
+
+      virtual double TotalTime() { return totalTime; }
 
     protected:
 
@@ -56,6 +73,7 @@ namespace muq{
       void PrintStatus(std::string prefix, unsigned int currInd) const;
 
       std::shared_ptr<SaveSchedulerBase> scheduler;
+      std::shared_ptr<SaveSchedulerBase> schedulerQOI;
 
       unsigned int numSamps;
       unsigned int burnIn;
@@ -65,6 +83,11 @@ namespace muq{
       std::vector<std::shared_ptr<TransitionKernel>> kernels;
 
     private:
+
+      unsigned int sampNum = 1;
+      std::shared_ptr<SamplingState> prevState = nullptr;
+      std::shared_ptr<SamplingState> lastSavedState = nullptr;
+      double totalTime = 0.0;
 
       void SetUp(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem);
     }; // class SingleChainMCMC
