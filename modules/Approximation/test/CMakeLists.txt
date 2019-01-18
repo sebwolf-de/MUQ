@@ -19,7 +19,13 @@ CreateTestGroup(
   Polynomials/BasisExpansionTest.cpp
   Polynomials/MonotoneExpansionTest.cpp
   Polynomials/PolynomialTests.cpp
+)
+
+CreateTestGroup(
+  APPROXIMATION_QUADRATURE
+
   Quadrature/GaussQuadratureTests.cpp
+  Quadrature/FullTensorQuadratureTest.cpp
 )
 
 CreateTestGroup(

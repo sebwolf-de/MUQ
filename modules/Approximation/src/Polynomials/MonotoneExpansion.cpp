@@ -39,7 +39,7 @@ MonotoneExpansion::MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>
   GaussQuadrature gqSolver(std::make_shared<Legendre>(), numQuadPts);
   gqSolver.Compute();
 
-  quadPts = 0.5*(gqSolver.Points()+Eigen::VectorXd::Ones(numQuadPts));
+  quadPts = 0.5*(gqSolver.Points().transpose()+Eigen::VectorXd::Ones(numQuadPts));
   quadWeights = 0.5*gqSolver.Weights();
 }
 

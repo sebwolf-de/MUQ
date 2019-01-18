@@ -2,11 +2,11 @@
 
 using namespace muq::Approximation;
 
-GaussQuadrature::GaussQuadrature() {}
+GaussQuadrature::GaussQuadrature() : Quadrature(1) {}
 
 GaussQuadrature::GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
-                                 int polyOrderIn)
-                                : poly(polyIn), polyOrder(polyOrderIn)
+                                 int polyOrderIn) : Quadrature(1),
+                                                    poly(polyIn), polyOrder(polyOrderIn)
 {
   Compute();
 }
@@ -36,24 +36,12 @@ void GaussQuadrature::Compute() {
   es.computeFromTridiagonal(diag, subdiag);
 
   // Set gauss points
-  gaussPts = es.eigenvalues();
+  pts = es.eigenvalues().transpose();
 
   // Get mu_0 value (integral of weighting function)
   double mu0 = poly->Normalization(0);
 
   // Set gauss weights
-  gaussWts = mu0*es.eigenvectors().row(0).array().square();
-
-}
-
-Eigen::VectorXd const& GaussQuadrature::Points() const {
-
-  return gaussPts;
-
-}
-
-Eigen::VectorXd const& GaussQuadrature::Weights() const {
-
-  return gaussWts;
+  wts = mu0*es.eigenvectors().row(0).array().square();
 
 }

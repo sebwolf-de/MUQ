@@ -38,7 +38,7 @@ TEST(Quadrature, PhysicistHermite) {
 
   // Compute pts and Weights
   gq.Compute();
-  Eigen::VectorXd gaussPts = gq.Points();
+  Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
   for (int i=0; i<polyOrder; i++) {
@@ -80,7 +80,7 @@ TEST(Quadrature, ProbabilistHermite) {
 
   // Compute pts and Weights
   gq.Compute();
-  Eigen::VectorXd gaussPts = gq.Points();
+  Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
   for (int i=0; i<polyOrder; i++) {
@@ -118,7 +118,7 @@ TEST(Quadrature, Legendre) {
 
   // Compute pts and Weights
   gq.Compute();
-  Eigen::VectorXd gaussPts = gq.Points();
+  Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
   for (int i=0; i<polyOrder; i++) {
@@ -156,7 +156,7 @@ TEST(Quadrature, LaguerreDefault) {
 
   // Compute pts and Weights
   gq.Compute();
-  Eigen::VectorXd gaussPts = gq.Points();
+  Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
   for (int i=0; i<polyOrder; i++) {
@@ -197,7 +197,7 @@ TEST(Quadrature, Laguerre) {
 
   // Compute pts and Weights
   gq.Compute();
-  Eigen::VectorXd gaussPts = gq.Points();
+  Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
   for (int i=0; i<polyOrder; i++) {
@@ -235,7 +235,7 @@ TEST(Quadrature, JacobiDefault) {
 
   // Compute pts and Weights
   gq.Compute();
-  Eigen::VectorXd gaussPts = gq.Points();
+  Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
   for (int i=0; i<polyOrder; i++) {
@@ -277,7 +277,7 @@ TEST(Quadrature, Jacobi) {
 
   // Compute pts and Weights
   gq.Compute();
-  Eigen::VectorXd gaussPts = gq.Points();
+  Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
   for (int i=0; i<polyOrder; i++) {

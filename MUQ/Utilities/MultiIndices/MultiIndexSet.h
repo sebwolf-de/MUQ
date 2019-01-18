@@ -113,7 +113,7 @@ namespace muq{
           @param[in] activeIndex Linear index of interest.
           @return A shared pointer to a constant instance of the MultiIndex class.
       */
-      virtual const std::shared_ptr<MultiIndex> IndexToMulti(unsigned activeIndex) const{return allMultis.at(active2global.at(activeIndex));};
+      virtual std::shared_ptr<MultiIndex> const& IndexToMulti(unsigned activeIndex) const{return allMultis.at(active2global.at(activeIndex));};
 
 
       /** Given a multiindex, return the linear index where it is located.
@@ -147,7 +147,7 @@ namespace muq{
        @param[in] activeIndex The index of the active MultiIndex to return.
        @return A pointer to the MultiIndex at index outputIndex.
        */
-      virtual std::shared_ptr<MultiIndex> at(int activeIndex){return IndexToMulti(activeIndex);}
+      virtual std::shared_ptr<MultiIndex> const& at(int activeIndex){return IndexToMulti(activeIndex);}
 
       /**
        * This function provides constant access to each of the MultiIndices.

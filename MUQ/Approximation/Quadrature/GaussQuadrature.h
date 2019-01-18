@@ -3,6 +3,8 @@
 
 #include "MUQ/Approximation/Polynomials/OrthogonalPolynomial.h"
 
+#include "MUQ/Approximation/Quadrature/Quadrature.h"
+
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
@@ -10,31 +12,25 @@ namespace muq {
 
   namespace Approximation {
 
-    /** @ingroup Polynomials
+    /** @ingroup Quadrature
         @brief Class for computing Gauss Quadrature rules from an orthogonal polynomial family.
         @details Uses the Golub-Welsch algorithm to construct a Gauss Quadrature rule of a
         specified order.
     */
-    class GaussQuadrature {
+    class GaussQuadrature : public Quadrature {
 
     public:
 
       GaussQuadrature();
 
+      virtual ~GaussQuadrature() = default;
+
       GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
                       int polyOrderIn);
 
-      void Compute();
-
-      Eigen::VectorXd const& Points() const;
-
-      Eigen::VectorXd const& Weights() const;
+      virtual void Compute();
 
     private:
-
-      Eigen::VectorXd gaussPts;
-
-      Eigen::VectorXd gaussWts;
 
       std::shared_ptr<OrthogonalPolynomial> poly;
 

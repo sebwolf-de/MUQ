@@ -41,7 +41,17 @@ CreateCompileGroup(
 	Polynomials/HermiteFunction.cpp
   Polynomials/BasisExpansion.cpp
   Polynomials/MonotoneExpansion.cpp
+)
+
+CreateCompileGroup(
+	APPROXIMATION_QUADRATURE
+	"Quadrature rules"
+	muqApproximation
+	"APPROXIMATION_QUADRATURE"
+	""
+	""
   Quadrature/GaussQuadrature.cpp
+	Quadrature/FullTensorQuadrature.cpp
 )
 
 CreateCompileGroup(
