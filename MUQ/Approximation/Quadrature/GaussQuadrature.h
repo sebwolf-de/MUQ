@@ -28,7 +28,7 @@ namespace muq {
       GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
                       int polyOrderIn);
 
-      virtual void Compute();
+      virtual void Compute(unsigned int order) override;
 
     private:
 

@@ -11,7 +11,9 @@ GaussQuadrature::GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
   Compute();
 }
 
-void GaussQuadrature::Compute() {
+void GaussQuadrature::Compute(unsigned int order) {
+
+  polyOrder = order;
 
   // Create diagonal and subdiagonal vectors
   Eigen::VectorXd diag = Eigen::VectorXd::Zero(polyOrder);

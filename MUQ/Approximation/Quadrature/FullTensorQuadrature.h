@@ -33,7 +33,8 @@ public:
 
   virtual ~FullTensorQuadrature() = default;
 
-  virtual void Compute() override;
+  virtual void Compute(unsigned int order) override;
+  virtual void Compute(Eigen::RowVectorXi const& orders) override;
 
 private:
 

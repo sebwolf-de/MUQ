@@ -26,9 +26,17 @@ namespace muq {
 
       Quadrature(unsigned int dimIn) : dim(dimIn){};
 
+
       virtual ~Quadrature() = default;
 
-      virtual void Compute() = 0;
+      virtual void Compute(unsigned int order) = 0;
+
+      /** Base implementation of Compute.  Assumes the quadrature rule is 1d
+          and then calls Compute with the first component of the orders vector.
+
+          Multivariate quadrature rules should override this function.
+      */
+      virtual void Compute(Eigen::RowVectorXi const& orders) { assert(orders.size()==1); Compute(orders(0));}
 
       /** Return the dimension of the quadrature rule. */
       virtual unsigned int Dim() const{return dim;};

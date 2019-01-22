@@ -18,7 +18,18 @@ FullTensorQuadrature::FullTensorQuadrature(std::vector<std::shared_ptr<Quadratur
   Compute();
 }
 
-void FullTensorQuadrature::Compute() {
+virtual void FullTensorQuadrature::Compute(unsigned int order)
+{
+  Compute(std::vector<unsigned int>(dim,order));
+}
+
+void FullTensorQuadrature::Compute(Eigen::RowVectorXi const& orders) {
+
+  assert(orders.size()==dim);
+
+  // Compute each 1d rule
+  for(int i=0; i<dim; ++i)
+    rules.at(i)->Compute(orders(i));
 
   // Extract the number of points in each rule
   Eigen::RowVectorXi numPts(dim);
@@ -34,7 +45,7 @@ void FullTensorQuadrature::Compute() {
 
   for(int i=0; i<multis->Size(); ++i){
     auto& multi = multis->IndexToMulti(i);
-    
+
     for(int d=0; d<dim; ++d){
       wts(i) *= rules.at(d)->Weights()(multi->GetValue(d));
       pts(d,i) = rules.at(d)->Points()(0,multi->GetValue(d));
