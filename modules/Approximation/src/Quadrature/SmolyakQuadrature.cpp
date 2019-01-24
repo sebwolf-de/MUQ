@@ -1,5 +1,9 @@
 #include "MUQ/Approximation/Quadrature/SmolyakQuadrature.h"
 
+#include "MUQ/Utilities/MultiIndices/MultiIndexFactory.h"
+
+#include <unordered_map>
+
 using namespace muq::Approximation;
 using namespace muq::Utilities;
 
@@ -8,9 +12,9 @@ SmolyakQuadrature::SmolyakQuadrature(std::vector<std::shared_ptr<Quadrature>> sc
 {}
 
 
-virtual void SmolyakQuadrature::Compute(unsigned int order)
+void SmolyakQuadrature::Compute(unsigned int order)
 {
-  Compute(std::vector<unsigned int>(dim,order));
+  Compute(order*Eigen::RowVectorXi::Ones(dim));
 }
 
 void SmolyakQuadrature::Compute(Eigen::RowVectorXi const& orders)
@@ -29,14 +33,14 @@ std::shared_ptr<MultiIndexSet> SmolyakQuadrature::BuildMultis(Eigen::RowVectorXi
   int minOrder = orders.minCoeff();
   assert(minOrder>=0);
 
-  auto multis = CreateTotalOrder(dim,minOrder);
+  auto multis = MultiIndexFactory::CreateTotalOrder(dim,minOrder);
 
   // Add other terms to get the right order
   for(int i=0; i<dim; ++i){
     for(int p=minOrder+1; p<=orders(i); ++p)
     {
-      auto newMulti = std::shared_ptr<MultiIndex>(dim);
-      newMulti.SetValue(i,p);
+      auto newMulti = std::make_shared<MultiIndex>(dim);
+      newMulti->SetValue(i,p);
       multis += newMulti;
     }
   }
@@ -48,7 +52,7 @@ std::shared_ptr<MultiIndexSet> SmolyakQuadrature::BuildMultis(Eigen::RowVectorXi
 void SmolyakQuadrature::Compute(std::shared_ptr<MultiIndexSet> const& multis) {
 
   // Compute the weights caused by using a tensor product of quadrature rules directly
-  Eigen::VectorXd smolyWts = ComputeWeights();
+  Eigen::VectorXd smolyWts = ComputeWeights(multis);
 
   auto tensorQuad = std::make_shared<FullTensorQuadrature>(scalarRules);
 
@@ -88,7 +92,7 @@ void SmolyakQuadrature::Compute(std::shared_ptr<MultiIndexSet> const& multis) {
 }
 
 
-Eigen::VectorXd SmolyakQuadrature::ComputeWeights() const
+Eigen::VectorXd SmolyakQuadrature::ComputeWeights(std::shared_ptr<MultiIndexSet> const& multis) const
 {
   Eigen::VectorXd multiWeights = Eigen::VectorXd::Zero(multis->Size());
 

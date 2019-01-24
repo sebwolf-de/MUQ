@@ -6,21 +6,26 @@
 using namespace muq::Approximation;
 using namespace muq::Utilities;
 
-FullTensorQuadrature::FullTensorQuadrature(unsigned int dim,
-                                           std::shared_ptr<Quadrature> const& rule) : FullTensorQuadrature(std::vector<std::shared_ptr<Quadrature>>(dim,rule)){};
+FullTensorQuadrature::FullTensorQuadrature(unsigned int                       dim,
+                                           std::shared_ptr<Quadrature> const& rule,
+                                           unsigned int                       order) : FullTensorQuadrature(std::vector<std::shared_ptr<Quadrature>>(dim,rule),
+                                                                                                            order*Eigen::RowVectorXi::Ones(dim)){};
 
-FullTensorQuadrature::FullTensorQuadrature(std::vector<std::shared_ptr<Quadrature>> const& rulesIn) : Quadrature(rulesIn.size()),
+FullTensorQuadrature::FullTensorQuadrature(std::vector<std::shared_ptr<Quadrature>> const& rulesIn,
+                                           Eigen::RowVectorXi                       const& orders) : Quadrature(rulesIn.size()),
                                                                                                        rules(rulesIn)
 {
   for(int i=0; i<rules.size(); ++i)
     assert(rules.at(i)->Dim()==1);
 
-  Compute();
+  assert(rulesIn.size()==orders.size());
+
+  Compute(orders);
 }
 
-virtual void FullTensorQuadrature::Compute(unsigned int order)
+void FullTensorQuadrature::Compute(unsigned int order)
 {
-  Compute(std::vector<unsigned int>(dim,order));
+  Compute(order*Eigen::RowVectorXi::Ones(dim));
 }
 
 void FullTensorQuadrature::Compute(Eigen::RowVectorXi const& orders) {

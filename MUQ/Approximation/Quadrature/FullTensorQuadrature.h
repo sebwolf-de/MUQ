@@ -26,9 +26,11 @@ class FullTensorQuadrature : public Quadrature {
 public:
 
   FullTensorQuadrature(unsigned int                       dim,
-                       std::shared_ptr<Quadrature> const& rules);
+                       std::shared_ptr<Quadrature> const& rules,
+                       unsigned int                       order);
 
-  FullTensorQuadrature(std::vector<std::shared_ptr<Quadrature>> const& rules);
+  FullTensorQuadrature(std::vector<std::shared_ptr<Quadrature>> const& rules,
+                       Eigen::RowVectorXi                       const& orders);
 
 
   virtual ~FullTensorQuadrature() = default;

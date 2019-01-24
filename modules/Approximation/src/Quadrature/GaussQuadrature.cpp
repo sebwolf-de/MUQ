@@ -8,7 +8,7 @@ GaussQuadrature::GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
                                  int polyOrderIn) : Quadrature(1),
                                                     poly(polyIn), polyOrder(polyOrderIn)
 {
-  Compute();
+  Compute(polyOrderIn);
 }
 
 void GaussQuadrature::Compute(unsigned int order) {
