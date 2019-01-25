@@ -145,13 +145,7 @@ bool MultiIndex::operator==(const MultiIndex &b){
 
 bool MultiIndex::operator<(const MultiIndex &b){
 
-  if((nzInds.size()==0)&&(b.nzInds.size()>0)){
-    return true;
-  }else if((b.nzInds.size()==0)&&(nzInds.size()>0)){
-    return false;
-  }else if((nzInds.size()==0)&&(b.nzInds.size()==0)){
-    return false;
-  }else if(totalOrder<b.totalOrder){
+  if(totalOrder<b.totalOrder){
     return true;
   }else if(totalOrder>b.totalOrder){
       return false;

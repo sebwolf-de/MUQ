@@ -137,7 +137,7 @@ namespace muq {
 
 
     struct MultiPtrComp{
-      bool operator()(std::shared_ptr<MultiIndex> a, std::shared_ptr<MultiIndex> b) const{return (*a)<(*b);};
+      bool operator()(std::shared_ptr<MultiIndex> const& a, std::shared_ptr<MultiIndex> const& b) const{return (*a)<(*b);};
     };
 
   } // namespace Utilities

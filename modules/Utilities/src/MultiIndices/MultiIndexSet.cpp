@@ -96,8 +96,8 @@ int MultiIndexSet::AddMulti(std::shared_ptr<MultiIndex> newMulti)
   allMultis.push_back(newMulti);
 
   int globalInd = allMultis.size() - 1;
-
   multi2global[newMulti] = globalInd;
+
   global2active.push_back(-1);
 
   inEdges.push_back(std::set<int>());
