@@ -81,6 +81,16 @@ bool MultiIndex::SetValue(unsigned ind, unsigned val)
   }
 }
 
+unsigned int MultiIndex::NumNz() const
+{
+    unsigned int numNz = 0;
+    for(auto& part : nzInds)
+      numNz += int(part.second > 0);
+
+    return numNz;
+}
+
+
 unsigned MultiIndex::MultiIndex::GetValue(unsigned ind) const
 {
   if(ind>length){

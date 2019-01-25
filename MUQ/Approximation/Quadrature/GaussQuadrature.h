@@ -25,8 +25,10 @@ namespace muq {
 
       virtual ~GaussQuadrature() = default;
 
+      GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn);
+      
       GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
-                      int polyOrderIn);
+                      int                                   polyOrderIn);
 
       virtual void Compute(unsigned int order) override;
 

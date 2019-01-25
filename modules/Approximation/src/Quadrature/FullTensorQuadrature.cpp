@@ -11,16 +11,22 @@ FullTensorQuadrature::FullTensorQuadrature(unsigned int                       di
                                            unsigned int                       order) : FullTensorQuadrature(std::vector<std::shared_ptr<Quadrature>>(dim,rule),
                                                                                                             order*Eigen::RowVectorXi::Ones(dim)){};
 
+FullTensorQuadrature::FullTensorQuadrature(unsigned int                       dim,
+                                          std::shared_ptr<Quadrature> const& rule) : FullTensorQuadrature(std::vector<std::shared_ptr<Quadrature>>(dim,rule)){};
+
+
 FullTensorQuadrature::FullTensorQuadrature(std::vector<std::shared_ptr<Quadrature>> const& rulesIn,
-                                           Eigen::RowVectorXi                       const& orders) : Quadrature(rulesIn.size()),
+                                           Eigen::RowVectorXi                              orders) : Quadrature(rulesIn.size()),
                                                                                                        rules(rulesIn)
 {
   for(int i=0; i<rules.size(); ++i)
     assert(rules.at(i)->Dim()==1);
 
-  assert(rulesIn.size()==orders.size());
-
-  Compute(orders);
+  // If the quadrature orders are specified, call Compute
+  if(orders.size()>0){
+    assert(rulesIn.size()==orders.size());
+    Compute(orders);
+  }
 }
 
 void FullTensorQuadrature::Compute(unsigned int order)
@@ -32,17 +38,21 @@ void FullTensorQuadrature::Compute(Eigen::RowVectorXi const& orders) {
 
   assert(orders.size()==dim);
 
-  // Compute each 1d rule
-  for(int i=0; i<dim; ++i)
-    rules.at(i)->Compute(orders(i));
+  Eigen::RowVectorXi tensorOrders(dim);
 
-  // Extract the number of points in each rule
-  Eigen::RowVectorXi numPts(dim);
-  for(int i = 0; i<dim; ++i)
-    numPts(i) = rules.at(i)->Weights().size()-1;
+  // Compute the points and weights from the 1d rules
+  std::vector<Eigen::MatrixXd> allPts(dim);
+  std::vector<Eigen::VectorXd> allWts(dim);
+  for(int i = 0; i<dim; ++i){
+    rules.at(i)->Compute(orders(i));
+    allPts.at(i) = rules.at(i)->Points();
+    allWts.at(i) = rules.at(i)->Weights();
+
+    tensorOrders(i) = allPts.at(i).cols()-1;
+  }
 
   // First, compute all of the multiindices
-  auto multis = MultiIndexFactory::CreateFullTensor(numPts);
+  auto multis = MultiIndexFactory::CreateFullTensor(tensorOrders);
 
   // Now compute all the terms
   pts.resize(dim,multis->Size());
@@ -52,8 +62,8 @@ void FullTensorQuadrature::Compute(Eigen::RowVectorXi const& orders) {
     auto& multi = multis->IndexToMulti(i);
 
     for(int d=0; d<dim; ++d){
-      wts(i) *= rules.at(d)->Weights()(multi->GetValue(d));
-      pts(d,i) = rules.at(d)->Points()(0,multi->GetValue(d));
+      wts(i) *= allWts.at(d)(multi->GetValue(d));
+      pts(d,i) = allPts.at(d)(0,multi->GetValue(d));
     }
   }
 

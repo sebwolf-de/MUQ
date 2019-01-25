@@ -83,8 +83,8 @@ TEST(Approximation_GP, KarhunenLoeve_GaussQuad)
     const double ub = 1.0;
 
     // Get Gauss-Legendre points on [lb,ub]
-    GaussQuadrature gq(std::make_shared<Legendre>(), 50);
-    gq.Compute();
+    GaussQuadrature gq(std::make_shared<Legendre>());
+    gq.Compute(50);
     Eigen::VectorXd gaussPts = gq.Points().transpose();
     gaussPts = 0.5*(gaussPts+Eigen::VectorXd::Ones(gaussPts.size()));
     gaussPts = (ub-lb)*gaussPts + lb*Eigen::VectorXd::Ones(gaussPts.size());

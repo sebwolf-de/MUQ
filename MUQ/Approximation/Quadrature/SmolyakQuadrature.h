@@ -15,7 +15,11 @@ namespace Approximation {
   */
   class SmolyakQuadrature : public Quadrature
   {
-    SmolyakQuadrature(std::vector<std::shared_ptr<Quadrature>> scalarRulesIn);
+  public:
+
+    SmolyakQuadrature(unsigned int dim, std::shared_ptr<Quadrature> const& scalarRule);
+    
+    SmolyakQuadrature(std::vector<std::shared_ptr<Quadrature>> const& scalarRulesIn);
 
     virtual ~SmolyakQuadrature() = default;
 
