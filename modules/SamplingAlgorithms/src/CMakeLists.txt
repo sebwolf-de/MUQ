@@ -16,8 +16,8 @@ CreateCompileGroup(
     SAMPLING_PROBLEMS
     "Implement sampling sampling problems for MCMC."
     muqSamplingAlgorithms
-    "MODELING_CORE"
-    ""
+    "MODELING_CORE;APPROXIMATION_REGRESSION"
+    "PARCER"
     ""
 
     SamplingProblem.cpp
