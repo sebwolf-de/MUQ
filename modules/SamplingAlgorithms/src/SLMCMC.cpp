@@ -31,8 +31,7 @@ namespace muq {
     }
 
     std::shared_ptr<SampleCollection> SLMCMC::RunImpl(std::vector<Eigen::VectorXd> const& x0) {
-      coarse_chain->Run();
-      return nullptr;
+      return coarse_chain->Run();
     }
 
     Eigen::VectorXd SLMCMC::MeanQOI() {
