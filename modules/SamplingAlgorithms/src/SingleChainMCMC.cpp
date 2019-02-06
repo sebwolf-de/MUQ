@@ -70,7 +70,33 @@ void SingleChainMCMC::Setup(pt::ptree pt,
 
 }
 
+SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree pt,
+                std::vector<std::shared_ptr<TransitionKernel>> kernelsIn,
+                std::shared_ptr<SamplingState> x0) :
+                SamplingAlgorithm(std::make_shared<MarkovChain>()),
+                printLevel(pt.get("PrintLevel",3)),
+                kernels(kernelsIn),
+                prevState(x0)
+{
+  // TODO: clean this up, maybe somehow merge with SetUp(..)
+  numSamps = pt.get<unsigned int>("NumSamples");
+  burnIn = pt.get("BurnIn",0);
+  if(burnIn==0) {
+    samples->Add(prevState);
+    prevState = samples->at(0); // Add() copies state, so need to retrieve copy here
+  }
+
+  scheduler = std::make_shared<ThinScheduler>(pt);
+  schedulerQOI = std::make_shared<ThinScheduler>(pt);
+}
+
 void SingleChainMCMC::Setup(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> const& problem) {
+  numSamps = pt.get<unsigned int>("NumSamples");
+  burnIn = pt.get("BurnIn",0);
+  if(burnIn==0) {
+    samples->Add(prevState);
+    prevState = samples->at(0); // Add() copies state, so need to retrieve copy here
+  }
 
   std::string kernelString = pt.get<std::string>("KernelList");
 
