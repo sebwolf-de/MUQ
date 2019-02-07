@@ -26,6 +26,7 @@ CreateTestGroup(
 
   Quadrature/GaussQuadratureTests.cpp
   Quadrature/FullTensorQuadratureTest.cpp
+  Quadrature/ClenshawCurtisTests.cpp
 )
 
 CreateTestGroup(
