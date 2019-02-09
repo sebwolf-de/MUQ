@@ -4,16 +4,21 @@ using namespace muq::Approximation;
 
 GaussQuadrature::GaussQuadrature() : Quadrature(1) {}
 
+GaussQuadrature::GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn) : Quadrature(1),
+                                                                                 poly(polyIn), polyOrder(-1)
+{
+}
+
 GaussQuadrature::GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
                                  int polyOrderIn) : Quadrature(1),
                                                     poly(polyIn), polyOrder(polyOrderIn)
 {
-  Compute();
+  Compute(polyOrderIn);
 }
 
 void GaussQuadrature::Compute(unsigned int order) {
 
-  polyOrder = order;
+  polyOrder = order+1;
 
   // Create diagonal and subdiagonal vectors
   Eigen::VectorXd diag = Eigen::VectorXd::Zero(polyOrder);

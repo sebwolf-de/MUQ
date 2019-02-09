@@ -25,10 +25,26 @@ namespace muq {
 class FullTensorQuadrature : public Quadrature {
 public:
 
+  /**
+  Sets up a tensor product of quadrature rules in dim dimensions.  Does not
+  compute the tensor product because no order is specified.
+  */
   FullTensorQuadrature(unsigned int                       dim,
                        std::shared_ptr<Quadrature> const& rules);
 
-  FullTensorQuadrature(std::vector<std::shared_ptr<Quadrature>> const& rules);
+  /** Sets up and solves a tensor product of 1d quadrature rules.
+  */
+  FullTensorQuadrature(unsigned int                       dim,
+                       std::shared_ptr<Quadrature> const& rules,
+                       unsigned int                       order);
+
+  /** Sets up a tensor product of quadrature rules with potentially different rules
+      in each dimension.  If the orders row vector is specified, then the tensor
+      product rule is also computed, otherwise an additional call to "Compute" is
+      required.
+  */
+  FullTensorQuadrature(std::vector<std::shared_ptr<Quadrature>> const& rules,
+                       Eigen::RowVectorXi                              orders = Eigen::RowVectorXi());
 
 
   virtual ~FullTensorQuadrature() = default;

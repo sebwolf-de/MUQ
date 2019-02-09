@@ -37,7 +37,7 @@ MonotoneExpansion::MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>
   // rule can integrate exactly a polynomial of order 2N-1
   int numQuadPts = ceil(0.5*(2.0*maxOrder + 1.0));
   GaussQuadrature gqSolver(std::make_shared<Legendre>(), numQuadPts);
-  gqSolver.Compute();
+  gqSolver.Compute(numQuadPts);
 
   quadPts = 0.5*(gqSolver.Points().transpose()+Eigen::VectorXd::Ones(numQuadPts));
   quadWeights = 0.5*gqSolver.Weights();

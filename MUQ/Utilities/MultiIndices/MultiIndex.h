@@ -105,6 +105,9 @@ namespace muq {
       */
       void SetLength(unsigned newLength);
 
+      /** Returns the number of nonzero components in the multiindex.
+      */
+      unsigned int NumNz() const;
 
       /** Get the number of components in the index.  When used to define a
           multivariate polynomial, this will return the dimension of the
@@ -137,7 +140,7 @@ namespace muq {
 
 
     struct MultiPtrComp{
-      bool operator()(std::shared_ptr<MultiIndex> a, std::shared_ptr<MultiIndex> b) const{return (*a)<(*b);};
+      bool operator()(std::shared_ptr<MultiIndex> const& a, std::shared_ptr<MultiIndex> const& b) const{return (*a)<(*b);};
     };
 
   } // namespace Utilities

@@ -15,7 +15,11 @@ namespace Approximation {
   */
   class SmolyakQuadrature : public Quadrature
   {
-    SmolyakQuadrature(std::vector<std::shared_ptr<Quadrature>> scalarRulesIn);
+  public:
+
+    SmolyakQuadrature(unsigned int dim, std::shared_ptr<Quadrature> const& scalarRule);
+    
+    SmolyakQuadrature(std::vector<std::shared_ptr<Quadrature>> const& scalarRulesIn);
 
     virtual ~SmolyakQuadrature() = default;
 
@@ -23,7 +27,7 @@ namespace Approximation {
 
     virtual void Compute(Eigen::RowVectorXi const& orders) override;
 
-    virtual void Compute(std::shared_ptr<MultiIndexSet> const& multis);
+    virtual void Compute(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis);
 
     /** The Smolyak rule is defined as the tensor product of differences
         of 1d quadrature rules
@@ -40,7 +44,7 @@ namespace Approximation {
         This function returns the weights \f$c_{\mathbf{k}}\f$ and is called
         during the call the SmolyakQuadrature::Compute().
     */
-    Eigen::VectorXd ComputeWeights() const;
+    Eigen::VectorXd ComputeWeights(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis) const;
 
     std::shared_ptr<muq::Utilities::MultiIndexSet> BuildMultis(Eigen::RowVectorXi const& orders) const;
   private:

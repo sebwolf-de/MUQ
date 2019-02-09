@@ -81,6 +81,16 @@ bool MultiIndex::SetValue(unsigned ind, unsigned val)
   }
 }
 
+unsigned int MultiIndex::NumNz() const
+{
+    unsigned int numNz = 0;
+    for(auto& part : nzInds)
+      numNz += int(part.second > 0);
+
+    return numNz;
+}
+
+
 unsigned MultiIndex::MultiIndex::GetValue(unsigned ind) const
 {
   if(ind>length){
@@ -145,13 +155,7 @@ bool MultiIndex::operator==(const MultiIndex &b){
 
 bool MultiIndex::operator<(const MultiIndex &b){
 
-  if((nzInds.size()==0)&&(b.nzInds.size()>0)){
-    return true;
-  }else if((b.nzInds.size()==0)&&(nzInds.size()>0)){
-    return false;
-  }else if((nzInds.size()==0)&&(b.nzInds.size()==0)){
-    return false;
-  }else if(totalOrder<b.totalOrder){
+  if(totalOrder<b.totalOrder){
     return true;
   }else if(totalOrder>b.totalOrder){
       return false;

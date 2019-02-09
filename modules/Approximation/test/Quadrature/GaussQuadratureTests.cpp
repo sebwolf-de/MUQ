@@ -15,7 +15,7 @@ using namespace muq::Approximation;
 TEST(Quadrature, PhysicistHermite) {
 
   // polynomial order
-  int polyOrder = 5;
+  int order = 4;
 
   // legendre table for polynomial order n=5
   std::vector<double> gaussPtsTable = {-2.020182870456085632929,
@@ -34,14 +34,14 @@ TEST(Quadrature, PhysicistHermite) {
   auto poly = std::make_shared<PhysicistHermite>();
 
   // Create quadrature object
-  GaussQuadrature gq(poly, polyOrder);
+  GaussQuadrature gq(poly);
 
   // Compute pts and Weights
-  gq.Compute();
+  gq.Compute(order);
   Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
-  for (int i=0; i<polyOrder; i++) {
+  for (int i=0; i<order+1; i++) {
 
     EXPECT_NEAR(gaussPts(i), gaussPtsTable[i], 1e-9);
     EXPECT_NEAR(gaussWts(i), gaussWtsTable[i], 1e-9);
@@ -53,7 +53,7 @@ TEST(Quadrature, PhysicistHermite) {
 TEST(Quadrature, ProbabilistHermite) {
 
   // polynomial order
-  int polyOrder = 7;
+  int order = 6;
 
   // legendre table for polynomial order n=7
   std::vector<double> gaussPtsTable = {-3.750439717725742,
@@ -76,14 +76,14 @@ TEST(Quadrature, ProbabilistHermite) {
   auto poly = std::make_shared<ProbabilistHermite>();
 
   // Create quadrature object
-  GaussQuadrature gq(poly, polyOrder);
+  GaussQuadrature gq(poly);
 
   // Compute pts and Weights
-  gq.Compute();
+  gq.Compute(order);
   Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
-  for (int i=0; i<polyOrder; i++) {
+  for (int i=0; i<order+1; i++) {
 
     EXPECT_NEAR(gaussPts(i), gaussPtsTable[i], 1e-9);
     EXPECT_NEAR(gaussWts(i), gaussWtsTable[i], 1e-9);
@@ -95,7 +95,7 @@ TEST(Quadrature, ProbabilistHermite) {
 TEST(Quadrature, Legendre) {
 
   // polynomial order
-  int polyOrder = 5;
+  int order = 4;
 
   // legendre table for polynomial order n=5
   std::vector<double> gaussPtsTable = {-0.9061798459386639927976,
@@ -114,14 +114,14 @@ TEST(Quadrature, Legendre) {
   auto poly = std::make_shared<Legendre>();
 
   // Create quadrature object
-  GaussQuadrature gq(poly, polyOrder);
+  GaussQuadrature gq(poly);
 
   // Compute pts and Weights
-  gq.Compute();
+  gq.Compute(order);
   Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
-  for (int i=0; i<polyOrder; i++) {
+  for (int i=0; i<order+1; i++) {
 
     EXPECT_NEAR(gaussPts(i), gaussPtsTable[i], 1e-9);
     EXPECT_NEAR(gaussWts(i), gaussWtsTable[i], 1e-9);
@@ -133,7 +133,7 @@ TEST(Quadrature, Legendre) {
 TEST(Quadrature, LaguerreDefault) {
 
   // polynomial order
-  int polyOrder = 5;
+  int order = 4;
 
   // legendre table for polynomial order n=5
   std::vector<double> gaussPtsTable = {0.2635603197181409102031,
@@ -152,14 +152,14 @@ TEST(Quadrature, LaguerreDefault) {
   auto poly = std::make_shared<Laguerre>();
 
   // Create quadrature object
-  GaussQuadrature gq(poly, polyOrder);
+  GaussQuadrature gq(poly);
 
   // Compute pts and Weights
-  gq.Compute();
+  gq.Compute(order);
   Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
-  for (int i=0; i<polyOrder; i++) {
+  for (int i=0; i<order+1; i++) {
 
     EXPECT_NEAR(gaussPts(i), gaussPtsTable[i], 1e-9);
     EXPECT_NEAR(gaussWts(i), gaussWtsTable[i], 1e-9);
@@ -171,7 +171,7 @@ TEST(Quadrature, LaguerreDefault) {
 TEST(Quadrature, Laguerre) {
 
   // polynomial order
-  int polyOrder = 5;
+  int order = 4;
 
   // legendre table for polynomial order n=5
   std::vector<double> gaussPtsTable = {1.490554945186828158609,
@@ -193,14 +193,14 @@ TEST(Quadrature, Laguerre) {
   auto poly = std::make_shared<Laguerre>(alpha);
 
   // Create quadrature object
-  GaussQuadrature gq(poly, polyOrder);
+  GaussQuadrature gq(poly);
 
   // Compute pts and Weights
-  gq.Compute();
+  gq.Compute(order);
   Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
-  for (int i=0; i<polyOrder; i++) {
+  for (int i=0; i<order+1; i++) {
 
     EXPECT_NEAR(gaussPts(i), gaussPtsTable[i], 1e-9);
     EXPECT_NEAR(gaussWts(i), gaussWtsTable[i], 1e-9);
@@ -212,7 +212,7 @@ TEST(Quadrature, Laguerre) {
 TEST(Quadrature, JacobiDefault) {
 
   // polynomial order
-  int polyOrder = 5;
+  int order = 4;
 
   // legendre table for polynomial order n=5
   std::vector<double> gaussPtsTable = {-0.830223896278566929872,
@@ -231,14 +231,14 @@ TEST(Quadrature, JacobiDefault) {
   auto poly = std::make_shared<Jacobi>();
 
   // Create quadrature object
-  GaussQuadrature gq(poly, polyOrder);
+  GaussQuadrature gq(poly);
 
   // Compute pts and Weights
-  gq.Compute();
+  gq.Compute(order);
   Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
-  for (int i=0; i<polyOrder; i++) {
+  for (int i=0; i<order+1; i++) {
 
     EXPECT_NEAR(gaussPts(i), gaussPtsTable[i], 1e-9);
     EXPECT_NEAR(gaussWts(i), gaussWtsTable[i], 1e-9);
@@ -250,7 +250,7 @@ TEST(Quadrature, JacobiDefault) {
 TEST(Quadrature, Jacobi) {
 
   // polynomial order
-  int polyOrder = 5;
+  int order = 4;
 
   // legendre table for polynomial order n=5
   std::vector<double> gaussPtsTable = {-0.6904577501267610633887,
@@ -273,14 +273,14 @@ TEST(Quadrature, Jacobi) {
   auto poly = std::make_shared<Jacobi>(alpha, beta);
 
   // Create quadrature object
-  GaussQuadrature gq(poly, polyOrder);
+  GaussQuadrature gq(poly);
 
   // Compute pts and Weights
-  gq.Compute();
+  gq.Compute(order);
   Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
-  for (int i=0; i<polyOrder; i++) {
+  for (int i=0; i<order+1; i++) {
 
     EXPECT_NEAR(gaussPts(i), gaussPtsTable[i], 1e-9);
     EXPECT_NEAR(gaussWts(i), gaussWtsTable[i], 1e-9);
