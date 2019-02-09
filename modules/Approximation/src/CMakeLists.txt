@@ -17,7 +17,7 @@ CreateCompileGroup(
 	"Polynomial regression (global and local)"
 	muqApproximation
 	"UTILITIES_MULTIINDEX;MODELING_FLANN;MODELING_CORE;APPROXIMATION_POLYNOMIALS;OPTIMIZATION_CORE"
-	""
+	"NLOPT"
 	""
 	Regression/Regression.cpp
 	Regression/LocalRegression.cpp
