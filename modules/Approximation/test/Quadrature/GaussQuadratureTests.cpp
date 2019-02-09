@@ -92,6 +92,45 @@ TEST(Quadrature, ProbabilistHermite) {
 
 }
 
+TEST(Quadrature, LegendreFromString) {
+
+  // polynomial order
+  int order = 4;
+
+  // legendre table for polynomial order n=5
+  std::vector<double> gaussPtsTable = {-0.9061798459386639927976,
+                                       -0.5384693101056830910363,
+                                       0.0,
+                                       0.5384693101056830910363,
+                                       0.9061798459386639927976};
+
+  std::vector<double> gaussWtsTable = {0.2369268850561890875143,
+                                       0.4786286704993664680413,
+                                       0.5688888888888888888889,
+                                       0.4786286704993664680413,
+                                       0.2369268850561890875143};
+
+  // create a Legendre object
+  auto poly = OrthogonalPolynomial::Construct("Legendre");
+
+  // Create quadrature object
+  GaussQuadrature gq(poly);
+
+  // Compute pts and Weights
+  gq.Compute(order);
+  Eigen::VectorXd gaussPts = gq.Points().transpose();
+  Eigen::VectorXd gaussWts = gq.Weights();
+
+  for (int i=0; i<order+1; i++) {
+
+    EXPECT_NEAR(gaussPts(i), gaussPtsTable[i], 1e-9);
+    EXPECT_NEAR(gaussWts(i), gaussWtsTable[i], 1e-9);
+
+  }
+
+}
+
+
 TEST(Quadrature, Legendre) {
 
   // polynomial order

@@ -11,6 +11,11 @@ using namespace muq::Modeling;
 using namespace muq::Approximation;
 
 
+std::shared_ptr<OrthogonalPolynomial> OrthogonalPolynomial::Construct(std::string const& polyName)
+{
+  return std::dynamic_pointer_cast<OrthogonalPolynomial>(IndexedScalarBasis::Construct(polyName));
+}
+
 
 double OrthogonalPolynomial::Normalization(unsigned int polyOrder) const {
 
