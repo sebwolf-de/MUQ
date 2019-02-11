@@ -11,7 +11,10 @@ namespace muq {
   namespace Approximation {
 
 /**
- * The simplest possible quadrature rule, a full tensor expansion.
+   @class FullTensorQuadrature
+   @ingroup Quadrature
+   @brief Multivariate quadrature rule defined by the tensor product of 1d rules.
+   @details One of the most straightforward multivariate quadrature rules, a full tensor expansion.
  * Creates a the complete tensor product of the points of the given order
  * 1D quadrature rules for each dimension. The 1D quadrature order can
  * be isotropic or vary per dimension. Note that an isotropic order

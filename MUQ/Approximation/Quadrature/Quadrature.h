@@ -12,7 +12,7 @@ namespace muq {
     @defgroup Quadrature
     @brief Tools for constructing univariate and multivariate quadrature rules.
     @details
-    <b> Gauss Quadrature </b>
+    \section gsec Gauss Quadrature
     One dimensional quadrature rules attempt to approximate a weighted integral
     of the form
     \f[
@@ -50,7 +50,7 @@ namespace muq {
     \f$\exp\left[-\frac{1}{2}x^2\right] \f$ | \f$(-\infty, \infty)\f$ | Probabilist Hermite | `muq::Approximation::ProbabilistHermite`
     \f$\exp\left[-x^2\right] \f$ | \f$(-\infty, \infty)\f$ | Physicist Hermite | `muq::Approximation::PhysicistHermite`
     \f$\exp\left[-x\right] \f$  | \f$[0, \infty)\f$ | Laguerre | `muq::Approximation::Laguerre`
-    \f$(1-x)^a (1+x)^b          | \f$[-1,1]\f$      | Jacobi   | `muq::Approximation::Jacobi`
+    \f$(1-x)^a (1+x)^b\f$          | \f$[-1,1]\f$      | Jacobi   | `muq::Approximation::Jacobi`
 
     To construct a Gauss quadrature rule, MUQ requires the polynomial family to be
     defined first.  See below for examples.  Note that behind the scenes, MUQ
@@ -100,17 +100,17 @@ namespace muq {
     GaussQuadrature gaussQuad(poly);
     @endcode
 
-    <b> Other 1D Quadrature Rules </b>
-    The nexted Clenshaw Curtis quadrature:
+    \section otherquad Other 1D Quadrature Rules
+    The nested Clenshaw Curtis quadrature:
     @code{.cpp}
     unsigned int numPts = 10;
     ClenshawCurtisQuadrature ccQuad;
     ccQuad.Compute(numPts);
     @endcode
-    
-    <b> Tensor Product Rules </b>
 
-    <b> Smolyak Rules </b>
+    \section tensor Tensor Product Rules
+
+    \section smolyak Smolyak Rules
     */
 
     /**

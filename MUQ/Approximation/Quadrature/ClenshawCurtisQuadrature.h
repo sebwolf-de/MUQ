@@ -6,6 +6,10 @@
 namespace muq {
 namespace Approximation {
 
+  /** @class ClenshawCurtisQuadrature
+      @ingroup Quadrature
+      @brief Nested 1d Clenshaw Curtis rule
+  */
   class ClenshawCurtisQuadrature : public Quadrature {
   public:
 
