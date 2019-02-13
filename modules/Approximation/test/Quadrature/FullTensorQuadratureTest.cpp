@@ -9,7 +9,10 @@
 #include "MUQ/Approximation/Quadrature/FullTensorQuadrature.h"
 #include "MUQ/Approximation/Quadrature/SmolyakQuadrature.h"
 
+#include "MUQ/Utilities/MultiIndices/MultiIndexFactory.h"
+
 using namespace muq::Approximation;
+using namespace muq::Utilities;
 
 ///Regression test for a 6-dim mixed var type and mixed order full tensor quadrature grid
 TEST(Quadrature, FullTensorSquareTest)
@@ -35,6 +38,24 @@ TEST(Quadrature, FullTensorSquareTest)
   EXPECT_EQ(2,quad.Points().cols());
 }
 
+TEST(Quadrature, SmolyakWeights)
+{
+  unsigned int dim = 2;
+  unsigned int order = 1;
+
+  auto legendrePoly = std::make_shared<Legendre>();
+  auto gaussLegendre = std::make_shared<GaussQuadrature>(legendrePoly);
+
+  SmolyakQuadrature quad(dim, gaussLegendre);
+
+  auto multis = MultiIndexFactory::CreateTotalOrder(dim, order);
+
+  Eigen::VectorXd weights = quad.ComputeWeights(multis);
+  ASSERT_EQ(3,weights.size());
+  EXPECT_DOUBLE_EQ(-1.0, weights(0));
+  EXPECT_DOUBLE_EQ(1.0, weights(1));
+  EXPECT_DOUBLE_EQ(1.0, weights(2));
+}
 TEST(Quadrature, SmolyakSquareTest)
 {
   unsigned int dim = 4;

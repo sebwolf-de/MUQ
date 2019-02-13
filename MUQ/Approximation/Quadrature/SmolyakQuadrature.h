@@ -18,7 +18,7 @@ namespace Approximation {
   public:
 
     SmolyakQuadrature(unsigned int dim, std::shared_ptr<Quadrature> const& scalarRule);
-    
+
     SmolyakQuadrature(std::vector<std::shared_ptr<Quadrature>> const& scalarRulesIn);
 
     virtual ~SmolyakQuadrature() = default;
@@ -47,7 +47,24 @@ namespace Approximation {
     Eigen::VectorXd ComputeWeights(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis) const;
 
     std::shared_ptr<muq::Utilities::MultiIndexSet> BuildMultis(Eigen::RowVectorXi const& orders) const;
+    
   private:
+
+    unsigned int nchoosek(unsigned int n, unsigned int k)
+    {
+        if (k == 0) return 1;
+        if (k > n / 2) return nchoosek(n, n - k);
+
+        unsigned int res = 1;
+
+        for (int kk = 1; kk <= k; ++kk)
+        {
+            res *= n - kk + 1;
+            res /= kk;
+        }
+
+        return res;
+    }
 
     std::vector<std::shared_ptr<Quadrature>> scalarRules;
 

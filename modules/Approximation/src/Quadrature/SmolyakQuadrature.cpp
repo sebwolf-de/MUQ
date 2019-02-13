@@ -41,15 +41,15 @@ std::shared_ptr<MultiIndexSet> SmolyakQuadrature::BuildMultis(Eigen::RowVectorXi
 
   auto multis = MultiIndexFactory::CreateTotalOrder(dim,minOrder);
 
-  // Add other terms to get the right order
-  for(int i=0; i<dim; ++i){
-    for(int p=minOrder+1; p<=orders(i); ++p)
-    {
-      auto newMulti = std::make_shared<MultiIndex>(dim);
-      newMulti->SetValue(i,p);
-      multis += newMulti;
-    }
-  }
+  // // Add other terms to get the right order
+  // for(int i=0; i<dim; ++i){
+  //   for(int p=minOrder+1; p<=orders(i); ++p)
+  //   {
+  //     auto newMulti = std::make_shared<MultiIndex>(dim);
+  //     newMulti->SetValue(i,p);
+  //     multis += newMulti;
+  //   }
+  // }
 
   return multis;
 }

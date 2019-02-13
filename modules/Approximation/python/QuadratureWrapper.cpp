@@ -39,7 +39,14 @@ void muq::Approximation::PythonBindings::QuadratureWrapper(py::module &m)
   py::class_<ClenshawCurtisQuadrature, Quadrature, std::shared_ptr<ClenshawCurtisQuadrature>> ccQuad(m,"ClenshawCurtisQuadrature");
   ccQuad
     .def(py::init<>())
+    .def(py::init<bool>())
     .def("Compute", &ClenshawCurtisQuadrature::Compute);
+
+  py::class_<FullTensorQuadrature, Quadrature, std::shared_ptr<FullTensorQuadrature>> tensQuad(m,"FullTensorQuadrature");
+  tensQuad
+    .def(py::init<unsigned int, std::shared_ptr<Quadrature>>())
+    .def(py::init<unsigned int, std::shared_ptr<Quadrature>, unsigned int>())
+    .def(py::init<std::vector<std::shared_ptr<Quadrature>>, Eigen::RowVectorXi>());
 
   py::class_<SmolyakQuadrature, Quadrature, std::shared_ptr<SmolyakQuadrature>> smolyQuad(m,"SmolyakQuadrature");
   smolyQuad
