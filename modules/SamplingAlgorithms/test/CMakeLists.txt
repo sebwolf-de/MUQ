@@ -1,7 +1,6 @@
 CreateTestGroup(
     SAMPLING_ALGORITHM
 
-    SamplingProblemTests.cpp
     SampleCollectionTests.cpp
     MarkovChainTests.cpp
 
@@ -11,17 +10,27 @@ CreateTestGroup(
     #ImportanceSamplingTests.cpp
     MCMCTests.cpp
     CrankNicolsonTests.cpp
+)
 
-    ExpensiveSamplingProblemTests.cpp
+CreateTestGroup(
+  SAMPLING_PROBLEMS
+
+  SamplingProblemTests.cpp
+)
+
+CreateTestGroup(
+  FANCY_SAMPLING_PROBLEMS
+
+  ExpensiveSamplingProblemTests.cpp
 )
 
 CreateParallelTestGroup(
     SAMPLING_ALGORITHM
 
     SamplingStateParallelTests.cpp
-    
+
     DistributedCollectionTests.cpp
-    
+
     GMHKernelParallelTests.cpp
 
     SingleChainMCMCParallelTests.cpp

@@ -11,10 +11,17 @@ CreateTestGroup(
     IdentityPieceTests.cpp
 
     MultiLogisticTest.cpp
+)
+
+CreateTestGroup(
+  MODELING_STAN
+  CwiseOperatorTests/UnaryOperatorTest.cpp
+)
+
+CreateTestGroup(
+    MODELING_FLANN
 
     FlannTest/FlannCacheTests.cpp
-
-    CwiseOperatorTests/UnaryOperatorTest.cpp
 )
 
 CreateTestGroup(
@@ -34,12 +41,6 @@ CreateTestGroup(
 
     ODETests.cpp
     RootfindingIVPTests.cpp
-)
-
-CreateTestGroup(
-    MODELING_FLANN
-
-    FlannTest/FlannCacheTests.cpp
 )
 
 CreateTestGroup(

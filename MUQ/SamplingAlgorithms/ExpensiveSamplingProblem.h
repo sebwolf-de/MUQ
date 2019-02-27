@@ -37,6 +37,9 @@ namespace muq {
 
       unsigned int CacheSize() const;
 
+
+      virtual void AddOptions(boost::property_tree::ptree & pt) const override;
+
     private:
 
       /// Set up the sampling problem

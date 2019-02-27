@@ -219,3 +219,8 @@ void ExpensiveSamplingProblem::UpdateGlobalRadius() {
 }
 
 unsigned int ExpensiveSamplingProblem::CacheSize() const { return reg->CacheSize(); }
+
+
+void ExpensiveSamplingProblem::AddOptions(boost::property_tree::ptree & pt) const {
+  pt.put("ReevaluateAcceptedDensity", true);
+}

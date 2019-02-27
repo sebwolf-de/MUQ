@@ -7,6 +7,7 @@
 #include <memory>
 
 #include <Eigen/Core>
+#include <boost/property_tree/ptree.hpp>
 
 namespace muq{
   namespace SamplingAlgorithms{
@@ -29,8 +30,8 @@ namespace muq{
     public:
 
       enum SampleType {
-	Proposed,
-	Accepted
+	       Proposed,
+	        Accepted
       };
 
       inline AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn) : numBlocks(blockSizesIn.size()),
@@ -41,8 +42,15 @@ namespace muq{
 
       virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) = 0;
 
+      /** Sometimes, there will be problem-specific options that need to be passed
+          to the SamplingAlgorithm.  This function adds any of those options to the
+          given property_tree.
+      */
+      virtual void AddOptions(boost::property_tree::ptree & pt) const{};
+
       const int numBlocks;
       const Eigen::VectorXi blockSizes;
+
     };
 
   }
