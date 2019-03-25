@@ -118,6 +118,11 @@ void SingleChainMCMC::Setup(pt::ptree pt, std::shared_ptr<AbstractSamplingProble
   Setup(pt, kernelVec);
 }
 
+void SingleChainMCMC::PrintStatus(std::string prefix) {
+  PrintStatus(prefix, numSamps+1);
+}
+
+
 void SingleChainMCMC::PrintStatus(std::string prefix, unsigned int currInd) const
 {
   std::cout << prefix << int(std::floor(double((currInd - 1) * 100) / double(numSamps))) << "% Complete" << std::endl;
