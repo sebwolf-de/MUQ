@@ -88,7 +88,7 @@ TEST(UtilityTest, Surrogate) {
   auto evidence = std::make_shared<Evidence>(prior, like, prior, pt.get_child("Evidence"));
 
   pt.put("OEDResidual.NumImportanceSamples", 25);
-  auto resid = std::make_shared<OEDResidual>(like, evidence, like, pt.get_child("OEDResidual"));
+  auto resid = std::make_shared<OEDResidual>(like, evidence, pt.get_child("OEDResidual"));
 
   pt.put("Utility.NumImportanceSamples", 25);
   pt.put("Utility.LocalRegression", "MyLocalReg");

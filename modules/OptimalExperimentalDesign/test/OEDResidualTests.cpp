@@ -39,7 +39,7 @@ TEST(OEDResidualTest, Basic) {
   auto evidence = std::make_shared<Evidence>(prior, like, prior, pt.get_child("Evidence"));
 
   pt.put("OEDResidual.NumImportanceSamples", 200);
-  auto resid = std::make_shared<OEDResidual>(like, evidence, like, pt.get_child("OEDResidual"));
+  auto resid = std::make_shared<OEDResidual>(like, evidence, pt.get_child("OEDResidual"));
 
   const Eigen::VectorXd x = Eigen::VectorXd::Random(1); // parameter
   const Eigen::VectorXd d = Eigen::VectorXd::Random(1); // design

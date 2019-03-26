@@ -102,8 +102,6 @@ Eigen::VectorXd LocalRegression::Add(Eigen::VectorXd const& input) const {
   }
 #endif
 
-  //std::cout << "DONE WITH ADD" << std::endl;
-
   return result;
 }
 
@@ -142,35 +140,24 @@ std::pair<double, double> LocalRegression::ErrorIndicator(Eigen::VectorXd const&
   return ErrorIndicator(input, neighbors);
 }
 
+unsigned int LocalRegression::Order() const { return reg->order; }
+
 std::pair<double, double> LocalRegression::ErrorIndicator(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd> const& neighbors) const {
   assert(neighbors.size()==kn);
 
   // create a local factorial function (caution: may be problematic if n is sufficiently large)
-  std::function<int(int)> factorial = [&factorial](int const n) { return ((n==2 || n==1)? n : n*factorial(n-1)); };
-
-  // compute the center
-  Eigen::VectorXd center = Eigen::VectorXd::Zero(input.size());
-  for( auto n : neighbors) { center += n; }
-  center /= (double)neighbors.size();
-  //std::cout << "center: " << center.transpose() << std::endl;
+  //std::function<int(int)> factorial = [&factorial](int const n) { return ((n==2 || n==1)? n : n*factorial(n-1)); };
 
   // compute the radius
-  /*double radius = 0.0;
-  for( auto n : neighbors) { radius = std::max(radius, (n-input).norm()); }*/
-  Eigen::ArrayXd radius = Eigen::ArrayXd::Zero(input.size());
+  double delta = 0.0;
+  for( auto n : neighbors) { delta = std::max(delta, (n-input).norm()); }
+  /*Eigen::ArrayXd radius = Eigen::ArrayXd::Zero(input.size());
   for( auto n : neighbors) {
     //std::cout << n.transpose() << std::endl;
-    radius = radius.max((n-center).array().abs());
-  }
+    radius = radius.max((n-input).array().abs());
+  }*/
 
-  //std::cout << "radius: " << radius.transpose() << std::endl;
-  //std::cout << "radius: " << radius.matrix().norm() << std::endl;
-  //std::cout << "radius: " << radius.matrix().lpNorm<Eigen::Infinity>() << std::endl;
-
-  const double delta = radius.matrix().lpNorm<Eigen::Infinity>();
-
-  // compute the error indicator
-  return std::pair<double, double>(std::pow(delta, (double)reg->order+1.0)/(double)factorial(reg->order+1), delta);
+  return std::pair<double, double>(((double)reg->order+1.0)*std::log(delta), delta);
 }
 
 void LocalRegression::NearestNeighbors(Eigen::VectorXd const& input, std::vector<Eigen::VectorXd>& neighbors) const {

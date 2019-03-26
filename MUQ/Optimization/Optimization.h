@@ -24,7 +24,7 @@ namespace muq {
 	 @param[in] cost The cost function
 	 @param[in] pt Parameters for the optimization problem
        */
-      Optimization(std::shared_ptr<CostFunction> cost, boost::property_tree::ptree const& pt);
+      Optimization(std::shared_ptr<CostFunction> cost, boost::property_tree::ptree pt);
 
       virtual ~Optimization();
 

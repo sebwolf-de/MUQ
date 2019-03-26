@@ -44,6 +44,13 @@ namespace muq {
       */
       ImportanceSampling(std::shared_ptr<muq::Modeling::ModPiece> const& target, std::shared_ptr<muq::Modeling::Distribution> const& bias, std::vector<Eigen::VectorXd> hyperparameters, boost::property_tree::ptree const& pt);
 
+      /**
+      @param[in] target The target distribution
+      @param[in] hyperparameters Hyperparameters for the biasing distribution
+      @param[in] pt Options for the importance sampler
+      */
+      ImportanceSampling(std::shared_ptr<muq::Modeling::Distribution> const& target, std::vector<Eigen::VectorXd> hyperparameters, boost::property_tree::ptree const& pt);
+
       virtual ~ImportanceSampling() = default;
 
     private:

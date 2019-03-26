@@ -28,7 +28,7 @@ void CostFunction::GradientImpl(unsigned int const inputDimWrt,
 
 double
 CostFunction::Cost(muq::Modeling::ref_vector<Eigen::VectorXd> const& input) {
-  return Evaluate(input).at(0) (0);
+    return Evaluate(input).at(0) (0);
 }
 
 Eigen::VectorXd const&

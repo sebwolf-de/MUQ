@@ -13,8 +13,6 @@
 #include "MUQ/Modeling/WorkGraph.h"
 #include "MUQ/Modeling/Distributions/Distribution.h"
 
-#include "MUQ/Approximation/Regression/LocalRegression.h"
-
 #include "MUQ/OptimalExperimentalDesign/OEDResidual.h"
 
 namespace muq {
@@ -44,6 +42,10 @@ namespace muq {
 #endif
 
       virtual ~Utility() = default;
+
+      unsigned int TotalRefinements() const;
+
+      Eigen::VectorXi RunningRefinements() const;
     private:
       void CreateGraph(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<muq::Modeling::Distribution> const& likelihood, std::shared_ptr<muq::Modeling::Distribution> const& evidence);
 
@@ -55,15 +57,17 @@ namespace muq {
 
       void EvaluateSurrogate(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs);
 
-      void RandomlyRefineNear(Eigen::VectorXd const& xd, double const radius) const;
+      void RandomlyRefineNear(Eigen::VectorXd const& xd, double const radius);
 
-      void RefineAt(Eigen::VectorXd const& pnt, double const radius) const;
+      void RefineAt(Eigen::VectorXd const& pnt, double const radius);
 
       const unsigned int numImportanceSamples;
       const double gamma0 = 1.0;
       const double radius0 = 1.0;
 
       std::shared_ptr<muq::Modeling::Distribution> biasing;
+
+      const bool runningEstimate = false;
 
 #if MUQ_HAS_PARCER==1
       std::shared_ptr<parcer::Communicator> comm;
@@ -73,7 +77,8 @@ namespace muq {
 
       std::shared_ptr<muq::Approximation::LocalRegression> reg;
 
-      std::shared_ptr<muq::Modeling::ModPiece> TEST;
+      unsigned int totalRefinements = 0;
+      Eigen::VectorXi runningRefinements;
     };
   } // namespace OptimalExperimentalDesign
 } // namespace muq

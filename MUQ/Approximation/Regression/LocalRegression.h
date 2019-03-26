@@ -138,6 +138,9 @@ namespace muq {
       /// Clear the cache
       void ClearCache();
 
+      /// Polynomial order
+      unsigned int Order() const;
+
     private:
 
       virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) override;

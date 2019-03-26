@@ -12,7 +12,7 @@ NLoptOptimizer::NLoptOptimizer(std::shared_ptr<CostFunction> cost,
   Optimizer(cost, pt),
   algorithm(NLOptAlgorithm(pt.get<std::string>("Algorithm"))),
   minimize(pt.get<bool>("Minimize", true)) {
-  opt = cost;
+    opt = cost;
 }
 
 NLoptOptimizer::~NLoptOptimizer() {}
@@ -95,7 +95,6 @@ void NLoptOptimizer::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   Eigen::VectorXd& xopt = boost::any_cast<Eigen::VectorXd&>(outputs.at(0));
 
   double minf;
-
   const nlopt_result check = nlopt_optimize(solver, xopt.data(), &minf);
 
   if( check<0 )

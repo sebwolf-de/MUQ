@@ -9,11 +9,9 @@ ExpectedModPieceValue::ExpectedModPieceValue(std::shared_ptr<muq::Modeling::ModP
   assert(f->numOutputs==1);
 }
 
-Eigen::VectorXd const& ExpectedModPieceValue::operator()(SamplingState const& a) {
-  assert(f->numInputs==a.state.size()+metains.size());
-  for( unsigned int i=0; i<a.state.size(); ++i ) { assert(a.state[i].size()==f->inputSizes(i)); }
+void ExpectedValueInputs(SamplingState const& a, std::vector<std::string> const& metains, std::vector<Eigen::VectorXd>& ins) {
+  ins = a.state;
 
-  std::vector<Eigen::VectorXd> ins = a.state;
   for( auto metain : metains ) {
     auto it = a.meta.find(metain);
     assert(it!=a.meta.end());
@@ -51,6 +49,14 @@ Eigen::VectorXd const& ExpectedModPieceValue::operator()(SamplingState const& a)
       continue;
     }
   }
+}
+
+Eigen::VectorXd const& ExpectedModPieceValue::operator()(SamplingState const& a) {
+  assert(f->numInputs==a.state.size()+metains.size());
+  for( unsigned int i=0; i<a.state.size(); ++i ) { assert(a.state[i].size()==f->inputSizes(i)); }
+
+  std::vector<Eigen::VectorXd> ins;
+  ExpectedValueInputs(a, metains, ins);
 
   return f->Evaluate(ins) [0];
 }
@@ -461,4 +467,26 @@ Eigen::VectorXd SampleCollection::ExpectedValue(std::shared_ptr<muq::Modeling::M
 
   std::tie(weight, val) = RecursiveSum(samples.begin(), samples.end(), op);
   return (val / weight).eval();
+}
+
+std::vector<Eigen::VectorXd> SampleCollection::RunningExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains) const {
+  const unsigned int numSamps = size();
+  std::vector<Eigen::VectorXd> runningExpected(numSamps);
+
+  std::shared_ptr<SamplingState> s = at(0);
+  double totWeight = s->weight;
+
+  std::vector<Eigen::VectorXd> ins;
+  ExpectedValueInputs(*s, metains, ins);
+
+  runningExpected[0] = totWeight*f->Evaluate(ins) [0];
+  for( unsigned int i=1; i<numSamps; ++i ) {
+    s = at(i);
+    ExpectedValueInputs(*s, metains, ins);
+    totWeight += s->weight;
+
+    runningExpected[i] = ((totWeight-s->weight)*runningExpected[i-1] + s->weight*f->Evaluate(ins) [0])/totWeight;
+  }
+
+  return runningExpected;
 }

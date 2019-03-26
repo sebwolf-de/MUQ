@@ -19,19 +19,34 @@ Regression::Regression(pt::ptree const& pt) : WorkPiece(), order(pt.get<unsigned
   assert(alpha>0.0);
   poly = IndexedScalarBasis::Construct(pt.get<std::string>("PolynomialBasis", "Legendre"));
 
-  multi = std::make_shared<MultiIndexSet>(inputDim);
-  for( unsigned int i=1; i<=order; ++i ) {
-    std::cout << "order: " << i << std::endl;
-    for( unsigned int d=0; d<inputDim; ++d ) {
-      auto singleIndex = MultiIndexFactory::CreateSingleTerm(inputDim, d, i);
-      multi->AddActive(singleIndex);
-      std::cout << "\tdimension: " << d << std::endl;
-    }
-  }
-  std::cout << "size: " << multi->Size() << std::endl;
-
   // initalize the multi-index
-  //multi = MultiIndexFactory::CreateTotalOrder(inputDim, order);
+  const std::string type = pt.get<std::string>("ExpansionType", "TotalOrder");
+  if( type=="TotalOrder" ) {
+    multi = MultiIndexFactory::CreateTotalOrder(inputDim, order);
+  } else if( type=="Hyperbolic" ) {
+    const double q = pt.get<double>("NormScale", 1.0);
+    multi = MultiIndexFactory::CreateHyperbolic(inputDim, order, q);
+  } else if( type=="Diagonal" ) {
+    multi = std::make_shared<MultiIndexSet>(inputDim);
+
+    // add a constant term
+    std::shared_ptr<MultiIndex> constantIndex = std::make_shared<MultiIndex>(inputDim);
+    multi->AddActive(constantIndex);
+
+    // add the higher order terms
+    for( unsigned int i=1; i<=order; ++i ) {
+      for( unsigned int d=0; d<inputDim; ++d ) {
+        auto singleIndex = MultiIndexFactory::CreateSingleTerm(inputDim, d, i);
+        multi->AddActive(singleIndex);
+      }
+    }
+  } else {
+    std::cerr << std::endl;
+    std::cerr << "ERROR: invalid polynomial expansion type in Regression.cpp" << std::endl;
+    std::cerr << "\tChoose from: 'TotalOrder', 'Hyperbolic', or 'Diagonal'" << std::endl;
+    std::cerr << std::endl;
+    assert(false);
+  }
 
   // set algorithm parameters for poisedness optimization with default values
   optPt.put("Ftol.AbsoluteTolerance", pt.get<double>("PoisednessConstant.Ftol.AbsoluteTolerance", 1.0e-8));
@@ -187,16 +202,6 @@ Eigen::ArrayXd Regression::CenterPoints(std::vector<Eigen::VectorXd>& xs, Eigen:
       *it -= center;
     }
   }
-
-  // reset the radius
-  /*double radius = 0.0;
-  for( unsigned int i=0; i<kn; ++i ) {
-    // set the radius to the largest distance from the center
-    radius = std::fmax(radius, xs[i].norm());
-  }
-
-  // loop through all of the input points to normalize by the radius
-  for( auto it=xs.begin(); it!=xs.end(); ++it ) { *it /= radius; }*/
 
   // reset the radius
   Eigen::ArrayXd radius = Eigen::ArrayXd::Zero(center.size());

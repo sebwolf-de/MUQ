@@ -20,20 +20,35 @@ namespace muq {
 	 @param[in] target The target distribution
 	 @param[in] pt Options for the sampling problem
        */
-      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree pt);
+      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& target, boost::property_tree::ptree pt);
+
+      /**
+   @param[in] target The target distribution
+   @param[in] centroid The centroid of the distribution
+   @param[in] pt Options for the sampling problem
+       */
+      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& target, Eigen::VectorXd const& centroid, boost::property_tree::ptree pt);
 
 #if MUQ_HAS_PARCER
       /**
+    @param[in] target The target distribution
+    @param[in] pt Options for the sampling problem
+    @param[in] comm Parallel communicator for regression
+      */
+      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& target, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> comm);
+
+      /**
 	 @param[in] target The target distribution
+   @param[in] centroid The centroid of the distribution
 	 @param[in] pt Options for the sampling problem
 	 @param[in] comm Parallel communicator for regression
        */
-      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> comm);
+      ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& target, Eigen::VectorXd const& centroid, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> comm);
 #endif
 
-      ~ExpensiveSamplingProblem() = default;
+      virtual ~ExpensiveSamplingProblem() = default;
 
-      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) override;
+      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> const& state, AbstractSamplingProblem::SampleType type) override;
 
       unsigned int CacheSize() const;
 
@@ -54,7 +69,7 @@ namespace muq {
        */
       double RefineSurrogate(
         unsigned int const step,
-        std::shared_ptr<SamplingState> state,
+        std::shared_ptr<SamplingState> const& state,
         std::vector<Eigen::VectorXd>& neighbors,
         std::vector<Eigen::VectorXd>& results);
 
@@ -66,7 +81,7 @@ namespace muq {
      \return The poisedness constant \f$\Lambda\f$
          */
         double RefineSurrogate(
-          std::shared_ptr<SamplingState> state,
+          std::shared_ptr<SamplingState> const& state,
           double const radius,
           std::vector<Eigen::VectorXd>& neighbors,
           std::vector<Eigen::VectorXd>& results);
@@ -92,7 +107,7 @@ namespace muq {
         @param[out] results The log-target at the nearest neighbors
       */
       void CheckNeighbors(
-        std::shared_ptr<SamplingState> state,
+        std::shared_ptr<SamplingState> const& state,
         std::vector<Eigen::VectorXd>& neighbors,
         std::vector<Eigen::VectorXd>& results) const;
 
@@ -100,21 +115,22 @@ namespace muq {
       /**
         @param[in] state If we do not have enough points, sample from a standard Gaussian centered at this point
       */
-      void CheckNumNeighbors(std::shared_ptr<SamplingState> state);
-
-      /**
-      	 Update the global radius: the max distance between the cache centroid and a point in the cache.
-       */
-      void UpdateGlobalRadius();
+      void CheckNumNeighbors(std::shared_ptr<SamplingState> const& state);
 
       /// Compute the error threshold
       /**
-        @param[in] step The current MCMC step
-        @param[in] radius The distance from the centroid of the evaluated points
-        @param[in] approxLogTarg The value of the surrogate model
-        \return first: the error scaling, second: the error scaling exponent, third: the error indicator
+        @param[in] x The state of the MCMC chain
+        \return The error threshild
       */
-      std::tuple<double, double, double> ErrorThreshold(unsigned int const step, double const radius, double const approxLogTarg) const;
+      double ErrorThreshold(Eigen::VectorXd const& x) const;
+
+      /// Estimate the Lyapunov function
+      /**
+        Defaults to \f$V(x) = \exp{(\|x-\bar{x}\|_2)}\f$.
+        @param[in] x the input point \f$x\f$
+        \return \f$V(x)\f$
+      */
+      double LogLyapunovFunction(Eigen::VectorXd const& x) const;
 
       std::shared_ptr<muq::Approximation::LocalRegression> reg;
 
@@ -136,26 +152,14 @@ namespace muq {
        */
       std::pair<double, double> gamma;
 
-      /// The maximum number of gamma refinements per interation
-      /**
-        Defaults to the number of nearest neighbors
-      */
-      unsigned int maxGammaRefine;
+      /// The scaling and exponent for the Lyapunov function
+      std::pair<double, double> lyapunovPara;
 
-      /// An approximation for \f$\max{\pi(x)}\f$.
-      /**
-        \f$\nu\f$ is "TargetMax" and defaults to \f$1.0\f$.
-      */
-      double nu;
+      /// The centroid of the distribution (input parameter)
+      const Eigen::VectorXd centroid;
 
-      /// Parameters for the tail indicator
-      /**
-      \f$\eta_0\f$ is "EtaScale" and it defaults to \f$1.0\f$.  \f$\eta_1\f$ is "EtaExponent" and it defaults to \f$1.0\f$.
-      */
-      std::pair<double, double> eta;
-
-      /// Scaling for the poisedness constant
-      double lambdaScale;
+      /// Tail correction parameter
+      double eta;
 
       /// The current error threshold level
       unsigned int level = 1;
@@ -169,10 +173,11 @@ namespace muq {
       /// Cumulative kappa refinements
       unsigned int cumkappa = 0;
 
-      /// Maximum distance between the globalMean and an evaluated point
-      double radius_max = 0.0;
+      /// The Lyapunov function at the most recently accepted point
+      double lastLyapunov = 0.0;
 
-      double lastAcceptedRadius = 0.0;
+      /// The error threshold at the most recently accepted point
+      double lastThreshold = 0.0;
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

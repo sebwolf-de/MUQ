@@ -144,6 +144,8 @@ namespace muq{
 
       virtual Eigen::VectorXd ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains = std::vector<std::string>()) const;
 
+      std::vector<Eigen::VectorXd> RunningExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains = std::vector<std::string>()) const;
+
     protected:
 
       std::vector<std::shared_ptr<SamplingState> > samples;

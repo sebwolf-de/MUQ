@@ -12,7 +12,15 @@ using namespace muq::Modeling;
 using namespace muq::Approximation;
 using namespace muq::SamplingAlgorithms;
 
-ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, pt::ptree pt) : SamplingProblem(target) {
+ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& target, pt::ptree pt) : SamplingProblem(target), centroid(Eigen::VectorXd::Zero(target->inputSizes(0))) {
+  // create the local regressor
+  reg = std::make_shared<LocalRegression>(target, pt.get_child(pt.get<std::string>("RegressionOptions")));
+
+  // must becaused after reg is created
+  SetUp(pt);
+}
+
+ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& target, Eigen::VectorXd const& centroid, pt::ptree pt) : SamplingProblem(target), centroid(centroid) {
   // create the local regressor
   reg = std::make_shared<LocalRegression>(target, pt.get_child(pt.get<std::string>("RegressionOptions")));
 
@@ -21,7 +29,15 @@ ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling
 }
 
 #if MUQ_HAS_PARCER
-ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> target, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> comm) : SamplingProblem(target) {
+ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& target, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> comm) : SamplingProblem(target), centroid(Eigen::VectorXd::Zero(target->inputSizes(0))) {
+  // create the local regressor
+  reg = std::make_shared<LocalRegression>(target, pt.get_child(pt.get<std::string>("RegressionOptions")), comm);
+
+  // must becaused after reg is created
+  SetUp(pt);
+}
+
+ExpensiveSamplingProblem::ExpensiveSamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& target, Eigen::VectorXd const& centroid, boost::property_tree::ptree pt, std::shared_ptr<parcer::Communicator> comm) : SamplingProblem(target), centroid(centroid) {
   // create the local regressor
   reg = std::make_shared<LocalRegression>(target, pt.get_child(pt.get<std::string>("RegressionOptions")), comm);
 
@@ -41,86 +57,80 @@ void ExpensiveSamplingProblem::SetUp(boost::property_tree::ptree& pt) {
 
   tau0 = pt.get<double>("FirstLevelLength", 1.0);
 
-  gamma = std::pair<double, double>(pt.get<double>("GammaScale", 1.0), pt.get<double>("GammaExponent", 1.0));
-  assert(gamma.first>0.0);
+  gamma = std::pair<double, double>(std::log(pt.get<double>("GammaScale", 1.0)), pt.get<double>("GammaExponent", 1.0));
   assert(gamma.second>0.0);
-  maxGammaRefine = pt.get<unsigned int>("MaximumGammaRefine", reg->kn);
 
-  nu = pt.get<double>("TargetMax", 1.0);
-
-  lambdaScale = pt.get<double>("LambdaScale", 25.0);
-
-  eta = std::pair<double, double>(pt.get<double>("EtaScale", 1.0), pt.get<double>("EtaExponent", 1.0));
+  lyapunovPara.first = pt.get<double>("LyapunovScale", 1.0);
+  lyapunovPara.second = pt.get<double>("LyapunovExponent", 1.0);
+  eta = pt.get<double>("TailCorrection", 0.0);
 }
 
-double ExpensiveSamplingProblem::LogDensity(unsigned int const step, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) {
+double ExpensiveSamplingProblem::LogDensity(unsigned int const step, std::shared_ptr<SamplingState> const& state, AbstractSamplingProblem::SampleType type) {
   std::vector<Eigen::VectorXd> neighbors, results;
-  const double threshold = RefineSurrogate(step, state, neighbors, results);
-  assert(neighbors.size()==results.size());
-  assert(neighbors.size()>=reg->kn);
-  bool addThreshold = (type==AbstractSamplingProblem::SampleType::Proposed) && (lastAcceptedRadius<state->state[0].norm());
-  //bool addThreshold = (type==AbstractSamplingProblem::SampleType::Proposed) && (lastAcceptedRadius<(state->state[0]-reg->CacheCentroid()).norm());
-  //bool addThreshold = (type==AbstractSamplingProblem::SampleType::Proposed) && (0.75*radius_max<(state->state[0]-reg->CacheCentroid()).norm());
-  if( type==AbstractSamplingProblem::SampleType::Accepted && reg->CacheSize()>0 ) {
-    //lastAcceptedRadius = (state->state[0]-reg->CacheCentroid()).norm();
-    lastAcceptedRadius = state->state[0].norm();
+
+  bool addThreshold = (type==AbstractSamplingProblem::SampleType::Proposed);
+
+  double threshold = RefineSurrogate(step, state, neighbors, results);
+
+  if( type==AbstractSamplingProblem::SampleType::Accepted ) {
+    lastLyapunov = LogLyapunovFunction(state->state[0]);
+    lastThreshold = threshold;
   }
 
-  /*if( type==AbstractSamplingProblem::SampleType::Accepted ) {
-    // refine and get nearest neighbors
-    RefineSurrogate(step, state, neighbors, results);
-  } else {
-    // get nearest neighbors
-    reg->NearestNeighbors(state->state[0], neighbors, results);
-    }*/
+  //double threshold = RefineSurrogate(step, state, neighbors, results);
+  assert(neighbors.size()==results.size());
+  assert(neighbors.size()>=reg->kn);
+
+  // agument the threshold
+  threshold *= (lastLyapunov<LogLyapunovFunction(state->state[0]) ? -1.0 : 1.0);
 
   // set cumulative refinement
-  state->meta["cumulative kappa refinement"] = cumkappa;
-  state->meta["cumulative beta refinement"] = cumbeta;
-  state->meta["cumulative gamma refinement"] = cumgamma;
-  state->meta["global radius"] = radius_max;
+  if( beta.first>0.0 ) { state->meta["cumulative random refinement"] = cumbeta; }
+  state->meta["cumulative structural refinement"] = cumgamma;
 
-  return (addThreshold ? 1.0+500.0*threshold : 1.0)*reg->EvaluateRegressor(state->state[0],
+  const double logtarg = reg->EvaluateRegressor(state->state[0],
                                 std::vector<Eigen::VectorXd>(neighbors.begin(), neighbors.begin()+reg->kn),
                                 std::vector<Eigen::VectorXd>(results.begin(), results.begin()+reg->kn)) (0);
+
+  return logtarg + (addThreshold ? eta*(lastThreshold+threshold)*state->state[0].norm()*std::fabs(logtarg) : 0.0);
 }
 
-void ExpensiveSamplingProblem::CheckNumNeighbors(std::shared_ptr<SamplingState> state) {
+double ExpensiveSamplingProblem::LogLyapunovFunction(Eigen::VectorXd const& x) const {
+  /*(const Eigen::VectorXd diff = x-centroid;
+
+  Eigen::VectorXd scale = Eigen::VectorXd::Constant(diff.size(), lyapunovScale);
+  scale(0) = 1.0;
+  scale(1) = 1.0;
+
+  return diff.dot(scale.asDiagonal()*diff);*/
+
+  //return lyapunovScale*(x-centroid).norm();
+  return lyapunovPara.first*std::pow((x-centroid).norm(), lyapunovPara.second);
+}
+
+void ExpensiveSamplingProblem::CheckNumNeighbors(std::shared_ptr<SamplingState> const& state) {
   while( reg->CacheSize()<reg->kn ) {
-    auto gauss = std::make_shared<muq::Modeling::Gaussian>(state->state[0], 1.0e-3*Eigen::VectorXd::Ones(state->state[0].size()));
+    auto gauss = std::make_shared<muq::Modeling::Gaussian>(state->state[0], std::pow(std::exp(gamma.first), 1.0/(1.0+reg->Order()))*Eigen::VectorXd::Ones(state->state[0].size()));
     const Eigen::VectorXd& x = gauss->Sample();
     reg->Add(x);
-    UpdateGlobalRadius();
     ++cumkappa;
   }
 }
 
 void ExpensiveSamplingProblem::CheckNeighbors(
-  std::shared_ptr<SamplingState> state,
+  std::shared_ptr<SamplingState> const& state,
   std::vector<Eigen::VectorXd>& neighbors,
   std::vector<Eigen::VectorXd>& results) const {
     reg->NearestNeighbors(state->state[0], neighbors, results);
     assert(neighbors.size()==results.size());
 }
 
-std::tuple<double, double, double> ExpensiveSamplingProblem::ErrorThreshold(
-  unsigned int const step,
-  double const radius,
-  double const approxLogTarg) const {
-    // a small neggest so rho is always less than one
-    const double eps = 1.0e-12;
-
-    // the tail scaling constant
-    const double rho = std::fmin(1.0-eps, std::exp(approxLogTarg-nu));
-
-    // the tail scaling exponent
-    const double etaexp = eta.first*std::pow(radius/radius_max, eta.second);
-
-    return std::tuple<double, double, double>(rho, etaexp, gamma.first*std::pow((double)level, -gamma.second));
+double ExpensiveSamplingProblem::ErrorThreshold(Eigen::VectorXd const& x) const {
+  return LogLyapunovFunction(x) + gamma.first - gamma.second*std::log((double)level);
 }
 
 double ExpensiveSamplingProblem::RefineSurrogate(
-  std::shared_ptr<SamplingState> state,
+  std::shared_ptr<SamplingState> const& state,
   double const radius,
   std::vector<Eigen::VectorXd>& neighbors,
   std::vector<Eigen::VectorXd>& results) {
@@ -153,20 +163,16 @@ double ExpensiveSamplingProblem::RefineSurrogate(
   return std::get<1>(lambda);
 }
 
-double ExpensiveSamplingProblem::RefineSurrogate(
-  unsigned int const step,
-  std::shared_ptr<SamplingState> state,
-  std::vector<Eigen::VectorXd>& neighbors,
-  std::vector<Eigen::VectorXd>& results) {
+double ExpensiveSamplingProblem::RefineSurrogate(unsigned int const step, std::shared_ptr<SamplingState> const& state, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) {
   // make sure we have enough points
   CheckNumNeighbors(state);
 
-  // check to see if this state has nearenst neighbors
+  // get the nearest nearest neighbors
   CheckNeighbors(state, neighbors, results);
 
   // get the error indicator (using the first kn neighbors)
   double error, radius;
-  std::tie(error, radius) = reg->ErrorIndicator(state->state[0], std::vector<Eigen::VectorXd>(neighbors.begin(), neighbors.begin()+reg->kn));
+  std::tie(error, radius) = reg->ErrorIndicator(state->state[0], neighbors);
 
   // random refinement
   if( RandomGenerator::GetUniform()<beta.first*std::pow((double)step, beta.second) ) {
@@ -177,34 +183,21 @@ double ExpensiveSamplingProblem::RefineSurrogate(
     std::tie(error, radius) = reg->ErrorIndicator(state->state[0], std::vector<Eigen::VectorXd>(neighbors.begin(), neighbors.begin()+reg->kn));
   }
 
-  // compute the error threshold
-  const double approxLogTarg = reg->EvaluateRegressor(state->state[0], neighbors, results) (0);
-
   // check to see if we should increment the level
   if( step>tau0*std::pow((double)level, 2.0*gamma.second) ) { ++level; }
 
   // compute (and store) the error threshold
-  double rho, etaexp, threshold;
-  std::tie(rho, etaexp, threshold) = ErrorThreshold(step, (state->state[0]-reg->CacheCentroid()).norm(), approxLogTarg);
-  threshold *= std::pow(rho, etaexp);
-  state->meta["error indicator"] = error;
-  state->meta["nearest neighbor ball radius"] = radius;
-  state->meta["rho"] = rho;
-  state->meta["eta"] = etaexp;
-  state->meta["error threshold"] = threshold;
+  const double threshold = ErrorThreshold(state->state[0]);
+  state->meta["error threshold"] = std::exp(threshold);
+  state->meta["error indicator"] = std::exp(error);
 
   // structural refinement
-  unsigned int n = 0;
   if( error>threshold ) {
     double lambda = RefineSurrogate(state, radius, neighbors, results);
-    ++cumgamma; ++n;
-    while( lambda>lambdaScale*reg->kn && n<=maxGammaRefine ) {
-      lambda = RefineSurrogate(state, radius, neighbors, results);
-      ++cumgamma; ++n;
-    }
+    ++cumgamma;
   }
 
-  return threshold;
+  return std::exp(threshold);
 }
 
 void ExpensiveSamplingProblem::RefineSurrogate(Eigen::VectorXd const& point, unsigned int const index, std::vector<Eigen::VectorXd>& neighbors, std::vector<Eigen::VectorXd>& results) {
@@ -218,16 +211,6 @@ void ExpensiveSamplingProblem::RefineSurrogate(Eigen::VectorXd const& point, uns
   results.push_back(result);
   std::iter_swap(neighbors.end()-1, neighbors.begin()+index);
   std::iter_swap(results.end()-1, results.begin()+index);
-
-  UpdateGlobalRadius();
-}
-
-void ExpensiveSamplingProblem::UpdateGlobalRadius() {
-  radius_max = 0.0;
-  for( unsigned int i=0; i<CacheSize(); ++i ) {
-    const double r = (reg->CacheCentroid()-reg->CachePoint(i)).norm();
-    radius_max = std::fmax(radius_max, r);
-  }
 }
 
 unsigned int ExpensiveSamplingProblem::CacheSize() const { return reg->CacheSize(); }

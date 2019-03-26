@@ -27,36 +27,40 @@ using namespace muq::Approximation;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::OptimalExperimentalDesign;
 
-Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(prior) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Constant(pt.get<bool>("RunningEstimate", false) ? pt.get<unsigned int>("NumImportanceSamples") : 1, 1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(prior), runningEstimate(pt.get<bool>("RunningEstimate", false)) {
   CreateGraph(prior, likelihood, evidence);
 }
 
-Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, std::shared_ptr<Distribution> const& biasing, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, std::shared_ptr<Distribution> const& biasing, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Constant(pt.get<bool>("RunningEstimate", false) ? pt.get<unsigned int>("NumImportanceSamples") : 1, 1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing), runningEstimate(pt.get<bool>("RunningEstimate", false)) {
   CreateGraph(prior, likelihood, evidence);
 }
 
-Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(prior) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Constant(pt.get<bool>("RunningEstimate", false) ? pt.get<unsigned int>("NumImportanceSamples") : 1, 1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(prior), runningEstimate(pt.get<bool>("RunningEstimate", false)) {
   CreateGraph(prior, resid, pt);
 }
 
-Utility::Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<muq::Modeling::Distribution> const& biasing, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(biasing) {
+Utility::Utility(std::shared_ptr<muq::Modeling::Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<muq::Modeling::Distribution> const& biasing, pt::ptree pt) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Constant(pt.get<bool>("RunningEstimate", false) ? pt.get<unsigned int>("NumImportanceSamples") : 1, 1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(biasing), runningEstimate(pt.get<bool>("RunningEstimate", false)) {
   CreateGraph(prior, resid, pt);
 }
 
 #if MUQ_HAS_PARCER==1
-Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(prior), comm(comm) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Constant(pt.get<bool>("RunningEstimate", false) ? pt.get<unsigned int>("NumImportanceSamples") : 1, 1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(prior), runningEstimate(pt.get<bool>("RunningEstimate", false)), comm(comm) {
+  if( comm->GetSize()>1 ) { assert(!runningEstimate); }
   CreateGraph(prior, likelihood, evidence);
 }
 
-Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, std::shared_ptr<Distribution> const& biasing, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing), comm(comm) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<Distribution> const& likelihood, std::shared_ptr<Distribution> const& evidence, std::shared_ptr<Distribution> const& biasing, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, likelihood->hyperSizes(1)), Eigen::VectorXi::Constant(pt.get<bool>("RunningEstimate", false) ? pt.get<unsigned int>("NumImportanceSamples") : 1, 1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), biasing(biasing), runningEstimate(pt.get<bool>("RunningEstimate", false)), comm(comm) {
+  if( comm->GetSize()>1 ) { assert(!runningEstimate); }
   CreateGraph(prior, likelihood, evidence);
 }
 
-Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(prior), comm(comm) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Constant(pt.get<bool>("RunningEstimate", false) ? pt.get<unsigned int>("NumImportanceSamples") : 1, 1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(prior), runningEstimate(pt.get<bool>("RunningEstimate", false)), comm(comm) {
+  if( comm->GetSize()>1 ) { assert(!runningEstimate); }
   CreateGraph(prior, resid, pt);
 }
 
-Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<Distribution> const& biasing, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Ones(1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(biasing), comm(comm) {
+Utility::Utility(std::shared_ptr<Distribution> const& prior, std::shared_ptr<OEDResidual> const& resid, std::shared_ptr<Distribution> const& biasing, pt::ptree pt, std::shared_ptr<parcer::Communicator> const& comm) : ModPiece(Eigen::VectorXi::Constant(1, resid->inputSizes(1)), Eigen::VectorXi::Constant(pt.get<bool>("RunningEstimate", false) ? pt.get<unsigned int>("NumImportanceSamples") : 1, 1)), numImportanceSamples(pt.get<unsigned int>("NumImportanceSamples")), gamma0(pt.get<double>("InitialThreshold")), radius0(pt.get<double>("InitialRadius")), biasing(biasing), runningEstimate(pt.get<bool>("RunningEstimate", false)), comm(comm) {
+  if( comm->GetSize()>1 ) { assert(!runningEstimate); }
   CreateGraph(prior, resid, pt);
 }
 #endif
@@ -100,9 +104,6 @@ void Utility::CreateGraph(std::shared_ptr<muq::Modeling::Distribution> const& pr
   reg = std::make_shared<LocalRegression>(graph->CreateModPiece("residual"), pt.get_child(pt.get<std::string>("LocalRegression")));
 #endif
 
-  //TEST = graph->CreateModPiece("residual");
-  TEST = resid;
-
   // remove the combined parameter/design node
   graph->RemoveNode("parameter-design");
 }
@@ -125,7 +126,7 @@ void Utility::CreateGraph(std::shared_ptr<Distribution> const& prior, std::share
   graph->AddNode(std::make_shared<DensityProduct>(2), "log joint"); // x, y | d
 
   // the log difference between the evidence and the likelihood
-  graph->AddNode(std::make_shared<LogDifference>(evidence), "log difference");
+  graph->AddNode(std::make_shared<LogDifference>(likelihood, evidence), "log difference");
 
   // connect the parameters
   graph->AddEdge("parameter-data", 0, "parameter", 0);
@@ -145,7 +146,8 @@ void Utility::CreateGraph(std::shared_ptr<Distribution> const& prior, std::share
 
   // connect the difference
   graph->AddEdge("data", 0, "log difference", 0);
-  graph->AddEdge("design", 0, "log difference", 1);
+  graph->AddEdge("parameter", 0, "log difference", 1);
+  graph->AddEdge("design", 0, "log difference", 2);
 }
 
 void Utility::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
@@ -157,7 +159,7 @@ void Utility::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
   EvaluateBruteForce(inputs);
 }
 
-void Utility::RandomlyRefineNear(Eigen::VectorXd const& xd, double const radius) const {
+void Utility::RandomlyRefineNear(Eigen::VectorXd const& xd, double const radius) {
   assert(reg);
 
   while( true ) {
@@ -167,19 +169,22 @@ void Utility::RandomlyRefineNear(Eigen::VectorXd const& xd, double const radius)
     point += xd;
     if( !reg->InCache(point) ) {
       reg->Add(point);
+      ++totalRefinements;
       break;
     }
   }
 }
 
-void Utility::RefineAt(Eigen::VectorXd const& pnt, double const radius) const {
+void Utility::RefineAt(Eigen::VectorXd const& pnt, double const radius) {
   assert(reg);
   if( reg->InCache(pnt) ) { return RandomlyRefineNear(pnt, radius); }
 
   reg->Add(pnt);
+  ++totalRefinements;
 }
 
 void Utility::EvaluateSurrogate(ref_vector<Eigen::VectorXd> const& inputs) {
+  //std::cout << "EVALUATE SURROGATE" << std::endl;
   auto logprior = graph->CreateModPiece("log prior");
   assert(logprior);
   assert(biasing);
@@ -201,50 +206,20 @@ void Utility::EvaluateSurrogate(ref_vector<Eigen::VectorXd> const& inputs) {
     }
   #else
     auto samps = is->Run();
-    auto localSize = samps;
+    auto localSamps = samps;
   #endif
   assert(samps);
   assert(localSamps);
 
   const unsigned int n2 = samps->size();
-  const double threshold = gamma0*std::pow((double)n2, -0.5);
+  //const double threshold = gamma0*std::pow((double)n2, -0.5);
+  const double threshold = std::log(gamma0)-0.5*std::log((double)n2);
 
   // loop through the samples
   Eigen::VectorXd xd(inputSizes(0)+logprior->inputSizes(0));
   xd.tail(inputSizes(0)) = inputs[0].get();
 
-  for( unsigned int i=0; i<localSamps->size(); ++i ) {
-    // the current point for the surrogate model
-    xd.head(logprior->inputSizes(0)) = localSamps->at(i)->state[0];
-
-    // make sure there are enough points in the cache
-    while( reg->CacheSize()<reg->kn ) {
-      if( comm )
-        std::cout << "process " << comm->GetRank() << " is refining, needs more neighbors: step " << i << std::endl;
-      else
-        std::cout << "refining, needs more neighbors; step " << i << std::endl;
-      RandomlyRefineNear(xd, radius0);
-    }
-
-    const std::pair<double, double> error = reg->ErrorIndicator(xd);
-    //const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
-
-    /*if( std::get<1>(lambda)>100.0 ) {
-      std::cout << "\tprocess " << comm->GetRank() << " poisedness constant: " << std::get<1>(lambda) << " step: " << i << std::endl;
-    }*/
-
-    if( error.first>threshold /*|| std::get<1>(lambda)>lammax*/ ) {
-      const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
-      //if( comm )
-      std::cout << "process " << comm->GetRank() << " is refining, indicator: " << error.first << " threshold: " << threshold << " step: " << i << std::endl;
-      std::cout << "\tpoisedness: " << std::get<1>(lambda) << std::endl;
-      //else
-      //  std::cout << "refining, indicator: " << error.first << " threshold: " << threshold << " step: " << i << std::endl;
-      RefineAt(std::get<0>(lambda), error.second);
-    }
-  }
-
-  auto g = std::make_shared<WorkGraph>();
+  /*auto g = std::make_shared<WorkGraph>();
 
   g->AddNode(reg, "residual approx");
   g->AddNode(std::make_shared<CombineVectors>(Eigen::Vector2i(logprior->inputSizes(0), inputSizes(0))), "combine");
@@ -255,10 +230,100 @@ void Utility::EvaluateSurrogate(ref_vector<Eigen::VectorXd> const& inputs) {
   g->AddEdge("design", 0, "combine", 1);
   g->AddEdge("combine", 0, "residual approx", 0);
 
-  auto mod = g->CreateModPiece("residual approx");
+  auto mod = g->CreateModPiece("residual approx");*/
 
-  outputs.resize(1);
-  outputs[0] = samps->ExpectedValue(mod);
+  if( runningEstimate ) { outputs.resize(localSamps->size()); }
+
+  totalRefinements = 0;
+  runningRefinements = Eigen::VectorXi::Zero(localSamps->size());
+  for( unsigned int i=0; i<localSamps->size(); ++i ) {
+    // the current point for the surrogate model
+    xd.head(logprior->inputSizes(0)) = localSamps->at(i)->state[0];
+
+    // make sure there are enough points in the cache
+    while( reg->CacheSize()<reg->kn ) {
+      //if( comm )
+        //std::cout << "process " << comm->GetRank() << " is refining, needs more neighbors: step " << i << std::endl;
+      //else
+      //std::cout << "refining, needs more neighbors; step " << i << std::endl;
+      RandomlyRefineNear(xd, radius0);
+    }
+
+    const std::pair<double, double> error = reg->ErrorIndicator(xd);
+    //std::cout << "thershold: " << std::exp(threshold) << " error: " << std::exp(error.first) << "  radius: " << error.second << std::endl;
+    //std::cout << "total refinements: " << totalRefinements << std::endl;
+    //const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
+    //std::cout << "\tpoisedness constant: " << std::get<1>(lambda) << " step: " << i << std::endl;
+
+    /*if( std::get<1>(lambda)>100.0 ) {
+      std::cout << "\tprocess " << comm->GetRank() << " poisedness constant: " << std::get<1>(lambda) << " step: " << i << std::endl;
+    }*/
+
+    if( error.first>threshold /*|| std::get<1>(lambda)>lammax*/ ) {
+      const std::tuple<Eigen::VectorXd, double, unsigned int> lambda = reg->PoisednessConstant(xd);
+      //std::cout << "\tpoisedness constant: " << std::get<1>(lambda) << " step: " << i << std::endl;
+
+      /*if( comm ) {
+        std::cout << "process " << comm->GetRank() << " is refining, indicator: " << error.first << " threshold: " << threshold << " step: " << i << std::endl;
+        std::cout << "\tpoisedness: " << std::get<1>(lambda) << std::endl;
+      } else {
+        std::cout << "refining, indicator: " << error.first << " threshold: " << threshold << " step: " << i << std::endl;
+      }*/
+      RefineAt(std::get<0>(lambda), error.second);
+
+      //error = reg->ErrorIndicator(xd);
+      //std::cout << "\tthershold: " << threshold << " error: " << error.first << "  radius: " << error.second << std::endl;
+    }
+
+    /*if( runningEstimate ) {
+      auto g = std::make_shared<WorkGraph>();
+
+      g->AddNode(reg, "residual approx");
+      g->AddNode(std::make_shared<CombineVectors>(Eigen::Vector2i(logprior->inputSizes(0), inputSizes(0))), "combine");
+      g->AddNode(std::make_shared<IdentityOperator>(logprior->inputSizes(0)), "parameter");
+      g->AddNode(std::make_shared<ConstantVector>(std::vector<Eigen::VectorXd>(1, inputs[0])), "design");
+
+      g->AddEdge("parameter", 0, "combine", 0);
+      g->AddEdge("design", 0, "combine", 1);
+      g->AddEdge("combine", 0, "residual approx", 0);
+
+      auto mod = g->CreateModPiece("residual approx");
+
+      double totWeight = 0.0;
+      Eigen::VectorXd ubreve = Eigen::VectorXd::Zero(1);
+      for( unsigned int j=0; j<i; ++j ) {
+        auto s = localSamps->at(j);
+        totWeight += s->weight;
+        if( i==0 ) {
+          ubreve = mod->Evaluate(s->state) [0];
+        } else {
+          ubreve = ((totWeight-s->weight)*ubreve + s->weight*mod->Evaluate(s->state) [0])/totWeight;
+        }
+      }
+      std::cout << "ubreve: " << ubreve << std::endl;
+      outputs[i] = ubreve;
+    }*/
+
+    runningRefinements(i) = totalRefinements;
+  }
+
+//  if( !runningEstimate ) {
+    auto g = std::make_shared<WorkGraph>();
+
+    g->AddNode(reg, "residual approx");
+    g->AddNode(std::make_shared<CombineVectors>(Eigen::Vector2i(logprior->inputSizes(0), inputSizes(0))), "combine");
+    g->AddNode(std::make_shared<IdentityOperator>(logprior->inputSizes(0)), "parameter");
+    g->AddNode(std::make_shared<ConstantVector>(std::vector<Eigen::VectorXd>(1, inputs[0])), "design");
+
+    g->AddEdge("parameter", 0, "combine", 0);
+    g->AddEdge("design", 0, "combine", 1);
+    g->AddEdge("combine", 0, "residual approx", 0);
+
+    auto mod = g->CreateModPiece("residual approx");
+
+    outputs.resize(1);
+    outputs[0] = samps->ExpectedValue(mod);
+  //}
 
   /*Eigen::VectorXd d = inputs[0].get();
   Eigen::VectorXd expected = Eigen::VectorXd::Zero(1);
@@ -307,9 +372,17 @@ void Utility::EvaluateBruteForce(ref_vector<Eigen::VectorXd> const& inputs) {
   #endif
     assert(samps);
 
-  auto diff = graph->CreateModPiece("log difference", std::vector<std::string>({"parameter-data", "log difference"}));
+  auto diff = graph->CreateModPiece("log difference", std::vector<std::string>({"parameter-data"}));
   assert(diff);
 
-  outputs.resize(1);
-  outputs[0] = samps->ExpectedValue(diff, std::vector<std::string>({"log target"}));
+  if( runningEstimate ) {
+    outputs = samps->RunningExpectedValue(diff);
+  } else {
+    outputs.resize(1);
+    outputs[0] = samps->ExpectedValue(diff);
+  }
 }
+
+unsigned int Utility::TotalRefinements() const { return totalRefinements; }
+
+Eigen::VectorXi Utility::RunningRefinements() const { return runningRefinements; }
