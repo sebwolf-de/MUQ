@@ -179,7 +179,6 @@ TEST(Modelling_ModGraphPiece, BasicTest)
   EXPECT_EQ(2, graphMod->inputSizes(0));
   EXPECT_EQ(2, graphMod->outputSizes(0));
 
-
   // evaluation testing
   Eigen::VectorXd input  = Eigen::VectorXd::Ones(2);
   Eigen::VectorXd output = graphMod->Evaluate(input).at(0);

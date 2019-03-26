@@ -706,8 +706,7 @@ std::string WorkGraph::GetName(std::shared_ptr<WorkPiece> piece) const
   return graph[*GetNodeIterator(piece)]->name;
 }
 
-void WorkGraph::BindNode(std::string             const& nodeName,
-                         std::vector<boost::any> const& x)
+void WorkGraph::BindNode(std::string const& nodeName, std::vector<boost::any> const& x)
 {
   // find the node
   auto nodeDesc = GetNodeIterator(nodeName);
@@ -720,7 +719,9 @@ void WorkGraph::BindNode(std::string             const& nodeName,
   if( mod ) {
     // replace the ModPiece ptr
     std::vector<Eigen::VectorXd> vec(x.size());
-    for( unsigned int i=0; i<x.size(); ++i ) { vec[i] = boost::any_cast<std::__1::reference_wrapper<Eigen::VectorXd const> >(x[i]).get(); }
+    for( unsigned int i=0; i<x.size(); ++i ) {
+      vec[i] = boost::any_cast<Eigen::VectorXd const>(x[i]);
+    }
     (graph)[*nodeDesc]->piece = std::make_shared<ConstantVector>(vec);
   } else {
     // replace the WorkPiece ptr
