@@ -245,7 +245,7 @@ int ODEBase::EvaluateRHS(realtype time, N_Vector state, N_Vector statedot, void 
 #if MUQ_HAS_PARCER==1
   NVectorMap(stateref, data->comm, state);
 #else
-  Eigen::Map<Eigen::VectorXd> stateref(V_DATA_S(state), NV_LENGTH_S(state));
+  Eigen::Map<Eigen::VectorXd> stateref(NV_DATA_S(state), NV_LENGTH_S(state));
 #endif
   data->UpdateInputs(stateref, time);
 
@@ -253,7 +253,7 @@ int ODEBase::EvaluateRHS(realtype time, N_Vector state, N_Vector statedot, void 
 #if MUQ_HAS_PARCER==1
   NVectorMap(statedotref, data->comm, statedot);
 #else
-  Eigen::Map<Eigen::VectorXd> statedotref(V_DATA_S(statedot), NV_LENGTH_S(statedot));
+  Eigen::Map<Eigen::VectorXd> statedotref(NV_DATA_S(statedot), NV_LENGTH_S(statedot));
 #endif
   statedotref = data->rhs->Evaluate(data->inputs) [0];
 

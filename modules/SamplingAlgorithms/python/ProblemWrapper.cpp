@@ -38,7 +38,10 @@ void PythonBindings::ProblemWrapper(py::module &m) {
     expenProb
       .def(py::init( [] (std::shared_ptr<muq::Modeling::ModPiece> target, py::dict d) { return new ExpensiveSamplingProblem(target, ConvertDictToPtree(d)); }))
       .def(py::init( [] (std::shared_ptr<muq::Modeling::ModPiece> target, Eigen::VectorXd const& centroid, py::dict d) { return new ExpensiveSamplingProblem(target, centroid, ConvertDictToPtree(d)); }))
-      .def(py::init( [] (std::shared_ptr<muq::Modeling::ModPiece> target, Eigen::VectorXd const& centroid, py::dict d, std::shared_ptr<parcer::Communicator> comm) { return new ExpensiveSamplingProblem(target, centroid, ConvertDictToPtree(d), comm); }))
       .def("LogDensity", &ExpensiveSamplingProblem::LogDensity)
       .def("CacheSize", &ExpensiveSamplingProblem::CacheSize);
+
+#if MUQ_HAS_PARCER==1
+      expenProb.def(py::init( [] (std::shared_ptr<muq::Modeling::ModPiece> target, Eigen::VectorXd const& centroid, py::dict d, std::shared_ptr<parcer::Communicator> comm) { return new ExpensiveSamplingProblem(target, centroid, ConvertDictToPtree(d), comm); }))
+#endif
 }
