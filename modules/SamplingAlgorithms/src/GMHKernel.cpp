@@ -135,6 +135,7 @@ void GMHKernel::ParallelProposal(unsigned int const t, std::shared_ptr<SamplingS
     AcceptanceDensity(R);*/
   }
 #endif
+}
 
 void GMHKernel::AcceptanceDensity(Eigen::VectorXd& R) {
 
