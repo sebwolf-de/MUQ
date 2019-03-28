@@ -148,7 +148,7 @@ namespace muq{
 
     protected:
 
-      std::vector<std::shared_ptr<SamplingState> > samples;
+      std::vector<std::shared_ptr<SamplingState>> samples;
 
       /** Returns the sum of the weights and the sum of the squared weights. */
       static std::pair<double,double> RecursiveWeightSum(std::vector<std::shared_ptr<SamplingState>>::const_iterator start,

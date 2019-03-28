@@ -197,7 +197,8 @@ At the base level, we specify the number of steps in the chain with the entry "N
   function of the MCMCFactory class to create an instance of the MCMC algorithm we defined in the
   property tree.
   */
-  auto mcmc = MCMCFactory::CreateSingleChain(pt, problem);
+  Eigen::VectorXd startPt = mu;
+  auto mcmc = MCMCFactory::CreateSingleChain(pt, problem, startPt);
 
   /***
   ### 3. Run the MCMC algorithm
@@ -206,8 +207,7 @@ At the base level, we specify the number of steps in the chain with the entry "N
   of the SampleCollection class, which internally holds the steps in the MCMC chain
   as a vector of weighted SamplingState's.
   */
-  Eigen::VectorXd startPt = mu;
-  std::shared_ptr<SampleCollection> samps = mcmc->Run(startPt);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run();
 
   /***
   ### 4. Analyze the results

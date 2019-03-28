@@ -25,17 +25,19 @@ namespace muq {
 
       SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samples);
 
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samplesIn, std::shared_ptr<SampleCollection> const& QOIsIn);
+
 #if MUQ_HAS_PARCER
       SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samplesIn, std::shared_ptr<parcer::Communicator> const& comm);
 #endif
 
       virtual ~SamplingAlgorithm() = default;
 
-      std::shared_ptr<SampleCollection> GetSamples() const;
+      virtual std::shared_ptr<SampleCollection> GetSamples() const;
+      
+      virtual std::shared_ptr<SampleCollection> GetQOIs() const;
 
       virtual std::shared_ptr<SampleCollection> Run();
-      virtual std::shared_ptr<SampleCollection> Run(Eigen::VectorXd const& x0);
-      virtual std::shared_ptr<SampleCollection> Run(std::vector<Eigen::VectorXd> const& x0);
 
 #if MUQ_HAS_PARCER
       std::shared_ptr<parcer::Communicator> GetCommunicator() const;
@@ -43,7 +45,7 @@ namespace muq {
 
     protected:
 
-      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) = 0;
+      virtual std::shared_ptr<SampleCollection> RunImpl() = 0;
 
       /**
 	 Inputs:
@@ -56,6 +58,8 @@ namespace muq {
       //virtual void EvaluateImpl(muq::Modeling::ref_vector<boost::any> const& inputs) override;
 
       std::shared_ptr<SampleCollection> samples;
+
+      std::shared_ptr<SampleCollection> QOIs;
 
 #if MUQ_HAS_PARCER
       std::shared_ptr<parcer::Communicator> comm = nullptr;

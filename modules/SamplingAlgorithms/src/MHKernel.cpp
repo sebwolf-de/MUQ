@@ -53,6 +53,9 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
     currentTarget = AnyCast( prevState->meta["LogTarget"]);
   }else{
     currentTarget = problem->LogDensity(t, prevState, AbstractSamplingProblem::SampleType::Accepted);
+    if (problem->numBlocksQOI > 0) {
+      prevState->meta["QOI"] = problem->QOI();
+    }
     prevState->meta["LogTarget"] = currentTarget;
   }
 
@@ -67,6 +70,9 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   // accept/reject
   numCalls++;
   if( RandomGenerator::GetUniform()<alpha ) {
+    if (problem->numBlocksQOI > 0) {
+      prop->meta["QOI"] = problem->QOI();
+    }
     numAccepts++;
     return std::vector<std::shared_ptr<SamplingState>>(1, prop);
   } else {
