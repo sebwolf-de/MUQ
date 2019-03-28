@@ -52,10 +52,10 @@ TEST(ExpensiveSamplingProblemTests, GaussianTarget) {
   const Eigen::VectorXd start = Eigen::VectorXd::Random(2);
 
   // create an instance of MCMC
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"), problem, start);
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"), problem);
 
   // run MCMC
-  std::shared_ptr<SampleCollection> samps = mcmc->Run();
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
 
   // make sure the number of evaluations is less than the number of steps
   EXPECT_TRUE(problem->CacheSize()>pt.get<unsigned int>("MySamplingProblem.MyRegression.NumNeighbors"));

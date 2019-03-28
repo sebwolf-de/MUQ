@@ -33,7 +33,6 @@ void MIKernel::PostStep(unsigned int const t, std::vector<std::shared_ptr<Sampli
 }
 
 std::vector<std::shared_ptr<SamplingState>> MIKernel::Step(unsigned int const t, std::shared_ptr<SamplingState> prevState){
-
   assert(proposal);
 
   // If no coarse sample is specified, assume it's the first one

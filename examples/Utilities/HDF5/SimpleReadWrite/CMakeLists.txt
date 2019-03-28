@@ -11,6 +11,3 @@ include_directories(${MUQ_INCLUDE_DIRS})
 
 add_executable(SimpleReadWrite SimpleReadWrite.cpp)
 target_link_libraries(SimpleReadWrite ${MUQ_LIBRARIES} ${MUQ_LINK_LIBRARIES})
-
-add_executable(testing test.cpp)
-target_link_libraries(testing ${MUQ_LIBRARIES} ${MUQ_LINK_LIBRARIES})

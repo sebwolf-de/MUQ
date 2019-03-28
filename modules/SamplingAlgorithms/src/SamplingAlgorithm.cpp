@@ -14,7 +14,7 @@ std::shared_ptr<SampleCollection> SamplingAlgorithm::GetSamples() const { return
 
 std::shared_ptr<SampleCollection> SamplingAlgorithm::GetQOIs() const { return QOIs; }
 
-std::shared_ptr<SampleCollection> SamplingAlgorithm::Run() { return RunImpl(); };
+std::shared_ptr<SampleCollection> SamplingAlgorithm::Run(std::vector<Eigen::VectorXd> const& x0) { return RunImpl(x0); };
 
 #if MUQ_HAS_PARCER
 std::shared_ptr<parcer::Communicator> SamplingAlgorithm::GetCommunicator() const { return comm; }

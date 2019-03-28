@@ -22,7 +22,8 @@ namespace muq {
       coarse_kernels[0] = std::make_shared<MHKernel>(ptBlockID,coarse_problem,proposal_coarse);
 
       Eigen::VectorXd startPtCoarse = componentFactory->StartingPoint(rootIndex);
-      auto coarse_chain = std::make_shared<SingleChainMCMC>(ptChains,coarse_kernels,startPtCoarse);
+      auto coarse_chain = std::make_shared<SingleChainMCMC>(ptChains,coarse_kernels);
+      coarse_chain->SetState(startPtCoarse);
 
       // Construct path to lowest index of box
       boxLowestIndex = MultiIndex::Copy(boxHighestIndex);
@@ -43,7 +44,8 @@ namespace muq {
         std::vector<std::shared_ptr<TransitionKernel>> kernels(1);
         kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
 
-        auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels,startingPoint);
+        auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels);
+        chain->SetState(startingPoint);
 
         coarse_problem = problem;
         coarse_chain = chain;
@@ -76,7 +78,8 @@ namespace muq {
         std::vector<std::shared_ptr<TransitionKernel>> kernels(1);
         kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
 
-        auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels,startingPoint);
+        auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels);
+        chain->SetState(startingPoint);
 
         boxChains[boxIndices->MultiToIndex(boxIndex)] = chain;
 

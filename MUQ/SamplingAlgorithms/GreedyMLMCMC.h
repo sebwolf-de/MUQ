@@ -32,7 +32,7 @@ namespace muq {
       std::shared_ptr<MIMCMCBox> GetBox(int index);
 
     protected:
-      virtual std::shared_ptr<SampleCollection> RunImpl() override;
+      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
 
     private:
       const double e;

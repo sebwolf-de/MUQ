@@ -31,7 +31,7 @@ namespace muq {
       return nullptr;
     }
 
-    std::shared_ptr<SampleCollection> GreedyMLMCMC::RunImpl() {
+    std::shared_ptr<SampleCollection> GreedyMLMCMC::RunImpl(std::vector<Eigen::VectorXd> const& x0) {
 
       const int levels = componentFactory->FinestIndex()->GetValue(0);
 

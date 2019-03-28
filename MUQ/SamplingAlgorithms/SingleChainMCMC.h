@@ -31,33 +31,31 @@ namespace muq{
     public:
 
 #if MUQ_HAS_PARCER
-      SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem, std::vector<Eigen::VectorXd> x0, std::shared_ptr<parcer::Communicator> comm);
+      SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> const& problem, std::shared_ptr<parcer::Communicator> const& comm);
 #endif
 
-      SingleChainMCMC(boost::property_tree::ptree              pt,
-                      std::shared_ptr<AbstractSamplingProblem> problem,
-                      std::vector<Eigen::VectorXd> x0);
+      SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> const& problem);
 
-      SingleChainMCMC(boost::property_tree::ptree              pt,
-                      std::shared_ptr<AbstractSamplingProblem> problem,
-                      Eigen::VectorXd x0)
-                    : SingleChainMCMC(pt, problem, std::vector<Eigen::VectorXd>(1,x0)) {};
-
-      SingleChainMCMC(boost::property_tree::ptree pt,
-                      std::vector<std::shared_ptr<TransitionKernel>> kernels,
-                      std::vector<Eigen::VectorXd> x0);
-
-      SingleChainMCMC(boost::property_tree::ptree pt,
-                      std::vector<std::shared_ptr<TransitionKernel>> kernels,
-                      Eigen::VectorXd x0)
-                    : SingleChainMCMC(pt, kernels, std::vector<Eigen::VectorXd>(1,x0)) {};
-
+      SingleChainMCMC(boost::property_tree::ptree pt, std::vector<std::shared_ptr<TransitionKernel> > const& kernels);
 
       virtual ~SingleChainMCMC() = default;
 
+      /// Set the state of the MCMC chain
+      /**
+        If no steps have been taken, this function sets the starting point.
+        Set the current state AND adds it to the sample collection.
+      */
+      void SetState(std::vector<Eigen::VectorXd> const& x0);
+
+      template<typename... Args>
+        inline void SetState(Args const&... args) {
+          std::vector<Eigen::VectorXd> vec;
+          SetStateRecurse(vec, args...);
+      }
+
       virtual std::vector<std::shared_ptr<TransitionKernel>>& Kernels(){return kernels;};
 
-      virtual std::shared_ptr<SampleCollection> RunImpl() override;
+      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
 
       virtual void Sample();
 
@@ -83,6 +81,17 @@ namespace muq{
       std::vector<std::shared_ptr<TransitionKernel>> kernels;
 
     private:
+
+      template<typename... Args>
+        inline void SetStateRecurse(std::vector<Eigen::VectorXd>& vec, Eigen::VectorXd const& it, Args const&... args) {
+          vec.push_back(it);
+          SetStateRecurse(vec, args...);
+        }
+
+      inline void SetStateRecurse(std::vector<Eigen::VectorXd>& vec, Eigen::VectorXd const& last) {
+        vec.push_back(last);
+        SetState(vec);
+      }
 
       unsigned int sampNum = 1;
       std::shared_ptr<SamplingState> prevState = nullptr;

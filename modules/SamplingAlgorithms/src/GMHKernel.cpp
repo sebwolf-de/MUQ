@@ -91,8 +91,6 @@ void GMHKernel::ParallelProposal(unsigned int const t, std::shared_ptr<SamplingS
   //auto helper = std::make_shared<ProposeState>(proposal, problem);
   //auto proposalQueue = std::make_shared<ProposalQueue>(helper, comm);
 
-  std::cout << "CREATED queue" << std::endl;
-
   if( comm->GetRank()==0 ) {
     /*std::cout << "ONE RANK IS HERE" << std::endl;
     assert(state);
@@ -136,9 +134,6 @@ void GMHKernel::ParallelProposal(unsigned int const t, std::shared_ptr<SamplingS
     // compute stationary transition probability
     AcceptanceDensity(R);*/
   }
-
-  std::cout << "BOTH" << std::endl;
-}
 #endif
 
 void GMHKernel::AcceptanceDensity(Eigen::VectorXd& R) {
@@ -189,17 +184,13 @@ void GMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> sta
 #if MUQ_HAS_PARCER
     if( comm ) {
       if( comm->GetRank()==0 ) { assert(state); }
-      std::cout << "Pre BEFORE PARALLEL" << std::endl;
       ParallelProposal(t, state);
-      std::cout << "Pre AFTER PARALLEL" << std::endl;
     }else{
       SerialProposal(t, state);
     }
 #else
     SerialProposal(t, state);
 #endif
-
-  std::cout << "DONE PRESTEP" << std::endl << std::flush;
 }
 
 std::vector<std::shared_ptr<SamplingState> > GMHKernel::SampleStationary() const {
