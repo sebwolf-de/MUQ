@@ -13,7 +13,7 @@ std::shared_ptr<MultiIndexSet> muq::Utilities::operator+=( std::shared_ptr<Multi
 }
 
 std::shared_ptr<MultiIndexSet> muq::Utilities::operator+=( std::shared_ptr<MultiIndexSet> x,
-                                                           std::shared_ptr<MultiIndex> y)
+                                                           std::shared_ptr<MultiIndex>    y)
 {
   (*x)+=y;
   return x;
@@ -26,7 +26,7 @@ MultiIndexSet::MultiIndexSet(const unsigned dimIn,
 {
 };
 
-void MultiIndexSet::SetLimiter(std::shared_ptr<MultiIndexLimiter> limiterIn){
+void MultiIndexSet::SetLimiter(std::shared_ptr<MultiIndexLimiter> const& limiterIn){
 
   // first, make sure no active terms in the set currently obey the new limiter.
   //  If a term is inactive, remove all edges tied to it
@@ -53,7 +53,7 @@ void MultiIndexSet::SetLimiter(std::shared_ptr<MultiIndexLimiter> limiterIn){
   limiter = limiterIn;
 }
 
-std::shared_ptr<MultiIndexSet> MultiIndexSet::CloneExisting(std::shared_ptr<MultiIndexSet> original)
+std::shared_ptr<MultiIndexSet> MultiIndexSet::CloneExisting(std::shared_ptr<MultiIndexSet> const& original)
 {
   auto output = make_shared<MultiIndexSet>(original->dim, original->limiter);
 
@@ -79,7 +79,7 @@ std::shared_ptr<MultiIndexSet> MultiIndexSet::CloneExisting(std::shared_ptr<Mult
 //   return output;
 // }
 
-int MultiIndexSet::MultiToIndex(const std::shared_ptr<MultiIndex> input) const{
+int MultiIndexSet::MultiToIndex(std::shared_ptr<MultiIndex> const& input) const{
 
   auto localIter = multi2global.find(input);
 
@@ -91,7 +91,7 @@ int MultiIndexSet::MultiToIndex(const std::shared_ptr<MultiIndex> input) const{
 }
 
 
-int MultiIndexSet::AddMulti(std::shared_ptr<MultiIndex> newMulti)
+int MultiIndexSet::AddMulti(std::shared_ptr<MultiIndex> const& newMulti)
 {
   allMultis.push_back(newMulti);
 
@@ -114,7 +114,7 @@ int MultiIndexSet::AddMulti(std::shared_ptr<MultiIndex> newMulti)
 ///////////////////////////
 //////// FINISHED UP HERE
 ///////////////////////////
-int MultiIndexSet::AddActive(std::shared_ptr<MultiIndex> newNode)
+int MultiIndexSet::AddActive(std::shared_ptr<MultiIndex> const& newNode)
 {
   int globalInd = AddInactive(newNode);
 
@@ -130,7 +130,7 @@ int MultiIndexSet::AddActive(std::shared_ptr<MultiIndex> newNode)
 
 
 
-int MultiIndexSet::AddInactive(std::shared_ptr<MultiIndex> newNode)
+int MultiIndexSet::AddInactive(std::shared_ptr<MultiIndex> const& newNode)
 {
   auto iter = multi2global.find(newNode);
 
@@ -148,7 +148,7 @@ int MultiIndexSet::AddInactive(std::shared_ptr<MultiIndex> newNode)
   }
 }
 
-bool MultiIndexSet::IsActive(std::shared_ptr<MultiIndex> multiIndex) const
+bool MultiIndexSet::IsActive(std::shared_ptr<MultiIndex> const& multiIndex) const
 {
   auto iter = multi2global.find(multiIndex);
 
@@ -188,7 +188,7 @@ bool MultiIndexSet::IsAdmissible(unsigned int globalIndex) const
   }
 }
 
-bool MultiIndexSet::IsAdmissible(std::shared_ptr<MultiIndex> multiIndex) const
+bool MultiIndexSet::IsAdmissible(std::shared_ptr<MultiIndex> const& multiIndex) const
 {
   auto iter = multi2global.find(multiIndex);
   if(iter==multi2global.end()){
@@ -235,7 +235,7 @@ void MultiIndexSet::Activate(int globalIndex)
   }
 }
 
-void MultiIndexSet::Activate(std::shared_ptr<MultiIndex> multiIndex)
+void MultiIndexSet::Activate(std::shared_ptr<MultiIndex> const& multiIndex)
 {
   auto iter = multi2global.find(multiIndex);
 
@@ -374,7 +374,7 @@ void MultiIndexSet::ForciblyActivate(int globalIndex, std::vector<unsigned> &new
   }
 }
 
-std::vector<unsigned> MultiIndexSet::ForciblyActivate(std::shared_ptr<MultiIndex> multiIndex){
+std::vector<unsigned> MultiIndexSet::ForciblyActivate(std::shared_ptr<MultiIndex> const& multiIndex){
 
   assert(limiter->IsFeasible(multiIndex));
 
@@ -418,7 +418,7 @@ int MultiIndexSet::Union(const MultiIndexSet& rhs)
   return Size() - oldTerms;
 }
 
-MultiIndexSet& MultiIndexSet::operator+=(std::shared_ptr<MultiIndex> rhs)
+MultiIndexSet& MultiIndexSet::operator+=(std::shared_ptr<MultiIndex> const& rhs)
 {
   AddActive(rhs);
   return *this;

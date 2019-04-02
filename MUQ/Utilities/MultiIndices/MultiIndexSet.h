@@ -71,7 +71,7 @@ namespace muq{
                     std::shared_ptr<MultiIndexLimiter> limiterIn = std::make_shared<NoLimiter>());
 
       /// NOTE: does not perform a deep copy of the multiindices themselves, only pointers to the multiindices
-      static std::shared_ptr<MultiIndexSet> CloneExisting(std::shared_ptr<MultiIndexSet> original);
+      static std::shared_ptr<MultiIndexSet> CloneExisting(std::shared_ptr<MultiIndexSet> const& original);
 
       /** Default virtual destructor */
       virtual ~MultiIndexSet() = default;
@@ -81,7 +81,7 @@ namespace muq{
           If this is not the case, an assert will be thrown.
           @param[in] limiterIn A shared pointer to the new limiter.
       */
-      virtual void SetLimiter(std::shared_ptr<MultiIndexLimiter> limiterIn);
+      virtual void SetLimiter(std::shared_ptr<MultiIndexLimiter> const& limiterIn);
 
       /** Returns the limiter used in this MultiIndexSet. */
       virtual std::shared_ptr<MultiIndexLimiter> GetLimiter() const{return limiter;};
@@ -122,7 +122,7 @@ namespace muq{
           containing the linear index is returned.  However, if the set does not
           contain the multiindex, -1 is returned.
       */
-      virtual int MultiToIndex(const std::shared_ptr<MultiIndex> input) const;
+      virtual int MultiToIndex(std::shared_ptr<MultiIndex> const& input) const;
 
       /** Given a multiindex, return the linear index where it is located.
        @param[in] input A row vector of unsigned integers representing the multiindex.
@@ -198,7 +198,7 @@ namespace muq{
        @return A reference to this MultiIndex set, which may now contain the new
                MultiIndex in rhs.
        */
-      virtual MultiIndexSet& operator+=(std::shared_ptr<MultiIndex> rhs);
+      virtual MultiIndexSet& operator+=(std::shared_ptr<MultiIndex> const& rhs);
 
       /** @brief Add a single MultiIndex to the set.
        @details This function creates an instance of MultiIndex from the row
@@ -225,7 +225,7 @@ namespace muq{
          of this set.  If that is not the case, use the AddActive function instead.
          @param[in] multiIndex A multiindex to make active.  Note that an assert will fail if multiIndex is not admissable.
       */
-      virtual void Activate(std::shared_ptr<MultiIndex> multiIndex);
+      virtual void Activate(std::shared_ptr<MultiIndex> const& multiIndex);
 
       /**
          Make the multi-index active. Assumes that the multiIndex input is already
@@ -247,7 +247,7 @@ namespace muq{
        @param[in] newNode A multiindex we want to add as an active member of the set.
        @return An integer specifying the linear index of the now active multiindex.
        */
-      virtual int AddActive(std::shared_ptr<MultiIndex> newNode);
+      virtual int AddActive(std::shared_ptr<MultiIndex> const& newNode);
 
       /** This function simply creates an instance of MultiIndex and calls the
           AddActive(std::shared_ptr<MultiIndex> newNode) function.
@@ -285,7 +285,7 @@ namespace muq{
        * @return A vector of linear indices indicating all the active MultiIndices
                  added to the set in order to make the given multiIndex admissable.
        */
-      virtual std::vector<unsigned> ForciblyActivate(std::shared_ptr<MultiIndex> multiIndex);
+      virtual std::vector<unsigned> ForciblyActivate(std::shared_ptr<MultiIndex> const& multiIndex);
 
       /**
        * This function simply creates an instance of the MultiIndex class and calls ForciblyActivate(std::shared_ptr<MultiIndex> multiIndex).
@@ -305,18 +305,18 @@ namespace muq{
       //*********************************************************
 
       ///Determines whether the input multiIndex is currently admissible.
-      virtual bool IsAdmissible(std::shared_ptr<MultiIndex> multiIndex) const;
+      virtual bool IsAdmissible(std::shared_ptr<MultiIndex> const& multiIndex) const;
 
       ///Return true if one of the forward neighbors of index is admissible but not active.
       virtual bool IsExpandable(unsigned int activeIndex) const;
 
       ///Return true if the multiIndex is active
-      virtual bool IsActive(std::shared_ptr<MultiIndex> multiIndex) const;
+      virtual bool IsActive(std::shared_ptr<MultiIndex> const& multiIndex) const;
 
 
     protected:
 
-      int AddInactive(std::shared_ptr<MultiIndex> newNode);
+      int AddInactive(std::shared_ptr<MultiIndex> const& newNode);
 
       virtual bool IsAdmissible(unsigned int globalIndex) const;
       virtual bool IsActive(unsigned int globalIndex) const;
@@ -358,7 +358,7 @@ namespace muq{
 
     private:
 
-      int AddMulti(std::shared_ptr<MultiIndex> newMulti);
+      int AddMulti(std::shared_ptr<MultiIndex> const& newMulti);
 
       std::map<std::shared_ptr<MultiIndex>, unsigned int, MultiPtrComp> multi2global; // map from a multiindex to an integer
 
