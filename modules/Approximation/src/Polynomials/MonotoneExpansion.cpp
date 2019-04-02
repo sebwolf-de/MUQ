@@ -36,8 +36,8 @@ MonotoneExpansion::MonotoneExpansion(std::vector<std::shared_ptr<BasisExpansion>
   // Number of quadrature points is based on the fact that an N point Gauss-quadrature
   // rule can integrate exactly a polynomial of order 2N-1
   int numQuadPts = ceil(0.5*(2.0*maxOrder + 1.0));
-  GaussQuadrature gqSolver(std::make_shared<Legendre>(), numQuadPts);
-  gqSolver.Compute(numQuadPts);
+  GaussQuadrature gqSolver(std::make_shared<Legendre>(), numQuadPts-1);
+  gqSolver.Compute(numQuadPts-1);
 
   quadPts = 0.5*(gqSolver.Points().transpose()+Eigen::VectorXd::Ones(numQuadPts));
   quadWeights = 0.5*gqSolver.Weights();
