@@ -27,7 +27,7 @@ namespace Approximation {
    */
   class PolynomialChaosExpansion : public BasisExpansion {
   friend class PCEFactory;
-  
+
   public:
 
     PolynomialChaosExpansion(std::shared_ptr<OrthogonalPolynomial>          const& basisCompsIn,
@@ -95,9 +95,15 @@ namespace Approximation {
     Eigen::MatrixXd TotalSensitivity() const;
 
     ///Compute the main sensitivity index for the input dimension, for each output dimension
-    Eigen::VectorXd MainSensitivity(unsigned const targetDim) const;
+    Eigen::VectorXd SobolSensitivity(unsigned const targetDim) const;
 
-    ///Compute all the main sensitivities. Rows are outputs, each column is an input.
+    /** Computes the Sobol sensitivity for a group of input parameters.
+    */
+    Eigen::VectorXd SobolSensitivity(std::vector<unsigned int> const& targetDims) const;
+
+    /** Compute all the main sensitivities (e.g., one term Sobol sensitivity indices).
+        Rows are outputs, each column is an input.
+    */
     Eigen::MatrixXd MainSensitivity() const;
 
     // ///Load an expansion using boost::serialization and return the result

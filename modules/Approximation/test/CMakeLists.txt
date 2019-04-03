@@ -25,6 +25,7 @@ CreateTestGroup(
   APPROXIMATION_POLYNOMIALCHAOS
 
   PolynomialChaos/PCEFactoryTest.cpp
+  PolynomialChaos/PolynomialChaosExpansionTest.cpp
 )
 
 CreateTestGroup(

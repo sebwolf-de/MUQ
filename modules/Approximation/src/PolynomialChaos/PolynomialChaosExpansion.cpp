@@ -44,12 +44,13 @@ Eigen::VectorXd PolynomialChaosExpansion::GetNormalizationVec() const{
     double norm = 1.0; //start the normalization at 1
 
     //loop over the dimensions and multiply the normalizations for each component polynomial
-    std::shared_ptr<MultiIndex> multi = multis->IndexToMulti(i);
-    for(auto it=multi->GetNzBegin(); it!=multi->GetNzEnd(); ++it)
-       norm *= std::dynamic_pointer_cast<OrthogonalPolynomial>(basisComps.at(it->first))->Normalization(it->second);
-
+    Eigen::RowVectorXi multi = multis->IndexToMulti(i)->GetVector();
+    for(int k=0; k<multi.size(); ++k){
+      norm *= std::dynamic_pointer_cast<OrthogonalPolynomial>(basisComps.at(k))->Normalization(multi(k));
+    }
     result(i) = std::sqrt(norm);
   }
+
   return result;
 };
 
@@ -103,16 +104,9 @@ Eigen::MatrixXd PolynomialChaosExpansion::Covariance() const
   Eigen::MatrixXd cov(outputSizes(0), outputSizes(0));
   int npolys = coeffs.cols();
   for (int j = 0; j < outputSizes(0); ++j) {   // column index
-    for (int i = j; i <= outputSizes(0); ++i) { // row index
+    for (int i = j; i < outputSizes(0); ++i) { // row index
       cov(i,j) = coeffs.row(j).tail(npolys - 1) * quadVec.asDiagonal() * coeffs.row(i).tail(npolys - 1).transpose();
       cov(j,i) = cov(i,j);
-    }
-  }
-
-  // lower to upper triangular copy
-  for (int j = 1; j < outputSizes(0); ++j) { // column index
-    for (int i = 0; i < j; ++i) {        // row index
-      cov(i, j) = cov(j, i);
     }
   }
 
@@ -322,8 +316,10 @@ Eigen::VectorXd PolynomialChaosExpansion::TotalSensitivity(unsigned const target
   Eigen::VectorXd normalVec = GetNormalizationVec();
 
   // Zero out the terms that do not depend on the targetDim
-  for (unsigned int i = 0; i < multis->Size(); ++i)
-    normalVec(i) *=  static_cast<double>((multis->IndexToMulti(i)->GetValue(targetDim) != 0));
+  for (unsigned int i = 0; i < multis->Size(); ++i){
+    if(multis->IndexToMulti(i)->GetValue(targetDim)==0)
+      normalVec(i) = 0.0;
+  }
 
   Eigen::VectorXd dimMeasures(inputSizes(0));
   for (unsigned int i = 0; i < inputSizes(0); ++i)
@@ -331,8 +327,7 @@ Eigen::VectorXd PolynomialChaosExpansion::TotalSensitivity(unsigned const target
 
   //we want the sum of normalized involved coeffs divided by the normalized sum of all of them.
   //Don't forget the constant normalization the variance requires
-  return (coeffs.array().square().matrix() *
-          normalVec.array().square().matrix()).array() / dimMeasures.prod() / Variance().array();
+  return (coeffs.array().square().matrix() * normalVec.array().square().matrix()).array() / dimMeasures.prod() / Variance().array();
 }
 
 Eigen::MatrixXd PolynomialChaosExpansion::TotalSensitivity() const
@@ -345,19 +340,27 @@ Eigen::MatrixXd PolynomialChaosExpansion::TotalSensitivity() const
   return result;
 }
 
-Eigen::VectorXd PolynomialChaosExpansion::MainSensitivity(unsigned const targetDim) const
-{
+Eigen::VectorXd PolynomialChaosExpansion::SobolSensitivity(unsigned int targetDim) const {
+  return SobolSensitivity(std::vector<unsigned int>(1,targetDim));
+}
+
+
+Eigen::VectorXd PolynomialChaosExpansion::SobolSensitivity(std::vector<unsigned int> const& targetDims) const {
   //we're going to fill this index with either 1 or 0, depending on whether the term includes the target dimension
   Eigen::ArrayXd contributesToIndex = Eigen::VectorXd::Zero(NumTerms());
 
-  //create a row vector with a one at only the place we're interested in
-  Eigen::Array<int, 1, Eigen::Dynamic> deltaDim = Eigen::RowVectorXi::Ones(inputSizes(0));
-  deltaDim(targetDim) = 0;
+  // each term contributes to the main effects iff all nonzero terms in the multiindex correspond to a target dimension
+  for(unsigned int i=0; i<multis->Size(); ++i){
+    auto currMulti = multis->IndexToMulti(i);
+    int miSum = currMulti->Sum();
 
-  //each one contributes iff it is the only non-zero one
-  for (unsigned int i = 0; i < multis->Size(); ++i) {
-    Eigen::RowVectorXi oneIndex = multis->IndexToMulti(i)->GetVector();
-    contributesToIndex(i) = static_cast<double>((oneIndex(targetDim) != 0) && ((oneIndex.array() * deltaDim).matrix().sum() == 0));
+    int partSum = 0;
+    for(auto& k : targetDims)
+      partSum += currMulti->GetValue(k);
+
+    if((miSum>0)&&(partSum==miSum)){
+      contributesToIndex(i) = 1;
+    }
   }
 
   //grab the total normalizations
@@ -372,8 +375,7 @@ Eigen::VectorXd PolynomialChaosExpansion::MainSensitivity(unsigned const targetD
 
   //we want the sum of normalized involved coeffs divided by the normalized sum of all of them.
   //Don't forget the constant normalization the variance requires
-  return (coeffs.array().square().matrix() *
-          filterdVec.array().square().matrix()).array() / dimMeasures.prod() / Variance().array();
+  return (coeffs.array().square().matrix() * filterdVec.array().square().matrix()).array() / dimMeasures.prod() / Variance().array();
 }
 
 Eigen::MatrixXd PolynomialChaosExpansion::MainSensitivity() const
@@ -381,7 +383,7 @@ Eigen::MatrixXd PolynomialChaosExpansion::MainSensitivity() const
   Eigen::MatrixXd result(coeffs.rows(), inputSizes(0));
 
   for (unsigned int i = 0; i < inputSizes(0); ++i)
-    result.col(i) = MainSensitivity(i);
+    result.col(i) = SobolSensitivity(i);
 
   return result;
 }
