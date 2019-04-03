@@ -10,6 +10,7 @@
 namespace muq {
 namespace Approximation {
 
+  class PCEFactory;
 
   /**
    @class PolynomialChaosExpansion
@@ -25,7 +26,8 @@ namespace Approximation {
   @see BasisExpansion, PCEFactory
    */
   class PolynomialChaosExpansion : public BasisExpansion {
-
+  friend class PCEFactory;
+  
   public:
 
     PolynomialChaosExpansion(std::shared_ptr<OrthogonalPolynomial>          const& basisCompsIn,

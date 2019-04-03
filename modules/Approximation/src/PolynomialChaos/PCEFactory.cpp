@@ -20,7 +20,7 @@ PCEFactory::PCEFactory(std::vector<std::shared_ptr<Quadrature>>         const& q
   */
   Eigen::RowVectorXi orders(dim);
   for(unsigned int i=0; i<dim; ++i)
-    orders(i) = quadTypes.at(i)->Exactness(quadOrders->GetValue(i))/2;
+    orders(i) = std::floor( quadTypes.at(i)->Exactness(quadOrders->GetValue(i)) / 2.0);
 
   polyMultis = MultiIndexFactory::CreateFullTensor(orders);
 
@@ -79,6 +79,9 @@ std::shared_ptr<PolynomialChaosExpansion> PCEFactory::Compute(std::vector<Eigen:
   // Estimate the projection c_{ij} = <\psi_j, f_i> = \sum_{k=1}^N w_k \psi_j(x_k) f_i(x_k)
   for(unsigned int k=0; k<quadPts.size(); ++k)
     coeffs += quadWts(k) * quadEvals.at(k) * pce->BuildVandermonde(quadPts.at(k));
+
+  Eigen::VectorXd allNorms = pce->GetNormalizationVec().array().square().matrix();
+  coeffs = (coeffs.array().rowwise() / allNorms.transpose().array()).eval();
 
   pce->SetCoeffs(coeffs);
 

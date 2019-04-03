@@ -19,7 +19,8 @@ namespace Approximation {
              approximation using a fixed quadrature rule.
   */
   class PCEFactory {
-
+  public:
+    
     /** Constructs a factory using a prespecified tensor product quadrature rule.
         The terms in the polynomial expansion are chosen from the quadrature rule.
         Polynomial terms that can be integrated exactly are used.

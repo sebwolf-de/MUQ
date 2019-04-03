@@ -30,7 +30,7 @@ PolynomialChaosExpansion::PolynomialChaosExpansion(std::vector<std::shared_ptr<I
 
 PolynomialChaosExpansion::PolynomialChaosExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
                                                    std::shared_ptr<muq::Utilities::MultiIndexSet>            multisIn,
-                                                   unsigned int                                              outputDim) : BasisExpansion(basisCompsIn, multisIn, Eigen::MatrixXd::Zero(outputDim, multisIn->GetMultiLength()))
+                                                   unsigned int                                              outputDim) : BasisExpansion(basisCompsIn, multisIn, Eigen::MatrixXd::Zero(outputDim, multisIn->Size()))
 {}
 
 

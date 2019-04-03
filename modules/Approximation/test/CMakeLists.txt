@@ -22,6 +22,12 @@ CreateTestGroup(
 )
 
 CreateTestGroup(
+  APPROXIMATION_POLYNOMIALCHAOS
+
+  PolynomialChaos/PCEFactoryTest.cpp
+)
+
+CreateTestGroup(
   APPROXIMATION_QUADRATURE
 
   Quadrature/GaussQuadratureTests.cpp
