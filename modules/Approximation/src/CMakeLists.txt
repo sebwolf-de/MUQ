@@ -27,7 +27,7 @@ CreateCompileGroup(
 	APPROXIMATION_POLYNOMIALS
 	"Polynomials and multiindices"
 	muqApproximation
-	"MODELING_CORE"
+	"MODELING_CORE;UTILITIES_MULTIINDEX"
 	""
 	""
 	Polynomials/IndexedScalarBasis.cpp
@@ -47,13 +47,25 @@ CreateCompileGroup(
 	APPROXIMATION_QUADRATURE
 	"Quadrature rules"
 	muqApproximation
-	"APPROXIMATION_QUADRATURE"
+	"APPROXIMATION_POLYNOMIALS;UTILITIES_MULTIINDEX"
 	""
 	""
+	Quadrature/Quadrature.cpp
   Quadrature/GaussQuadrature.cpp
 	Quadrature/FullTensorQuadrature.cpp
 	Quadrature/SmolyakQuadrature.cpp
 	Quadrature/ClenshawCurtisQuadrature.cpp
+)
+
+CreateCompileGroup(
+	APPROXIMATION_POLYNOMIALCHAOS
+	"Polynomial chaos tools"
+	muqApproximation
+	"MODELING_CORE;APPROXIMATION_QUADRATURE;APPROXIMATION_POLYNOMIALS"
+	""
+	""
+	PolynomialChaos/PolynomialChaosExpansion.cpp
+	PolynomialChaos/PCEFactory.cpp
 )
 
 CreateCompileGroup(

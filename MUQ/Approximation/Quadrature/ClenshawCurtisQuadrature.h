@@ -52,6 +52,7 @@ Eigen::VectorXd wts = quad.Weights();
 
     virtual void Compute(unsigned int index) override;
 
+    virtual unsigned int Exactness(unsigned int quadOrder) const override;
   private:
 
 

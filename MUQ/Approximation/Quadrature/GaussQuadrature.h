@@ -26,11 +26,13 @@ namespace muq {
       virtual ~GaussQuadrature() = default;
 
       GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn);
-      
+
       GaussQuadrature(std::shared_ptr<OrthogonalPolynomial> polyIn,
                       int                                   polyOrderIn);
 
-      virtual void Compute(unsigned int order) override;
+      virtual void Compute(unsigned int quadOrder) override;
+
+      virtual unsigned int Exactness(unsigned int quadOrder) const override{return 2*quadOrder+1;};
 
     private:
 

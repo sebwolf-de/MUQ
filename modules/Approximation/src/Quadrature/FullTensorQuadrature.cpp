@@ -68,3 +68,12 @@ void FullTensorQuadrature::Compute(Eigen::RowVectorXi const& orders) {
   }
 
 }
+
+unsigned int FullTensorQuadrature::Exactness(unsigned int quadOrder) const {
+
+  unsigned int maxOrder = 0;
+  for(auto& rule : rules)
+    maxOrder = std::max(maxOrder, rule->Exactness(quadOrder));
+    
+  return maxOrder;
+}

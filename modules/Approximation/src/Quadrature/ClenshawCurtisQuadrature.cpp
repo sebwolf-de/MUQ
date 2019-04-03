@@ -6,6 +6,11 @@ using namespace muq::Approximation;
 ClenshawCurtisQuadrature::ClenshawCurtisQuadrature(bool nestedIn) : Quadrature(1),
                                                                     nested(nestedIn) {}
 
+unsigned int ClenshawCurtisQuadrature::Exactness(unsigned int index) const
+{
+  return IndexToNumPoints(index)-1;
+}
+
 unsigned int ClenshawCurtisQuadrature::IndexToNumPoints(unsigned int index) const
 {
   if(nested){

@@ -50,7 +50,7 @@ namespace muq {
     \f$\exp\left[-\frac{1}{2}x^2\right] \f$ | \f$(-\infty, \infty)\f$ | Probabilist Hermite | `muq::Approximation::ProbabilistHermite`
     \f$\exp\left[-x^2\right] \f$ | \f$(-\infty, \infty)\f$ | Physicist Hermite | `muq::Approximation::PhysicistHermite`
     \f$\exp\left[-x\right] \f$  | \f$[0, \infty)\f$ | Laguerre | `muq::Approximation::Laguerre`
-    \f$(1-x)^a (1+x)^b\f$          | \f$[-1,1]\f$      | Jacobi   | `muq::Approximation::Jacobi`
+    \f$(1-x)^a (1+x)^b\f$       | \f$[-1,1]\f$      | Jacobi   | `muq::Approximation::Jacobi`
 
     To construct a Gauss quadrature rule, MUQ requires the polynomial family to be
     defined first.  See below for examples.  Note that behind the scenes, MUQ
@@ -128,7 +128,20 @@ namespace muq {
 
       virtual ~Quadrature() = default;
 
-      virtual void Compute(unsigned int order) = 0;
+      virtual void Compute(unsigned int quadOrder) = 0;
+
+      /** Returns the order of the polynomial that can be integrated exactly by
+          this quadrature rule.   An \f$n\f$-point Gauss quadrature rule integrates
+          polynomials of order \f$2n-1\f$ exactly.  Thus, since \f$n\f$= quadOrder+1,
+          for Gauss quadrature rules, this function will return 2*quadOrder+1.
+
+          In the multivariate tensor product rule, the maximum exactness across all dimensions
+          is returned.
+
+          If not exactness information is known (or implemented) for a particular
+          quadrature rule, an exception will be thrown.
+      */
+      virtual unsigned int Exactness(unsigned int quadOrder) const;
 
       /** Base implementation of Compute.  Assumes the quadrature rule is 1d
           and then calls Compute with the first component of the orders vector.

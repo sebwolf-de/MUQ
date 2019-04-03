@@ -55,6 +55,8 @@ public:
   virtual void Compute(unsigned int order) override;
   virtual void Compute(Eigen::RowVectorXi const& orders) override;
 
+  virtual unsigned int Exactness(unsigned int quadOrder) const override;
+
 private:
 
   std::vector<std::shared_ptr<Quadrature>> rules;
