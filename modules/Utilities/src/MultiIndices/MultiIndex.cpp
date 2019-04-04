@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include <iostream>
+
 using namespace muq::Utilities;
 
 
@@ -141,8 +143,13 @@ bool MultiIndex::operator!=(const MultiIndex &b){
   if(b.nzInds.size() != nzInds.size())
     return true;
 
-  for(int i=0; i<length; ++length){
-    if(GetValue(i) != b.GetValue(i))
+  // Loop through the nonzero indices
+  auto bit = b.nzInds.begin();
+  auto it = nzInds.begin();
+  for(; it!=nzInds.end(); ++it){
+    if(it->first != bit->first)
+      return true;
+    if(it->second != bit->second)
       return true;
   }
 
