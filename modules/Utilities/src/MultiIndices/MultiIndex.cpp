@@ -2,8 +2,6 @@
 
 #include <stdexcept>
 
-#include <iostream>
-
 using namespace muq::Utilities;
 
 
@@ -135,7 +133,7 @@ void MultiIndex::SetLength(unsigned newLength)
   }
 }
 
-bool MultiIndex::operator!=(const MultiIndex &b){
+bool MultiIndex::operator!=(const MultiIndex &b) const{
 
   if( (b.length != length) || (b.maxValue != maxValue) || (b.totalOrder != totalOrder))
     return true;
@@ -156,11 +154,15 @@ bool MultiIndex::operator!=(const MultiIndex &b){
   return false;
 }
 
-bool MultiIndex::operator==(const MultiIndex &b){
+bool MultiIndex::operator==(const MultiIndex &b) const{
   return !( *this != b);
 }
 
-bool MultiIndex::operator<(const MultiIndex &b){
+bool MultiIndex::operator>(const MultiIndex &b) const{
+  return b<(*this);
+}
+
+bool MultiIndex::operator<(const MultiIndex &b) const{
 
   if(totalOrder<b.totalOrder){
     return true;

@@ -109,7 +109,7 @@ void SmolyakQuadrature::Compute(std::shared_ptr<MultiIndexSet> const& multis) {
 }
 
 
-Eigen::VectorXd SmolyakQuadrature::ComputeWeights(std::shared_ptr<MultiIndexSet> const& multis) const
+Eigen::VectorXd SmolyakQuadrature::ComputeWeights(std::shared_ptr<MultiIndexSet> const& multis)
 {
   unsigned int dim = multis->GetMultiLength();
 

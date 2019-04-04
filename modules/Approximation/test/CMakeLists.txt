@@ -26,6 +26,7 @@ CreateTestGroup(
 
   PolynomialChaos/PCEFactoryTest.cpp
   PolynomialChaos/PolynomialChaosExpansionTest.cpp
+  Quadrature/AdaptiveSmolyakQuadratureTest.cpp
 )
 
 CreateTestGroup(

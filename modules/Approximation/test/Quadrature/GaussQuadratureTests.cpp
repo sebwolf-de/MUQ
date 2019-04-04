@@ -319,6 +319,7 @@ TEST(Quadrature, Jacobi) {
   Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
+  std::cout << gaussPts << std::endl;
   for (int i=0; i<order+1; i++) {
 
     EXPECT_NEAR(gaussPts(i), gaussPtsTable[i], 1e-9);

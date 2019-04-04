@@ -300,6 +300,12 @@ namespace muq{
        */
       virtual std::vector<std::shared_ptr<MultiIndex>>  GetAdmissibleForwardNeighbors(unsigned int activeIndex);
 
+      /** Returns the indices for the backward neighbors of a currently active multiindex.
+      @param[in] activeIndex The linear index of the MultiIndex of interest
+      @return A std::vector containing the linear indices of the backward neighbors.
+      */
+      virtual std::vector<unsigned int> GetBackwardNeighbors(unsigned int activeIndex) const;
+
       //*********************************************************
       //Testing properties of an index/multiIndex
       //*********************************************************

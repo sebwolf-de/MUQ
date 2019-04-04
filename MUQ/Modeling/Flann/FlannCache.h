@@ -15,78 +15,79 @@ namespace muq {
     class FlannCache;
 
     template <class Distance = nanoflann::metric_L2, typename IndexType = size_t>
-      struct DynamicKDTreeAdaptor {
-        friend class FlannCache;
+    struct DynamicKDTreeAdaptor {
 
-        typedef DynamicKDTreeAdaptor<Distance,IndexType> self_t;
-        typedef typename Distance::template traits<double,self_t>::distance_t metric_t;
-        typedef nanoflann::KDTreeSingleIndexDynamicAdaptor< metric_t,self_t,-1,IndexType>  index_t;
+      friend class FlannCache;
 
-        std::shared_ptr<index_t> index; //! The kd-tree index for the user to call its methods as usual with any other FLANN index.
-        std::deque<Eigen::VectorXd> m_data;
+      typedef DynamicKDTreeAdaptor<Distance,IndexType> self_t;
+      typedef typename Distance::template traits<double,self_t>::distance_t metric_t;
+      typedef nanoflann::KDTreeSingleIndexDynamicAdaptor< metric_t,self_t,-1,IndexType>  index_t;
 
-        /// Constructor: takes a const ref to the vector of vectors object with the data points
-	inline DynamicKDTreeAdaptor(const int dim, const int leaf_max_size = 10) {
-          index = std::make_shared<index_t>(dim, *this /* adaptor */, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size ) );
-        }
+      std::shared_ptr<index_t> index; //! The kd-tree index for the user to call its methods as usual with any other FLANN index.
+      std::deque<Eigen::VectorXd> m_data;
 
-	inline void UpdateIndex(const int leaf_max_size = 10) {
-	  assert(m_data.size()>0);
-          index = std::make_shared<index_t>(m_data.at(0).size(), *this /* adaptor */, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size ) );
-          index->addPoints(0, m_data.size()-1);
-        }
+      /// Constructor: takes a const ref to the vector of vectors object with the data points
+	    inline DynamicKDTreeAdaptor(const int dim, const int leaf_max_size = 10) {
+        index = std::make_shared<index_t>(dim, *this /* adaptor */, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size ) );
+      }
 
-	inline virtual ~DynamicKDTreeAdaptor() {}
+	    inline void UpdateIndex(const int leaf_max_size = 10) {
+	      assert(m_data.size()>0);
+        index = std::make_shared<index_t>(m_data.at(0).size(), *this /* adaptor */, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size ) );
+        index->addPoints(0, m_data.size()-1);
+      }
 
-        inline void add(Eigen::VectorXd const& newPt) {
-          m_data.push_back(newPt);
-	  index->addPoints(m_data.size()-1, m_data.size()-1);
-        }
+      inline virtual ~DynamicKDTreeAdaptor() {}
 
-        /** Query for the \a num_closest closest points to a given point (entered as query_point[0:dim-1]).
-	 *  Note that this is a short-cut method for index->findNeighbors().
-	 *  The user can also call index->... methods as desired.
-	 * \note nChecks_IGNORED is ignored but kept for compatibility with the original FLANN interface.
-	 */
-        inline std::pair<std::vector<IndexType>, std::vector<double>> query(Eigen::VectorXd const& query_point, const size_t num_closest, const int nChecks_IGNORED = 10) const {
-          std::vector<IndexType> out_indices(num_closest);
-          std::vector<double> out_distances_sq(num_closest);
+      inline void add(Eigen::VectorXd const& newPt) {
+        m_data.push_back(newPt);
+	      index->addPoints(m_data.size()-1, m_data.size()-1);
+      }
 
-          nanoflann::KNNResultSet<double,IndexType> resultSet(num_closest);
-          resultSet.init(&out_indices[0], &out_distances_sq[0]);
-          index->findNeighbors(resultSet, query_point.data(), nanoflann::SearchParams());
+      /** Query for the \a num_closest closest points to a given point (entered as query_point[0:dim-1]).
+    	 *  Note that this is a short-cut method for index->findNeighbors().
+    	 *  The user can also call index->... methods as desired.
+    	 * \note nChecks_IGNORED is ignored but kept for compatibility with the original FLANN interface.
+    	 */
+      inline std::pair<std::vector<IndexType>, std::vector<double>> query(Eigen::VectorXd const& query_point, const size_t num_closest, const int nChecks_IGNORED = 10) const {
+        std::vector<IndexType> out_indices(num_closest);
+        std::vector<double> out_distances_sq(num_closest);
 
-          return std::make_pair(out_indices, out_distances_sq);
-        }
+        nanoflann::KNNResultSet<double,IndexType> resultSet(num_closest);
+        resultSet.init(&out_indices[0], &out_distances_sq[0]);
+        index->findNeighbors(resultSet, query_point.data(), nanoflann::SearchParams());
 
-        inline const self_t & derived() const {
-          return *this;
-        }
+        return std::make_pair(out_indices, out_distances_sq);
+      }
 
-        inline self_t& derived() {
-          return *this;
-        }
+      inline const self_t & derived() const {
+        return *this;
+      }
 
-        // Must return the number of data points
-        inline size_t kdtree_get_point_count() const {
-          return m_data.size();
-        }
+      inline self_t& derived() {
+        return *this;
+      }
 
-        // Returns the dim'th component of the idx'th point in the class:
-        inline double kdtree_get_pt(const size_t idx, int dim) const {
-	  assert(idx<m_data.size());
-	  assert(dim<m_data[idx].size());
+      // Must return the number of data points
+      inline size_t kdtree_get_point_count() const {
+        return m_data.size();
+      }
 
-	  return m_data[idx][dim];
-        }
+      // Returns the dim'th component of the idx'th point in the class:
+      inline double kdtree_get_pt(const size_t idx, int dim) const {
+	      assert(idx<m_data.size());
+	      assert(dim<m_data[idx].size());
 
-        // Optional bounding-box computation: return false to default to a standard bbox computation loop.
-        //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it again.
-        //   Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
-        template <class BBOX>
-        inline bool kdtree_get_bbox(BBOX & /*bb*/) const {
-          return false;
-        }
+	      return m_data[idx][dim];
+      }
+
+      // Optional bounding-box computation: return false to default to a standard bbox computation loop.
+      //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it again.
+      //   Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
+      template <class BBOX>
+      inline bool kdtree_get_bbox(BBOX & /*bb*/) const {
+        return false;
+      }
     }; // end of DynamicKDTreeAdaptor
 
 
@@ -140,6 +141,9 @@ namespace muq {
        */
       Eigen::VectorXd at(unsigned int const index);
 
+      /// Returns the model for a specific cache index
+      Eigen::VectorXd const& OutputValue(unsigned int index) const;
+
       /// Add a new point to the cache
       /**
 	 @param[in] input The entry we would like to add to the cache (if it is not there already)
@@ -151,8 +155,9 @@ namespace muq {
       /**
 	 @param[in] input The entry we would like to add to the cache (if it is not there already)
 	 @param[in] result The result of the function
+   @return Returns the index of the added point
       */
-      void Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result);
+      unsigned int Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result);
 
       /// Remove point from the cache
       /**
@@ -210,7 +215,7 @@ namespace muq {
       void UpdateCentroid(Eigen::VectorXd const& point);
 
       // The vector of previous results
-      std::deque<Eigen::VectorXd> outputCache;
+      std::vector<Eigen::VectorXd> outputCache;
 
       virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 

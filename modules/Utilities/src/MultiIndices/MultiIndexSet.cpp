@@ -287,6 +287,19 @@ std::vector<shared_ptr<MultiIndex>>  MultiIndexSet::GetAdmissibleForwardNeighbor
   return output;
 }
 
+
+std::vector<unsigned int> MultiIndexSet::GetBackwardNeighbors(unsigned int activeIndex) const
+{
+  unsigned int globalInd = active2global.at(activeIndex);
+
+  std::vector<unsigned int> output;
+  for(auto neighbor : inEdges[globalInd])
+    output.push_back(global2active.at(neighbor));
+
+  return output;
+}
+
+
 void MultiIndexSet::AddBackwardNeighbors(unsigned int globalIndex, bool addInactive)
 {
   Eigen::RowVectorXi base = allMultis.at(globalIndex)->GetVector();

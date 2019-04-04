@@ -116,9 +116,10 @@ namespace muq {
       */
       unsigned GetLength() const{return length;};
 
-      bool operator==(const MultiIndex &b);
-      bool operator!=(const MultiIndex &b);
-      bool operator<(const MultiIndex &b);
+      bool operator==(const MultiIndex &b) const;
+      bool operator!=(const MultiIndex &b) const;
+      bool operator<(const MultiIndex &b) const;
+      bool operator>(const MultiIndex &b) const;
 
       std::unordered_map<unsigned, unsigned>::const_iterator GetNzBegin() const{return nzInds.begin();};
       std::unordered_map<unsigned, unsigned>::const_iterator GetNzEnd()   const{return nzInds.end();};
