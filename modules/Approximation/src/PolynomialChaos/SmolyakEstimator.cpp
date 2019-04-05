@@ -1,6 +1,7 @@
 #include "MUQ/Approximation/PolynomialChaos/SmolyakEstimator.h"
 
 #include "MUQ/Approximation/Quadrature/SmolyakQuadrature.h"
+#include "MUQ/Approximation/PolynomialChaos/PolynomialChaosExpansion.h"
 
 using namespace muq::Modeling;
 using namespace muq::Utilities;
@@ -142,5 +143,6 @@ int SmolyakEstimator<EstimateType>::SmolyakEstimator::InCache(Eigen::VectorXd co
 namespace muq{
 namespace Approximation{
   template class SmolyakEstimator<Eigen::VectorXd>;
+  template class SmolyakEstimator<std::shared_ptr<PolynomialChaosExpansion>>;
 }
 }

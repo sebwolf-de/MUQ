@@ -3,6 +3,7 @@
 
 #include "MUQ/Approximation/PolynomialChaos/PolynomialChaosExpansion.h"
 #include "MUQ/Approximation/Quadrature/Quadrature.h"
+#include "MUQ/Approximation/Quadrature/FullTensorQuadrature.h"
 
 #include "MUQ/Utilities/MultiIndices/MultiIndex.h"
 
@@ -20,7 +21,10 @@ namespace Approximation {
   */
   class PCEFactory {
   public:
-    
+
+    PCEFactory(std::vector<std::shared_ptr<Quadrature>>         const& quadTypesIn,
+               std::vector<std::shared_ptr<IndexedScalarBasis>> const& polyTypesIn);
+
     /** Constructs a factory using a prespecified tensor product quadrature rule.
         The terms in the polynomial expansion are chosen from the quadrature rule.
         Polynomial terms that can be integrated exactly are used.
@@ -90,17 +94,36 @@ std::shared_ptr<PolynomialChaosExpansion> pce = factory.Compute(quadEvals);
     */
     std::shared_ptr<PolynomialChaosExpansion> Compute(std::vector<Eigen::VectorXd> const& quadEvals);
 
+    std::shared_ptr<PolynomialChaosExpansion> Compute(std::vector<std::reference_wrapper<const Eigen::VectorXd>> const& quadEvals);
+
+    std::shared_ptr<PolynomialChaosExpansion> Compute(std::vector<Eigen::VectorXd>                const& quadEvals,
+                                                      std::shared_ptr<muq::Utilities::MultiIndex> const& quadOrders);
+
+    std::shared_ptr<PolynomialChaosExpansion> Compute(std::vector<std::reference_wrapper<const Eigen::VectorXd>> const& quadEvals,
+                                                      std::shared_ptr<muq::Utilities::MultiIndex> const& quadOrders);
     /**
       Returns the quadrature points in the tensor product quadrature rule.
     */
     std::vector<Eigen::VectorXd> const& QuadPts() const{return quadPts;};
+    std::vector<Eigen::VectorXd> const& QuadPts(std::shared_ptr<muq::Utilities::MultiIndex> const& quadOrders);
 
 
   protected:
 
 
+    /** Sets up the tensor product quadrature and polynomial expansions based on
+      the specified quadrature order.
+    */
+    void Setup(std::shared_ptr<muq::Utilities::MultiIndex> const& quadOrders);
+
+    std::shared_ptr<muq::Utilities::MultiIndex> quadOrdersCache;
+
+
+    std::vector<std::shared_ptr<Quadrature>> quadTypes;
     std::vector<std::shared_ptr<IndexedScalarBasis>> polyTypes;
-    std::shared_ptr<muq::Utilities::MultiIndexSet>     polyMultis;
+    FullTensorQuadrature tensQuad;
+
+    std::shared_ptr<muq::Utilities::MultiIndexSet>   polyMultis;
 
     std::vector<Eigen::VectorXd> quadPts;
     Eigen::VectorXd quadWts;

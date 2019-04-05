@@ -67,6 +67,7 @@ CreateCompileGroup(
 	PolynomialChaos/PolynomialChaosExpansion.cpp
 	PolynomialChaos/PCEFactory.cpp
 	PolynomialChaos/SmolyakEstimator.cpp
+	PolynomialChaos/AdaptiveSmolyakPCE.cpp
 	Quadrature/AdaptiveSmolyakQuadrature.cpp
 )
 
