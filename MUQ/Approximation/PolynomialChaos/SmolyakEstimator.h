@@ -81,12 +81,18 @@ namespace Approximation {
     /// Holds the weights for the tensor product formulation.
     std::vector<double> smolyWeights;
 
+    /// Keeps track of if a term has been computed or not
+    std::vector<bool> isComputed;
+
     /// A cache of model evaluations
     muq::Modeling::DynamicKDTreeAdaptor<> pointCache;
     std::vector<Eigen::VectorXd> evalCache;
 
+    /// Holds the model evaluations that are needed for each terms  evalInds[term][point]
+    std::vector<std::vector<unsigned int>> evalInds;
 
     int InCache(Eigen::VectorXd const& input) const;
+    Eigen::VectorXd const& GetFromCache(unsigned int index){return pointCache.m_data.at(index);};
     int AddToCache(Eigen::VectorXd const& newPt);
     int CacheSize() const{return pointCache.m_data.size();};
 

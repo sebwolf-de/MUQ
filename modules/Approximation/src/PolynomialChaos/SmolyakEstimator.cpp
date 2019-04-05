@@ -30,10 +30,15 @@ EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilit
      were needed for each tensor product approximation by storing the index of
      the cached points.
   */
-  std::vector<std::vector<unsigned int>> evalInds(fixedSet->Size());
   std::vector<Eigen::VectorXd> allNewPts; // new pts to evaluate
 
   for(unsigned int i=0; i<fixedSet->Size(); ++i) {
+    evalInds.push_back(std::vector<unsigned int>());
+    terms->AddActive(fixedSet->at(i));
+    smolyVals.push_back( EstimateType());
+    isComputed.push_back(false);
+
+    assert(evalInds.size()==terms->Size());
 
     std::vector<Eigen::VectorXd> pts = OneTermPoints(fixedSet->IndexToMulti(i));
 
@@ -46,45 +51,55 @@ EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilit
       if(cacheId<0){
         int cacheInd = AddToCache(pts.at(k));
         evalInds.at(i).at(k) = cacheInd;
-        allNewPts.push_back(pts.at(k));
+        evalCache.push_back( Eigen::VectorXd() );
+
       }else{
         evalInds.at(i).at(k) = cacheId;
       }
     }
   }
 
-  /* The allNewPts vector now contains all the new points we need to evaluate and add to our cache
-     In the future, this for loop could easily be parallelized
-  */
-  for(unsigned int ptInd=0; ptInd<allNewPts.size(); ++ptInd)
-    evalCache.push_back( model->Evaluate(allNewPts.at(ptInd)).at(0) );
-
-  // Resize the Smolyak weights to allow for the new terms
-  smolyWeights.resize(smolyWeights.size() + fixedSet->Size(), 0.0);
-
-  // Now, pull out references to each output vector and compute the tensor product estimates
-  for(unsigned int i=0; i<fixedSet->Size(); ++i) {
-
-    // Copy references of the model output to a vector
-    std::vector<std::reference_wrapper<const Eigen::VectorXd>> evals;
-    for(unsigned int ptInd=0; ptInd<evalInds.at(i).size(); ++ptInd){
-      evals.push_back( evalCache.at(evalInds.at(i).at(ptInd)) );
-    }
-
-    // Compute the tensor product estimate using the model output
-    int newInd = terms->AddActive(fixedSet->at(i));
-
-    smolyVals.push_back( ComputeOneTerm(fixedSet->IndexToMulti(i), evals) );
-    assert(newInd==smolyVals.size()-1);
-
-    // update the smolyak coefficients now that we've added this term
-    //UpdateSmolyCoeffs(newInd);
-
-  }
-
+  // Now, compute the Smolyak coefficients for the new multiindex set
   auto tempWeights = SmolyakQuadrature::ComputeWeights(terms);
+  smolyWeights.resize(tempWeights.size());
   for(unsigned int i=0; i<tempWeights.size(); ++i)
     smolyWeights.at(i) = tempWeights(i);
+
+  // Figure out what points we need to evaluate
+  std::set<unsigned int> ptsToEval;
+  for(unsigned int termInd=0; termInd<evalInds.size(); ++termInd) {
+
+    // If the smolyak weight is zero, don't bother computing any needed points
+    if( std::abs(smolyWeights.at(termInd)) > 10*std::numeric_limits<double>::epsilon()) {
+
+      for(unsigned int i=0; i<evalInds.at(termInd).size(); ++i) {
+        unsigned int ptInd = evalInds.at(termInd).at(i);
+        // If the size of the output is zero, we haven't evaluated the model at this point yet
+        if(evalCache.at(ptInd).size()==0)
+          ptsToEval.insert(ptInd);
+      }
+    }
+  }
+
+  // Evaluate all the terms we need to
+  for(auto& ptInd : ptsToEval)
+    evalCache.at(ptInd) = model->Evaluate( GetFromCache(ptInd) ).at(0);
+
+  // Now, compute any new tensor product estimates that are necessary
+  for(unsigned int i=0; i<terms->Size(); ++i) {
+
+    // If we haven't built this estimate before, do it now
+    if((!isComputed.at(i))&&( std::abs(smolyWeights.at(i))>1e-10)) {
+
+      // Copy references of the model output to a vector
+      std::vector<std::reference_wrapper<const Eigen::VectorXd>> evals;
+      for(unsigned int ptInd=0; ptInd<evalInds.at(i).size(); ++ptInd){
+        evals.push_back( evalCache.at(evalInds.at(i).at(ptInd) ) );
+      }
+      smolyVals.at(i) = ComputeOneTerm(fixedSet->IndexToMulti(i), evals);
+    }
+
+  }
 
   // Make sure nothing funky happened
   assert(smolyVals.size() == smolyWeights.size());

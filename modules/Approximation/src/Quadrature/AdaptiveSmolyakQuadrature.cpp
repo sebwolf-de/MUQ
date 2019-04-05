@@ -51,9 +51,18 @@ Eigen::VectorXd AdaptiveSmolyakQuadrature::ComputeOneTerm(std::shared_ptr<MultiI
 
 Eigen::VectorXd AdaptiveSmolyakQuadrature::ComputeWeightedSum() const
 {
-  Eigen::VectorXd output = smolyWeights.at(0)*smolyVals.at(0);
-  for(unsigned int i=1; i<smolyVals.size(); ++i)
-    output += smolyWeights.at(i) * smolyVals.at(i);
+  unsigned int firstGoodInd;
+  for(unsigned int i=0; i<smolyWeights.size(); ++i){
+    if(std::abs(smolyWeights.at(i))>1e-10){
+      firstGoodInd = i;
+      break;
+    }
+  }
+  Eigen::VectorXd output = smolyWeights.at(firstGoodInd)*smolyVals.at(firstGoodInd);
+  for(unsigned int i=firstGoodInd+1; i<smolyVals.size(); ++i){
+    if(std::abs(smolyWeights.at(i))>1e-10)
+      output += smolyWeights.at(i) * smolyVals.at(i);
+  }
 
   return output;
 }

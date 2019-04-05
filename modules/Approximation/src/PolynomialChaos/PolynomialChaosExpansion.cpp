@@ -257,8 +257,17 @@ std::shared_ptr<PolynomialChaosExpansion> PolynomialChaosExpansion::ComputeWeigh
                                                                                        std::shared_ptr<MultiIndexSet>                     const& polynomials,
                                                                                        std::vector<std::vector<unsigned int>>             const& locToGlob)
 {
+  std::shared_ptr<PolynomialChaosExpansion> firstNonNull;
+  for(unsigned int i=0; i<expansions.size();++i){
+    if(expansions.at(i) != nullptr) {
+      firstNonNull = expansions.at(i);
+      break;
+    }
+  }
+  assert(firstNonNull);
+
   // Loop over each expansion and add the weighted coefficients
-  Eigen::MatrixXd newCoeffs = Eigen::MatrixXd::Zero(expansions.at(0)->outputSizes(0), polynomials->Size());
+  Eigen::MatrixXd newCoeffs = Eigen::MatrixXd::Zero(firstNonNull->outputSizes(0), polynomials->Size());
 
   for(unsigned int i=0; i<expansions.size(); ++i){
     if(std::abs(weights(i))>10.0*std::numeric_limits<double>::epsilon()){
@@ -268,7 +277,7 @@ std::shared_ptr<PolynomialChaosExpansion> PolynomialChaosExpansion::ComputeWeigh
     }
   }
 
-  return std::make_shared<PolynomialChaosExpansion>(expansions.at(0)->basisComps, polynomials, newCoeffs);
+  return std::make_shared<PolynomialChaosExpansion>(firstNonNull->basisComps, polynomials, newCoeffs);
 }
 
 std::shared_ptr<PolynomialChaosExpansion> PolynomialChaosExpansion::ComputeWeightedSum(std::vector<std::shared_ptr<PolynomialChaosExpansion>> expansions,
@@ -276,14 +285,17 @@ std::shared_ptr<PolynomialChaosExpansion> PolynomialChaosExpansion::ComputeWeigh
 {
   assert(weights.size()==expansions.size());
 
-  unsigned int inputDim = expansions.at(0)->inputSizes(0);
-  unsigned int outputDim = expansions.at(0)->outputSizes(0);
-
-  // check the output size of each expansion
-  for(int i=1; i<expansions.size(); ++i){
-    assert(outputDim==expansions.at(0)->outputSizes(0));
-    assert(inputDim==expansions.at(0)->inputSizes(0));
+  std::shared_ptr<PolynomialChaosExpansion> firstNonNull;
+  for(unsigned int i=0; i<expansions.size();++i){
+    if(expansions.at(i) != nullptr) {
+      firstNonNull = expansions.at(i);
+      break;
+    }
   }
+  assert(firstNonNull);
+
+  unsigned int inputDim = firstNonNull->inputSizes(0);
+  unsigned int outputDim = firstNonNull->outputSizes(0);
 
   // the collection of all polynomials that will be in the result
   auto allPolynomials = std::make_shared<MultiIndexSet>(inputDim);
@@ -296,6 +308,7 @@ std::shared_ptr<PolynomialChaosExpansion> PolynomialChaosExpansion::ComputeWeigh
   {
     // if the weight is zero, skip this expansion
     if(std::abs(weights(j))>10.0*std::numeric_limits<double>::epsilon()){
+      assert(expansions.at(j));
 
       //loop over all the polynomials in this expansion
       unsigned int numTerms = expansions.at(j)->multis->Size();
