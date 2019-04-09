@@ -28,8 +28,12 @@ std::shared_ptr<PolynomialChaosExpansion> AdaptiveSmolyakPCE::ComputeOneTerm(std
   return tensFactory.Compute(modEvals,multi);
 }
 
-std::shared_ptr<PolynomialChaosExpansion> AdaptiveSmolyakPCE::ComputeWeightedSum() const
+std::shared_ptr<PolynomialChaosExpansion> AdaptiveSmolyakPCE::AddEstimates(double w1,
+                                                                           std::shared_ptr<PolynomialChaosExpansion> const& part1,
+                                                                           double w2,
+                                                                           std::shared_ptr<PolynomialChaosExpansion> const& part2) const
 {
-  Eigen::Map<const Eigen::VectorXd> wts(smolyWeights.data(), smolyWeights.size());
-  return PolynomialChaosExpansion::ComputeWeightedSum(smolyVals, wts);
+  Eigen::VectorXd wts(2);
+  wts << w1, w2;
+  return PolynomialChaosExpansion::ComputeWeightedSum({part1,part2},wts);
 }

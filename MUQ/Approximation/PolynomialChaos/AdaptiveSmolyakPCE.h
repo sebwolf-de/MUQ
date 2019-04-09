@@ -22,10 +22,11 @@ namespace Approximation {
   protected:
     virtual std::vector<Eigen::VectorXd> OneTermPoints(std::shared_ptr<muq::Utilities::MultiIndex> const& multi) override;
 
-    virtual std::shared_ptr<PolynomialChaosExpansion> ComputeOneTerm(std::shared_ptr<muq::Utilities::MultiIndex>         const& multi,
+    virtual std::shared_ptr<PolynomialChaosExpansion> ComputeOneTerm(std::shared_ptr<muq::Utilities::MultiIndex>                const& multi,
                                                                      std::vector<std::reference_wrapper<const Eigen::VectorXd>> const& modEvals) override;
 
-    virtual std::shared_ptr<PolynomialChaosExpansion> ComputeWeightedSum() const override;
+    virtual std::shared_ptr<PolynomialChaosExpansion> AddEstimates(double w1, std::shared_ptr<PolynomialChaosExpansion> const& part1,
+                                                                   double w2, std::shared_ptr<PolynomialChaosExpansion> const& part2) const override;
 
     PCEFactory tensFactory;
 

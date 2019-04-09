@@ -53,7 +53,11 @@ namespace Approximation {
                                         std::vector<std::reference_wrapper<const Eigen::VectorXd>> const& modEvals) = 0;
 
     /** Should compute sum(smolyVals[i] * smolyWeights[i]) and return the result*/
-    virtual EstimateType ComputeWeightedSum() const = 0;
+    virtual EstimateType ComputeWeightedSum(Eigen::VectorXd const& weights) const;
+    virtual EstimateType ComputeWeightedSum() const;
+
+
+    virtual EstimateType AddEstimates(double w1, EstimateType const& part1, double w2, EstimateType const& part2) const = 0;
 
     /** Computes the change in the smolyak weights caused by the addition of
         one term to the Smolyak MultiIndexSet.  This is to construct the c_k
@@ -73,23 +77,12 @@ namespace Approximation {
     std::shared_ptr<muq::Modeling::ModPiece> model;
 
     /// Multiindices defining each tensor product term in the Smolyak approximation
-    std::shared_ptr<muq::Utilities::MultiIndexSet> terms;
+    std::shared_ptr<muq::Utilities::MultiIndexSet> termMultis;
 
-    /// Contains each of the individual tensor product approximations
-    std::vector<EstimateType> smolyVals;
-
-    /// Holds the weights for the tensor product formulation.
-    std::vector<double> smolyWeights;
-
-    /// Keeps track of if a term has been computed or not
-    std::vector<bool> isComputed;
 
     /// A cache of model evaluations
     muq::Modeling::DynamicKDTreeAdaptor<> pointCache;
     std::vector<Eigen::VectorXd> evalCache;
-
-    /// Holds the model evaluations that are needed for each terms  evalInds[term][point]
-    std::vector<std::vector<unsigned int>> evalInds;
 
     int InCache(Eigen::VectorXd const& input) const;
     Eigen::VectorXd const& GetFromCache(unsigned int index){return pointCache.m_data.at(index);};
@@ -97,6 +90,33 @@ namespace Approximation {
     int CacheSize() const{return pointCache.m_data.size();};
 
     const double cacheTol = 4e-15; // <- points are considered equal if they are closer than this
+
+    struct SmolyTerm {
+
+      // Value of the tensor product approximation for one term in the Smolyak expansion
+      EstimateType val;
+
+      /* Weight on this tensor product approximation -- will change as terms are
+         added to the Smolyak rule.
+      */
+      double weight = 0.0;
+
+      /* Has val been computed for this term yet? */
+      bool isComputed = false;
+
+      // A local error indicator.  See eq (5.1) of Conrad and Marzouk
+      double localError;
+
+      /* A vector containing the indices of points in the evaluation cache
+        (see evalCache and pointCache variables) that are needed to compute the
+        value for this term.  This is used for lazy evaluation and helps avoid
+        reevaluation of the model.
+      */
+      std::vector<unsigned int> evalInds;
+
+    };
+
+    std::vector<SmolyTerm> terms;
 
   }; // class SmolyakEstimator
 

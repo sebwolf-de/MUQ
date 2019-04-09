@@ -24,7 +24,8 @@ namespace Approximation {
     virtual Eigen::VectorXd ComputeOneTerm(std::shared_ptr<muq::Utilities::MultiIndex>                const& multi,
                                            std::vector<std::reference_wrapper<const Eigen::VectorXd>> const& modEvals) override;
 
-    virtual Eigen::VectorXd ComputeWeightedSum() const override;
+    virtual Eigen::VectorXd AddEstimates(double w1, Eigen::VectorXd const& part1,
+                                         double w2, Eigen::VectorXd const& part2) const override;
 
     std::shared_ptr<muq::Utilities::MultiIndex> cachedMulti;
     FullTensorQuadrature tensQuad;
