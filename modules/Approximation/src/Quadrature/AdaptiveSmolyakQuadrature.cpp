@@ -54,3 +54,8 @@ Eigen::VectorXd AdaptiveSmolyakQuadrature::AddEstimates(double w1, Eigen::Vector
 {
   return w1*part1 + w2*part2;
 }
+
+double AdaptiveSmolyakQuadrature::ComputeMagnitude(Eigen::VectorXd const& estimate) const
+{
+  return estimate.array().abs().matrix().maxCoeff();
+}

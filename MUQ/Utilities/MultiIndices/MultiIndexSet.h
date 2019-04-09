@@ -300,6 +300,12 @@ namespace muq{
        */
       virtual std::vector<std::shared_ptr<MultiIndex>>  GetAdmissibleForwardNeighbors(unsigned int activeIndex);
 
+      /** Here, we define a term on the "frontier" of the multiindex set as one
+          that has inactive admissable forward neighbors.  These terms are expandable.
+          @return A vector of active "frontier" indices.
+      */
+      virtual std::vector<unsigned int> GetFrontier() const;
+
       /** Returns the indices for the backward neighbors of a currently active multiindex.
       @param[in] activeIndex The linear index of the MultiIndex of interest
       @return A std::vector containing the linear indices of the backward neighbors.

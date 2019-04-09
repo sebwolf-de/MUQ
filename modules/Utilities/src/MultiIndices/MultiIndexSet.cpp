@@ -287,6 +287,18 @@ std::vector<shared_ptr<MultiIndex>>  MultiIndexSet::GetAdmissibleForwardNeighbor
   return output;
 }
 
+std::vector<unsigned int> MultiIndexSet::GetFrontier() const {
+
+  std::vector<unsigned int> frontierInds;
+
+  for(unsigned int activeInd = 0; activeInd<active2global.size(); ++activeInd) {
+    if(IsExpandable(activeInd))
+      frontierInds.push_back(activeInd);
+  }
+
+  return frontierInds;
+}
+
 
 std::vector<unsigned int> MultiIndexSet::GetBackwardNeighbors(unsigned int activeIndex) const
 {

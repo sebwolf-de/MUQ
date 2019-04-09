@@ -24,18 +24,19 @@ EstimateType SmolyakEstimator<EstimateType>::ComputeWeightedSum(Eigen::VectorXd 
   assert(weights.size()<=terms.size());
 
   unsigned int firstNzInd = 0;
-  const double weightTol = 10.0*std::numeric_limits<double>::epsilon();
   for(unsigned int i=0; i<weights.size(); ++i){
-    if(std::abs(weights(i))>weightTol) {
+    if(std::abs(weights(i))>nzTol) {
       firstNzInd = i;
       break;
     }
   }
 
+  assert(std::abs(weights(firstNzInd))>nzTol);
+
   // compute the number of nonzero terms
-  EstimateType res = AddEstimates(0.0, terms.at(firstNzInd).val, terms.at(firstNzInd).weight, terms.at(firstNzInd).val);
+  EstimateType res = AddEstimates(0.0, terms.at(firstNzInd).val, weights(firstNzInd), terms.at(firstNzInd).val);
   for(unsigned int i=firstNzInd+1; i<weights.size(); ++i){
-    if(std::abs(weights(i))>weightTol)
+    if(std::abs(weights(i))>nzTol)
       res = AddEstimates(1.0, res, weights(i), terms.at(i).val);
   }
 
@@ -67,8 +68,7 @@ EstimateType SmolyakEstimator<EstimateType>::ComputeWeightedSum() const
 }
 
 template<typename EstimateType>
-EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilities::MultiIndexSet> const& fixedSet,
-                                                     boost::property_tree::ptree                           options)
+void SmolyakEstimator<EstimateType>::AddTerms(std::shared_ptr<muq::Utilities::MultiIndexSet> const& fixedSet)
 {
   /* For each term in the fixed set we want to construct a tensor product approximation.
      The i^th tensor product approximation will require model evaluations at N_i
@@ -77,13 +77,14 @@ EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilit
      were needed for each tensor product approximation by storing the index of
      the cached points.
   */
-  std::vector<Eigen::VectorXd> allNewPts; // new pts to evaluate
 
   for(unsigned int i=0; i<fixedSet->Size(); ++i) {
     unsigned int termInd = terms.size();
     terms.push_back(SmolyTerm());
     termMultis->AddActive(fixedSet->at(i));
+
     assert(terms.size()==termMultis->Size());
+
 
     std::vector<Eigen::VectorXd> pts = OneTermPoints(fixedSet->IndexToMulti(i));
 
@@ -104,23 +105,41 @@ EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilit
     }
   }
 
-  // Now, compute the Smolyak coefficients for the new multiindex set
-  auto newWeights = SmolyakQuadrature::ComputeWeights(termMultis);
-//  std::vector<double> diffWeights(smolyWeights.size());
+  // Update the weights
+  Eigen::VectorXd newWeights = SmolyakQuadrature::ComputeWeights(termMultis);
+  for(unsigned int j=0; j<newWeights.size(); ++j)
+    terms.at(j).weight = newWeights(j);
 
-  for(unsigned int i=0; i<newWeights.size(); ++i){
-  //  diffWeights.at(i) = smolyWeights.at(i) - newWeights(i);
-    terms.at(i).weight = newWeights(i);
+  // Compute differential weights for the frontier terms
+  for(unsigned int termInd : termMultis->GetFrontier()){
+    terms.at(termInd).diffWeights = Eigen::VectorXd::Zero(terms.size());
+    SmolyakQuadrature::UpdateWeights(termInd, termMultis, terms.at(termInd).diffWeights);
   }
 
-  // Figure out what points we need to evaluate
+  ////////////////////////////////////////////////////
+  // Figure out which terms we need to actually compute.
+
+  // All terms with nonzero Smolyak weights
+  for(unsigned int termInd=0; termInd<terms.size(); ++termInd){
+    if(std::abs(terms.at(termInd).weight) > nzTol)
+      terms.at(termInd).isNeeded = true;
+  }
+
+  // All terms needed to compute error estimates on the "frontier" terms
+  for(unsigned int termInd : termMultis->GetFrontier()){
+    for(unsigned int wInd=0; wInd<terms.at(termInd).diffWeights.size(); ++wInd){
+      if(std::abs(terms.at(termInd).diffWeights(wInd))>nzTol)
+        terms.at(wInd).isNeeded = true;
+    }
+  }
+
+  ////////////////////////////////////////////////////////
+  // Figure out what points we need to evaluate to build the terms we need
   std::set<unsigned int> ptsToEval;
-  const double nzTol = 10.0*std::numeric_limits<double>::epsilon();
   for(unsigned int termInd=0; termInd<terms.size(); ++termInd) {
 
     // If the smolyak weight is zero or the term has already been computed, don't bother computing any needed points
-    if((std::abs(terms.at(termInd).weight) > nzTol) && (!terms.at(termInd).isComputed)) {
-
+    if((terms.at(termInd).isNeeded) && (!terms.at(termInd).isComputed)) {
       for(unsigned int i=0; i<terms.at(termInd).evalInds.size(); ++i) {
         unsigned int ptInd = terms.at(termInd).evalInds.at(i);
         // If the size of the output is zero, we haven't evaluated the model at this point yet
@@ -130,15 +149,16 @@ EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilit
     }
   }
 
-  // Evaluate all the points we need to
-  for(auto& ptInd : ptsToEval)
-    evalCache.at(ptInd) = model->Evaluate( GetFromCache(ptInd) ).at(0);
+  ////////////////////////////////////////////////////////
+  // Evaluate all the points we need to -- could easily be parallelized
+  EvaluatePoints(ptsToEval);
 
+  ////////////////////////////////////////////////////////
   // Now, compute any new tensor product estimates that are necessary
   for(unsigned int i=0; i<termMultis->Size(); ++i) {
 
     // If we haven't built this estimate before, do it now
-    if((!terms.at(i).isComputed)&&( std::abs(terms.at(i).weight)>nzTol)) {
+    if((terms.at(i).isNeeded) && (!terms.at(i).isComputed)) {
 
       // Copy references of the model output to a vector
       std::vector<std::reference_wrapper<const Eigen::VectorXd>> evals;
@@ -150,6 +170,38 @@ EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilit
     }
 
   }
+
+}
+
+template<typename EstimateType>
+void SmolyakEstimator<EstimateType>::EvaluatePoints(std::set<unsigned int> const& ptsToEval)
+{
+  for(auto& ptInd : ptsToEval)
+    evalCache.at(ptInd) = model->Evaluate( GetFromCache(ptInd) ).at(0);
+}
+
+template<typename EstimateType>
+void SmolyakEstimator<EstimateType>::UpdateErrors()
+{
+  globalError = 0.0;
+  // Consider terms that have non-active forward neighbors, which means it can be expandable
+  std::vector<unsigned int> frontierTerms = termMultis->GetFrontier();
+
+  // For each frontier term, compute a local error estimate
+  for(unsigned int termInd : frontierTerms){
+    terms.at(termInd).localError = ComputeMagnitude( ComputeWeightedSum( terms.at(termInd).diffWeights ));
+    globalError += terms.at(termInd).localError;
+  }
+}
+
+
+template<typename EstimateType>
+EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilities::MultiIndexSet> const& fixedSet,
+                                                     boost::property_tree::ptree                           options)
+{
+  AddTerms(fixedSet);
+
+  UpdateErrors();
 
   // We've done all the work, just return a weighted sum of the tensor product approximations
   return ComputeWeightedSum();

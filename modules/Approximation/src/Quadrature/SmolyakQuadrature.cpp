@@ -109,36 +109,44 @@ void SmolyakQuadrature::Compute(std::shared_ptr<MultiIndexSet> const& multis) {
 }
 
 
-Eigen::VectorXd SmolyakQuadrature::ComputeWeights(std::shared_ptr<MultiIndexSet> const& multis)
+void SmolyakQuadrature::UpdateWeights(unsigned int                          activeInd,
+                                      std::shared_ptr<MultiIndexSet> const& multis,
+                                      Eigen::VectorXd                     & multiWeights)
 {
   unsigned int dim = multis->GetMultiLength();
-
   auto optMultis = MultiIndexFactory::CreateFullTensor(dim,1);
+
+  auto& activeMulti = multis->IndexToMulti(activeInd);
+
+  // This is the multiindex defining the Smolyak difference tensor product
+  auto& k = multis->IndexToMulti(activeInd);
+
+  for(unsigned int j=0; j<optMultis->Size(); ++j){
+
+    auto newMulti = MultiIndex::Copy(activeMulti);
+    double weightIncr = 1.0;
+
+    // Loop over all the nonzero terms, which is where we have to decrement the order
+    for(auto it = optMultis->IndexToMulti(j)->GetNzBegin(); it != optMultis->IndexToMulti(j)->GetNzEnd(); ++it) {
+      if((it->second>0)&&(activeMulti->GetValue(it->first)>0)){
+        weightIncr *= -1;
+        newMulti->SetValue(it->first, activeMulti->GetValue(it->first)-1);
+      }else if(k->GetValue(it->first)==0){
+        weightIncr = 0.0;
+      }
+    }
+
+    multiWeights(multis->MultiToIndex(newMulti)) += weightIncr;
+  }
+}
+
+Eigen::VectorXd SmolyakQuadrature::ComputeWeights(std::shared_ptr<MultiIndexSet> const& multis)
+{
 
   Eigen::VectorXd multiWeights = Eigen::VectorXd::Zero(multis->Size());
 
   for(unsigned int i = 0; i<multis->Size(); ++i) {
-
-    // This is the multiindex defining the Smolyak difference tensor product
-    auto& k = multis->IndexToMulti(i);
-
-      for(unsigned int j=0; j<optMultis->Size(); ++j){
-
-        auto newMulti = MultiIndex::Copy(k);
-        double weightIncr = 1.0;
-
-        // Loop over all the nonzero terms, which is where we have to decrement the order
-        for(auto it = optMultis->IndexToMulti(j)->GetNzBegin(); it != optMultis->IndexToMulti(j)->GetNzEnd(); ++it) {
-          if((it->second>0)&&(k->GetValue(it->first)>0)){
-            weightIncr *= -1;
-            newMulti->SetValue(it->first, k->GetValue(it->first)-1);
-          }else if(k->GetValue(it->first)==0){
-            weightIncr = 0.0;
-          }
-        }
-
-        multiWeights(multis->MultiToIndex(newMulti)) += weightIncr;
-      }
+    UpdateWeights(i, multis, multiWeights);
   }
 
   return multiWeights;

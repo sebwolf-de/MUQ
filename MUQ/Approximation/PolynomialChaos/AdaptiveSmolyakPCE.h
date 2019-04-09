@@ -28,6 +28,8 @@ namespace Approximation {
     virtual std::shared_ptr<PolynomialChaosExpansion> AddEstimates(double w1, std::shared_ptr<PolynomialChaosExpansion> const& part1,
                                                                    double w2, std::shared_ptr<PolynomialChaosExpansion> const& part2) const override;
 
+    virtual double ComputeMagnitude(std::shared_ptr<PolynomialChaosExpansion> const& estimate) const override;
+
     PCEFactory tensFactory;
 
   }; // class AdaptiveSmolyakPCE

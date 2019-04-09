@@ -29,7 +29,7 @@ TEST(PolynomialChaos, AdaptiveSmolyak_Cos2d) {
 
   AdaptiveSmolyakPCE smolyPCE(model, {quad1d, quad1d}, {poly1d,poly1d});
 
-  unsigned int maxOrder = 5;
+  unsigned int maxOrder = 9;
   auto multiSet = MultiIndexFactory::CreateTotalOrder(dim, maxOrder);
 
   std::shared_ptr<PolynomialChaosExpansion> pce = smolyPCE.Compute(multiSet);

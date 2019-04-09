@@ -27,6 +27,8 @@ namespace Approximation {
     virtual Eigen::VectorXd AddEstimates(double w1, Eigen::VectorXd const& part1,
                                          double w2, Eigen::VectorXd const& part2) const override;
 
+    virtual double ComputeMagnitude(Eigen::VectorXd const& estimate) const override;
+
     std::shared_ptr<muq::Utilities::MultiIndex> cachedMulti;
     FullTensorQuadrature tensQuad;
 

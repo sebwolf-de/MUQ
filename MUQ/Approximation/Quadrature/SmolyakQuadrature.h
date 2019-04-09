@@ -46,6 +46,10 @@ namespace Approximation {
     */
     static Eigen::VectorXd ComputeWeights(std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis);
 
+    static void UpdateWeights(unsigned int activeInd,
+                              std::shared_ptr<muq::Utilities::MultiIndexSet> const& multis,
+                              Eigen::VectorXd                                     & multiWeights);
+                              
     std::shared_ptr<muq::Utilities::MultiIndexSet> BuildMultis(Eigen::RowVectorXi const& orders) const;
 
   private:

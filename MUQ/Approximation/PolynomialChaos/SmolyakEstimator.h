@@ -27,8 +27,23 @@ namespace Approximation {
                                  boost::property_tree::ptree                           options = boost::property_tree::ptree());
 
 
+    /** Returns the current estimate of the global error in the Smolyak
+        approximation.
+    */
+    virtual double Error() const{return globalError;};
 
   protected:
+
+    virtual void AddTerms(std::shared_ptr<muq::Utilities::MultiIndexSet> const& fixedSet);
+
+    /** Updates the local error indicators for terms on the leading edge. */
+    virtual void UpdateErrors();
+
+    /** Evaluates the model at specified points in the cache and saves the results
+        to the evalCache vector.
+        @param[in] ptsToEval A set of indices into the cache with points that need evaluation.
+    */
+    virtual void EvaluatePoints(std::set<unsigned int> const& ptsToEval);
 
     /** Computes the locations where the model will need to be evaluated in order
         to construct a single tensor-product estimate.  For example, in the
@@ -59,6 +74,8 @@ namespace Approximation {
 
     virtual EstimateType AddEstimates(double w1, EstimateType const& part1, double w2, EstimateType const& part2) const = 0;
 
+    virtual double ComputeMagnitude(EstimateType const& estimate) const = 0;
+
     /** Computes the change in the smolyak weights caused by the addition of
         one term to the Smolyak MultiIndexSet.  This is to construct the c_k
         coefficients in equation 3.6 of Conrad and Marzouk's pseudospectral paper.
@@ -85,7 +102,7 @@ namespace Approximation {
     std::vector<Eigen::VectorXd> evalCache;
 
     int InCache(Eigen::VectorXd const& input) const;
-    Eigen::VectorXd const& GetFromCache(unsigned int index){return pointCache.m_data.at(index);};
+    Eigen::VectorXd const& GetFromCache(unsigned int index) const{return pointCache.m_data.at(index);};
     int AddToCache(Eigen::VectorXd const& newPt);
     int CacheSize() const{return pointCache.m_data.size();};
 
@@ -104,8 +121,11 @@ namespace Approximation {
       /* Has val been computed for this term yet? */
       bool isComputed = false;
 
+      /* Is this term needed for the estimate or an error indicator? */
+      bool isNeeded = false;
+
       // A local error indicator.  See eq (5.1) of Conrad and Marzouk
-      double localError;
+      double localError = -1.0;
 
       /* A vector containing the indices of points in the evaluation cache
         (see evalCache and pointCache variables) that are needed to compute the
@@ -114,9 +134,15 @@ namespace Approximation {
       */
       std::vector<unsigned int> evalInds;
 
+      Eigen::VectorXd diffWeights;
+
     };
 
     std::vector<SmolyTerm> terms;
+
+    double globalError;
+
+    const double nzTol = 10.0*std::numeric_limits<double>::epsilon();
 
   }; // class SmolyakEstimator
 

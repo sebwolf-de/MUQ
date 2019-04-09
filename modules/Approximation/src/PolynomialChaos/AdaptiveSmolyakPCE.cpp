@@ -37,3 +37,9 @@ std::shared_ptr<PolynomialChaosExpansion> AdaptiveSmolyakPCE::AddEstimates(doubl
   wts << w1, w2;
   return PolynomialChaosExpansion::ComputeWeightedSum({part1,part2},wts);
 }
+
+
+double AdaptiveSmolyakPCE::ComputeMagnitude(std::shared_ptr<PolynomialChaosExpansion> const& estimate) const
+{
+  return estimate->Magnitude().norm();
+}

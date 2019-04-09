@@ -15,7 +15,7 @@ using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 
-TEST(Quadrature, AdaptiveSmolyak_GaussQuad) {
+TEST(Quadrature, AdaptiveSmolyak_StaticGaussQuad) {
 
   unsigned int dim = 2;
 
@@ -28,11 +28,13 @@ TEST(Quadrature, AdaptiveSmolyak_GaussQuad) {
 
   AdaptiveSmolyakQuadrature smolyQuad(model, {quad1d, quad1d});
 
-  unsigned int maxOrder = 5;
+  unsigned int maxOrder = 7;
   auto multiSet = MultiIndexFactory::CreateTotalOrder(dim, maxOrder);
 
   Eigen::VectorXd res = smolyQuad.Compute(multiSet);
 
   EXPECT_NEAR(4.0*std::sin(1.0), res(0), 1e-10);
   EXPECT_NEAR(4.0*std::sin(1.0), res(1), 1e-10);
+
+  EXPECT_LT(smolyQuad.Error(), 1e-12);
 }
