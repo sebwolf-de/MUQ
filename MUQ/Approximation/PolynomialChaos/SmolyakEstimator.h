@@ -37,6 +37,9 @@ namespace Approximation {
     */
     virtual double Error() const{return globalError;};
 
+    /** Returns the number of model evaluations this factory has performed. */
+    virtual unsigned int NumEvals() const{return numEvals;};
+
   protected:
 
     virtual void AddTerms(std::shared_ptr<muq::Utilities::MultiIndexSet> const& fixedSet);
@@ -130,7 +133,7 @@ namespace Approximation {
     unsigned int maxNumEvals = std::numeric_limits<unsigned int>::max();
 
     /// The number of model evaluations that have been performed
-    int numEvals;
+    unsigned int numEvals=0;
 
     struct SmolyTerm {
 
