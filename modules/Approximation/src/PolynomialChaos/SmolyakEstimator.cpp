@@ -3,6 +3,8 @@
 #include "MUQ/Approximation/Quadrature/SmolyakQuadrature.h"
 #include "MUQ/Approximation/PolynomialChaos/PolynomialChaosExpansion.h"
 
+#include <chrono>
+
 using namespace muq::Modeling;
 using namespace muq::Utilities;
 using namespace muq::Approximation;
@@ -68,7 +70,80 @@ EstimateType SmolyakEstimator<EstimateType>::ComputeWeightedSum() const
 }
 
 template<typename EstimateType>
+EstimateType SmolyakEstimator<EstimateType>::Adapt(boost::property_tree::ptree options)
+{
+  UpdateErrors();
+
+  timeTol = options.get("MaximumAdaptTime", std::numeric_limits<double>::infinity());
+  errorTol = options.get("ErrorTol", 0.0);
+  maxNumEvals = options.get("MaximumEvals",std::numeric_limits<unsigned int>::max());
+
+  // If none of the stopping criteria have been set, throw an error
+  if((timeTol==std::numeric_limits<double>::infinity())&&(errorTol==0)&&(maxNumEvals==std::numeric_limits<unsigned int>::max())){
+    std::stringstream msg;
+    msg << "Error in SmolyakEstimator::Adapt.  No stopping criteria were set.  ";
+    msg << "The options property_tree must specify at least one of the following ";
+    msg << "variables, \"MaximumAdaptTime\", \"ErrorTol\", or \"MaximumEvals\".";
+    throw std::runtime_error(msg.str());
+  }
+
+  auto t_start = std::chrono::high_resolution_clock::now();
+  double runtime = 0.0; // <- Time since the beginning of adapting (in seconds)
+
+  // Adapt until we've reached a stopping criteria
+  while((globalError>errorTol)&&(runtime<timeTol)&&(numEvals<maxNumEvals)) {
+    Refine();
+    UpdateErrors();
+
+    auto t_curr =std::chrono::high_resolution_clock::now();
+    runtime = std::chrono::duration<double, std::milli>(t_curr-t_start).count()/1e3;
+  }
+
+
+  return ComputeWeightedSum();
+}
+
+template<typename EstimateType>
+bool SmolyakEstimator<EstimateType>::Refine()
+{
+  // Of all the terms on the frontier, find the one with the largest error indicator and expand it
+  int expandInd = -1;
+  double maxError = 0.0;
+  for(unsigned int termInd : termMultis->GetFrontier()){
+    if(terms.at(termInd).localError > maxError){
+      expandInd = termInd;
+      maxError = terms.at(termInd).localError;
+    }
+  }
+
+  // If no admissible terms were found, just return
+  if(expandInd==-1)
+    return false;
+
+  // Add the new terms to the set
+  std::vector<std::shared_ptr<MultiIndex>> neighs = termMultis->GetAdmissibleForwardNeighbors(expandInd);
+  std::vector<std::shared_ptr<MultiIndex>> termsToAdd;
+  for(auto& neigh : neighs){
+    if(!termMultis->IsActive(neigh))
+      termsToAdd.push_back(neigh);
+  }
+  AddTerms(termsToAdd);
+
+  return true;
+}
+
+template<typename EstimateType>
 void SmolyakEstimator<EstimateType>::AddTerms(std::shared_ptr<muq::Utilities::MultiIndexSet> const& fixedSet)
+{
+  std::vector<std::shared_ptr<MultiIndex>> multiVec(fixedSet->Size());
+  for(unsigned int i=0; i<fixedSet->Size(); ++i)
+    multiVec.at(i) = fixedSet->IndexToMulti(i);
+
+  AddTerms(multiVec);
+}
+
+template<typename EstimateType>
+void SmolyakEstimator<EstimateType>::AddTerms(std::vector<std::shared_ptr<MultiIndex>> const& fixedSet)
 {
   /* For each term in the fixed set we want to construct a tensor product approximation.
      The i^th tensor product approximation will require model evaluations at N_i
@@ -78,15 +153,15 @@ void SmolyakEstimator<EstimateType>::AddTerms(std::shared_ptr<muq::Utilities::Mu
      the cached points.
   */
 
-  for(unsigned int i=0; i<fixedSet->Size(); ++i) {
+  for(unsigned int i=0; i<fixedSet.size(); ++i) {
     unsigned int termInd = terms.size();
     terms.push_back(SmolyTerm());
-    termMultis->AddActive(fixedSet->at(i));
+    termMultis->AddActive(fixedSet.at(i));
 
     assert(terms.size()==termMultis->Size());
 
 
-    std::vector<Eigen::VectorXd> pts = OneTermPoints(fixedSet->IndexToMulti(i));
+    std::vector<Eigen::VectorXd> pts = OneTermPoints(fixedSet.at(i));
 
     // Figure out if we've already evaluated a point, or if we need to
     terms.at(termInd).evalInds.resize(pts.size());
@@ -165,7 +240,7 @@ void SmolyakEstimator<EstimateType>::AddTerms(std::shared_ptr<muq::Utilities::Mu
       for(unsigned int ptInd=0; ptInd<terms.at(i).evalInds.size(); ++ptInd){
         evals.push_back( evalCache.at(terms.at(i).evalInds.at(ptInd) ) );
       }
-      terms.at(i).val = ComputeOneTerm(fixedSet->IndexToMulti(i), evals);
+      terms.at(i).val = ComputeOneTerm(termMultis->IndexToMulti(i), evals);
       terms.at(i).isComputed = true;
     }
 
@@ -176,8 +251,10 @@ void SmolyakEstimator<EstimateType>::AddTerms(std::shared_ptr<muq::Utilities::Mu
 template<typename EstimateType>
 void SmolyakEstimator<EstimateType>::EvaluatePoints(std::set<unsigned int> const& ptsToEval)
 {
-  for(auto& ptInd : ptsToEval)
+  for(auto& ptInd : ptsToEval){
     evalCache.at(ptInd) = model->Evaluate( GetFromCache(ptInd) ).at(0);
+    numEvals++;
+  }
 }
 
 template<typename EstimateType>
@@ -194,7 +271,6 @@ void SmolyakEstimator<EstimateType>::UpdateErrors()
   }
 }
 
-
 template<typename EstimateType>
 EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilities::MultiIndexSet> const& fixedSet,
                                                      boost::property_tree::ptree                           options)
@@ -202,6 +278,10 @@ EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilit
   AddTerms(fixedSet);
 
   UpdateErrors();
+
+  bool shouldAdapt = options.get("ShouldAdapt",false);
+  if(shouldAdapt)
+    return Adapt(options);
 
   // We've done all the work, just return a weighted sum of the tensor product approximations
   return ComputeWeightedSum();

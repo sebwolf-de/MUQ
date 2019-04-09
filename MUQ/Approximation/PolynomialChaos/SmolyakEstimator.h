@@ -27,6 +27,11 @@ namespace Approximation {
                                  boost::property_tree::ptree                           options = boost::property_tree::ptree());
 
 
+    /** To be called after Compute, this will continue to refine the estimate
+        until the stopping criteria in options is met.
+    */
+    virtual EstimateType Adapt(boost::property_tree::ptree options);
+
     /** Returns the current estimate of the global error in the Smolyak
         approximation.
     */
@@ -36,8 +41,15 @@ namespace Approximation {
 
     virtual void AddTerms(std::shared_ptr<muq::Utilities::MultiIndexSet> const& fixedSet);
 
+    virtual void AddTerms(std::vector<std::shared_ptr<muq::Utilities::MultiIndex>> const& fixedSet);
+
     /** Updates the local error indicators for terms on the leading edge. */
     virtual void UpdateErrors();
+
+    /** Refine the approximation by adding to the computed terms.  Returns true
+        if any new terms were added.
+    */
+    virtual bool Refine();
 
     /** Evaluates the model at specified points in the cache and saves the results
         to the evalCache vector.
@@ -107,6 +119,18 @@ namespace Approximation {
     int CacheSize() const{return pointCache.m_data.size();};
 
     const double cacheTol = 4e-15; // <- points are considered equal if they are closer than this
+
+    /// Tolerance on the time (in seconds) allowed to continue adapting
+    double timeTol = std::numeric_limits<double>::infinity();
+
+    /// Tolerance on the global error indicator to continue adapting
+    double errorTol = 0.0;
+
+    /// Tolerance on the maximum number of evaluations
+    unsigned int maxNumEvals = std::numeric_limits<unsigned int>::max();
+
+    /// The number of model evaluations that have been performed
+    int numEvals;
 
     struct SmolyTerm {
 
