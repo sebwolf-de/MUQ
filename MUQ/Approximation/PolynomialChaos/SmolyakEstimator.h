@@ -42,6 +42,8 @@ namespace Approximation {
 
   protected:
 
+    virtual void Reset();
+
     virtual void AddTerms(std::shared_ptr<muq::Utilities::MultiIndexSet> const& fixedSet);
 
     virtual void AddTerms(std::vector<std::shared_ptr<muq::Utilities::MultiIndex>> const& fixedSet);

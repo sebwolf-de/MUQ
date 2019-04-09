@@ -31,20 +31,20 @@ namespace Approximation {
   public:
 
     PolynomialChaosExpansion(std::shared_ptr<OrthogonalPolynomial>          const& basisCompsIn,
-                             std::shared_ptr<muq::Utilities::MultiIndexSet>        multisIn,
+                             std::shared_ptr<muq::Utilities::MultiIndexSet> const& multisIn,
                              Eigen::MatrixXd                                const& coeffsIn);
 
     PolynomialChaosExpansion(std::shared_ptr<OrthogonalPolynomial>          const& basisCompsIn,
-                             std::shared_ptr<muq::Utilities::MultiIndexSet>        multisIn,
+                             std::shared_ptr<muq::Utilities::MultiIndexSet> const& multisIn,
                              unsigned int                                          outputDim);
 
     PolynomialChaosExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
-                             std::shared_ptr<muq::Utilities::MultiIndexSet>            multisIn,
-                             Eigen::MatrixXd                                    const& coeffsIn);
+                             std::shared_ptr<muq::Utilities::MultiIndexSet>   const& multisIn,
+                             Eigen::MatrixXd                                  const& coeffsIn);
 
     PolynomialChaosExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
-                             std::shared_ptr<muq::Utilities::MultiIndexSet>            multisIn,
-                             unsigned int                                              outputDim);
+                             std::shared_ptr<muq::Utilities::MultiIndexSet>   const& multisIn,
+                             unsigned int                                            outputDim);
 
 
     virtual ~PolynomialChaosExpansion() = default;
@@ -89,13 +89,13 @@ namespace Approximation {
 
 
     ///Compute the Sobol total sensitivity index for the input dimension, for each output dimension
-    Eigen::VectorXd TotalSensitivity(unsigned const targetDim) const;
+    Eigen::VectorXd TotalSensitivity(unsigned int targetDim) const;
 
     ///Compute all Sobol total sensitivities. Rows are outputs, each column is an input.
     Eigen::MatrixXd TotalSensitivity() const;
 
     ///Compute the main sensitivity index for the input dimension, for each output dimension
-    Eigen::VectorXd SobolSensitivity(unsigned const targetDim) const;
+    Eigen::VectorXd SobolSensitivity(unsigned int targetDim) const;
 
     /** Computes the Sobol sensitivity for a group of input parameters.
     */

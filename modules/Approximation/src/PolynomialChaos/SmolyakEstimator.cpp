@@ -275,6 +275,8 @@ template<typename EstimateType>
 EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilities::MultiIndexSet> const& fixedSet,
                                                      boost::property_tree::ptree                           options)
 {
+  Reset();
+
   AddTerms(fixedSet);
 
   UpdateErrors();
@@ -285,6 +287,14 @@ EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilit
 
   // We've done all the work, just return a weighted sum of the tensor product approximations
   return ComputeWeightedSum();
+}
+
+template<typename EstimateType>
+void SmolyakEstimator<EstimateType>::Reset()
+{
+  termMultis = std::make_shared<MultiIndexSet>(model->inputSizes(0));
+  terms.clear();
+  globalError;
 }
 
 

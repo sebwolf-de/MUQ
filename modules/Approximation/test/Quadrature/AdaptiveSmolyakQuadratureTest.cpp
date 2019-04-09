@@ -149,7 +149,7 @@ TEST(Quadrature, AdaptiveSmolyak_AdaptiveExponential) {
   auto multiSet = MultiIndexFactory::CreateTotalOrder(dim, maxOrder);
 
   Eigen::VectorXd res = smolyQuad.Compute(multiSet, options);
-  
+
   EXPECT_NEAR(4.0*std::sin(1.0), res(0), 1e-10);
   EXPECT_NEAR(4.0*std::sin(1.0), res(1), 1e-10);
 

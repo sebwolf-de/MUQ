@@ -9,28 +9,28 @@ using namespace muq::Utilities;
 using namespace muq::Approximation;
 
 PolynomialChaosExpansion::PolynomialChaosExpansion(std::shared_ptr<OrthogonalPolynomial>          const& basisCompsIn,
-                                                   std::shared_ptr<muq::Utilities::MultiIndexSet>        multisIn,
+                                                   std::shared_ptr<muq::Utilities::MultiIndexSet> const& multisIn,
                                                    Eigen::MatrixXd                                const& coeffsIn) : PolynomialChaosExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>>(multisIn->GetMultiLength(), basisCompsIn),
                                                                                                                                               multisIn,
                                                                                                                                               coeffsIn)
 {}
 
 PolynomialChaosExpansion::PolynomialChaosExpansion(std::shared_ptr<OrthogonalPolynomial>          const& basisCompsIn,
-                                                   std::shared_ptr<muq::Utilities::MultiIndexSet>        multisIn,
+                                                   std::shared_ptr<muq::Utilities::MultiIndexSet> const& multisIn,
                                                    unsigned int                                          outputDim) : PolynomialChaosExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>>(multisIn->GetMultiLength(), basisCompsIn),
                                                                                                                                                multisIn,
                                                                                                                                                outputDim)
 {}
 
 PolynomialChaosExpansion::PolynomialChaosExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
-                                                   std::shared_ptr<muq::Utilities::MultiIndexSet>          multisIn,
+                                                   std::shared_ptr<muq::Utilities::MultiIndexSet>   const& multisIn,
                                                    Eigen::MatrixXd                                  const& coeffsIn) : BasisExpansion(basisCompsIn, multisIn, coeffsIn)
 {
 }
 
 PolynomialChaosExpansion::PolynomialChaosExpansion(std::vector<std::shared_ptr<IndexedScalarBasis>> const& basisCompsIn,
-                                                   std::shared_ptr<muq::Utilities::MultiIndexSet>            multisIn,
-                                                   unsigned int                                              outputDim) : BasisExpansion(basisCompsIn, multisIn, Eigen::MatrixXd::Zero(outputDim, multisIn->Size()))
+                                                   std::shared_ptr<muq::Utilities::MultiIndexSet>   const& multisIn,
+                                                   unsigned int                                            outputDim) : BasisExpansion(basisCompsIn, multisIn, Eigen::MatrixXd::Zero(outputDim, multisIn->Size()))
 {}
 
 
@@ -322,7 +322,7 @@ std::shared_ptr<PolynomialChaosExpansion> PolynomialChaosExpansion::ComputeWeigh
 }
 
 
-Eigen::VectorXd PolynomialChaosExpansion::TotalSensitivity(unsigned const targetDim) const
+Eigen::VectorXd PolynomialChaosExpansion::TotalSensitivity(unsigned int targetDim) const
 {
 
   //grab the total normalizations
