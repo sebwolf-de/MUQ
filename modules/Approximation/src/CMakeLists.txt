@@ -55,6 +55,8 @@ CreateCompileGroup(
 	Quadrature/FullTensorQuadrature.cpp
 	Quadrature/SmolyakQuadrature.cpp
 	Quadrature/ClenshawCurtisQuadrature.cpp
+	Quadrature/GaussPattersonQuadrature.cpp
+	Quadrature/ExponentialGrowthQuadrature.cpp
 )
 
 CreateCompileGroup(
