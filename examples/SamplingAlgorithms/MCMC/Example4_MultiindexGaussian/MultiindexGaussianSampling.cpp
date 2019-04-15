@@ -21,11 +21,11 @@ using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
 
+#include "Problem.h"
 
 
 
-
-class MySamplingProblem : public AbstractSamplingProblem {
+/*class MySamplingProblem : public AbstractSamplingProblem {
 public:
   MySamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& targetIn)
    : AbstractSamplingProblem(Eigen::VectorXi::Constant(1,2), Eigen::VectorXi::Constant(1,2)),
@@ -146,7 +146,8 @@ public:
     return mu;
   }
 
-};
+};*/
+
 
 int main(){
 
