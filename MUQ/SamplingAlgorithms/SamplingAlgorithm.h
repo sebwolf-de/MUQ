@@ -37,6 +37,8 @@ namespace muq {
 
       virtual std::shared_ptr<SampleCollection> GetQOIs() const;
 
+      virtual void SetState(std::vector<Eigen::VectorXd> const& x0);
+
       virtual std::shared_ptr<SampleCollection> Run(std::vector<Eigen::VectorXd> const& x0 = std::vector<Eigen::VectorXd>());
 
       template<typename... Args>

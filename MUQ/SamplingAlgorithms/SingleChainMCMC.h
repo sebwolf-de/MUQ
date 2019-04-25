@@ -45,7 +45,7 @@ namespace muq{
         If no steps have been taken, this function sets the starting point.
         Set the current state AND adds it to the sample collection.
       */
-      void SetState(std::vector<Eigen::VectorXd> const& x0);
+      virtual void SetState(std::vector<Eigen::VectorXd> const& x0) override;
 
       template<typename... Args>
         inline void SetState(Args const&... args) {
