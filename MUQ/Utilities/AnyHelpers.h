@@ -1,3 +1,6 @@
+#ifndef ANYHELPERS_H
+#define ANYHELPERS_H
+
 #include <boost/any.hpp>
 
 #include "MUQ/config.h"
@@ -64,3 +67,5 @@ NOTE: This class stores a reference to the boost::any in question and errors may
         };
     } // namespace Utilities
 } // namespace muq
+
+#endif

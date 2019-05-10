@@ -272,7 +272,6 @@ void MultiIndexSet::AddForwardNeighbors(unsigned int globalIndex, bool addInacti
   }
 }
 
-
 std::vector<shared_ptr<MultiIndex>>  MultiIndexSet::GetAdmissibleForwardNeighbors(unsigned int activeIndex)
 {
   unsigned int globalInd = active2global.at(activeIndex);

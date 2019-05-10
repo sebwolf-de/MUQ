@@ -40,7 +40,7 @@ CreateCompileGroup(
 
 CreateCompileGroup(
     UTILITIES_MULTIINDEX
-    "Classes for definining and generating multiindices and multiindex sets."
+    "Classes for defining and generating multiindices and multiindex sets."
     muqUtilities
     ""
     "EIGEN3"

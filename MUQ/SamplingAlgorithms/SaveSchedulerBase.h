@@ -7,7 +7,9 @@ namespace muq {
     class SaveSchedulerBase {
 
     public:
-      SaveSchedulerBase() {};
+      SaveSchedulerBase() = default;
+
+      virtual ~SaveSchedulerBase() = default;
 
       virtual bool ShouldSave(int step) = 0;
 

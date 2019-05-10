@@ -4,6 +4,8 @@ CreateTestGroup(
     SamplingProblemTests.cpp
     SampleCollectionTests.cpp
     MarkovChainTests.cpp
+    MIMCMCTests.cpp
+    MLMCMCTests.cpp
 
     GMHKernelTests.cpp
 

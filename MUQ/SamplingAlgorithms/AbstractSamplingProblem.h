@@ -28,21 +28,27 @@ namespace muq{
     {
     public:
 
-      enum SampleType {
-	Proposed,
-	Accepted
-      };
+      AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn,
+                              Eigen::VectorXi const& blockSizesQOIIn);
 
-      inline AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn) : numBlocks(blockSizesIn.size()),
-                                                                     blockSizes(blockSizesIn)
-                                                                     {assert(blockSizes.size()==numBlocks);};
+      AbstractSamplingProblem(Eigen::VectorXi const& blockSizesIn);
+
+      enum SampleType {
+        Proposed,
+        Accepted
+      };
 
       virtual ~AbstractSamplingProblem() = default;
 
       virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) = 0;
 
+      virtual std::shared_ptr<SamplingState> QOI();
+
+
       const int numBlocks;
       const Eigen::VectorXi blockSizes;
+      const int numBlocksQOI;
+      const Eigen::VectorXi blockSizesQOI;
     };
 
   }

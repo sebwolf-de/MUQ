@@ -46,9 +46,9 @@ TEST(MCMC, MHKernel_ThinScheduler) {
   const Eigen::VectorXd start = mu;
 
   // create an instance of MCMC
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem,start);
 
-  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run();
 
   EXPECT_EQ(int(std::floor(pt.get<double>("MyMCMC.NumSamples")/pt.get<double>("MyMCMC.ThinIncrement"))), samps->size());
 
@@ -90,7 +90,7 @@ TEST(MCMC, MHKernel_MHProposal) {
 
   // evaluate
   // create an instance of MCMC
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem,start);
 
   // Make sure the kernel and proposal are correct
   std::shared_ptr<TransitionKernel> kernelBase = mcmc->Kernels().at(0);
@@ -101,7 +101,7 @@ TEST(MCMC, MHKernel_MHProposal) {
   std::shared_ptr<MHProposal> proposalMH = std::dynamic_pointer_cast<MHProposal>(proposalBase);
   EXPECT_TRUE(proposalMH);
 
-  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run();
 
   EXPECT_EQ(pt.get<int>("MyMCMC.NumSamples"), samps->size());
 
@@ -165,7 +165,7 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
 
   // evaluate
   // create an instance of MCMC
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem,start);
 
   // Make sure the kernel and proposal are correct
   EXPECT_EQ(2,mcmc->Kernels().size());
@@ -182,7 +182,7 @@ TEST(MCMC, MetropolisInGibbs_IsoGauss) {
   std::shared_ptr<MHProposal> proposalMH = std::dynamic_pointer_cast<MHProposal>(proposalBase);
   EXPECT_TRUE(proposalMH);
 
-  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run();
 
   Eigen::VectorXd mean = samps->Mean();
 
@@ -232,7 +232,7 @@ TEST(MCMC, MHKernel_AMProposal) {
 
   // evaluate
   // create an instance of MCMC
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"), problem);
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"), problem, start);
 
   std::shared_ptr<TransitionKernel> kernelBase = mcmc->Kernels().at(0);
   std::shared_ptr<MHKernel> kernelMH = std::dynamic_pointer_cast<MHKernel>(kernelBase);
@@ -242,7 +242,7 @@ TEST(MCMC, MHKernel_AMProposal) {
   std::shared_ptr<AMProposal> proposalAM = std::dynamic_pointer_cast<AMProposal>(proposalBase);
   EXPECT_TRUE(proposalAM);
 
-  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
+  std::shared_ptr<SampleCollection> samps = mcmc->Run();
 
   Eigen::VectorXd mean = samps->Mean();
 

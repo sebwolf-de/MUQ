@@ -294,7 +294,7 @@ void SmolyakEstimator<EstimateType>::Reset()
 {
   termMultis = std::make_shared<MultiIndexSet>(model->inputSizes(0));
   terms.clear();
-  globalError;
+  globalError = std::numeric_limits<double>::infinity();
 }
 
 
