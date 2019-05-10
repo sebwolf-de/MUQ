@@ -15,7 +15,7 @@ namespace muq {
     class Density;
     class RandomVariable;
 
-    class Distribution : public std::enable_shared_from_this<Distribution>{
+    class Distribution : public std::enable_shared_from_this<Distribution> {
     public:
       friend class Density;
       friend class RandomVariable;

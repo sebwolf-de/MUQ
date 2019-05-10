@@ -23,7 +23,7 @@ TEST(Utilties_LinearOperator, EigenDense)
 
     const int rows = 5;
     const int cols = 2;
-    
+
     Eigen::MatrixXd A = Eigen::MatrixXd::Random(rows,cols);
 
     auto denseOp = LinearOperator::Create(A);
@@ -59,24 +59,24 @@ TEST(Utilties_LinearOperator, EigenSparse)
     std::uniform_int_distribution<> rowRG(0, rows-1);
     std::uniform_int_distribution<> colRG(0, cols-1);
     std::normal_distribution<> valRG(0.0,1.0);
-    
+
     typedef Eigen::Triplet<double> T;
     std::vector<T> tripletList;
     tripletList.reserve(nnz);
 
     // Create a random sparse matrix with at most nnz non zero entries
     for(int i=0; i<nnz; ++i){
-        
+
         int    randRow = rowRG(gen);
         int    randCol = colRG(gen);
         double randVal = valRG(gen);
-        
+
         tripletList.push_back(T(randRow, randCol, randVal));
     }
 
     Eigen::SparseMatrix<double> A(rows,cols);
     A.setFromTriplets(tripletList.begin(), tripletList.end());
-    
+
     auto denseOp = LinearOperator::Create(A);
 
     Eigen::VectorXd x = Eigen::VectorXd::Ones(cols);
@@ -92,7 +92,7 @@ TEST(Utilties_LinearOperator, EigenSparse)
     x = Eigen::VectorXd::Ones(rows);
     ytrue = A.transpose()*x;
     ytest = denseOp->ApplyTranspose(x);
-    
+
     for(int i=0; i<cols; ++i)
         EXPECT_DOUBLE_EQ(ytrue(i), ytest(i));
 
@@ -114,14 +114,14 @@ TEST(Utilities_LinearOperator, CompanionMatrix)
     lastRow << 1.0, 1.5, 1.75;
 
     CompanionMatrix A(lastRow);
-    
+
     Eigen::MatrixXd x = Eigen::MatrixXd::Random(3,10);
 
     // Test the multiplication
     Eigen::MatrixXd b = A.Apply(x);
 
     Eigen::VectorXd trueRow = lastRow.transpose()*x;
-        
+
     for(int j=0; j<x.cols(); ++j)
     {
         for(int i=0; i<b.rows()-1; ++i)
@@ -138,7 +138,7 @@ TEST(Utilities_LinearOperator, CompanionMatrix)
     trueTrans.block(1,0,2,2) = Eigen::MatrixXd::Identity(2,2);
     trueTrans.col(2) = lastRow;
     Eigen::MatrixXd trueB = trueTrans*x;
-    
+
     for(int j=0; j<b.cols(); ++j)
     {
         for(int i=0; i<b.rows(); ++i)
@@ -167,7 +167,7 @@ TEST(Utilities_LinearOperator, BlockDiagonal)
     Eigen::MatrixXd bTrue(A.rows() + B.rows(), x.cols());
     bTrue.block(0,0, A.rows(), bTrue.cols()) = A * x.block(0, 0, A.cols(), x.cols());
     bTrue.block(A.rows(),0, B.rows(), bTrue.cols()) = B * x.block(A.cols(), 0, B.cols(), x.cols());
-    
+
 
     Eigen::MatrixXd bOp = ABop->Apply(x);
     for(int j=0; j<bOp.cols(); ++j){
@@ -201,7 +201,7 @@ TEST(Utilities_LinearOperator, KroneckerProduct)
 
 
     auto AB = std::make_shared<KroneckerProductOperator>(Aop,Bop);
-    
+
     Eigen::MatrixXd x = Eigen::MatrixXd::Random(AB->cols(), 10);
 
     Eigen::MatrixXd bOp = AB->Apply(x);
@@ -234,7 +234,7 @@ TEST(Utilities_LinearOperator, DenseKronecker)
     Eigen::MatrixXd B = Eigen::MatrixXd::Random(4,20);
 
     Eigen::MatrixXd AB = muq::Modeling::KroneckerProduct(A,B);
-    
+
     Eigen::MatrixXd trueProd(A.rows()*B.rows(), A.cols()*B.cols());
     for(int j=0; j<A.cols(); ++j)
     {
@@ -251,7 +251,7 @@ TEST(Utilities_LinearOperator, DenseKronecker)
             EXPECT_NEAR(trueProd(i,j), AB(i,j), 1e-13);
         }
     }
-    
+
 }
 
 
@@ -266,7 +266,7 @@ TEST(Utilities_LinearOperator, Sum)
 
 
     auto AB = std::make_shared<SumOperator>(Aop,Bop);
-    
+
     Eigen::MatrixXd x = Eigen::MatrixXd::Random(AB->cols(), 10);
 
     Eigen::MatrixXd bOp = AB->Apply(x);
@@ -293,7 +293,7 @@ TEST(Utilities_LinearOperator, BlockRow)
     ops.at(1) = LinearOperator::Create(B);
 
     auto AB = std::make_shared<BlockRowOperator>(ops);
-    
+
     Eigen::MatrixXd x = Eigen::MatrixXd::Random(AB->cols(), 10);
 
     Eigen::MatrixXd bOp = AB->Apply(x);
@@ -301,7 +301,7 @@ TEST(Utilities_LinearOperator, BlockRow)
     Eigen::MatrixXd bMat(AB->rows(), x.cols());
     bMat = A*x.block(0,0,A.cols(),x.cols());
     bMat += B*x.block(A.cols(), 0, B.cols(), x.cols());
-    
+
 
     for(int j=0; j<bMat.cols(); ++j)
     {
@@ -325,7 +325,7 @@ TEST(Utilities_LinearOperator, Concatenate_BadSizes)
     std::vector<std::shared_ptr<LinearOperator>> ops(2);
     ops.at(0) = Aop;
     ops.at(1) = Bop;
-    
+
     EXPECT_THROW(ConcatenateOperator(ops,0), muq::WrongSizeError);
     EXPECT_THROW(ConcatenateOperator(ops,1), muq::WrongSizeError);
 }
@@ -349,7 +349,7 @@ TEST(Utilities_LinearOperator, Concatenate)
     EXPECT_EQ(A.rows(), AB_horiz->rows());
     EXPECT_EQ(A.cols(), AB_vert->cols());
     EXPECT_EQ(A.cols() + B.cols(), AB_horiz->cols());
-    
+
     {
         Eigen::MatrixXd x = Eigen::MatrixXd::Random(AB_vert->cols(), 10);
         Eigen::MatrixXd bOp = AB_vert->Apply(x);

@@ -9,6 +9,9 @@ CreateTestGroup(
     ModPieceTests.cpp
     ConstantPieceTests.cpp
     IdentityPieceTests.cpp
+    SplitVectorTests.cpp
+    ScaleVectorTests.cpp
+    CombineVectorsTests.cpp
 
     MultiLogisticTest.cpp
 
@@ -33,8 +36,15 @@ CreateTestGroup(
     MODELING_SUNDIALS_MODELS
 
     ODETests.cpp
-    RootfindingIVPTests.cpp
+    #RootfindingIVPTests.cpp
 )
+
+CreateParallelTestGroup(
+    MODELING_SUNDIALS_MODELS
+
+    ODEParallelTests.cpp
+)
+
 
 CreateTestGroup(
     MODELING_FLANN

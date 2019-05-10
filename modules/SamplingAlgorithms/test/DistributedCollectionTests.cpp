@@ -145,26 +145,4 @@ TEST_F(DistributedCollectionTest, Weights) {
   EXPECT_EQ(weights.size(), nproc*numSamps);
 }
 
-TEST_F(DistributedCollectionTest, WriteToFile) {
-    const std::string filename = "output.h5";
-    collection->WriteToFile(filename);
-
-  if( rank==0 ) {
-    auto hdf5file = std::make_shared<HDF5File>(filename);
-
-    const Eigen::MatrixXd samples = hdf5file->ReadMatrix("/samples");
-    const Eigen::RowVectorXd weights = hdf5file->ReadMatrix("/weights");
-    const Eigen::RowVectorXd id = hdf5file->ReadMatrix("/id");
-    const Eigen::RowVectorXd rnk = hdf5file->ReadMatrix("/rank");
-
-    EXPECT_EQ(id.size(), 2*numSamps);
-    EXPECT_EQ(rnk.size(), 2*numSamps);
-    EXPECT_EQ(weights.size(), 2*numSamps);
-    EXPECT_EQ(samples.cols(), 2*numSamps);
-    EXPECT_EQ(samples.rows(), 2);
-
-    std::remove(filename.c_str());
-  }
-}
-
 #endif // end MUQ_HAS_MPI

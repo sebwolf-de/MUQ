@@ -4,16 +4,14 @@ namespace muq {
   namespace SamplingAlgorithms {
 
     MIMCMC::MIMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory)
-    : SamplingAlgorithm(nullptr, nullptr),
+    : SamplingAlgorithm(std::shared_ptr<SampleCollection>(), std::shared_ptr<SampleCollection>()),
       componentFactory(componentFactory),
       samples(pt.get("NumSamples",1000))
     {
-
       gridIndices = MultiIndexFactory::CreateFullTensor(componentFactory->FinestIndex()->GetVector());
 
       for (int i = 0; i < gridIndices->Size(); i++) {
         std::shared_ptr<MultiIndex> boxHighestIndex = (*gridIndices)[i];
-
         auto box = std::make_shared<MIMCMCBox>(componentFactory, boxHighestIndex);
         boxes.push_back(box);
       }
@@ -27,9 +25,9 @@ namespace muq {
       return nullptr;
     }
 
-    std::shared_ptr<SampleCollection> MIMCMC::RunImpl() {
-
+    std::shared_ptr<SampleCollection> MIMCMC::RunImpl(std::vector<Eigen::VectorXd> const& x0) {
       for (auto box : boxes) {
+        assert(box);
         for (int samp = 0; samp < samples; samp++) {
           box->Sample();
         }

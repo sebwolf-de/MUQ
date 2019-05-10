@@ -1,7 +1,13 @@
 #ifndef ODEDATA_H_
 #define ODEDATA_H_
 
-#include "MUQ/Modeling/WorkPiece.h"
+#include "MUQ/config.h"
+
+#if MUQ_HAS_PARCER==1
+#include <parcer/Communicator.h>
+#endif
+
+#include "MUQ/Modeling/ModPiece.h"
 
 namespace muq {
   namespace Modeling {
@@ -18,9 +24,12 @@ namespace muq {
 	 @param[in] inputs The inputs to the rhs --- the first is the state, the rest are constant in time
 	 @param[in] autonomous Is the RHS autonomous?
 	 @param[in] wrtIn The input we are computing the derivative wrt --- negative indicates no derivative is being computed
-	 @param[in] wrtOut The output we are computing the derivative of --- negative indicates no derivative is being computed
        */
-      ODEData(std::shared_ptr<WorkPiece> rhs, ref_vector<boost::any> const& inputs, bool const autonomous, int const wrtIn, int const wrtOut);
+#if MUQ_HAS_PARCER==1
+      ODEData(std::shared_ptr<ModPiece> const& rhs, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn, std::shared_ptr<parcer::Communicator> const& comm);
+#else
+      ODEData(std::shared_ptr<ModPiece> const& rhs, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn);
+#endif
 
       /// Construct with root function
       /**
@@ -29,18 +38,22 @@ namespace muq {
 	 @param[in] inputs The inputs to the rhs --- the first is the state, the rest are constant in time
 	 @param[in] autonomous Is the RHS autonomous?
 	 @param[in] wrtIn The input we are computing the derivative wrt --- negative indicates no derivative is being computed
-	 @param[in] wrtOut The output we are computing the derivative of --- negative indicates no derivative is being computed
        */
-      ODEData(std::shared_ptr<WorkPiece> rhs, std::shared_ptr<WorkPiece> root, ref_vector<boost::any> const& inputs, bool const autonomous, int const wrtIn, int const wrtOut);
+      ODEData(std::shared_ptr<ModPiece> const& rhs, std::shared_ptr<ModPiece> const& root, ref_vector<Eigen::VectorXd> const& refinputs, bool const autonomous, int const wrtIn);
+
+      virtual ~ODEData() = default;
+
+      /// Update the time and state inputs
+      void UpdateInputs(Eigen::VectorXd const& state, double const time);
 
       /// The right hand side of the ODE
-      std::shared_ptr<WorkPiece> rhs;
+      std::shared_ptr<ModPiece> rhs;
 
       /// A function we are trying to find the root of along an orbit of the ODE (nullptr if we are not doing a root finding problem)
-      std::shared_ptr<WorkPiece> root;
+      std::shared_ptr<ModPiece> root;
 
       /// The inputs to the rhs --- the first is the state, the rest are constant in time
-      ref_vector<boost::any> inputs;
+      std::vector<Eigen::VectorXd> inputs;
 
       /// Is the RHS autonomous?
       const bool autonomous;
@@ -48,9 +61,10 @@ namespace muq {
       /// The input we are computing the derivative wrt --- negative indicates no derivative is being computed
       const int wrtIn = -1;
 
-      /// The output we are computing the derivative of --- negative indicates no derivative is being computed
-      const int wrtOut = -1;
-      
+#if MUQ_HAS_PARCER==1
+      std::shared_ptr<parcer::Communicator> comm = nullptr;
+#endif
+
     private:
     };
   } // namespace Modeling

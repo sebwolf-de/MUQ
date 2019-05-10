@@ -206,6 +206,12 @@ namespace muq {
       */
       Eigen::VectorXd Centroid() const;
 
+      /// Get the underlying function
+      /**
+      \return The function whose output we are storing
+      */
+      std::shared_ptr<ModPiece> Function() const;
+
     private:
 
       /// Update the centroid when a new point is added to the cache

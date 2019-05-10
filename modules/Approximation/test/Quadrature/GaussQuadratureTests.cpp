@@ -305,7 +305,7 @@ TEST(Quadrature, Jacobi) {
                                        0.0650476830805122679291};
 
   // Jacobi powers
-  double alpha = 2.0;
+  double alpha = 3.0;
   double beta = 3.0;
 
   // create a Jacobi object

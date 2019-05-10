@@ -88,6 +88,11 @@ install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAM
         DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/${CMAKE_PROJECT_NAME}"
 	    COMPONENT dev)
 
+# Install the pymuq libraries
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/modules/Modeling/python/pymuqModeling/"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pymuqModeling"
+	    COMPONENT dev)
+
 # Install the export set for use with the install-tree
 install(EXPORT ${CMAKE_PROJECT_NAME}Depends
         DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/${CMAKE_PROJECT_NAME}"

@@ -23,21 +23,29 @@ namespace muq {
     class SamplingAlgorithm {//} : public muq::Modeling::WorkPiece {
     public:
 
-      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn,
-                        std::shared_ptr<SampleCollection> QOIsIn);
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samples);
 
-      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn);
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samplesIn, std::shared_ptr<SampleCollection> const& QOIsIn);
 
 #if MUQ_HAS_PARCER
-      SamplingAlgorithm(std::shared_ptr<SampleCollection> samplesIn, std::shared_ptr<parcer::Communicator> comm);
+      SamplingAlgorithm(std::shared_ptr<SampleCollection> const& samplesIn, std::shared_ptr<parcer::Communicator> const& comm);
 #endif
 
       virtual ~SamplingAlgorithm() = default;
 
       virtual std::shared_ptr<SampleCollection> GetSamples() const;
+
       virtual std::shared_ptr<SampleCollection> GetQOIs() const;
 
-      virtual std::shared_ptr<SampleCollection> Run();
+      virtual void SetState(std::vector<Eigen::VectorXd> const& x0);
+
+      virtual std::shared_ptr<SampleCollection> Run(std::vector<Eigen::VectorXd> const& x0 = std::vector<Eigen::VectorXd>());
+
+      template<typename... Args>
+        inline std::shared_ptr<SampleCollection> Run(Args const&... args) {
+          std::vector<Eigen::VectorXd> vec;
+          return RunRecurse(vec, args...);
+        }
 
 #if MUQ_HAS_PARCER
       std::shared_ptr<parcer::Communicator> GetCommunicator() const;
@@ -45,7 +53,7 @@ namespace muq {
 
     protected:
 
-      virtual std::shared_ptr<SampleCollection> RunImpl() = 0;
+      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) = 0;
 
       /**
 	 Inputs:
@@ -62,11 +70,21 @@ namespace muq {
       std::shared_ptr<SampleCollection> QOIs;
 
 #if MUQ_HAS_PARCER
-      std::shared_ptr<parcer::Communicator> comm = std::make_shared<parcer::Communicator>();
+      std::shared_ptr<parcer::Communicator> comm = nullptr;
 #endif
 
     private:
-      
+
+      template<typename... Args>
+        inline std::shared_ptr<SampleCollection> RunRecurse(std::vector<Eigen::VectorXd>& vec, Eigen::VectorXd const& ith, Args const&... args) {
+          vec.push_back(ith);
+          return RunRecurse(vec, args...);
+        }
+
+        inline std::shared_ptr<SampleCollection> RunRecurse(std::vector<Eigen::VectorXd>& vec, Eigen::VectorXd const& last) {
+          vec.push_back(last);
+          return Run(vec);
+        }
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

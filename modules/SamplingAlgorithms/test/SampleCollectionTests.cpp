@@ -7,6 +7,7 @@
 #include "MUQ/SamplingAlgorithms/SampleCollection.h"
 
 using namespace muq::Utilities;
+using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
 class SampleCollectionTest : public::testing::Test {
@@ -30,7 +31,7 @@ protected:
 	state->meta["vec3"] = (Eigen::Vector3d)(i*Eigen::Vector3d::Ones());
 	state->meta["vec4"] = (Eigen::Vector4d)(i*Eigen::Vector4d::Ones());
 	state->meta["vecX"] = (Eigen::VectorXd)(i*Eigen::VectorXd::Ones(5));
-	
+
         collection.Add(state);
       }
 
@@ -76,6 +77,32 @@ TEST_F(SampleCollectionTest, Mean)
 TEST_F(SampleCollectionTest, SampMean)
 {
   Eigen::VectorXd mu = samps * weights;
+
+  double mcStd = L(0,0)*L(0,0)/sqrt(double(numSamps));
+  EXPECT_NEAR(0.0, mu(0), 3*mcStd);
+  mcStd = (L(1,0)*L(1,0) + L(1,1)*L(1,1))/sqrt(double(numSamps));
+  EXPECT_NEAR(0.0, mu(1), 3*mcStd);
+}
+
+class Func : public ModPiece {
+public:
+  Func() : ModPiece(Eigen::VectorXi::Constant(1, 2), Eigen::VectorXi::Constant(1, 2)) {}
+
+  virtual ~Func() = default;
+
+private:
+
+  virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) override {
+    outputs.resize(1);
+    outputs[0] = inputs[0];
+  }
+};
+
+TEST_F(SampleCollectionTest, ExpectedValue)
+{
+  auto f = std::make_shared<Func>();
+
+  Eigen::VectorXd mu = collection.ExpectedValue(f);
 
   double mcStd = L(0,0)*L(0,0)/sqrt(double(numSamps));
   EXPECT_NEAR(0.0, mu(0), 3*mcStd);
