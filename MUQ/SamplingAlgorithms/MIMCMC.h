@@ -50,7 +50,7 @@ namespace muq {
       void Draw(bool drawSamples = true);
 
     protected:
-      virtual std::shared_ptr<SampleCollection> RunImpl() override;
+      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
 
     private:
       std::shared_ptr<MultiIndexSet> gridIndices;

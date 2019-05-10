@@ -266,7 +266,7 @@ TEST(Quadrature, Jacobi) {
                                        0.0650476830805122679291};
 
   // Jacobi powers
-  double alpha = 2.0;
+  double alpha = 3.0;
   double beta = 3.0;
 
   // create a Jacobi object
@@ -279,6 +279,8 @@ TEST(Quadrature, Jacobi) {
   gq.Compute();
   Eigen::VectorXd gaussPts = gq.Points();
   Eigen::VectorXd gaussWts = gq.Weights();
+
+  std::cout << gaussPts << std::endl;
 
   for (int i=0; i<polyOrder; i++) {
 

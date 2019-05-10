@@ -34,7 +34,7 @@ public:
   virtual ~MySamplingProblem() = default;
 
 
-  virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) override {
+  virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> const& state, AbstractSamplingProblem::SampleType type) override {
     lastState = state;
     return target->Evaluate(state->state).at(0)(0);
   };
@@ -54,14 +54,14 @@ private:
 
 class MyInterpolation : public MIInterpolation {
 public:
-  std::shared_ptr<SamplingState> Interpolate (std::shared_ptr<SamplingState> coarseProposal, std::shared_ptr<SamplingState> fineProposal) {
+  std::shared_ptr<SamplingState> Interpolate (std::shared_ptr<SamplingState> const& coarseProposal, std::shared_ptr<SamplingState> const& fineProposal) {
     return std::make_shared<SamplingState>(coarseProposal->state);
   }
 };
 
 class MyMIComponentFactory : public MIComponentFactory {
 public:
-  virtual std::shared_ptr<MCMCProposal> Proposal (std::shared_ptr<MultiIndex> index, std::shared_ptr<AbstractSamplingProblem> samplingProblem) override {
+  virtual std::shared_ptr<MCMCProposal> Proposal (std::shared_ptr<MultiIndex> const& index, std::shared_ptr<AbstractSamplingProblem> const& samplingProblem) override {
     pt::ptree pt;
     pt.put("BlockIndex",0);
 
@@ -83,9 +83,9 @@ public:
     return index;
   }
 
-  virtual std::shared_ptr<MCMCProposal> CoarseProposal (std::shared_ptr<MultiIndex> index,
-                                                        std::shared_ptr<AbstractSamplingProblem> coarseProblem,
-                                                           std::shared_ptr<SingleChainMCMC> coarseChain) override {
+  virtual std::shared_ptr<MCMCProposal> CoarseProposal (std::shared_ptr<MultiIndex> const& index,
+                                                        std::shared_ptr<AbstractSamplingProblem> const& coarseProblem,
+                                                           std::shared_ptr<SingleChainMCMC> const& coarseChain) override {
     pt::ptree ptProposal;
     ptProposal.put("BlockIndex",0);
     int subsampling = 5;
@@ -93,7 +93,7 @@ public:
     return std::make_shared<SubsamplingMIProposal>(ptProposal, coarseProblem, coarseChain);
   }
 
-  virtual std::shared_ptr<AbstractSamplingProblem> SamplingProblem (std::shared_ptr<MultiIndex> index) override {
+  virtual std::shared_ptr<AbstractSamplingProblem> SamplingProblem (std::shared_ptr<MultiIndex> const& index) override {
     Eigen::VectorXd mu(2);
     mu << 1.0, 2.0;
     Eigen::MatrixXd cov(2,2);
@@ -121,11 +121,11 @@ public:
     return std::make_shared<MySamplingProblem>(coarseTargetDensity);
   }
 
-  virtual std::shared_ptr<MIInterpolation> Interpolation (std::shared_ptr<MultiIndex> index) override {
+  virtual std::shared_ptr<MIInterpolation> Interpolation (std::shared_ptr<MultiIndex> const& index) override {
     return std::make_shared<MyInterpolation>();
   }
 
-  virtual Eigen::VectorXd StartingPoint (std::shared_ptr<MultiIndex> index) override {
+  virtual Eigen::VectorXd StartingPoint (std::shared_ptr<MultiIndex> const& index) override {
     Eigen::VectorXd mu(2);
     mu << 1.0, 2.0;
     return mu;

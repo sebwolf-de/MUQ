@@ -40,7 +40,7 @@ namespace muq{
 
       virtual ~AbstractSamplingProblem() = default;
 
-      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) = 0;
+      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> const& state, AbstractSamplingProblem::SampleType type) = 0;
 
       virtual std::shared_ptr<SamplingState> QOI();
 

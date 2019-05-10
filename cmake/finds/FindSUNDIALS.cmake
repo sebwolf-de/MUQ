@@ -12,7 +12,8 @@ if(NOT DEFINED MUQ_SUNDIALS_DIR)
                HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
   find_library(NVEC_LIBRARY NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}sundials_nvecserial${CMAKE_SHARED_LIBRARY_SUFFIX}
                HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
-
+  find_library(NVEC_PARALLEL_LIBRARY NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}sundials_nvecparallel${CMAKE_SHARED_LIBRARY_SUFFIX}
+               HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
 
   find_library(CVODES_LIBRARY_STATIC NAMES ${library_prefix}sundials_cvodes${static_library_suffix}
                HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
@@ -22,7 +23,8 @@ if(NOT DEFINED MUQ_SUNDIALS_DIR)
                HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
   find_library(NVEC_LIBRARY_STATIC NAMES ${library_prefix}sundials_nvecserial${static_library_suffix}
                HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
-
+  find_library(NVEC_PARALLEL_LIBRARY_STATIC NAMES ${library_prefix}sundials_nvecparallel${static_library_suffix}
+               HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
 else()
 
 	find_path(SUNDIALS_INCLUDE_DIR cvodes/cvodes.h
@@ -35,7 +37,8 @@ else()
 	             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
 	find_library(NVEC_LIBRARY NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}sundials_nvecserial${CMAKE_SHARED_LIBRARY_SUFFIX}
 	             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
-
+  find_library(NVEC_PARALLEL_LIBRARY NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}sundials_nvecparallel${CMAKE_SHARED_LIBRARY_SUFFIX}
+             	             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
 
 	find_library(CVODES_LIBRARY_STATIC NAMES ${library_prefix}sundials_cvodes${static_library_suffix}
 	             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
@@ -45,13 +48,14 @@ else()
 	             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
 	find_library(NVEC_LIBRARY_STATIC NAMES ${library_prefix}sundials_nvecserial${static_library_suffix}
 	             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
-
+  find_library(NVEC_PARALLEL_LIBRARY_STATIC NAMES ${library_prefix}sundials_nvecparallel${static_library_suffix}
+                            HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
 endif()
 
-set(SUNDIALS_LIBRARY ${CVODES_LIBRARY} ${IDAS_LIBRARY} ${KINSOL_LIBRARY} ${NVEC_LIBRARY})
+set(SUNDIALS_LIBRARY ${CVODES_LIBRARY} ${IDAS_LIBRARY} ${KINSOL_LIBRARY} ${NVEC_LIBRARY} ${NVEC_PARALLEL_LIBRARY})
 set(SUNDIALS_LIBRARIES ${SUNDIALS_LIBRARY})
 
-set(SUNDIALS_LIBRARY_STATIC ${CVODES_LIBRARY_STATIC} ${IDAS_LIBRARY_STATIC} ${KINSOL_LIBRARY_STATIC} ${NVEC_LIBRARY_STATIC})
+set(SUNDIALS_LIBRARY_STATIC ${CVODES_LIBRARY_STATIC} ${IDAS_LIBRARY_STATIC} ${KINSOL_LIBRARY_STATIC} ${NVEC_LIBRARY_STATIC} ${NVEC_PARALLEL_LIBRARY_STATIC})
 set(SUNDIALS_LIBRARIES_STATIC ${SUNDIALS_LIBRARY_STATIC})
 
 set(SUNDIALS_INCLUDE_DIRS ${SUNDIALS_INCLUDE_DIR})

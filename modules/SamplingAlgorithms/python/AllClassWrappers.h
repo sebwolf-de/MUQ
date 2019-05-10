@@ -11,7 +11,7 @@ namespace muq{
       void ProposalWrapper(pybind11::module &m);
       void SampleWrapper(pybind11::module &m);
       void MCMCWrapper(pybind11::module &m);
-
+      void ProblemWrapper(pybind11::module &m);
     }
   }
 }

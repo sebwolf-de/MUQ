@@ -11,34 +11,28 @@ namespace pt = boost::property_tree;
 using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
-TEST(ImportanceSampling, Setup) {
-    
-  // create an instance of importance sampling
-  auto ip = std::make_shared<ImportanceSampling>();
-
+TEST(ImportanceSamplingTests, Setup) {
   // the number of samples
-  const unsigned int N = 1.0e5;
+  const unsigned int n = 250000;
 
-  // parameters for the sampler
   pt::ptree pt;
-  pt.put<unsigned int>("SamplingAlgorithm.NumSamples", N); // number of Monte Carlo samples
-
-  // create a Gaussian distribution---this is the biasing distribution
-  auto bias = std::make_shared<Gaussian>(0.25); 
+  pt.put<unsigned int>("ImportanceSampling.NumSamples", n);
 
   // create a uniform distribution---the sampling problem is built around characterizing this distribution
-  auto dist = std::make_shared<UniformBox>(std::pair<double, double>(-0.5, 1.0));
+  auto dist = std::make_shared<UniformBox>(Eigen::RowVector2d(-0.5, 1.0));
+  auto target = dist->AsDensity();
 
-  // create a sampling problem
-  auto problem = std::make_shared<SamplingProblem>(dist, bias);
+  // create a Gaussian distribution---this is the biasing distribution
+  auto bias = std::make_shared<Gaussian>(Eigen::VectorXd::Constant(1, 0.25));
 
-  // evaluate
-  const std::vector<boost::any>& result = ip->Evaluate(pt, problem);
-  const std::vector<std::shared_ptr<SamplingState> >& samples = boost::any_cast<std::vector<std::shared_ptr<SamplingState> > const&>(result[0]);
-  EXPECT_EQ(samples.size(), N);
+  // create an instance of importance sampling
+  auto is = std::make_shared<ImportanceSampling>(target, bias, pt.get_child("ImportanceSampling"));
 
-  // estimate the mean
-  const boost::any mean = ip->FirstMoment();
+  // generate the samples
+  std::shared_ptr<SampleCollection> samps = is->Run();
 
-  EXPECT_NEAR(boost::any_cast<double const>(mean), 0.25, 1.0e-2);
+  // make sure the mean matches
+  const Eigen::VectorXd& mean = samps->Mean();
+  EXPECT_EQ(mean.size(), 1);
+  EXPECT_NEAR(mean(0), 0.25, 1.0e-2);
 }

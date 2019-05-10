@@ -83,3 +83,4 @@ GaussianProcess_py-checkpoint.ipynb
 GaussianProcess_py.ipynb
 
 muq.cereal
+*.pyc

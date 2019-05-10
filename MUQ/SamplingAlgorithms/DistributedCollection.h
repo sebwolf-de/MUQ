@@ -33,7 +33,7 @@ namespace muq {
 	 @param[in] i The local index
        */
       std::shared_ptr<SamplingState> LocalAt(unsigned i);
-	    
+
       /// Get the local state at the \f$i^{th}\f$ index
       /**
 	 @param[in] i The local index
@@ -45,7 +45,7 @@ namespace muq {
 	 @param[in] i The global index
        */
       std::shared_ptr<SamplingState> GlobalAt(unsigned i);
-	    
+
       /// Get the global state at the \f$i^{th}\f$ index
       /**
 	 @param[in] i The global index
@@ -57,13 +57,13 @@ namespace muq {
 	 @param[in] i The local index
        */
       virtual std::shared_ptr<SamplingState> at(unsigned i) override;
-	    
+
       /// Get the local state at the \f$i^{th}\f$ index
       /**
 	 @param[in] i The local index
        */
       virtual const std::shared_ptr<SamplingState> at(unsigned i) const override;
-      
+
       /// The number of samples stored locally
       /**
 	 \return The number of samples stored on this processor
@@ -75,7 +75,7 @@ namespace muq {
 	 \return The sum of the number of samples stored on each processor
        */
       unsigned int GlobalSize() const;
-      
+
       /// The total number of samples
       /**
 	 By default the size returns the global size.
@@ -129,7 +129,7 @@ namespace muq {
 	 \return The global mean
       */
       virtual Eigen::VectorXd Mean(int blockDim=-1) const override;
-      
+
       /// Compute the variance using only local samples
       /**
 	 @param[in] blockDim Compute the variance of this block
@@ -239,23 +239,23 @@ namespace muq {
       virtual Eigen::VectorXd Weights() const override;
 
       /**
+      Writes the local samples to file
 	 @param[in] filename The name of the file
 	 @param[in] dataset The name of the group within the file
       */
       virtual void WriteToFile(std::string const& filename, std::string const& dataset = "/") const override;
 
-      /**
-	 @param[in] rank The rank that writes to file
-	 @param[in] filename The name of the file
-	 @param[in] dataset The name of the group within the file
-      */
-      void WriteToFile(unsigned int const rank, std::string const& filename, std::string const& dataset = "/") const;
+      Eigen::VectorXd GlobalExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains = std::vector<std::string>()) const;
+
+      Eigen::VectorXd LocalExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains = std::vector<std::string>()) const;
+
+      virtual Eigen::VectorXd ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains = std::vector<std::string>()) const override;
 
     private:
 
       template <class scalar, int rows, int cols, int options, int maxRows, int maxCols>
     	Eigen::Matrix<scalar, rows, cols, options, maxRows, maxCols> GlobalEigenMean(Eigen::Matrix<scalar, rows, cols, options, maxRows, maxCols> const& local) const {
-        
+
         	typedef Eigen::Matrix<scalar, rows, cols, options, maxRows, maxCols> MatType;
         	MatType global = MatType::Zero(local.rows(), local.cols());
 

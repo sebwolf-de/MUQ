@@ -37,12 +37,13 @@ TEST(ExpensiveSamplingProblemTests, GaussianTarget) {
 
   pt.put("MySamplingProblem.GammaScale", 1.0);
   pt.put("MySamplingProblem.GammaExponent", 0.5);
+  pt.put("MaximumGammaRefine", 15);
+  pt.put("TargetMax", std::exp(dist->LogDensity(mu)));
 
-  pt.put("MySamplingProblem.DeltaExponent", 0.01);
-
-  pt.put("MySamplingProblem.TargetMax", std::exp(dist->LogDensity(mu)));
   pt.put("MySamplingProblem.EtaScale", 2.0);
   pt.put("MySamplingProblem.EtaExponent", 2.0);
+
+  pt.put("MySamplingProblem.LambdaScale", 25.0);
 
   // create a sampling problem
   auto problem = std::make_shared<ExpensiveSamplingProblem>(dist, pt.get_child("MySamplingProblem"));
@@ -51,10 +52,10 @@ TEST(ExpensiveSamplingProblemTests, GaussianTarget) {
   const Eigen::VectorXd start = Eigen::VectorXd::Random(2);
 
   // create an instance of MCMC
-  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"), problem, start);
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"), problem);
 
   // run MCMC
-  std::shared_ptr<SampleCollection> samps = mcmc->Run();
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
 
   // make sure the number of evaluations is less than the number of steps
   EXPECT_TRUE(problem->CacheSize()>pt.get<unsigned int>("MySamplingProblem.MyRegression.NumNeighbors"));

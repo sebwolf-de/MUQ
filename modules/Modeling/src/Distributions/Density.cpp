@@ -37,10 +37,7 @@ void DensityBase::ApplyJacobianImpl(unsigned int                const  outputDim
 }
 
 
-Density::Density(std::shared_ptr<Distribution> distIn) : DensityBase(GetInputSizes(distIn)),
-                                                         dist(distIn)
-{
-}
+Density::Density(std::shared_ptr<Distribution> distIn) : DensityBase(GetInputSizes(distIn)), dist(distIn) {}
 
 double Density::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs)
 {

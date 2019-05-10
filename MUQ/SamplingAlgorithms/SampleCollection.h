@@ -6,6 +6,8 @@
 
 #include <Eigen/Core>
 
+#include "MUQ/Modeling/ModPiece.h"
+
 #include "MUQ/SamplingAlgorithms/SamplingState.h"
 
 #include "MUQ/Utilities/HDF5/HDF5File.h"
@@ -17,6 +19,8 @@ namespace muq{
     public:
       SamplingStateIdentity(int blockIndIn) : blockInd(blockIndIn){};
 
+      virtual ~SamplingStateIdentity() = default;
+
       Eigen::VectorXd const& operator()(SamplingState const& a);
 
       const int blockInd;
@@ -25,11 +29,27 @@ namespace muq{
       Eigen::VectorXd output;
     };
 
+    class ExpectedModPieceValue {
+    public:
+      ExpectedModPieceValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains);
+
+      virtual ~ExpectedModPieceValue() = default;
+
+      Eigen::VectorXd const& operator()(SamplingState const& a);
+
+    private:
+      std::shared_ptr<muq::Modeling::ModPiece> f;
+
+      const std::vector<std::string> metains;
+    };
+
     class SamplingStatePartialMoment{
     public:
       SamplingStatePartialMoment(int                    blockIndIn,
                                  int                    momentPowerIn,
                                  Eigen::VectorXd const& muIn) : blockInd(blockIndIn), momentPower(momentPowerIn), mu(muIn){};
+
+      virtual ~SamplingStatePartialMoment() = default;
 
       Eigen::VectorXd const& operator()(SamplingState const& a);
 
@@ -115,6 +135,16 @@ namespace muq{
 	 @param[in] dataset The name of the group within the file
        */
       virtual void WriteToFile(std::string const& filename, std::string const& dataset = "/") const;
+
+      /**
+      @param[in] name Need the this piece of meta data for each sample
+      \return A matrix of meta data associated with in the input string
+      */
+      Eigen::MatrixXd GetMeta(std::string const& name) const;
+
+      virtual Eigen::VectorXd ExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains = std::vector<std::string>()) const;
+
+      std::vector<Eigen::VectorXd> RunningExpectedValue(std::shared_ptr<muq::Modeling::ModPiece> const& f, std::vector<std::string> const& metains = std::vector<std::string>()) const;
 
     protected:
 

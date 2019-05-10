@@ -12,6 +12,7 @@ namespace muq{
       void DistributionWrapper(pybind11::module &m);
       void CwiseUnaryOperatorsWrapper(pybind11::module &m);
       void LinearOperatorWrapper(pybind11::module &m);
+      void ODEWrapper(pybind11::module &m);
     }
   }
 }

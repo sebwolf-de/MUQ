@@ -224,10 +224,10 @@ namespace muq{
     inline Eigen::VectorXd const& Gradient(unsigned int outWrt,
                                            unsigned int inWrt,
                                            Eigen::VectorXd const& last,
-                                           Eigen::VectorXd const& sens) {    
+                                           Eigen::VectorXd const& sens) {
       ref_vector<Eigen::VectorXd> vec;
-      vec.push_back(std::cref(last)); 
-      return Gradient(outWrt, inWrt, vec, sens);                                                                              
+      vec.push_back(std::cref(last));
+      return Gradient(outWrt, inWrt, vec, sens);
     }
 
     template<typename... Args>
@@ -366,6 +366,8 @@ namespace muq{
 
   protected:
 
+    std::vector<Eigen::VectorXd> ToStdVec(ref_vector<Eigen::VectorXd> const& input);
+
     // The following variables keep track of how many times the Implemented functions, i.e. EvaluateImpl, GradientImpl,
     // etc... are called.
     unsigned long int numGradCalls   = 0;
@@ -421,34 +423,34 @@ namespace muq{
     //                       Eigen::VectorXd             const& vec);
 
   private:
-    template<typename NextType, typename... Args>                     
+    template<typename NextType, typename... Args>
     inline Eigen::VectorXd const& GradientRecurse(unsigned int outWrt,
                                                   unsigned int inWrt,
                                                   ref_vector<Eigen::VectorXd>& vec,
                                                   NextType const& ith,
-                                                  Args const&... args) { 
+                                                  Args const&... args) {
 
       static_assert(std::is_same<Eigen::VectorXd,
                     NextType>::value,
-                    "In ModPiece::Gradient, cannot cast input to Eigen::VectorXd."); 
+                    "In ModPiece::Gradient, cannot cast input to Eigen::VectorXd.");
 
-        vec.push_back(std::cref((NextType&)ith));                                                                                      
-        return GradientRecurse(outWrt, inWrt, vec, args...);                                                                           
+        vec.push_back(std::cref((NextType&)ith));
+        return GradientRecurse(outWrt, inWrt, vec, args...);
 
     }
 
-    template<typename NextType>                                                   
+    template<typename NextType>
     inline Eigen::VectorXd const& GradientRecurse(unsigned int outWrt,
                                                   unsigned int inWrt,
                                                   ref_vector<Eigen::VectorXd>& vec,
                                                   NextType const& last,
-                                                  Eigen::VectorXd const& sens) { 
-        static_assert(std::is_same<Eigen::VectorXd, NextType>::value, "In ModPiece::Gradient, cannot cast input to Eigen::VectorXd."); 
-        vec.push_back(std::cref((NextType&)last));                                                                                     
-        return Gradient(outWrt, inWrt, vec, sens);                                                                              
+                                                  Eigen::VectorXd const& sens) {
+        static_assert(std::is_same<Eigen::VectorXd, NextType>::value, "In ModPiece::Gradient, cannot cast input to Eigen::VectorXd.");
+        vec.push_back(std::cref((NextType&)last));
+        return Gradient(outWrt, inWrt, vec, sens);
     }
 
-    template<typename... Args>                                                                                               
+    template<typename... Args>
     inline Eigen::MatrixXd const& Jacobian(unsigned int outWrt, unsigned int inWrt, ref_vector<Eigen::VectorXd>& vec, Eigen::VectorXd const& ith, Args const&... args) {     \
         vec.push_back(std::cref(ith));                                                                                               \
         return Jacobian(outWrt, inWrt, vec, args...);                                                                              \

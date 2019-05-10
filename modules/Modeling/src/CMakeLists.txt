@@ -38,6 +38,9 @@ CreateCompileGroup(
     ConstantVector.cpp
     IdentityPiece.cpp
     ProductPiece.cpp
+    SplitVector.cpp
+    ScaleVector.cpp
+    CombineVectors.cpp
 
     MultiLogisticLikelihood.cpp
 
@@ -81,6 +84,7 @@ CreateCompileGroup(
     ""
 
     Distributions/Distribution.cpp
+    Distributions/PyDistribution.cpp
     Distributions/UniformBox.cpp
     Distributions/Gaussian.cpp
     Distributions/InverseGamma.cpp
@@ -89,14 +93,15 @@ CreateCompileGroup(
     Distributions/RandomVariable.cpp
 )
 
-#CreateCompileGroup(
-#    MODELING_SUNDIALS_MODELS
-#    "ODE integrators using Sundials"
-#    muqModeling
-#    "MODELING_CORE"
-#    "EIGEN3;BOOST;SUNDIALS"
-#    ""
-#    ODEData.cpp
-#    ODE.cpp
-#    RootfindingIVP.cpp
-#)
+CreateCompileGroup(
+    MODELING_SUNDIALS_MODELS
+    "ODE integrators using Sundials"
+    muqModeling
+    "MODELING_CORE"
+    "EIGEN3;BOOST;SUNDIALS"
+    ""
+    ODEBase.cpp
+    ODEData.cpp
+    ODE.cpp
+    #RootfindingIVP.cpp
+)
