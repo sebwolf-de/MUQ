@@ -49,31 +49,10 @@ namespace Approximation {
 
     virtual ~PolynomialChaosExpansion() = default;
 
-
-    // ///Print the pce to filename using the << operator.
-    // void  Print(std::string filename);
-    //
-    // ///Print the pce with normalized coefficients to basename+"_pce.dat" using the << operator.
-    // void  PrintNormalized(std::string basename);
-
     ///compute the variance of the current expansion
     Eigen::VectorXd Variance() const;
     Eigen::MatrixXd Covariance() const;
     Eigen::VectorXd Mean() const;
-
-    // /// get the derivative of the variances wrt the polynomial coefficients -- useful in constrained regression
-    // Eigen::MatrixXd ComputeVarianceJacobian() const;
-    //
-    // /** Compute the gradient of the variance in dimension outInd to the polynomial coefficients. */
-    // Eigen::VectorXd ComputeVarianceGradient(int outInd) const;
-    //
-    // /** Compute the Hessian of the variance of a single output dimension with respect to the polynomial coefficients.
-    //  *   Since the variance expression is qudratic, this Hessian is constant and thus does not depend on the polynomial
-    //  *  coefficients.  For that reason there is no dimension input, even though the output matrix is the Hessian of a
-    //  *  single output variance to the polynomial coefficients.
-    //  */
-    // Eigen::MatrixXd ComputeVarianceHessian() const;
-
 
     ///Compute the L2 norm of each output.
     Eigen::VectorXd Magnitude() const;
@@ -106,16 +85,7 @@ namespace Approximation {
     */
     Eigen::MatrixXd MainSensitivity() const;
 
-    // ///Load an expansion using boost::serialization and return the result
-    // static std::shared_ptr<PolynomialChaosExpansion> LoadFromFile(std::string fileName);
-    //
-    // ///Save an expansion to a file using boost::serialization
-    // static void SaveToFile(std::shared_ptr<PolynomialChaosExpansion> expansion, std::string fileName);
-
   private:
-
-    // PolynomialChaosExpansion(std::vector<std::shared_ptr<OrthogonalPolynomial>> polys,
-    //                          unsigned int                                       outputSize);
 
     /**
      * This function returns the sqrt of the normalization, sqrt(<p*p>),
