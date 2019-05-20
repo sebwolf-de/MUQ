@@ -118,82 +118,6 @@ Eigen::VectorXd PolynomialChaosExpansion::Mean() const
   return coeffs.col(0);
 }
 
-// Eigen::MatrixXd PolynomialChaosExpansion::ComputeVarianceJacobian() const
-// {
-//   VectorXd normalVec = GetNormalizationVec();
-//
-//   //if there's only the one constant term, the PCE has variance zero
-//   if (normalVec.rows() <= 1) {
-//     return MatrixXd::Zero(coeffs.rows(), coeffs.cols());
-//   }
-//
-//   unsigned int npolys = coeffs.cols();
-//
-//   VectorXd squareNorm = normalVec.tail(normalVec.rows() - 1).array().square();
-//
-//   VectorXd dimMeasures(inputSizes(0));
-//   for (unsigned int i = 0; i < inputSizes(0); ++i)
-//     dimMeasures(i) = polys[i]->GetNormalization(0);
-//
-//   Eigen::MatrixXd Jacobian = Eigen::MatrixXd::Zero(coeffs.rows(), npolys);
-//
-//   Eigen::VectorXd scales = squareNorm / dimMeasures.prod();
-//   for (unsigned int i = 1; i < npolys; ++i) {
-//     Jacobian.col(i) = 2.0 * coeffs.col(i) * scales(i - 1);
-//   }
-//
-//   //Since the variance is an expectation, we must normalize if the polynomials aren't quite set up
-//   //to integrate to one.
-//   return Jacobian;
-// }
-//
-// Eigen::VectorXd PolynomialChaosExpansion::ComputeVarianceGradient(int outInd) const
-// {
-//   VectorXd normalVec = GetNormalizationVec();
-//
-//   //if there's only the one constant term, the PCE has variance zero
-//   if (normalVec.rows() <= 1) {
-//     return VectorXd::Zero(1);
-//   }
-//
-//   VectorXd squareNorm = normalVec.tail(normalVec.rows() - 1).array().square();
-//
-//   VectorXd dimMeasures(inputSizes(0));
-//   for (unsigned int i = 0; i < inputSizes(0); ++i) {
-//     dimMeasures(i) = polys[i]->GetNormalization(0);
-//   }
-//
-//   Eigen::VectorXd Gradient = Eigen::VectorXd::Zero(coeffs.cols());
-//
-//   Eigen::VectorXd scales = squareNorm / dimMeasures.prod();
-//   for (unsigned int i = 1; i < coeffs.cols(); ++i) {
-//     Gradient(i) = coeffs(outInd, i) * scales(i - 1);
-//   }
-//
-//   //Since the variance is an expectation, we must normalize if the polynomials aren't quite set up
-//   //to integrate to one.
-//   return Gradient;
-// }
-//
-// Eigen::MatrixXd PolynomialChaosExpansion::ComputeVarianceHessian() const
-// {
-//   VectorXd normalVec = GetNormalizationVec();
-//
-//   //if there's only the one constant term, the PCE has variance zero
-//   if (normalVec.rows() <= 1) {
-//     return MatrixXd::Zero(coeffs.cols(), coeffs.cols());
-//   }
-//
-//   normalVec(0) = 0;
-//   VectorXd squareNorm = normalVec.array().square();
-//
-//   VectorXd dimMeasures(inputSizes(0));
-//   for (unsigned int i = 0; i < inputSizes(0); ++i) {
-//     dimMeasures(i) = polys[i]->GetNormalization(0);
-//   }
-//
-//   return ((squareNorm / dimMeasures.prod())).asDiagonal();
-// }
 
 Eigen::VectorXd PolynomialChaosExpansion::Magnitude() const
 {
@@ -203,55 +127,8 @@ Eigen::VectorXd PolynomialChaosExpansion::Magnitude() const
   return (coeffs.array().square().matrix() * normalVec.array().square().matrix()).array().sqrt();
 }
 
-// PolynomialChaosExpansion::Ptr PolynomialChaosExpansion::ComputeWeightedSum(
-//   std::vector<PolynomialChaosExpansion::Ptr> expansions,
-//   VectorXd const& weights,
-//   VariableCollection::Ptr variables,
-//   unsigned int const outputDim,
-//   UnstructuredMultiIndexFamily::Ptr const& polynomials,
-//   std::map<unsigned int, std::set<unsigned int> > const& basisMultiIndexCache)
-// {
-//   PolynomialChaosExpansion::Ptr sumPCE(new PolynomialChaosExpansion(variables, outputDim));
-//
-//   //we already know exactly which terms in the pce we need, it was passed in
-//   sumPCE->terms = polynomials;
-//
-//   //allocate space for all the coeffs
-//   sumPCE->coeffs = MatrixXd::Zero(outputDim, sumPCE->terms->GetNumberOfIndices());
-//
-//   //find the non-zero weights
-//   VectorXu nonZeroWeights = FindNonZeroInVector(weights);
-//
-//   //loop over every polynomial in the result
-//   for (unsigned int i = 0; i < sumPCE->terms->GetNumberOfIndices(); i++) {
-//     //allocate space for the values of the individual terms
-//     MatrixXd termCoeffs = MatrixXd::Zero(outputDim, weights.rows());
-//
-//     //save the multi-index we're looking for
-//     RowVectorXi multiToFind = sumPCE->terms->IndexToMulti(i);
-//
-//     //Find the non-zero weighted polys that actually have term i
-//     //Start with this sorting because it's usually very small
-//     for (unsigned int j = 0; j < nonZeroWeights.rows(); ++j) {
-//       //if this one has the current polynomial
-//       PolynomialChaosExpansion::Ptr jthEst = expansions.at(nonZeroWeights(j));
-//
-//       //do this by checking our cache whether this term is included, if the cache was provided
-//       std::map<unsigned int, std::set<unsigned int> >::const_iterator it = basisMultiIndexCache.find(i);
-//       if (it->second.find(nonZeroWeights(j)) != it->second.end()) {
-//         //copy the coeffs into the results
-//         unsigned int index = jthEst->terms->MultiToIndex(multiToFind);
-//         termCoeffs.col(nonZeroWeights(j)) = jthEst->coeffs.col(index);
-//       }
-//     }
-//
-//     //finish by summing the coeffs with the weights and store them in the result
-//     sumPCE->coeffs.col(i) = (termCoeffs * weights);
-//   }
-//
-//   return sumPCE;
-// }
-//
+
+
 std::shared_ptr<PolynomialChaosExpansion> PolynomialChaosExpansion::ComputeWeightedSum(std::vector<std::shared_ptr<PolynomialChaosExpansion>>    expansions,
                                                                                        Eigen::VectorXd                                    const& weights,
                                                                                        std::shared_ptr<MultiIndexSet>                     const& polynomials,
