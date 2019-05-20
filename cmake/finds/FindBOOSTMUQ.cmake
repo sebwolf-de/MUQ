@@ -4,14 +4,13 @@ find_package(PkgConfig)
 set(BOOST_MIN_VERSION "1.56.0")
 
 if(NOT DEFINED MUQ_BOOST_DIR)
-	
+
 	unset(Boost_LIBRARIES)
 	unset(Boost_INCLUDE_DIR)
 	unset(Boost_LIBRARY_DIRS)
-
 	set(Boost_USE_STATIC_LIBS ON)
 
-	find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS system filesystem regex serialization graph date_time) 
+	find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS system filesystem graph)
 
 	IF(Boost_FOUND)
 		set(BOOST_LIBRARIES_STATIC ${Boost_LIBRARIES})
@@ -22,7 +21,7 @@ if(NOT DEFINED MUQ_BOOST_DIR)
 	unset(Boost_LIBRARY_DIRS)
 	unset(Boost_USE_STATIC_LIBS)
 
-	find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS system filesystem regex serialization graph date_time) 
+	find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS system filesystem graph)
 
 	IF(Boost_FOUND)
 		set(BOOST_LIBRARY ${Boost_LIBRARIES})
@@ -39,50 +38,18 @@ else()
 	             HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
 	find_library(BOOST_FILESYSTEM_LIBRARY_STATIC NAMES ${library_prefix}boost_filesystem.${static_library_suffix}
 	             HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-	find_library(BOOST_TIMER_LIBRARY_STATIC NAMES ${library_prefix}boost_timer.${static_library_suffix}
-			 	 HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-	find_library(BOOST_CHRONO_LIBRARY_STATIC NAMES ${library_prefix}boost_chrono.${static_library_suffix}
-			 	 HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
- 	find_library(BOOST_REGEX_LIBRARY_STATIC NAMES ${library_prefix}boost_regex.${static_library_suffix}
- 	             HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
- 	find_library(BOOST_SERIAL_LIBRARY_STATIC NAMES ${library_prefix}boost_serialization.${static_library_suffix}
- 	             HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-	find_library(BOOST_WSERIAL_LIBRARY_STATIC NAMES ${library_prefix}boost_wserialization.${static_library_suffix}
-			  	 HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
  	find_library(BOOST_GRAPH_LIBRARY_STATIC NAMES ${library_prefix}boost_graph.${static_library_suffix}
  	             HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-  	find_library(BOOST_MATH_LIBRARY_STATIC NAMES ${library_prefix}boost_math_tr1.${static_library_suffix}
-  	             HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-	find_library(BOOST_MATHF_LIBRARY_STATIC NAMES ${library_prefix}boost_math_tr1f.${static_library_suffix}
-			   	 HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-	find_library(BOOST_MATHL_LIBRARY_STATIC NAMES ${library_prefix}boost_math_tr1l.${static_library_suffix}
-				 HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-				 
+
  	find_library(BOOST_SYSTEM_LIBRARY NAMES boost_system
- 		 	     HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)	
+ 		 	     HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
  	find_library(BOOST_FILESYSTEM_LIBRARY NAMES boost_filesystem
- 		 	     HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)	
-	find_library(BOOST_TIMER_LIBRARY NAMES boost_timer
-			  	 HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-	find_library(BOOST_CHRONO_LIBRARY NAMES boost_chrono
-			  	 HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)		
-	find_library(BOOST_REGEX_LIBRARY NAMES boost_regex
-		 	     HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)	
- 	find_library(BOOST_SERIAL_LIBRARY NAMES boost_serialization
  		 	     HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-	find_library(BOOST_WSERIAL_LIBRARY NAMES boost_wserialization
-			  	 HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
  	find_library(BOOST_GRAPH_LIBRARY NAMES boost_graph
- 		 	     HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)	 
- 	find_library(BOOST_MATH_LIBRARY NAMES boost_math_tr1
  		 	     HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-	find_library(BOOST_MATHF_LIBRARY NAMES boost_math_tr1f
-			  	 HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-	find_library(BOOST_MATHL_LIBRARY NAMES boost_math_tr1l
-				 HINTS ${MUQ_BOOST_DIR}/lib ${MUQ_BOOST_DIR}/stage/lib NO_DEFAULT_PATH)
-			 	
-	set(BOOST_LIBRARY ${BOOST_SYSTEM_LIBRARY} ${BOOST_FILESYSTEM_LIBRARY} ${BOOST_TIMER_LIBRARY} ${BOOST_CHRONO_LIBRARY} ${BOOST_REGEX_LIBRARY} ${BOOST_SERIAL_LIBRARY} ${BOOST_WSERIAL_LIBRARY} ${BOOST_GRAPH_LIBRARY} ${BOOST_MATH_LIBRARY} ${BOOST_MATHF_LIBRARY} ${BOOST_MATHL_LIBRARY})
-	set(BOOST_LIBRARY_STATIC ${BOOST_SYSTEM_LIBRARY_STATIC} ${BOOST_FILESYSTEM_LIBRARY_STATIC} ${BOOST_TIMER_LIBRARY_STATIC} ${BOOST_CHRONO_LIBRARY_STATIC} ${BOOST_REGEX_LIBRARY_STATIC} ${BOOST_SERIAL_LIBRARY_STATIC} ${BOOST_WSERIAL_LIBRARY_STATIC} ${BOOST_GRAPH_LIBRARY_STATIC} ${BOOST_MATH_LIBRARY_STATIC} ${BOOST_MATHF_LIBRARY_STATIC} ${BOOST_MATHL_LIBRARY_STATIC})
+
+	set(BOOST_LIBRARY ${BOOST_SYSTEM_LIBRARY} ${BOOST_FILESYSTEM_LIBRARY} ${BOOST_GRAPH_LIBRARY})
+	set(BOOST_LIBRARY_STATIC ${BOOST_SYSTEM_LIBRARY_STATIC} ${BOOST_FILESYSTEM_LIBRARY_STATIC} ${BOOST_GRAPH_LIBRARY_STATIC})
 endif()
 
 

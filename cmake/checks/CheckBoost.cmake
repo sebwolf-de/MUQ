@@ -8,71 +8,10 @@ CHECK_CXX_SOURCE_COMPILES(
 typedef boost::adjacency_list < boost::vecS, boost::vecS, boost::bidirectionalS, int, int> Graph;
 int main(){
 Graph temp;
-return 0; 
+return 0;
 }
 "
 BOOST_GRAPH_COMPILES)
-
-# make sure boost serialization works
-set(CMAKE_REQUIRED_LIBRARIES ${BOOST_LIBRARIES})
-set(CMAKE_REQUIRED_INCLUDES ${BOOST_INCLUDE_DIR})
-CHECK_CXX_SOURCE_COMPILES(
-"
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/shared_ptr_helper.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-int main(){
-int temp = 10;
-std::string filename;
-{
-std::ofstream ofs(filename.c_str());
-boost::archive::text_oarchive oa(ofs);
-oa << temp;
-}
-{
-std::ifstream ifs(filename.c_str());
-boost::archive::text_iarchive ia(ifs);
-ia >> temp;
-}
-return 0; 
- }
-"
-BOOST_SERIALIZATION_OLD_COMPILES)
-
-CHECK_CXX_SOURCE_COMPILES(
-"
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/shared_ptr_helper.hpp>
-int main(){
-int temp = 10;
-std::string filename;
-{
-std::ofstream ofs(filename.c_str());
-boost::archive::text_oarchive oa(ofs);
-oa << temp;
-}
-{
-std::ifstream ifs(filename.c_str());
-boost::archive::text_iarchive ia(ifs);
-ia >> temp;
-}
-return 0; 
- }
-"
-BOOST_SERIALIZATION_NEW_COMPILES)
-
-
 
 
 CHECK_CXX_SOURCE_COMPILES(
@@ -93,19 +32,8 @@ return 0;
 "
 BOOST_DIRECTORY_ITERATOR_COMPILES)
 
-
-#if(NOT (BOOST_SERIALIZATION_OLD_COMPILES OR BOOST_SERIALIZATION_NEW_COMPILES) OR NOT BOOST_GRAPH_COMPILES OR NOT BOOST_DIRECTORY_ITERATOR_COMPILES)
 if(NOT BOOST_GRAPH_COMPILES OR NOT BOOST_DIRECTORY_ITERATOR_COMPILES)
 	set(BOOST_TEST_FAIL 1)
 else()
 	set(BOOST_TEST_FAIL 0)
-endif()
-
-
-if(NOT BOOST_TEST_FAIL)
-    if(BOOST_SERIALIZATION_NEW_COMPILES)
-        set(MUQ_USE_NEW_BOOST ON)
-    else()
-        set(MUQ_USE_NEW_BOOST OFF)
-    endif()
 endif()
