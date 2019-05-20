@@ -52,16 +52,25 @@ Eigen::VectorXd FlannCache::Add(Eigen::VectorXd const& newPt) {
   return newOutput;
 }
 
-void FlannCache::Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result) {
+unsigned int FlannCache::Add(Eigen::VectorXd const& input, Eigen::VectorXd const& result) {
   assert(input.size()==function->inputSizes(0));
   assert(result.size()==function->outputSizes(0));
 
-  kdTree->add(input);
-  outputCache.push_back(result);
+	int cacheId = InCache(input);
 
-  assert(kdTree->m_data.size()==outputCache.size());
+	if(cacheId<0){
+	  kdTree->add(input);
+	  outputCache.push_back(result);
 
-	UpdateCentroid(input);
+	  assert(kdTree->m_data.size()==outputCache.size());
+
+		UpdateCentroid(input);
+
+		return outputCache.size()-1;
+
+	}else{
+		return cacheId;
+	}
 }
 
 void FlannCache::Remove(Eigen::VectorXd const& input) {
@@ -175,6 +184,10 @@ const Eigen::VectorXd FlannCache::at(unsigned int const index) const {
 Eigen::VectorXd FlannCache::at(unsigned int const index) {
   assert(index<kdTree->m_data.size());
   return kdTree->m_data[index];
+}
+
+Eigen::VectorXd const& FlannCache::OutputValue(unsigned int index) const{
+	return outputCache.at(index);
 }
 
 void FlannCache::UpdateCentroid(Eigen::VectorXd const& point) {

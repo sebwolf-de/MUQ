@@ -48,6 +48,7 @@ TEST_F(Approximation_MonotoneExpansion1d, Evaluate){
   double dx = (ub-lb)/numSteps;
 
   evalPt << lb;
+
   double oldOutput = expansion1->Evaluate(evalPt).at(0)(0);
 
   for(int i=1; i<numSteps; ++i){

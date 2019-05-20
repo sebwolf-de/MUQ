@@ -84,6 +84,8 @@ namespace muq
         MeanFunctionBase(unsigned dimIn,
                          unsigned coDimIn) : inputDim(dimIn), coDim(coDimIn){}
 
+        virtual ~MeanFunctionBase() = default;
+
         virtual Eigen::MatrixXd Evaluate(Eigen::MatrixXd const& xs) const = 0;
 
         virtual std::shared_ptr<MeanFunctionBase> Clone() const = 0;
@@ -110,6 +112,8 @@ namespace muq
     public:
         ZeroMean(unsigned dim, unsigned coDim) : MeanFunctionBase(dim,coDim){};
 
+        virtual ~ZeroMean() = default;
+
         virtual std::shared_ptr<MeanFunctionBase> Clone() const override
         {
           return std::make_shared<ZeroMean>(*this);
@@ -131,6 +135,8 @@ namespace muq
 
     public:
         LinearMean(double slope, double intercept) : LinearMean(slope*Eigen::MatrixXd::Ones(1,1), intercept*Eigen::VectorXd::Ones(1)){};
+
+        virtual ~LinearMean() = default;
 
         LinearMean(Eigen::MatrixXd const& slopesIn,
                    Eigen::VectorXd const& interceptsIn) : MeanFunctionBase(slopesIn.cols(),slopesIn.rows()),
@@ -188,6 +194,8 @@ namespace muq
         assert(A.cols() == otherMean->coDim);
       };
 
+      virtual ~LinearTransformMean() = default;
+
       virtual std::shared_ptr<MeanFunctionBase> Clone() const override
       {
         return std::make_shared<LinearTransformMean>(*this);
@@ -236,6 +244,8 @@ namespace muq
         assert(mu1->coDim == mu2->coDim);
       };
 
+      virtual ~SumMean() = default;
+      
       virtual std::shared_ptr<MeanFunctionBase> Clone() const override
       {
         return std::make_shared<SumMean>(*this);

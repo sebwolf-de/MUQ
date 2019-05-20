@@ -19,7 +19,23 @@ CreateTestGroup(
   Polynomials/BasisExpansionTest.cpp
   Polynomials/MonotoneExpansionTest.cpp
   Polynomials/PolynomialTests.cpp
+)
+
+CreateTestGroup(
+  APPROXIMATION_POLYNOMIALCHAOS
+
+  PolynomialChaos/PCEFactoryTest.cpp
+  PolynomialChaos/PolynomialChaosExpansionTest.cpp
+  PolynomialChaos/AdaptiveSmolyakPCETest.cpp
+  Quadrature/AdaptiveSmolyakQuadratureTest.cpp
+)
+
+CreateTestGroup(
+  APPROXIMATION_QUADRATURE
+
   Quadrature/GaussQuadratureTests.cpp
+  Quadrature/FullTensorQuadratureTest.cpp
+  Quadrature/ClenshawCurtisTests.cpp
 )
 
 CreateTestGroup(
