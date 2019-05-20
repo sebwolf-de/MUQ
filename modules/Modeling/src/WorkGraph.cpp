@@ -570,7 +570,7 @@ std::shared_ptr<WorkGraphPiece> WorkGraph::CreateWorkPiece(std::string const& no
 }
 
 
-std::shared_ptr<ModGraphPiece> WorkGraph::CreateModPiece(std::string const& node) const {
+std::shared_ptr<ModGraphPiece> WorkGraph::CreateModPiece(std::string const& node, std::vector<std::string> const& inNames) const {
 
   // make sure we have the node
   assert(HasNode(node));
@@ -580,7 +580,34 @@ std::shared_ptr<ModGraphPiece> WorkGraph::CreateModPiece(std::string const& node
   assert(newGraph);
 
   // get the inputs to the cut graph
-  std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > inputs = newGraph->GraphInputs();
+  std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > inputs;
+  if( inNames.size()>0 ) {
+    for( unsigned int i=0; i<inNames.size(); ++i ) {
+      boost::graph_traits<Graph>::vertex_iterator it;
+      const bool has = newGraph->HasNode(it, inNames[i]);
+      assert(has);
+
+      // get the number of inputs
+      const int numInputs = newGraph->graph[*it]->piece->numInputs;
+      std::vector<int> isSet;
+      isSet.reserve(numInputs);
+      // for each vertex, loop over the input nodes and figure out if the inputs are set
+      boost::graph_traits<Graph>::in_edge_iterator e, e_end;
+      for( tie(e, e_end)=in_edges(*it, newGraph->graph); e!=e_end; ++e ) {
+        // we have an input, so store it in the vector
+        isSet.push_back(graph[*e]->inputDim);
+      }
+
+      // for each vertex, loop over the input nodes and figure out if the inputs are set
+      for( int j=0; j<numInputs; ++j ) {
+        if( std::find(std::begin(isSet), std::end(isSet), j)==isSet.end() ) { // if the input is not set ..
+          inputs.push_back(std::pair<boost::graph_traits<Graph>::vertex_descriptor, int>(*it, j));
+        }
+      }
+    }
+  } else {
+    inputs = newGraph->GraphInputs();
+  }
 
   // the name of each input
   std::vector<std::string> inputNames;
@@ -609,7 +636,6 @@ std::shared_ptr<ModGraphPiece> WorkGraph::CreateModPiece(std::string const& node
   assert(constantPieces.size()==inputs.size());
 
   for( unsigned int i=0; i<inputs.size(); ++i ) { // loop over each input
-
     // create a constant WorkPiece to hold the input (it is empty for now) and add it to the new graph
     auto modIn = std::dynamic_pointer_cast<ModPiece>(newGraph->graph[inputs.at(i).first]->piece);
     assert(modIn);
@@ -632,9 +658,7 @@ std::shared_ptr<ModGraphPiece> WorkGraph::CreateModPiece(std::string const& node
 
   //return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inputName, inTypes, newGraph->graph[*outNode]->piece);
   return std::make_shared<ModGraphPiece>(newGraph, constantPieces, inputNames, std::dynamic_pointer_cast<ModPiece>(newGraph->graph[*outNode]->piece));
-
 }
-
 
 /** Print the nodes and edges of this graph to std::cout. */
 void WorkGraph::Print(std::ostream& fout) const
@@ -682,8 +706,7 @@ std::string WorkGraph::GetName(std::shared_ptr<WorkPiece> piece) const
   return graph[*GetNodeIterator(piece)]->name;
 }
 
-void WorkGraph::BindNode(std::string             const& nodeName,
-                         std::vector<boost::any> const& x)
+void WorkGraph::BindNode(std::string const& nodeName, std::vector<boost::any> const& x)
 {
   // find the node
   auto nodeDesc = GetNodeIterator(nodeName);
@@ -691,8 +714,19 @@ void WorkGraph::BindNode(std::string             const& nodeName,
   // next, delete all incoming edges
   boost::remove_in_edge_if(*nodeDesc, TrueOp(), graph);
 
-  // finally, replace the WorkPiece ptr
-  (graph)[*nodeDesc]->piece = std::make_shared<ConstantPiece>(x);
+  // try to cast the node as a ModPiece
+  auto mod = std::dynamic_pointer_cast<ModPiece>((graph)[*nodeDesc]->piece);
+  if( mod ) {
+    // replace the ModPiece ptr
+    std::vector<Eigen::VectorXd> vec(x.size());
+    for( unsigned int i=0; i<x.size(); ++i ) {
+      vec[i] = boost::any_cast<Eigen::VectorXd const>(x[i]);
+    }
+    (graph)[*nodeDesc]->piece = std::make_shared<ConstantVector>(vec);
+  } else {
+    // replace the WorkPiece ptr
+    (graph)[*nodeDesc]->piece = std::make_shared<ConstantPiece>(x);
+  }
 }
 
 void WorkGraph::BindEdge(std::string const& nodeName,

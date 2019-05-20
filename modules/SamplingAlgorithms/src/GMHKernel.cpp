@@ -20,9 +20,14 @@ REGISTER_TRANSITION_KERNEL(GMHKernel)
 // first: current step, second: the current state, third: do we want to propose a new state or not?
 typedef std::tuple<unsigned int, std::shared_ptr<SamplingState>, bool> CurrentState;
 
-struct ProposeState {
-  inline ProposeState(std::shared_ptr<MCMCProposal> proposal, std::shared_ptr<AbstractSamplingProblem> problem) : proposal(proposal), problem(problem) {}
+class ProposeState {
+public:
+  inline ProposeState() {}
+  //inline ProposeState(std::shared_ptr<MCMCProposal> const& proposal, std::shared_ptr<AbstractSamplingProblem> const& problem) : proposal(proposal), problem(problem) {}
 
+  virtual ~ProposeState() = default;
+
+  /*//inline std::shared_ptr<SamplingState> Evaluate(CurrentState state) { return nullptr; }
   inline std::shared_ptr<SamplingState> Evaluate(CurrentState state) {
     std::shared_ptr<SamplingState> proposed = std::get<2>(state) ? proposal->Sample(std::get<1>(state)) : std::get<1>(state);
     proposed->meta["LogTarget"] = problem->LogDensity(std::get<0>(state), proposed, std::get<2>(state) ? AbstractSamplingProblem::SampleType::Proposed : AbstractSamplingProblem::SampleType::Accepted);
@@ -31,10 +36,10 @@ struct ProposeState {
   }
 
   std::shared_ptr<MCMCProposal> proposal;
-  std::shared_ptr<AbstractSamplingProblem> problem;
+  std::shared_ptr<AbstractSamplingProblem> problem;*/
 };
 
-typedef parcer::Queue<CurrentState, std::shared_ptr<SamplingState>, ProposeState> ProposalQueue;
+//typedef parcer::Queue<CurrentState, std::shared_ptr<SamplingState>, ProposeState> ProposalQueue;
 #endif
 
 GMHKernel::GMHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : MHKernel(pt, problem),
@@ -81,10 +86,13 @@ void GMHKernel::ParallelProposal(unsigned int const t, std::shared_ptr<SamplingS
   if( comm->GetSize()==1 ) { return SerialProposal(t, state); }
 
   // create a queue to propose and evaluate the log-target
-  auto helper = std::make_shared<ProposeState>(proposal, problem);
-  auto proposalQueue = std::make_shared<ProposalQueue>(helper, comm);
+  auto helper = std::make_shared<ProposeState>();
+  assert(helper);
+  //auto helper = std::make_shared<ProposeState>(proposal, problem);
+  //auto proposalQueue = std::make_shared<ProposalQueue>(helper, comm);
 
   if( comm->GetRank()==0 ) {
+    /*std::cout << "ONE RANK IS HERE" << std::endl;
     assert(state);
 
     // submit the work
@@ -97,9 +105,13 @@ void GMHKernel::ParallelProposal(unsigned int const t, std::shared_ptr<SamplingS
       proposalIDs[0] = -1;
     }
 
+    std::cout << "NOW IT IS HERE" << std::endl;
+
     // Submit a bunch of proposal requests to the queue
     for( auto id=proposalIDs.begin()+1; id!=proposalIDs.end(); ++id )
       *id = proposalQueue->SubmitWork(CurrentState(t, state, true));
+
+    std::cout << "OKAY THEN" << std::endl;
 
     // retrieve the work
     proposedStates.resize(Np1, nullptr);
@@ -117,8 +129,10 @@ void GMHKernel::ParallelProposal(unsigned int const t, std::shared_ptr<SamplingS
       R(i) = AnyCast(proposedStates[i]->meta["LogTarget"]);
     }
 
+    std::cout << "THIS FAR" << std::endl;
+
     // compute stationary transition probability
-    AcceptanceDensity(R);
+    AcceptanceDensity(R);*/
   }
 }
 #endif

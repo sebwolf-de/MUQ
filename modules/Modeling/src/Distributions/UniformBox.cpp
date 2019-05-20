@@ -42,7 +42,6 @@ Eigen::MatrixXd UniformBox::CreateBoundsDouble(std::vector<double> const& bounds
 }
 
 double UniformBox::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) {
-
   // loop though each dimension
   for( unsigned int i=0; i<bounds.rows(); ++i ) {
     // get the value of the point for this dimension

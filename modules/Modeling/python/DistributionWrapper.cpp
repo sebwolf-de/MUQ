@@ -2,6 +2,7 @@
 
 #include "MUQ/Modeling/ModPiece.h"
 
+#include "MUQ/Modeling/Distributions/PyDistribution.h"
 #include "MUQ/Modeling/Distributions/Density.h"
 #include "MUQ/Modeling/Distributions/DensityProduct.h"
 #include "MUQ/Modeling/Distributions/RandomVariable.h"
@@ -23,6 +24,27 @@ using namespace muq::Modeling::PythonBindings;
 using namespace muq::Modeling;
 namespace py = pybind11;
 
+class PyDistributionTramp : public PyDistribution {
+public:
+  // Inherit the constructors
+  using PyDistribution::PyDistribution;
+
+  virtual inline Eigen::VectorXd SampleImpl(std::vector<Eigen::VectorXd> const& inputs) override {
+    PYBIND11_OVERLOAD_PURE(Eigen::VectorXd, PyDistribution, SampleImpl, inputs);
+  }
+
+  virtual inline double LogDensityImpl(std::vector<Eigen::VectorXd> const& inputs) override {
+    PYBIND11_OVERLOAD_PURE(double, PyDistribution, LogDensityImpl, inputs);
+  }
+private:
+};
+
+class Publicist : public PyDistribution {
+public:
+    // Expose protected functions
+    using PyDistribution::SampleImpl;
+    using PyDistribution::LogDensityImpl;
+};
 
 void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
 {
@@ -39,6 +61,12 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
       .def("AsVariable", &Distribution::AsVariable)
       .def_readonly("varSize", &Distribution::varSize)
       .def_readonly("hyperSizes", &Distribution::hyperSizes);
+
+    py::class_<PyDistribution, PyDistributionTramp, Distribution, std::shared_ptr<PyDistribution>> pydist(m, "PyDistribution");
+    pydist.def(py::init<unsigned int>());
+    pydist.def(py::init<unsigned int, Eigen::VectorXi const&>());
+    pydist.def("SampleImpl", (Eigen::VectorXd (PyDistribution::*)(std::vector<Eigen::VectorXd> const&)) &Publicist::SampleImpl);
+    pydist.def("LogDensityImpl", (double (PyDistribution::*)(std::vector<Eigen::VectorXd> const&)) &Publicist::LogDensityImpl);
 
     py::class_<DensityBase, Distribution, ModPiece, std::shared_ptr<DensityBase>> densBase(m, "DensityBase");
     densBase

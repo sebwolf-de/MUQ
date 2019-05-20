@@ -52,6 +52,7 @@ void muq::Approximation::PythonBindings::PolynomialsWrapper(py::module &m)
 
   py::class_<OrthogonalPolynomial, IndexedScalarBasis, std::shared_ptr<OrthogonalPolynomial>> orthPoly(m, "OrthogonalPolynomial");
   orthPoly
+    .def_static("Construct", &OrthogonalPolynomial::Construct)
     .def("BasisEvaluate", &OrthogonalPolynomial::BasisEvaluate)
     .def("EvaluateAllTerms", &OrthogonalPolynomial::DerivativeEvaluate)
     .def("Normalization", &OrthogonalPolynomial::Normalization);

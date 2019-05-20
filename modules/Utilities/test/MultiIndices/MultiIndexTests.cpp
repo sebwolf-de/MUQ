@@ -102,3 +102,86 @@ TEST(Utilities_MultiIndices, SetValue)
   EXPECT_EQ(2, multi.Max());
   EXPECT_EQ(2, multi.Sum());
 }
+
+TEST(Utilities_MultiIndices, AdditionOperators)
+{
+  MultiIndex a {1, 2, 3, 4};
+  MultiIndex b {5, 6, 7, 8};
+  MultiIndex c = a+b;
+
+  EXPECT_EQ(1,a.GetValue(0));
+  EXPECT_EQ(2,a.GetValue(1));
+  EXPECT_EQ(3,a.GetValue(2));
+  EXPECT_EQ(4,a.GetValue(3));
+
+  EXPECT_EQ(5,b.GetValue(0));
+  EXPECT_EQ(6,b.GetValue(1));
+  EXPECT_EQ(7,b.GetValue(2));
+  EXPECT_EQ(8,b.GetValue(3));
+
+  EXPECT_EQ(6,c.GetValue(0));
+  EXPECT_EQ(8,c.GetValue(1));
+  EXPECT_EQ(10,c.GetValue(2));
+  EXPECT_EQ(12,c.GetValue(3));
+
+  a += b;
+
+  EXPECT_EQ(6,a.GetValue(0));
+  EXPECT_EQ(8,a.GetValue(1));
+  EXPECT_EQ(10,a.GetValue(2));
+  EXPECT_EQ(12,a.GetValue(3));
+
+  EXPECT_EQ(5,b.GetValue(0));
+  EXPECT_EQ(6,b.GetValue(1));
+  EXPECT_EQ(7,b.GetValue(2));
+  EXPECT_EQ(8,b.GetValue(3));
+
+  ++b;
+
+  EXPECT_EQ(6,b.GetValue(0));
+  EXPECT_EQ(7,b.GetValue(1));
+  EXPECT_EQ(8,b.GetValue(2));
+  EXPECT_EQ(9,b.GetValue(3));
+}
+
+TEST(Utilities_MultiIndices, SubtractionOperators)
+{
+  MultiIndex a {1, 2, 3, 4};
+  MultiIndex b {5, 6, 7, 8};
+  MultiIndex c = b-a;
+
+  EXPECT_EQ(1,a.GetValue(0));
+  EXPECT_EQ(2,a.GetValue(1));
+  EXPECT_EQ(3,a.GetValue(2));
+  EXPECT_EQ(4,a.GetValue(3));
+
+  EXPECT_EQ(5,b.GetValue(0));
+  EXPECT_EQ(6,b.GetValue(1));
+  EXPECT_EQ(7,b.GetValue(2));
+  EXPECT_EQ(8,b.GetValue(3));
+
+  EXPECT_EQ(4,c.GetValue(0));
+  EXPECT_EQ(4,c.GetValue(1));
+  EXPECT_EQ(4,c.GetValue(2));
+  EXPECT_EQ(4,c.GetValue(3));
+
+  b -= a;
+
+  EXPECT_EQ(1,a.GetValue(0));
+  EXPECT_EQ(2,a.GetValue(1));
+  EXPECT_EQ(3,a.GetValue(2));
+  EXPECT_EQ(4,a.GetValue(3));
+
+  EXPECT_EQ(4,b.GetValue(0));
+  EXPECT_EQ(4,b.GetValue(1));
+  EXPECT_EQ(4,b.GetValue(2));
+  EXPECT_EQ(4,b.GetValue(3));
+
+  --a;
+  --a;
+
+  EXPECT_EQ(0,a.GetValue(0));
+  EXPECT_EQ(0,a.GetValue(1));
+  EXPECT_EQ(1,a.GetValue(2));
+  EXPECT_EQ(2,a.GetValue(3));
+}

@@ -243,6 +243,29 @@ TEST(Utilities_MultiIndices, AddAdmissibleNeighbor)
   EXPECT_TRUE(admiss);
 }
 
+
+TEST(Utilities_MultiIndices, BackwardsNeighbors)
+{
+
+  shared_ptr<MultiIndexSet> indexSet = MultiIndexFactory::CreateFullTensor(2, 3);
+
+  shared_ptr<MultiIndex> newMulti = std::make_shared<MultiIndex>(2);
+  newMulti->SetValue(0,2);
+  newMulti->SetValue(1,1);
+
+  std::vector<unsigned int> neighbors = indexSet->GetBackwardNeighbors(indexSet->MultiToIndex(newMulti));
+
+  ASSERT_EQ(2, neighbors.size());
+
+  Eigen::RowVectorXi neigh1 = indexSet->IndexToMulti(neighbors.at(0))->GetVector();
+  Eigen::RowVectorXi neigh2 = indexSet->IndexToMulti(neighbors.at(1))->GetVector();
+
+  EXPECT_EQ(1,neigh1(0));
+  EXPECT_EQ(1,neigh1(1));
+  EXPECT_EQ(2,neigh2(0));
+  EXPECT_EQ(0,neigh2(1));
+}
+
 /*
   AdmissableNeighbor.ForciblyExpandAdmissibleNeighbors
   ----------------------------------------------------

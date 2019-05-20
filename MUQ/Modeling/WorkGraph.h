@@ -109,10 +109,10 @@ namespace muq {
       /// Create a muq::Modeling::ModPiece whose output matches a given node
       /**
          @param[in] node The name of the output node
+         @param[in] inNames The name (and order) of the input nodes---defaults to the order of the graph
          @return A muq::Utilities::WorkPiece whose outputs are the same as the output node
       */
-      std::shared_ptr<ModGraphPiece> CreateModPiece(std::string const& node) const;
-
+      std::shared_ptr<ModGraphPiece> CreateModPiece(std::string const& node, std::vector<std::string> const& inNames = std::vector<std::string>()) const;
 
       /// Check to see if a node is constant?
       /**

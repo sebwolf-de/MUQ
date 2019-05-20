@@ -53,12 +53,3 @@ void PyModPiece::ApplyJacobianImpl(unsigned int                 const  outputDim
 {
   jacobianAction = ApplyJacobianByFD(outputDimWrt, inputDimWrt, input, vec);
 }
-
-std::vector<Eigen::VectorXd> PyModPiece::ToStdVec(ref_vector<Eigen::VectorXd> const& input) {
-  std::vector<Eigen::VectorXd> newIns(input.size());
-
-  for (int i=0; i<input.size(); ++i)
-    newIns.at(i) = input.at(i).get();
-
-  return newIns;
-}

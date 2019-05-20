@@ -10,8 +10,9 @@ using namespace muq::Optimization;
 NLoptOptimizer::NLoptOptimizer(std::shared_ptr<CostFunction> cost,
                                pt::ptree const& pt) :
   Optimizer(cost, pt),
-  algorithm(NLOptAlgorithm(pt.get<std::string>("Algorithm"))) {
-  opt = cost;
+  algorithm(NLOptAlgorithm(pt.get<std::string>("Algorithm"))),
+  minimize(pt.get<bool>("Minimize", true)) {
+    opt = cost;
 }
 
 NLoptOptimizer::~NLoptOptimizer() {}
@@ -42,12 +43,16 @@ void NLoptOptimizer::EvaluateImpl(ref_vector<boost::any> const& inputs) {
 
   // create the optimizer
   auto solver = nlopt_create(algorithm, opt->inputSizes(0));
-  nlopt_set_min_objective(solver, Cost, &opt);
+  if( minimize )
+    nlopt_set_min_objective(solver, Cost, &opt);
+  else {
+    nlopt_set_max_objective(solver, Cost, &opt);
+  }
 
   if (!ineqConstraints.empty()) {
 
     for (int i; i<ineqConstraints.size(); ++i) {
-    
+
       double ineqTol[ineqConstraints[i]->numOutputs];
       Eigen::Map<const Eigen::VectorXd> ineqTolmap(ineqTol, ineqConstraints[i]->numOutputs);
       const Eigen::VectorXd ineqTolEig = constraint_tol*Eigen::VectorXd::Ones(ineqConstraints[i]->numOutputs);
@@ -63,11 +68,11 @@ void NLoptOptimizer::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   if (!eqConstraints.empty()) {
 
     for (int i; i<eqConstraints.size(); ++i) {
-    
+
       double eqTol[eqConstraints[i]->numOutputs];
       Eigen::Map<const Eigen::VectorXd> eqTolmap(eqTol, eqConstraints[i]->numOutputs);
       const Eigen::VectorXd eqTolEig = constraint_tol*Eigen::VectorXd::Ones(eqConstraints[i]->numOutputs);
-      
+
       nlopt_add_equality_mconstraint(solver,
                                      eqConstraints[i]->numOutputs,
                                      Constraint,
@@ -90,23 +95,22 @@ void NLoptOptimizer::EvaluateImpl(ref_vector<boost::any> const& inputs) {
   Eigen::VectorXd& xopt = boost::any_cast<Eigen::VectorXd&>(outputs.at(0));
 
   double minf;
-
   const nlopt_result check = nlopt_optimize(solver, xopt.data(), &minf);
 
   if( check<0 )
     muq::ExternalLibraryError("NLOPT has failed with flag " + std::to_string(check));
 
   outputs[1] = minf;
-  
+
 }
-      
+
 std::pair<Eigen::VectorXd, double>
 NLoptOptimizer::Solve(std::vector<Eigen::VectorXd> const& input) {
 
   std::vector<boost::any> ins;
   for (auto i : input)
     ins.push_back(i);
-    
+
   Evaluate(ins);
 
   return std::pair<Eigen::VectorXd, double>(boost::any_cast<Eigen::VectorXd const&>(outputs[0]),
@@ -124,7 +128,7 @@ double NLoptOptimizer::Cost(unsigned int n,
 
   Eigen::Map<const Eigen::VectorXd> xmap(x, n);
   const Eigen::VectorXd& xeig = xmap;
-  
+
   if (grad) {
 
     Eigen::Map<Eigen::VectorXd> gradmap(grad, n);
@@ -168,4 +172,3 @@ void NLoptOptimizer::Constraint(unsigned int m,
   resultmap = resulteig.at(0);
 
 }
-

@@ -33,7 +33,13 @@ namespace muq{
 
         // Add all the other objects through their "str" interpretation
         }else{
-          pt.put(basePath + key, pybind11::str(dict.attr("get")(key)));
+          if( ((std::string)pybind11::str(dict.attr("get")(key))).compare("False")==0 ) {
+            pt.put(basePath + key, false);
+          } else if( ((std::string)pybind11::str(dict.attr("get")(key))).compare("True")==0 ) {
+              pt.put(basePath + key, true);
+          } else {
+            pt.put(basePath + key, pybind11::str(dict.attr("get")(key)));
+          }
         }
       }
     };

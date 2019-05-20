@@ -98,14 +98,14 @@ void muq::Utilities::PythonBindings::MultiIndicesWrapper(py::module &m)
     .def("at", &MultiIndexSet::at)
     .def("Size", &MultiIndexSet::Size)
     .def("Union", &MultiIndexSet::Union)
-    .def("Activate", (void (MultiIndexSet::*)(std::shared_ptr<MultiIndex>)) &MultiIndexSet::Activate)
+    .def("Activate", (void (MultiIndexSet::*)(std::shared_ptr<MultiIndex> const&)) &MultiIndexSet::Activate)
     .def("AddActive", &MultiIndexSet::AddActive)
     .def("Expand", &MultiIndexSet::Expand)
     .def("ForciblyExpand", &MultiIndexSet::ForciblyExpand)
-    .def("ForciblyActivate", (std::vector<unsigned> (MultiIndexSet::*)(std::shared_ptr<MultiIndex>)) &MultiIndexSet::ForciblyActivate)
+    .def("ForciblyActivate", (std::vector<unsigned> (MultiIndexSet::*)(std::shared_ptr<MultiIndex> const&)) &MultiIndexSet::ForciblyActivate)
     .def("GetAdmissibleForwardNeighbors", &MultiIndexSet::GetAdmissibleForwardNeighbors)
-    .def("IsAdmissible", (bool (MultiIndexSet::*)(std::shared_ptr<MultiIndex>) const) &MultiIndexSet::IsAdmissible)
+    .def("IsAdmissible", (bool (MultiIndexSet::*)(std::shared_ptr<MultiIndex> const&) const) &MultiIndexSet::IsAdmissible)
     .def("IsExpandable", &MultiIndexSet::IsExpandable)
-    .def("IsActive", (bool (MultiIndexSet::*)(std::shared_ptr<MultiIndex>) const) &MultiIndexSet::IsActive);
+    .def("IsActive", (bool (MultiIndexSet::*)(std::shared_ptr<MultiIndex> const&) const) &MultiIndexSet::IsActive);
 
 }
