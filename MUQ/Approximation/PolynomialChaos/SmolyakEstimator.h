@@ -93,20 +93,6 @@ namespace Approximation {
 
     virtual double ComputeMagnitude(EstimateType const& estimate) const = 0;
 
-    /** Computes the change in the smolyak weights caused by the addition of
-        one term to the Smolyak MultiIndexSet.  This is to construct the c_k
-        coefficients in equation 3.6 of Conrad and Marzouk's pseudospectral paper.
-        @param[in] index The linear index of the new term in the "terms" set.
-        @return A vector of length terms->Size() describing how the smolyWeights vector should be updated.
-    */
-    //void UpdateSmolyCoeffs(unsigned int const index);
-
-    // /** Evaluates the model (possibly in parallel) at the specified points.  Also
-    //     caches the results in the evalCache data structure to avoid any repeated
-    //     model evaluations.
-    // */
-    // std::vector<Eigen::VectorXd> EvaluateModel(std::vector<Eigen::VectorXd> const& inputPts);
-
     /// The model used to construct the approximations
     std::shared_ptr<muq::Modeling::ModPiece> model;
 
