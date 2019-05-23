@@ -61,7 +61,7 @@ void muq::Modeling::PythonBindings::WorkPieceWrapper(py::module &m)
         .def("Visualize", &WorkGraph::Visualize)
         .def("DependentCut", &WorkGraph::DependentCut)
         .def("CreateWorkPiece", &WorkGraph::CreateWorkPiece)
-        .def("CreateModPiece", &WorkGraph::CreateModPiece)
+        .def("CreateModPiece", &WorkGraph::CreateModPiece, py::arg("node"),py::arg("inNames") = std::vector<std::string>())
         .def("Constant", (bool (WorkGraph::*)(std::string const&) const) &WorkGraph::Constant)
         .def("GetConstantOutputs", (std::vector<boost::any> const& (WorkGraph::*)(std::string const&) const) &WorkGraph::GetConstantOutputs);
 
