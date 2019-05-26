@@ -151,13 +151,13 @@ public:
 
 int main(){
 
-  auto componentFactory = std::make_shared<MyMIComponentFactory>();
-
   pt::ptree pt;
 
-  pt.put("NumSamples", 1e4); // number of samples for single level
-  pt.put("NumInitialSamples", 1e2); // number of initial samples for greedy MLMCMC
-  pt.put("GreedyTargetVariance", 0.05); // estimator variance to be achieved by greedy algorithm
+  pt.put("NumSamples", 1e3); // number of samples for single level
+  pt.put("MLMCMC.Subsampling", 5);
+
+  auto componentFactory = std::make_shared<MyMIComponentFactory>(pt);
+
 
   std::cout << std::endl << "*************** multiindex chain" << std::endl << std::endl;
 
