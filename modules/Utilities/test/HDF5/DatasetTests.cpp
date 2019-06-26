@@ -9,24 +9,24 @@ class DatasetTest : public::testing::Test {
 protected:
 
     virtual void SetUp() override {
-	filename = "test.h5";
-	hdf5file = std::make_shared<muq::Utilities::HDF5File>(filename);
+    	filename = "test.h5";
+    	hdf5file = std::make_shared<muq::Utilities::HDF5File>(filename);
 
-	// create some groups
-	hdf5file->CreateGroup("/a/crazy/path");
-	hdf5file->CreateGroup("/here/is/a");
-	hdf5file->CreateGroup("/here/is/b/");
-	
-	// create a dataset
-	const Eigen::VectorXd testVec = Eigen::VectorXd::Random(3);
-	hdf5file->WriteMatrix("/here/is/a/vector", testVec);
+    	// create some groups
+    	hdf5file->CreateGroup("/a/crazy/path");
+    	hdf5file->CreateGroup("/here/is/a");
+    	hdf5file->CreateGroup("/here/is/b/");
+
+    	// create a dataset
+    	const Eigen::VectorXd testVec = Eigen::VectorXd::Random(3);
+    	hdf5file->WriteMatrix("/here/is/a/vector", testVec);
     }
-  
+
     virtual void TearDown() override {
-	hdf5file->Close();
-	std::remove(filename.c_str());
+    	hdf5file->Close();
+    	std::remove(filename.c_str());
     }
-    
+
     std::shared_ptr<muq::Utilities::HDF5File> hdf5file;
     std::string filename;
 };
@@ -39,7 +39,7 @@ TEST_F(DatasetTest, Groups)
 
     g["/first"]  = 1.0;
     g["/second"] = 2.0;
-    
+
     double val = f["/something/first"](0);
     EXPECT_DOUBLE_EQ(1.0, val);
 
@@ -62,7 +62,7 @@ TEST_F(DatasetTest, DoubleSetGet)
     double secondVal = f["/something/second"](0);
 
     Eigen::VectorXd third = f["/something/else/third"];
-    
+
     EXPECT_DOUBLE_EQ(1.0, firstVal);
     EXPECT_DOUBLE_EQ(2.0, secondVal);
 
@@ -81,19 +81,19 @@ TEST_F(DatasetTest, CopyDataset)
   EXPECT_EQ(1, f["/something/second"].rows());
   EXPECT_EQ(1, f["/something/second"].cols());
   EXPECT_DOUBLE_EQ(1.0, f["/something/second"](0));
-    
+
 }
 
 TEST_F(DatasetTest, CopyDatasetWithAttribute)
 {
   muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
-  
+
   f["/something/first"] = 1.0;
   f["/something/first"].attrs["meta1"] = "Units";
   f["/something/first"].attrs["meta2"] = 10.0;
-  
+
   f["/something/second"] = f["/something/first"];
-  
+
   EXPECT_EQ(1, f["/something/second"].rows());
   EXPECT_EQ(1, f["/something/second"].cols());
   EXPECT_DOUBLE_EQ(1.0, f["/something/second"](0));
@@ -106,13 +106,13 @@ TEST_F(DatasetTest, CopyDatasetWithAttribute)
 TEST_F(DatasetTest, CopyGroup)
 {
   muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
-  
+
   f["/something/first"] = 1.0;
   f["/something/first"].attrs["meta1"] = "Units";
   f["/something/first"].attrs["meta2"] = 10.0;
-  
+
   f["/something/second"] = f["/something/first"];
-  
+
   f["/somethingelse"] = f["/something"];
 
   EXPECT_EQ(1, f["/somethingelse/first"].rows());
@@ -143,7 +143,7 @@ TEST_F(DatasetTest, AttributeSetGet)
 	auto& attrs = f["/something"].attrs;
 	attrs["Meta1"] = 10.0;
 	attrs["Meta2"] = "This is an attribute.";
-	
+
 	auto& attrs2 = f["/something/first"].attrs;
 	attrs2["OtherVec"] = Eigen::VectorXd::Ones(10).eval();
 
@@ -158,7 +158,7 @@ TEST_F(DatasetTest, AttributeSetGet)
 	std::string val2 = f["/something"].attrs["Meta2"];
 	EXPECT_EQ("This is an attribute.", val2);
 
-	
+
 	Eigen::VectorXd temp = f["/something/first"].attrs["OtherVec"];
 	EXPECT_EQ(10, temp.size());
 	for(int i=0; i<10; ++i)
@@ -169,7 +169,7 @@ TEST_F(DatasetTest, AttributeSetGet)
 
 TEST_F(DatasetTest, BlockReadOps)
 {
-    
+
     Eigen::MatrixXd A(3,3);
     A << 2, 1, 0,
 	 1, 2, 1,
@@ -177,7 +177,7 @@ TEST_F(DatasetTest, BlockReadOps)
 
     Eigen::VectorXd b(3);
     b << 1,2,3;
-    
+
     {
 	muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
 
@@ -220,14 +220,14 @@ TEST_F(DatasetTest, BlockReadOps)
 	EXPECT_EQ(2, A2(1,0));
 	EXPECT_EQ(3, A2(1,1));
 
-	
+
 	Eigen::VectorXd b2 = f["/b"].segment(0,2);
 
 	EXPECT_EQ(2, b2.size());
 	EXPECT_EQ(1, b2(0));
 	EXPECT_EQ(2, b2(1));
     }
-    
+
 }
 
 TEST_F(DatasetTest, BlockWriteOps)
@@ -237,14 +237,14 @@ TEST_F(DatasetTest, BlockWriteOps)
 
     Eigen::MatrixXd A(3,3);
     A << 2, 1, 0,
-	 1, 2, 1,
-	 0, 2, 3;
+	       1, 2, 1,
+	       0, 2, 3;
 
     f["/A"] = A;
 
     Eigen::VectorXd newCol(3);
     newCol << -1, -2, -3;
-    
+
     f["/A"].col(1) = newCol;
 
     Eigen::MatrixXd A2 = f["/A"];
@@ -266,13 +266,13 @@ TEST_F(DatasetTest, IntSetGet)
     int firstVal = f["/something/first"](0);
 
     Eigen::VectorXi third = f["/something/else/third"];
-    
+
     EXPECT_DOUBLE_EQ(1, firstVal);
 
     for(int i=0; i<numThird; ++i)
 	EXPECT_DOUBLE_EQ(10, third(i));
 
-    
+
 }
 
 TEST_F(DatasetTest, CloseOpen)
@@ -291,11 +291,50 @@ TEST_F(DatasetTest, CloseOpen)
 
 	double result = f["/something/first"](0);
 	EXPECT_DOUBLE_EQ(1.0, result);
-	
+
         result = f["/something/second"](0);
 	EXPECT_DOUBLE_EQ(2.0, result);
     }
-    
+
+}
+
+TEST_F(DatasetTest, GroupSizeFail)
+{
+  muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
+
+  EXPECT_THROW(f.rows(), std::runtime_error);
+  EXPECT_THROW(f.cols(), std::runtime_error);
+  EXPECT_THROW(f.size(), std::runtime_error);
+}
+
+TEST_F(DatasetTest, CreateDataset)
+{
+  muq::Utilities::H5Object f = AddChildren(hdf5file, "/");
+
+  const int numRows = 10;
+  const int numCols = 20;
+
+  auto ds = f.CreateDataset<double>("/My/New/Dataset", numRows, numCols);
+
+  EXPECT_EQ(numRows,ds.rows());
+  EXPECT_EQ(numCols,ds.cols());
+
+  Eigen::MatrixXd temp = f["/My/New/Dataset"];
+  for(int j=0; j<numCols; ++j){
+    for(int i=0; i<numRows; ++i)
+      EXPECT_DOUBLE_EQ(0.0,temp(i,j));
+  }
+
+  ds.col(0) = Eigen::VectorXd::Ones(numRows).eval();
+
+  temp = f["/My/New/Dataset"];
+  for(int i=0; i<numRows; ++i)
+    EXPECT_DOUBLE_EQ(1.0,temp(i,0));
+
+  for(int j=1; j<numCols; ++j){
+    for(int i=0; i<numRows; ++i)
+      EXPECT_DOUBLE_EQ(0.0,temp(i,j));
+  }
 }
 
 TEST_F(DatasetTest, FromH5File)

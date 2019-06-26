@@ -15,15 +15,14 @@
 CreateCompileGroup(
     APPROXIMATION_CORE_PYTHON
     "Python wrappers for the basic building blocks of the Approximation library."
-    "pymuqApproximation"
+    "pymuqApproximationWrappers"
     "APPROXIMATION_GP;APPROXIMATION_GP_Kernels"
     "PYTHON"
     ""
-    Module.cpp
-    KernelWrapper.cpp
-    GaussianWrapper.cpp
-    PolynomialsWrapper.cpp
-    KLWrapper.cpp
-    QuadratureWrapper.cpp
-    PolynomialChaosWrapper.cpp
+    wrappers/Module.cpp
+    wrappers/KernelWrapper.cpp
+    wrappers/GaussianWrapper.cpp
+    wrappers/PolynomialsWrapper.cpp
+    wrappers/KLWrapper.cpp
+    wrappers/QuadratureWrapper.cpp
 )

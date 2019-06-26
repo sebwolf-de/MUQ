@@ -31,7 +31,7 @@ KarhunenLoeveExpansion::KarhunenLoeveExpansion(std::shared_ptr<KernelBase> kerne
     modeVecs = eigSolver.eigenvectors().rightCols(numModes).rowwise().reverse();
 }
 
-Eigen::MatrixXd KarhunenLoeveExpansion::GetModes(Eigen::Ref<const Eigen::MatrixXd> const& pts)
+Eigen::MatrixXd KarhunenLoeveExpansion::GetModes(Eigen::Ref<const Eigen::MatrixXd> const& pts) const
 {
 
     // Build the cross covariance between the seed points and the evaluation points
@@ -41,8 +41,8 @@ Eigen::MatrixXd KarhunenLoeveExpansion::GetModes(Eigen::Ref<const Eigen::MatrixX
     return crossCov *  seedWts.array().sqrt().matrix().asDiagonal() * modeVecs * modeEigs.array().inverse().sqrt().matrix().asDiagonal();// * scale.asDiagonal();
 }
 
-Eigen::VectorXd KarhunenLoeveExpansion::Evaluate(Eigen::Ref<const Eigen::MatrixXd> const& pts,
-                                                 Eigen::Ref<const Eigen::VectorXd> const& coeffs)
+
+unsigned int KarhunenLoeveExpansion::NumModes() const
 {
-    return GetModes(pts) * coeffs;
+  return modeEigs.size();
 }

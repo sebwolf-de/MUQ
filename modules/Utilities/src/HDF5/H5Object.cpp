@@ -10,50 +10,50 @@ void H5Object::DeepCopy(H5Object const& otherObj)
   isDataset = otherObj.isDataset;
 }
 
-H5Object& H5Object::operator=(H5Object const& otherObj) 
-{ 
-  DeepCopy(otherObj);  
+H5Object& H5Object::operator=(H5Object const& otherObj)
+{
+  DeepCopy(otherObj);
   return *this;
 }
 
 void H5Object::ExactCopy(H5Object const& otherObj)
-{ 
+{
   file = otherObj.file;
   attrs = otherObj.attrs;
-  
+
   path = otherObj.path;
   children = otherObj.children;
   isDataset = otherObj.isDataset;
 }
 
-H5Object& H5Object::CreateDataset(std::string const& grpName)
+H5Object& H5Object::CreatePlaceholder(std::string const& grpName)
 {
     auto pathParts = SplitString(grpName);
 
     if(pathParts.second.length()==0)
     {
-      children[pathParts.first].ExactCopy( H5Object(file, path+grpName, true) ); 
+      children[pathParts.first].ExactCopy( H5Object(file, path+grpName, true) );
       return children[pathParts.first];
     }
-	
+
     if(children.find( pathParts.first ) == children.end()){
       if((path.length()==1) && (path.at(0)=='/'))
       {
-	file->CreateGroup(pathParts.first);
-	children[pathParts.first].ExactCopy( H5Object(file, pathParts.first ,false) );
+	       file->CreateGroup(pathParts.first);
+	       children[pathParts.first].ExactCopy( H5Object(file, pathParts.first ,false) );
       }
       else
       {
-	file->CreateGroup(path + pathParts.first);
-	children[pathParts.first].ExactCopy( H5Object(file, path + pathParts.first ,false) );        
+	       file->CreateGroup(path + pathParts.first);
+	       children[pathParts.first].ExactCopy( H5Object(file, path + pathParts.first ,false) );
       }
-      
-      return children[pathParts.first].CreateDataset(pathParts.second);
-    } 
+
+      return children[pathParts.first].CreatePlaceholder(pathParts.second);
+    }
     else
     {
-      return children[pathParts.first].CreateDataset(pathParts.second);
-    } 
+      return children[pathParts.first].CreatePlaceholder(pathParts.second);
+    }
 };
 
 
@@ -66,7 +66,7 @@ H5Object& H5Object::CreateGroup(std::string const& grpName)
     // Otherwise, recursively create the necessary groups.
     auto pathParts = SplitString(grpName);
 
-    if(children.find( pathParts.first ) == children.end()) 
+    if(children.find( pathParts.first ) == children.end())
     {
 	file->CreateGroup(path + pathParts.first);
 	children[pathParts.first].ExactCopy( H5Object(file, path + pathParts.first, false) );
@@ -79,11 +79,11 @@ H5Object& H5Object::CreateGroup(std::string const& grpName)
 	{
 	    return children[pathParts.first];
 	}
-    } 
+    }
     else
     {
 	return children[pathParts.first].CreateGroup(pathParts.second);
-    } 
+    }
 };
 
 
@@ -98,16 +98,16 @@ H5Object& H5Object::operator[](std::string const& targetPath)
   else
   {
     auto pathParts = SplitString(targetPath);
-    
-    if(children.find( pathParts.first ) != children.end())  
+
+    if(children.find( pathParts.first ) != children.end())
     {
       return children.at(pathParts.first)[pathParts.second];
     }
     else
     {
-      return CreateDataset(targetPath);
+      return CreatePlaceholder(targetPath);
     }
-  }  
+  }
 };
 
 
@@ -123,7 +123,7 @@ H5Object& H5Object::operator[](std::string const& targetPath)
 //       else
 //       {
 // 	  auto pathParts = SplitString(path);
-    
+
 // 	  return children.at(pathParts.first)[pathParts.second];
 //       }
 //   };
@@ -184,11 +184,11 @@ BlockDataset H5Object::rightCols(unsigned numCols) const
     return block(0,cols()-numCols, rows(), numCols);
 }
 
-BlockDataset H5Object::col(unsigned col) const 
+BlockDataset H5Object::col(unsigned col) const
 {
     assert(isDataset);
     Eigen::VectorXi shape = file->GetDataSetSize(path);
-      
+
 
     return block(0,col,shape(0),1);
 }
@@ -208,9 +208,9 @@ BlockDataset H5Object::segment(unsigned startInd, unsigned numInds) const
 
 BlockDataset H5Object::head(unsigned numInds) const
 {
-    // Make sure the object is one dimensional 
+    // Make sure the object is one dimensional
     Eigen::VectorXi shape = file->GetDataSetSize(path);
-    
+
     if(shape.size()==0){
       std::cerr << "\nERROR: The dataset, " << path << ", does not exist.\n" << std::endl;
       assert(shape.size()>0);
@@ -223,7 +223,7 @@ BlockDataset H5Object::head(unsigned numInds) const
     }else if(shape(1)==1){
       return block(0,0,numInds,1);
     }else{
-      std::cerr << "\nERROR: The head() function requires the dataset to be one dimensional and \"" << path << "\" does not seem to be one dimensional.\n" << std::endl; 
+      std::cerr << "\nERROR: The head() function requires the dataset to be one dimensional and \"" << path << "\" does not seem to be one dimensional.\n" << std::endl;
       assert(false);
       return block(0,0,numInds,1);
     }
@@ -237,12 +237,18 @@ BlockDataset H5Object::tail(unsigned numInds) const
 
 unsigned H5Object::rows() const
 {
+    if(!isDataset)
+      throw std::runtime_error("Attempted to call H5Object::rows() on a group object.");
+
     Eigen::VectorXi shape = file->GetDataSetSize(path);
     return shape(0);
 }
 
 unsigned H5Object::cols() const
 {
+  if(!isDataset)
+    throw std::runtime_error("Attempted to call H5Object::cols() on a group object.");
+
     Eigen::VectorXi shape = file->GetDataSetSize(path);
     if(shape.size()==1)
       return 1;
@@ -252,6 +258,9 @@ unsigned H5Object::cols() const
 
 unsigned H5Object::size() const
 {
+  if(!isDataset)
+    throw std::runtime_error("Attempted to call H5Object::size() on a group object.");
+
     Eigen::VectorXi shape = file->GetDataSetSize(path);
     return shape.prod();
 }
@@ -302,8 +311,8 @@ H5Object muq::Utilities::AddChildren(std::shared_ptr<HDF5File>        file,
 {
 
     if(file->IsDataSet(groupName))
-	return H5Object(file,groupName,true);
-    
+	    return H5Object(file,groupName,true);
+
     // Set up the current object
     H5Object output(file, groupName, false);
 
