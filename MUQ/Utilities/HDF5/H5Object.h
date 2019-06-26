@@ -23,7 +23,7 @@ class H5Object;
 
 /// Recursively add children to create an HDF5 file hierarchy
 H5Object AddChildren(std::shared_ptr<HDF5File>        file,
-		     std::string               const& groupName);
+       std::string               const& groupName);
 
 /// Open an HDF5 file and return the root object
 /**
@@ -59,11 +59,11 @@ public:
     H5Object(){};
 
     H5Object(std::shared_ptr<HDF5File>        file_,
-	     std::string               const& path_,
-	     bool                             isDataset_) : file(file_),
+       std::string               const& path_,
+       bool                             isDataset_) : file(file_),
                                                             attrs(file_, path_),
  	                                                    path(path_),
-	                                                    isDataset(isDataset_){};
+                                                      isDataset(isDataset_){};
 
     typedef std::function<void(boost::any const&, H5Object& )> AnyWriterType;
     typedef std::unordered_map<std::type_index, AnyWriterType> AnyWriterMapType;
@@ -77,17 +77,17 @@ public:
     template<typename ScalarType, typename = typename std::enable_if<std::is_arithmetic<ScalarType>::value, ScalarType>::type>
     H5Object& operator=(ScalarType val)
     {
-	assert(path.length()>0);
-	if(isDataset)
-	{
-	    Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> temp(1,1);
-	    temp(0,0) = val;
-	    file->WriteMatrix(path, temp);
-	}
-	else
-	{
-	    assert(false);
-	}
+      assert(path.length()>0);
+      if(isDataset)
+      {
+        Eigen::Matrix<ScalarType,Eigen::Dynamic,Eigen::Dynamic> temp(1,1);
+        temp(0,0) = val;
+        file->WriteMatrix(path, temp);
+      }
+      else
+      {
+        assert(false);
+      }
 
         return *this;
     };
@@ -96,21 +96,21 @@ public:
     template<typename Derived>
     H5Object& operator=(Eigen::DenseBase<Derived> const& val)
     {
-	return (*this)=val.eval();
+      return (*this)=val.eval();
     };
 
     template<typename ScalarType, int fixedRows, int fixedCols>
     H5Object& operator=(Eigen::Matrix<ScalarType, fixedRows, fixedCols> const& val)
     {
-	assert(path.length()>0);
-	if(isDataset)
-	{
-	    file->WriteMatrix(path, val);
-	}
-	else
-	{
-	    assert(false);
-	}
+      assert(path.length()>0);
+      if(isDataset)
+      {
+        file->WriteMatrix(path, val);
+      }
+      else
+      {
+        assert(false);
+      }
 
         return *this;
     };
@@ -118,7 +118,7 @@ public:
     template<typename scalarType, int rows, int cols>
     operator Eigen::Matrix<scalarType,rows,cols>()
     {
-	return eval<scalarType,rows,cols>();
+      return eval<scalarType,rows,cols>();
     }
 
     /**
@@ -129,14 +129,14 @@ public:
     template<typename scalarType=double, int rows=Eigen::Dynamic, int cols=Eigen::Dynamic>
     Eigen::Matrix<scalarType,rows,cols> eval()
     {
-        if(isDataset)
-	{
-	    return file->ReadMatrix<scalarType,rows,cols>(path).template cast<scalarType>();
-	}
-	else
-	{
-	    assert(false);
-	}
+      if(isDataset)
+      {
+        return file->ReadMatrix<scalarType,rows,cols>(path).template cast<scalarType>();
+      }
+      else
+      {
+        assert(false);
+      }
     }
     //////////////////////////////////////////////////////
     // Create groups and datsets
@@ -144,16 +144,16 @@ public:
     H5Object& CreatePlaceholder(std::string const& grpName);
     H5Object& CreateGroup(std::string const& grpName);
 
-		/** Creates a dataset with a particular size and type. */
-		template<typename ScalarType>
-		H5Object& CreateDataset(std::string const& setName,
-			                      unsigned int rows,
-			                      unsigned int cols=0)
-		{
-			H5Object& temp = CreatePlaceholder(setName);
-			temp.file->CreateDataset<ScalarType>(temp.path, rows, cols);
-			return temp;
-		}
+    /** Creates a dataset with a particular size and type. */
+    template<typename ScalarType>
+    H5Object& CreateDataset(std::string const& setName,
+                          unsigned int rows,
+                          unsigned int cols=0)
+    {
+      H5Object& temp = CreatePlaceholder(setName);
+      temp.file->CreateDataset<ScalarType>(temp.path, rows, cols);
+      return temp;
+    }
 
     //////////////////////////////////////////////////////
     // Accessors
@@ -218,11 +218,11 @@ private:
     // Copy the other objects content into the current dataset
     void DeepCopy(H5Object const& otherObj);
 
-  std::string path;
+    std::string path;
 
-  std::map<std::string, H5Object> children;
+    std::map<std::string, H5Object> children;
 
-  bool isDataset;
+    bool isDataset;
 
 };
 

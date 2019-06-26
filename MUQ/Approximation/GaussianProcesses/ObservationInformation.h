@@ -95,7 +95,7 @@ namespace Approximation{
         in the description above.
         */
         std::vector<std::vector<int>> derivCoords;
-        
+
       protected:
 
         virtual Eigen::MatrixXd BuildBaseCovariance(Eigen::Ref<const Eigen::VectorXd> const& otherObs,

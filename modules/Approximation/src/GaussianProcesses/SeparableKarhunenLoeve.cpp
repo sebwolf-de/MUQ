@@ -1,11 +1,11 @@
-#include "MUQ/Approximation/GaussianProcesses/SeperableKarhunenLoeve.h"
+#include "MUQ/Approximation/GaussianProcesses/SeparableKarhunenLoeve.h"
 
 #include "MUQ/Utilities/MultiIndices/MultiIndexFactory.h"
 
 using namespace muq::Approximation;
 using namespace muq::Utilities;
 
-SeperableKarhunenLoeve::SeperableKarhunenLoeve(std::vector<std::shared_ptr<KernelBase>> kernels,
+SeparableKarhunenLoeve::SeparableKarhunenLoeve(std::vector<std::shared_ptr<KernelBase>> kernels,
                                                std::vector<Eigen::MatrixXd> const& seedPts,
                                                std::vector<Eigen::VectorXd> const& seedWts,
                                                boost::property_tree::ptree options)
@@ -22,7 +22,7 @@ SeperableKarhunenLoeve::SeperableKarhunenLoeve(std::vector<std::shared_ptr<Kerne
   for(int i=1; i<kernels.size(); ++i)
     assert(kernels.at(i).inputDim == inputDim);
 
-  // Build a KL decomposition for each seperable component
+  // Build a KL decomposition for each separable component
   components.resize(numComps);
 
   numModes = 1;
@@ -45,12 +45,12 @@ SeperableKarhunenLoeve::SeperableKarhunenLoeve(std::vector<std::shared_ptr<Kerne
 
 }
 
-unsigned int SeperableKarhunenLoeve::NumModes()
+unsigned int SeparableKarhunenLoeve::NumModes()
 {
   return numModes;
 }
 
-Eigen::MatrixXd SeperableKarhunenLoeve::GetModes(Eigen::Ref<const Eigen::MatrixXd> const& pts)
+Eigen::MatrixXd SeparableKarhunenLoeve::GetModes(Eigen::Ref<const Eigen::MatrixXd> const& pts)
 {
   std::vector<Eigen::MatrixXd> allModes(components.size());
   for(int i=0; i<components.size(); ++i)

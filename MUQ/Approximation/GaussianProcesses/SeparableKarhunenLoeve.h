@@ -1,5 +1,5 @@
-#ifndef SEPERABLEKARHUNENLOEVE_H
-#define SEPERABLEKARHUNENLOEVE_H
+#ifndef SEPARABLEKARHUNENLOEVE_H
+#define SEPARABLEKARHUNENLOEVE_H
 
 #include <Eigen/Core>
 
@@ -11,10 +11,10 @@ namespace muq
 namespace Approximation
 {
     /**
-    @class SeperableKarhunenLoeve
+    @class SeparableKarhunenLoeve
     @ingroup GaussianProcesses
     @seealso KarhunenLoeveExpansion
-    @brief Implements KL expansions that take advantage of seperable structure in both the domain and covariance kernel.
+    @brief Implements KL expansions that take advantage of separable structure in both the domain and covariance kernel.
     @details
 
     ## Background ##
@@ -23,30 +23,30 @@ namespace Approximation
     \f[
     k((x,y),(x^\prime, y^\prime)) = k_x(x,x^\prime)k_y(y,y^\prime).
     \f]
-    This type of kernel is seperable in all of its components.  It is also possible
-    to have kernels that are partially seperable.  For example, a three dimensional
-    kernel \f$k_2((x,y,z),(x^\prime, y^\prime,z^\prime))\f$ might be seperable
+    This type of kernel is separable in all of its components.  It is also possible
+    to have kernels that are partially separable.  For example, a three dimensional
+    kernel \f$k_2((x,y,z),(x^\prime, y^\prime,z^\prime))\f$ might be separable
     in \f$x\f$ and \f$(y,z)\f$ but not all three components.  This would result in
     a decomposition of the form
     \f[
     k_2((x,y,z),(x^\prime, y^\prime,z^\prime)) = k_x(x,x^\prime) k_{yz}((y,z), (y^\prime,z^\prime)).
     \f]
 
-    In both the seperable and partially seperable cases, it can often be more efficient
+    In both the separable and partially separable cases, it can often be more efficient
     to construct the KL decompositions for each component kernel (e.g., \f$k_x, k_y, \ldots\f$)
     seperately and then combine the individual expansions to form an expansion for the original
     kernel.  This is possible when the full-dimensional seed points are formed
-    from a tensor product of points in the seperable dimensions.
+    from a tensor product of points in the separable dimensions.
     */
-    class SeperableKarhunenLoeve
+    class SeparableKarhunenLoeve
     {
 
     public:
 
-      /** Construct the seperable expansion from a list of the seperate kernels
+      /** Construct the separable expansion from a list of the seperate kernels
           and seed points/weights.
 
-          @param[in] kernelsIn A vector of kernels for each seperable component.
+          @param[in] kernelsIn A vector of kernels for each separable component.
                                Note: Each individual kernel can be defined with multiple
                                input dimensions, but there can be no shared dimensions
                                between kernels.   As an example, the three component
@@ -56,7 +56,7 @@ namespace Approximation
                                "{1,2}", which is allowed.  However, the first kernel
                                could not depend on "{0,1}", because then both kernels
                                would depend on the second "y" component and the product
-                               would no long be seperable.
+                               would no long be separable.
           @param[in] seedPtsIn A vector of seed points for each component.  The
                                length of this vector must match the length of the
                                kernels vector.  Each component of the vector is an \f$N\times M\f$
@@ -67,7 +67,7 @@ namespace Approximation
                                seed points.  There must be the same number of wts
                                and pts for each component.
       */
-      SeperableKarhunenLoeve(std::vector<std::shared_ptr<KernelBase>> kernelsIn,
+      SeparableKarhunenLoeve(std::vector<std::shared_ptr<KernelBase>> kernelsIn,
                              std::vector<Eigen::MatrixXd> const& seedPtsIn,
                              std::vector<Eigen::VectorXd> const& seedWtsIn,
                              boost::property_tree::ptree options = boost::property_tree::ptree());
@@ -82,7 +82,7 @@ namespace Approximation
       std::shared_ptr<MultiIndexSet> modeInds;
       unsigned int numModes;
 
-    }; // class KarhunenLoeveBase
+    }; // class SeparableKarhunenLoeve
   }
 }
 
