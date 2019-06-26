@@ -13,13 +13,13 @@ ConstantPiece::ConstantPiece(std::vector<boost::any> const& outs) : WorkPiece(0,
 
 ConstantPiece::ConstantPiece() : WorkPiece(0, -1) {
   // the outputs will not change inside evaluate so we should not clear them
-  clearOutputs = false;  
+  clearOutputs = false;
 }
 
 void ConstantPiece::SetOutputs(std::vector<boost::any> const& outs) {
   // clear the output types
   outputTypes.clear();
-  
+
   // set the output types
   outputTypes = Types(Types(outs));
 
@@ -31,12 +31,10 @@ void ConstantPiece::SetOutputs(std::vector<boost::any> const& outs) {
 void ConstantPiece::SetOutputs() {
   // clear the output types
   outputTypes.clear();
-  
+
   // clear the vector of outputs
   outputs.clear();
 }
 
 // the outputs are already set and not cleared so don't do anything
 void ConstantPiece::EvaluateImpl(ref_vector<boost::any> const& inputs) {}
-
-

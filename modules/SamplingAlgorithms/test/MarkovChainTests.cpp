@@ -110,7 +110,7 @@ TEST_F(MarkovChainTest, ESS)
   Eigen::VectorXd whiteNoise = RandomGenerator::GetNormal(numWhite);
   double singleEss = MarkovChain::SingleComponentESS(whiteNoise);
 
-  EXPECT_NEAR(numWhite, singleEss, 100);
+  EXPECT_NEAR(numWhite, singleEss, 250);
 }
 
 

@@ -37,12 +37,13 @@ TEST(ExpensiveSamplingProblemTests, GaussianTarget) {
 
   pt.put("MySamplingProblem.GammaScale", 1.0);
   pt.put("MySamplingProblem.GammaExponent", 0.5);
+  pt.put("MaximumGammaRefine", 15);
+  pt.put("TargetMax", std::exp(dist->LogDensity(mu)));
 
-  pt.put("MySamplingProblem.DeltaExponent", 0.01);
-
-  pt.put("MySamplingProblem.TargetMax", std::exp(dist->LogDensity(mu)));
   pt.put("MySamplingProblem.EtaScale", 2.0);
   pt.put("MySamplingProblem.EtaExponent", 2.0);
+
+  pt.put("MySamplingProblem.LambdaScale", 25.0);
 
   // the communicator
   auto comm = std::make_shared<parcer::Communicator>();

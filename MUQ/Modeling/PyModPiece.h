@@ -46,7 +46,6 @@ namespace muq {
                                      Eigen::VectorXd              const& vec);
 
     private:
-      std::vector<Eigen::VectorXd> ToStdVec(ref_vector<Eigen::VectorXd> const& input);
 
     };
   }

@@ -13,6 +13,8 @@ namespace muq {
     public:
       ThinScheduler(boost::property_tree::ptree& pt);
 
+      virtual ~ThinScheduler() = default;
+
       virtual bool ShouldSave(int step) override;
 
     private:

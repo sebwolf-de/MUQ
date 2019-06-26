@@ -135,6 +135,12 @@ namespace muq {
       */
       Eigen::VectorXd CacheCentroid() const;
 
+      /// Clear the cache
+      void ClearCache();
+
+      /// Polynomial order
+      unsigned int Order() const;
+
     private:
 
       virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) override;
@@ -154,7 +160,6 @@ namespace muq {
 #if MUQ_HAS_PARCER
       std::shared_ptr<parcer::Communicator> comm = nullptr;
       const int tagSingle = 0;
-      const int tagMulti = 1;
 #endif
     };
   } // namespace Approximation

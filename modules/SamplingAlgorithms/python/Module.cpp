@@ -13,4 +13,5 @@ PYBIND11_MODULE(pymuqSamplingAlgorithms, m) {
     ProposalWrapper(m);
     SampleWrapper(m);
     MCMCWrapper(m);
+    ProblemWrapper(m);
 }

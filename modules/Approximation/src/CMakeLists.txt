@@ -17,7 +17,7 @@ CreateCompileGroup(
 	"Polynomial regression (global and local)"
 	muqApproximation
 	"UTILITIES_MULTIINDEX;MODELING_FLANN;MODELING_CORE;APPROXIMATION_POLYNOMIALS;OPTIMIZATION_CORE"
-	""
+	"NLOPT"
 	""
 	Regression/Regression.cpp
 	Regression/LocalRegression.cpp
@@ -27,7 +27,7 @@ CreateCompileGroup(
 	APPROXIMATION_POLYNOMIALS
 	"Polynomials and multiindices"
 	muqApproximation
-	"MODELING_CORE"
+	"MODELING_CORE;UTILITIES_MULTIINDEX"
 	""
 	""
 	Polynomials/IndexedScalarBasis.cpp
@@ -41,7 +41,36 @@ CreateCompileGroup(
 	Polynomials/HermiteFunction.cpp
   Polynomials/BasisExpansion.cpp
   Polynomials/MonotoneExpansion.cpp
+)
+
+CreateCompileGroup(
+	APPROXIMATION_QUADRATURE
+	"Quadrature rules"
+	muqApproximation
+	"APPROXIMATION_POLYNOMIALS;UTILITIES_MULTIINDEX"
+	""
+	""
+	Quadrature/Quadrature.cpp
   Quadrature/GaussQuadrature.cpp
+	Quadrature/FullTensorQuadrature.cpp
+	Quadrature/SmolyakQuadrature.cpp
+	Quadrature/ClenshawCurtisQuadrature.cpp
+	Quadrature/GaussPattersonQuadrature.cpp
+	Quadrature/ExponentialGrowthQuadrature.cpp
+)
+
+CreateCompileGroup(
+	APPROXIMATION_POLYNOMIALCHAOS
+	"Polynomial chaos tools"
+	muqApproximation
+	"MODELING_CORE;APPROXIMATION_QUADRATURE;APPROXIMATION_POLYNOMIALS"
+	""
+	""
+	PolynomialChaos/PolynomialChaosExpansion.cpp
+	PolynomialChaos/PCEFactory.cpp
+	PolynomialChaos/SmolyakEstimator.cpp
+	PolynomialChaos/AdaptiveSmolyakPCE.cpp
+	Quadrature/AdaptiveSmolyakQuadrature.cpp
 )
 
 CreateCompileGroup(

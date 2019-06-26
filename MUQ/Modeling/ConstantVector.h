@@ -10,6 +10,12 @@ namespace muq {
     class ConstantVector : public ModPiece {
     public:
 
+      /// Create a muq::Modeling::ConstantPiece with the outputs given in a vector of vectors
+      /**
+      @param[in] outs The outputs
+       */
+      ConstantVector(std::vector<Eigen::VectorXd> const& outs);
+
       /// Create a muq::Modeling::ConstantPiece with the outputs given in a vector
       /**
 	       @param[in] outs The outputs
@@ -28,6 +34,8 @@ namespace muq {
 	       @param[in] inputs An empty vector of inputs
       */
       virtual void EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& inputs) override;
+
+      static Eigen::VectorXi OutSizes(std::vector<Eigen::VectorXd> const& outs);
 
     }; // class ConstantVector
 

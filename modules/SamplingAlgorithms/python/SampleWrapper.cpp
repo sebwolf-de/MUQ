@@ -1,8 +1,6 @@
 #include "AllClassWrappers.h"
 
-#include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
 #include "MUQ/SamplingAlgorithms/SampleCollection.h"
-#include "MUQ/SamplingAlgorithms/SamplingProblem.h"
 #include "MUQ/SamplingAlgorithms/SamplingState.h"
 
 #include <pybind11/pybind11.h>
@@ -19,19 +17,6 @@ namespace py = pybind11;
 
 void PythonBindings::SampleWrapper(py::module &m)
 {
-  py::class_<AbstractSamplingProblem, std::shared_ptr<AbstractSamplingProblem>> absSamp(m, "AbstractSamplingProblem");
-  absSamp
-    .def("LogDensity", &AbstractSamplingProblem::LogDensity)
-    .def_readonly("numBlocks", &AbstractSamplingProblem::numBlocks)
-    .def_readonly("blockSizes", &AbstractSamplingProblem::blockSizes);
-
-  py::class_<SamplingProblem, AbstractSamplingProblem, std::shared_ptr<SamplingProblem>> sampProb(m, "SamplingProblem");
-  sampProb
-    .def(py::init<std::shared_ptr<muq::Modeling::ModPiece>>())
-    .def("LogDensity", &SamplingProblem::LogDensity)
-    .def("GradLogDensity", &SamplingProblem::GradLogDensity)
-    .def("GetDistribution", &SamplingProblem::GetDistribution);
-
   py::class_<SamplingStateIdentity, std::shared_ptr<SamplingStateIdentity>> ssID(m, "SamplingStateIdentity");
   ssID
     .def(py::init<int>())
@@ -54,10 +39,13 @@ void PythonBindings::SampleWrapper(py::module &m)
     .def("Variance", &SampleCollection::Variance, py::arg("blockDim") = -1)
     .def("Covariance", (Eigen::MatrixXd (SampleCollection::*)(int) const) &SampleCollection::Covariance, py::arg("blockDim") = -1)
     .def("Covariance", (Eigen::MatrixXd (SampleCollection::*)(Eigen::VectorXd const&, int) const) &SampleCollection::Covariance, py::arg("mean"), py::arg("blockDim") = -1)
+    .def("RunningCovariance", (std::vector<Eigen::MatrixXd> (SampleCollection::*)(Eigen::VectorXd const&, int) const) &SampleCollection::RunningCovariance, py::arg("mean"), py::arg("blockDim") = -1)
+    .def("RunningCovariance", (std::vector<Eigen::MatrixXd> (SampleCollection::*)(int) const) &SampleCollection::RunningCovariance, py::arg("blockDim") = -1)
     .def("ESS", &SampleCollection::ESS, py::arg("blockDim")=-1)
     .def("Add", &SampleCollection::Add)
     .def("Weights", &SampleCollection::Weights)
     .def("AsMatrix", &SampleCollection::AsMatrix, py::arg("blockDim")=-1)
+    .def("GetMeta", (Eigen::MatrixXd (SampleCollection::*)(std::string const&) const) &SampleCollection::GetMeta)
     .def("WriteToFile", (void (SampleCollection::*)(std::string const&, std::string const&) const) &SampleCollection::WriteToFile, py::arg("filename"), py::arg("dataset") = "/");
 
   py::class_<SamplingState, std::shared_ptr<SamplingState>> sampState(m, "SamplingState");
@@ -70,5 +58,4 @@ void PythonBindings::SampleWrapper(py::module &m)
     .def_readonly("state", &SamplingState::state)
     .def("HasMeta", &SamplingState::HasMeta)
     .def("TotalDim", &SamplingState::TotalDim);
-
 }

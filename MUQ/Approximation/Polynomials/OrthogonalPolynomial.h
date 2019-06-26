@@ -37,6 +37,8 @@ namespace muq {
       /// Create a polynomial
       OrthogonalPolynomial() : IndexedScalarBasis(){};
 
+      static std::shared_ptr<OrthogonalPolynomial> Construct(std::string const& polyName);
+
       virtual ~OrthogonalPolynomial() = default;
 
       /// Evaluate the specific polynomial type (must be implemented by the child)

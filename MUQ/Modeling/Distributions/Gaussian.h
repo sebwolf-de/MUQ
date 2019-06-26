@@ -104,13 +104,12 @@ namespace muq {
 
       void ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params);
 
-
+      virtual Eigen::VectorXd GradLogDensity(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs) override;
+      
     private:
 
 
       virtual double LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
-
-      virtual Eigen::VectorXd GradLogDensity(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs) override;
 
       /// Sample the distribution
       virtual Eigen::VectorXd SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) override;

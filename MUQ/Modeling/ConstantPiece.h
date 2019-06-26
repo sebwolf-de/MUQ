@@ -17,7 +17,7 @@ namespace muq {
 
       /// Create a muq::Modeling::ConstantPiece with no given outputs
       /**
-	 This creates a WorkPiece that takes no inputs and returns no outputs.  The user can set the outputs to any thing after construction.  The number of outputs is set to be variable. 
+	 This creates a WorkPiece that takes no inputs and returns no outputs.  The user can set the outputs to any thing after construction.  The number of outputs is set to be variable.
        */
       ConstantPiece();
 
@@ -45,7 +45,7 @@ namespace muq {
 	 @param[in] last the last output
       */
       template<typename last>
-	ConstantPiece(last const& in) : WorkPiece(0, WorkPiece::Fix::Inputs) {	
+	ConstantPiece(last const& in) : WorkPiece(0, WorkPiece::Fix::Inputs) {
 	// the outputs will never change so we should not clear them
 	clearOutputs = false;
 
@@ -77,7 +77,7 @@ namespace muq {
 	void SetOutputs(ith const& in, Args... args) {
 	// create an empty vector of outputs
 	std::vector<boost::any> outs(0);
-	
+
 	// add this output to the begining of the output vector
 	outs.insert(outs.begin(), in);
 
@@ -95,7 +95,7 @@ namespace muq {
        */
       template<typename ith, typename... Args>
 	void SetOutputs(std::vector<boost::any>& outs, ith const& in, Args... args) {
-	// add this output 
+	// add this output
 	outs.push_back(in);
 
 	// call recursively
@@ -109,7 +109,7 @@ namespace muq {
        */
       template<typename last>
 	void SetOutputs(std::vector<boost::any>& outs, last const& in) {
-	// add this output 
+	// add this output
 	outs.push_back(in);
 
 	// call recursively

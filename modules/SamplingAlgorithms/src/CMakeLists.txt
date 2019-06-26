@@ -32,9 +32,10 @@ CreateCompileGroup(
     "MODELING_CORE;UTILITIES_CORE;SAMPLING_PROBLEMS"
     ""
     ""
+    AbstractSamplingProblem.cpp
     SamplingAlgorithm.cpp
     #MonteCarlo.cpp
-    #ImportanceSampling.cpp
+    ImportanceSampling.cpp
     SingleChainMCMC.cpp
 
     SamplingState.cpp
@@ -46,6 +47,12 @@ CreateCompileGroup(
     #MCKernel.cpp
     #ISKernel.cpp
     MHKernel.cpp
+    MIKernel.cpp
+    GreedyMLMCMC.cpp
+    MIMCMC.cpp
+    MIMCMCBox.cpp
+    SLMCMC.cpp
+    SubsamplingMIProposal.cpp
     GMHKernel.cpp
     #MCMCKernel.cpp
     #ParallelMHKernel.cpp

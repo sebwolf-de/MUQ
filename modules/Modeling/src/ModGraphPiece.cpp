@@ -61,7 +61,6 @@ Eigen::VectorXi ModGraphPiece::ConstructInputSizes(std::vector<std::shared_ptr<C
 }
 
 void ModGraphPiece::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
-
   // set the inputs
   SetInputs(inputs);
 
@@ -311,7 +310,6 @@ void ModGraphPiece::FillOutputMap() {
     auto currPiece = std::dynamic_pointer_cast<ModPiece>(wPiece);
 
     if(!currPiece){
-
       // If it can't be cast to a ModPiece, check to see if the output can be cast to an Eigen vector
       ref_vector<Eigen::VectorXd> output;
 
@@ -326,7 +324,6 @@ void ModGraphPiece::FillOutputMap() {
         Eigen::VectorXd const& temp = AnyConstCast(anyOut.at(i));
         output.push_back(std::cref(temp));
       }
-
       valMap[wgraph->GetPiece(it)->ID()] = output;
 
     }else{
@@ -425,7 +422,7 @@ std::vector<int> ModGraphPiece::MatchInputs(std::shared_ptr<ModGraphPiece> other
     // get the downstream node and input index corresponding to this constant piece
     std::string constName = otherGraph->GetName( otherIns.at(i) );
     std::string sharedName = otherGraph->GetChildren( constName ).at(0);
-    
+
     // Now try to find the same node and input in *this graph
     if(wgraph->HasNode(sharedName)){
       int inputIndex = otherGraph->GetEdges( constName, sharedName ).at(0).second;

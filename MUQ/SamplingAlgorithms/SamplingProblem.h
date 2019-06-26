@@ -2,7 +2,7 @@
 #define SAMPLINGPROBLEM_H_
 
 // include Density and not ModPiece so that if a SamplingProblem is constructed with a Density the compiler knows it is a child of ModPiece
-#include "MUQ/Modeling/Distributions/Density.h" 
+#include "MUQ/Modeling/Distributions/Density.h"
 #include "MUQ/SamplingAlgorithms/AbstractSamplingProblem.h"
 
 namespace muq {
@@ -19,14 +19,14 @@ namespace muq {
       /**
 	     @param[in] target The target distribution
        */
-      SamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> targetIn);
+      SamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& targetIn);
 
       virtual ~SamplingProblem() = default;
 
 
-      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) override;
+      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> const& state, AbstractSamplingProblem::SampleType type) override;
 
-      virtual Eigen::VectorXd GradLogDensity(std::shared_ptr<SamplingState> state,
+      virtual Eigen::VectorXd GradLogDensity(std::shared_ptr<SamplingState> const& state,
                                              unsigned                       blockWrt);
 
 
@@ -39,8 +39,8 @@ namespace muq {
 
     private:
 
-      static unsigned GetNumBlocks(std::shared_ptr<muq::Modeling::ModPiece> target);
-      static std::vector<int> GetBlockSizes(std::shared_ptr<muq::Modeling::ModPiece> target);
+      static unsigned GetNumBlocks(std::shared_ptr<muq::Modeling::ModPiece> const& target);
+      static std::vector<int> GetBlockSizes(std::shared_ptr<muq::Modeling::ModPiece> const& target);
 
     };
   } // namespace SamplingAlgorithms

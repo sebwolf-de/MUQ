@@ -15,7 +15,7 @@ ConcatenateOperator::ConcatenateOperator(std::vector<std::shared_ptr<LinearOpera
 Eigen::MatrixXd ConcatenateOperator::Apply(Eigen::Ref<const Eigen::MatrixXd> const& x)
 {
     Eigen::MatrixXd output = Eigen::MatrixXd::Zero(nrows, x.cols());
-    
+
     if(rowCol==0){
         int currRow = 0;
         for(int i=0; i<ops.size(); ++i){
@@ -29,10 +29,10 @@ Eigen::MatrixXd ConcatenateOperator::Apply(Eigen::Ref<const Eigen::MatrixXd> con
             currRow += ops.at(i)->cols();
         }
     }
-    
+
     return output;
 }
-  
+
 
 /** Apply the transpose of the linear operator to a vector. */
 Eigen::MatrixXd ConcatenateOperator::ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd> const& x)
@@ -52,11 +52,11 @@ Eigen::MatrixXd ConcatenateOperator::ApplyTranspose(Eigen::Ref<const Eigen::Matr
             currRow += ops.at(i)->cols();
         }
     }
-    
+
     return output;
 
 }
-    
+
 
  std::shared_ptr<ConcatenateOperator> ConcatenateOperator::VStack(std::shared_ptr<LinearOperator> Ain,
                                                                   std::shared_ptr<LinearOperator> Bin)
@@ -97,7 +97,7 @@ int ConcatenateOperator::GetRows(std::vector<std::shared_ptr<LinearOperator>> co
                                  const int                                           rowColIn)
 {
     assert(opsIn.size()>0);
-    
+
     if(rowColIn==0){
         int count = 0;
         for(auto& op : opsIn)
@@ -113,7 +113,7 @@ int ConcatenateOperator::GetCols(std::vector<std::shared_ptr<LinearOperator>> co
                                  const int                                           rowColIn)
 {
     assert(opsIn.size()>0);
-    
+
     if(rowColIn==0){
         return opsIn.at(0)->cols();
     }else{
@@ -133,7 +133,7 @@ void ConcatenateOperator::CheckSizes()
             if(fixedCols != ops.at(i)->cols())
                 throw muq::WrongSizeError("In ConcatenateOperator: Cannot vertically stack operators with different number of columns.  Matrix A has " + std::to_string(fixedCols) + " columns but matrix B has " + std::to_string(ops.at(i)->cols()) + " columns.");
         }
-        
+
     }else{
         const int fixedRows = ops.at(0)->rows();
         for(int i=1; i<ops.size(); ++i){
