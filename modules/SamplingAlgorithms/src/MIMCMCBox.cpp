@@ -88,6 +88,10 @@ namespace muq {
       }
     }
 
+    std::shared_ptr<MultiIndex> MIMCMCBox::GetHighestIndex() {
+      return MultiIndex::Copy(boxHighestIndex);
+    }
+
     std::shared_ptr<AbstractSamplingProblem> MIMCMCBox::GetFinestProblem() {
       return finestProblem;
     }

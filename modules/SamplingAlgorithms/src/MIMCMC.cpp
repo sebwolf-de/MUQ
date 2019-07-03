@@ -15,7 +15,14 @@ namespace muq {
         auto box = std::make_shared<MIMCMCBox>(componentFactory, boxHighestIndex);
         boxes.push_back(box);
       }
+    }
 
+    std::shared_ptr<MIMCMCBox> MIMCMC::GetBox(std::shared_ptr<MultiIndex> index) {
+      for (std::shared_ptr<MIMCMCBox> box : boxes) {
+        if (box->GetHighestIndex() == index)
+          return box;
+      }
+      return nullptr;
     }
 
     std::shared_ptr<SampleCollection> MIMCMC::GetSamples() const {

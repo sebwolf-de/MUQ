@@ -47,6 +47,8 @@ namespace muq {
 
       Eigen::VectorXd MeanQOI();
 
+      std::shared_ptr<MIMCMCBox> GetBox(std::shared_ptr<MultiIndex> index);
+
       void Draw(bool drawSamples = true);
 
     protected:
