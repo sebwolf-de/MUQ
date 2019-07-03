@@ -7,6 +7,7 @@
 #error
 #endif
 
+#include "MUQ/spdlog/spdlog.h"
 #include <boost/property_tree/ptree.hpp>
 
 #include "MUQ/SamplingAlgorithms/ParallelMIMCMCWorker.h"
@@ -31,7 +32,7 @@ namespace muq {
     public:
       void setup(std::shared_ptr<ParallelizableMIComponentFactory> componentFactory, uint availableRanks) override {
         ranks_remaining = availableRanks;
-        std::cout << "Have " << availableRanks << " ranks" << std::endl;
+        spdlog::info("Balancing load across {} ranks", availableRanks);
         auto indices = MultiIndexFactory::CreateFullTensor(componentFactory->FinestIndex()->GetVector());
         models_remaining = indices->Size();
       }
@@ -45,7 +46,9 @@ namespace muq {
         assignment.numWorkersPerGroup = 1;
         assignment.numGroups = ranks_remaining / models_remaining;
 
-        std::cout << "Of " << ranks_remaining << ", assigning " << assignment.numGroups * assignment.numWorkersPerGroup << " to " << *modelIndex << std::endl;
+        spdlog::debug("Of {}, assigning {} to model {}", ranks_remaining, assignment.numGroups * assignment.numWorkersPerGroup, *modelIndex);
+
+        assert (assignment.numGroups * assignment.numWorkersPerGroup > 0);
 
         models_remaining--;
         ranks_remaining -= assignment.numGroups * assignment.numWorkersPerGroup;
@@ -72,8 +75,7 @@ namespace muq {
          workerClient(comm, phonebookClient, rootRank) {
 
 
-
-        std::cout << "Rank: " <<  comm->GetRank() << std::endl;
+        spdlog::debug("Rank: {}", comm->GetRank());
 
         if (comm->GetRank() == rootRank) {
 
@@ -82,11 +84,13 @@ namespace muq {
 
           auto indices = MultiIndexFactory::CreateFullTensor(componentFactory->FinestIndex()->GetVector());
 
+          assert(comm->GetSize() - 2 >= 0);
           loadBalancing->setup(componentFactory, comm->GetSize() - 2);
 
           int rank = 2;
 
           // Assign collectors
+          spdlog::trace("Assigning collectors");
           for (int i = 0; i < indices->Size(); i++) {
             std::shared_ptr<MultiIndex> index = (*indices)[i];
             std::vector<int> collectorRanks;
@@ -99,6 +103,7 @@ namespace muq {
           }
 
           // Assign workers
+          spdlog::trace("Assigning workers");
           for (int i = 0; i < indices->Size(); i++) {
 
             std::shared_ptr<MultiIndex> index = (*indices)[i];

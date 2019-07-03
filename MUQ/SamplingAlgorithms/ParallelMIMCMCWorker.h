@@ -8,6 +8,8 @@
 #endif
 
 
+#include "MUQ/spdlog/spdlog.h"
+#include "MUQ/spdlog/fmt/ostr.h"
 #include "MUQ/SamplingAlgorithms/MarkovChain.h"
 #include "MUQ/SamplingAlgorithms/DistributedCollection.h"
 #include "MUQ/SamplingAlgorithms/ParallelFlags.h"
@@ -41,6 +43,7 @@ namespace muq {
       }
 
       void CollectSamples (int numSamples) {
+        spdlog::debug("Kick off collection of {} samples", numSamples);
         sampling = true;
         int samplesAssigned = 0;
         for (int i = 0; i < subgroup.size(); i++) {
@@ -50,6 +53,7 @@ namespace muq {
           comm->Send(assigning, dest, ControlTag);
           samplesAssigned += assigning;
         }
+        spdlog::debug("Collection kick off done");
       }
 
       void ComputeMeans() {
@@ -178,7 +182,6 @@ namespace muq {
       std::shared_ptr<PhonebookClient> phonebookClient;
     };
 
-    //template <typename COMPONENT_FACTORY> // TODO: Avoid this template
     class WorkerServer {
     public:
       WorkerServer(boost::property_tree::ptree const& pt, std::shared_ptr<parcer::Communicator> comm, std::shared_ptr<PhonebookClient> phonebookClient, int RootRank, std::shared_ptr<ParallelizableMIComponentFactory> componentFactory) {
@@ -188,8 +191,8 @@ namespace muq {
           if (command == ControlFlag::ASSIGN) {
             std::vector<int> subgroup_proc = comm->Recv<std::vector<int>>(0, ControlTag);
             auto samplingProblemIndex = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(0, ControlTag));
-            //auto measurements = std::make_shared<Eigen::VectorXd>(comm->Recv<Eigen::VectorXd>(0, ControlTag));
 
+            spdlog::trace("Setting up MPI subcommunicator for group");
             MPI_Group world_group;
             MPI_Comm_group (MPI_COMM_WORLD, &world_group);
             MPI_Group subgroup;
@@ -199,28 +202,31 @@ namespace muq {
             MPI_Comm_create_group(MPI_COMM_WORLD, subgroup, ControlTag, &subcomm_raw);
             auto subcomm = std::make_shared<parcer::Communicator>(subcomm_raw);
 
-            //auto componentFactory = std::make_shared<COMPONENT_FACTORY>(subcomm, comm, measurements);
             componentFactory->SetComm(subcomm);
+            spdlog::trace("Setting up ParallelMIComponentFactory");
             auto parallelComponentFactory = std::make_shared<ParallelMIComponentFactory>(subcomm, comm, componentFactory);
 
             if (subcomm->GetRank() == 0) {
               std::cout << "Subgroup root is global " << comm->GetRank() << std::endl;
               auto finestProblem = parallelComponentFactory->SamplingProblem(parallelComponentFactory->FinestIndex());
 
+              spdlog::trace("Setting up ParallelMIMCMCBox");
               auto box = std::make_shared<ParallelMIMCMCBox>(parallelComponentFactory, samplingProblemIndex, comm, phonebookClient);
 
               // Burn in coarsest chains
               if (samplingProblemIndex->Max() == 0) {
-                std::cout << "Burning in" << std::endl;
+                spdlog::debug("Burning in");
                 for (int i = 0; i < pt.get<int>("MCMC.burnin"); i++)
                   box->Sample();
-                std::cout << "Burned in" << std::endl;
+                spdlog::debug("Burned in");
               }
 
+              spdlog::debug("Begin sampling");
               const int subsampling = pt.get<int>("MLMCMC.Subsampling");
               for (int i = 0; i < 1 + subsampling; i++) // TODO: Really subsampling on every level? Maybe subsample when requesting samples?
                 box->Sample();
               phonebookClient->SetWorkerReady(samplingProblemIndex, comm->GetRank());
+              spdlog::trace("Awaiting instructions");
 
               //Dune::Timer timer_idle;
               //Dune::Timer timer_full;
@@ -232,7 +238,8 @@ namespace muq {
                 if (command == ControlFlag::UNASSIGN) {
                   break;
                 } else if (command == ControlFlag::SAMPLE) {
-                  //std::cout << "Rank " << comm->GetRank() << " sending sample to rank " << status.MPI_SOURCE << std::endl;
+                  spdlog::trace("Send sample from {} to rank {}", comm->GetRank(), status.MPI_SOURCE);
+
                   auto sampleCollection = box->FinestChain()->GetSamples(); // TODO: last() function for collection? // TODO: Do not store chains here
                   auto latestSample = sampleCollection->at(sampleCollection->size()-1);
                   // TODO: Send "full" sample via parcer?
@@ -246,11 +253,13 @@ namespace muq {
                   }
 
 
+                  spdlog::trace("Sampling");
                   for (int i = 0; i < 1 + subsampling; i++) // TODO: Really subsampling on every level? Maybe subsample when requesting samples?
                     box->Sample();
                   phonebookClient->SetWorkerReady(samplingProblemIndex, comm->GetRank());
                 } else if (command == ControlFlag::SAMPLE_BOX) {
-                  //std::cout << "Rank " << comm->GetRank() << " sending sample to rank " << status.MPI_SOURCE << std::endl;
+                  spdlog::trace("Send box from {} to rank {}", comm->GetRank(), status.MPI_SOURCE);
+
                   for (int i = 0; i < box->NumChains(); i++) {
                     auto sampleCollection = box->GetChain(i)->GetSamples(); // TODO: last() function for collection? // TODO: Do not store chains here
                     auto latestSample = sampleCollection->at(sampleCollection->size()-1);
@@ -323,10 +332,12 @@ namespace muq {
               } else if (command == ControlFlag::SAMPLE_BOX) {
 
                 int numSamples = comm->Recv<int>(0, ControlTag);
+                spdlog::debug("Collecting {} samples for box {}", numSamples, *boxHighestIndex);
 
             		//std::cout << "Rank " << comm->GetRank() << " requesting sample from rank " << remoteRank << std::endl;
 
                 for (int i = 0; i < numSamples; i++) {
+                  spdlog::trace("Requesting sample box for model {}", *boxHighestIndex);
                   int remoteRank = phonebookClient->Query(boxHighestIndex);
                   comm->Send(ControlFlag::SAMPLE_BOX, remoteRank, ControlTag); // TODO: Receive sample in one piece?
                   for (uint i = 0; i < boxIndices->Size(); i++) {
