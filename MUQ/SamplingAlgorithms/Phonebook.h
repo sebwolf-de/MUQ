@@ -10,6 +10,7 @@
 #include <parcer/Communicator.h>
 #include "MUQ/SamplingAlgorithms/ParallelFlags.h"
 #include "MUQ/Utilities/Cereal/MultiIndexSerializer.h"
+#include <deque>
 
 namespace muq {
   namespace SamplingAlgorithms {
@@ -120,8 +121,8 @@ namespace muq {
           if (workers_ready.size() == 0)
             return -1;
 
-          int worker = workers_ready.back();
-          workers_ready.pop_back();
+          int worker = workers_ready.front();
+          workers_ready.pop_front();
           return worker;
         }
         void AddWorker(int worker) {
@@ -143,7 +144,7 @@ namespace muq {
         }
       private:
         std::vector<int> workers;
-        std::vector<int> workers_ready;
+        std::deque<int> workers_ready;
       };
 
       std::map<std::shared_ptr<MultiIndex>, WorkerList, MultiPtrComp> phonebook;
