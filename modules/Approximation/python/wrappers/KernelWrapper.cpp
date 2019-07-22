@@ -72,6 +72,7 @@ void muq::Approximation::PythonBindings::KernelWrapper(py::module &m)
     py::class_<ConcatenateKernel, KernelBase, std::shared_ptr<ConcatenateKernel>>
       concatKern(m, "ConcatenateKernel");
     concatKern
+      .def(py::init<std::vector<std::shared_ptr<KernelBase>> const&>())
       .def(py::init<std::shared_ptr<KernelBase> const&,
                     std::shared_ptr<KernelBase> const&>())
       .def("Clone", &ConcatenateKernel::Clone)
