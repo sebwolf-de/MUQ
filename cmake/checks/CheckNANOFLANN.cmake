@@ -1,29 +1,30 @@
 # make sure that the NANOFLANN library is available
 set(CMAKE_REQUIRED_LIBRARIES ${NANOFLANN_LIBRARIES})
-set(CMAKE_REQUIRED_INCLUDES ${NANOFLANN_INCLUDE_DIR})
+set(CMAKE_REQUIRED_INCLUDES ${NANOFLANN_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR})
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS}")
 CHECK_CXX_SOURCE_COMPILES(
   "
 #include <nanoflann.hpp>
+#include <Eigen/Dense>
 
 #include <stdio.h>
 
+using namespace Eigen;
 using namespace nanoflann;
 
-int main(int argc, char** argv)
-{
-  const size_t N = 1000;
+int main(int argc, char **argv) {
 
-  PointCloud<double> cloud;
-  generateRandomPointCloud(cloud, N);
-  typedef KDTreeSingleIndexAdaptor<L2_Simple_Adaptor<double, PointCloud<double>>, PointCloud<double>, 3> my_kd_tree_t;
+  const int nSamples = 1000;
+  const int dim = 3;
+  Eigen::MatrixXd mat = Eigen::MatrixXd::Random(nSamples, dim);
 
-  my_kd_tree_t   index(3, cloud, KDTreeSingleIndexAdaptorParams(10) );
-  index.buildIndex();
+  typedef KDTreeEigenMatrixAdaptor<Eigen::MatrixXd> my_kd_tree_t;
+
+  my_kd_tree_t mat_index(dim, std::cref(mat), 10 /* max leaf */);
+  mat_index.index->buildIndex();
 
   return 0;
 }
-
   "
   NANOFLANN_COMPILES)
 
