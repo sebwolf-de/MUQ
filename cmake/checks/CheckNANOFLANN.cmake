@@ -8,38 +8,26 @@ CHECK_CXX_SOURCE_COMPILES(
 
 #include <stdio.h>
 
-using namespace flann;
+using namespace nanoflann;
 
 int main(int argc, char** argv)
 {
-    int nn = 3;
+  const size_t N = 1000;
 
-    Matrix<float> dataset;
-    Matrix<float> query;
-    char str[128];
+  PointCloud<double> cloud;
+  generateRandomPointCloud(cloud, N);
+  typedef KDTreeSingleIndexAdaptor<L2_Simple_Adaptor<double, PointCloud<double>>, PointCloud<double>, 3> my_kd_tree_t;
 
-    Matrix<int> indices(new int[query.rows*nn], query.rows, nn);
-    Matrix<float> dists(new float[query.rows*nn], query.rows, nn);
+  my_kd_tree_t   index(3, cloud, KDTreeSingleIndexAdaptorParams(10) );
+  index.buildIndex();
 
-    // construct an randomized kd-tree index using 4 kd-trees
-    Index<L2<float> > index(dataset, flann::KDTreeIndexParams(4));
-    index.buildIndex();                                                                                               
-
-    // do a knn search, using 128 checks
-    index.knnSearch(query, indices, dists, nn, flann::SearchParams(128));
-
-    delete[] dataset.ptr();
-    delete[] query.ptr();
-    delete[] indices.ptr();
-    delete[] dists.ptr();
-    
-    return 0;
+  return 0;
 }
-  
+
   "
   NANOFLANN_COMPILES)
 
-	
+
 	if(NOT NANOFLANN_COMPILES)
 		set(NANOFLANN_TEST_FAIL 1)
 	else()

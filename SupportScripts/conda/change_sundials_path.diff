@@ -1,0 +1,38 @@
+--- cmake/finds/FindSUNDIALS.cmake	2019-07-23 18:25:38.576773281 -0400
++++ cmake/finds/FindSUNDIALS.cmake	2019-07-23 18:33:18.463041023 -0400
+@@ -12,7 +12,7 @@
+                HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
+   find_library(NVEC_LIBRARY NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}sundials_nvecserial${CMAKE_SHARED_LIBRARY_SUFFIX}
+                HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
+-  find_library(NVEC_PARALLEL_LIBRARY NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}sundials_nvecparallel${CMAKE_SHARED_LIBRARY_SUFFIX}
++  find_library(NVEC_PARALLEL_LIBRARY NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}sundials_nvecopenmp${CMAKE_SHARED_LIBRARY_SUFFIX}
+                HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
+ 
+   find_library(CVODES_LIBRARY_STATIC NAMES ${library_prefix}sundials_cvodes${static_library_suffix}
+@@ -23,7 +23,7 @@
+                HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
+   find_library(NVEC_LIBRARY_STATIC NAMES ${library_prefix}sundials_nvecserial${static_library_suffix}
+                HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
+-  find_library(NVEC_PARALLEL_LIBRARY_STATIC NAMES ${library_prefix}sundials_nvecparallel${static_library_suffix}
++  find_library(NVEC_PARALLEL_LIBRARY_STATIC NAMES ${library_prefix}sundials_nvecopenmp${static_library_suffix}
+                HINTS ${SUNDIALS_LIBRARY_DIRS} /usr/local/lib/ /usr/lib/)
+ else()
+ 
+@@ -37,7 +37,7 @@
+ 	             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
+ 	find_library(NVEC_LIBRARY NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}sundials_nvecserial${CMAKE_SHARED_LIBRARY_SUFFIX}
+ 	             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
+-  find_library(NVEC_PARALLEL_LIBRARY NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}sundials_nvecparallel${CMAKE_SHARED_LIBRARY_SUFFIX}
++  find_library(NVEC_PARALLEL_LIBRARY NAMES ${CMAKE_SHARED_LIBRARY_PREFIX}sundials_nvecopenmp${CMAKE_SHARED_LIBRARY_SUFFIX}
+              	             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
+ 
+ 	find_library(CVODES_LIBRARY_STATIC NAMES ${library_prefix}sundials_cvodes${static_library_suffix}
+@@ -48,7 +48,7 @@
+ 	             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
+ 	find_library(NVEC_LIBRARY_STATIC NAMES ${library_prefix}sundials_nvecserial${static_library_suffix}
+ 	             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
+-  find_library(NVEC_PARALLEL_LIBRARY_STATIC NAMES ${library_prefix}sundials_nvecparallel${static_library_suffix}
++  find_library(NVEC_PARALLEL_LIBRARY_STATIC NAMES ${library_prefix}sundials_nvecopenmp${static_library_suffix}
+                             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
+ endif()
+ 

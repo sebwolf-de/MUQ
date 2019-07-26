@@ -1,0 +1,47 @@
+package:
+  name: muq2
+  version: '0.02'
+
+source:
+  git_url: https://bitbucket.org/mituq/muq2.git
+  git_tag: conda-build
+  patches:
+    - fix_compiler_flags.diff
+    - change_sundials_path.diff
+    - change_nanoflann_path.diff
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - cmake
+    - make
+  host:
+    - python
+    - pybind11
+    - boost
+    - eigen
+    - h5py
+    - sundials ==2.6.2
+    - nanoflann
+    - nlopt
+    - mkl
+  run:
+    - python
+    - boost
+    - eigen
+    - h5py
+    - sundials ==2.6.2
+    - nanoflann
+    - nlopt
+    - mkl
+
+test:
+  imports:
+    - pymuqModeling
+    - pymuqUtilities
+    - pymuqApproximation
+
+about:
+  home: http://muq.mit.edu
+  license: BSD
+  summary: 'MIT Uncertainty Quantification Library (MUQ) is a collection of tools for constructing models and a collection of uncertainty quantification (UQ)–focused algorithms for working on those models.'
