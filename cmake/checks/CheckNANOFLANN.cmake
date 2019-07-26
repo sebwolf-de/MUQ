@@ -12,6 +12,16 @@ CHECK_CXX_SOURCE_COMPILES(
 using namespace Eigen;
 using namespace nanoflann;
 
+template <class Distance = nanoflann::metric_L2, typename IndexType = size_t>
+struct DynamicKDTreeAdaptor {
+
+  friend class FlannCache;
+
+  typedef DynamicKDTreeAdaptor<Distance,IndexType> self_t;
+  typedef typename Distance::template traits<double,self_t>::distance_t metric_t;
+  typedef nanoflann::KDTreeSingleIndexDynamicAdaptor< metric_t,self_t,-1,IndexType>  index_t;
+};
+
 int main(int argc, char **argv) {
 
   const int nSamples = 1000;
