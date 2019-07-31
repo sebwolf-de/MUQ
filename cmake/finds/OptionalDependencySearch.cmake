@@ -64,6 +64,9 @@ if (${dindex} GREATER -1)
             add_subdirectory(${CMAKE_SOURCE_DIR}/external/pybind11)
             include_directories(${CMAKE_SOURCE_DIR}/external/pybind11/include)
         endif()
+
+        message("PYTHON_SITE_PACKAGES = ${PYTHON_SITE_PACKAGES}")
+        
     endif()
 else()
     set(MUQ_NEEDS_PYTHON OFF)

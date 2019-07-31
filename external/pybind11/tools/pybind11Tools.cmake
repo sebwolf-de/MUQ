@@ -15,6 +15,8 @@ endif()
 set(Python_ADDITIONAL_VERSIONS 3.7 3.6 3.5 3.4)
 find_package(PythonLibsNew ${PYBIND11_PYTHON_VERSION} REQUIRED)
 
+message("PYTHON_SITE_PACKAGES = ${PYTHON_SITE_PACKAGES}")
+
 include(CheckCXXCompilerFlag)
 include(CMakeParseArguments)
 

@@ -28,6 +28,7 @@ include_directories(.)
 ###############################################
 # User options
 ###############################################
+INCLUDE(SetInstallPaths)
 INCLUDE(OptionsSetup)
 
 ###############################################
@@ -90,8 +91,11 @@ install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAM
 
 # Install the pymuq libraries
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/modules/Modeling/python/pymuqModeling/"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pymuqModeling"
-	    COMPONENT dev)
+        DESTINATION "${PYTHON_INSTALL_PREFIX}/muq/pymuqModeling"
+        COMPONENT dev)
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/modules/PythonPackage/"
+        DESTINATION "${PYTHON_INSTALL_PREFIX}/muq/"
+        COMPONENT dev)
 
 # Install the export set for use with the install-tree
 install(EXPORT ${CMAKE_PROJECT_NAME}Depends

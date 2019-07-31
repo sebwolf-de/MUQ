@@ -36,6 +36,7 @@ test:
     - pymuqApproximation
     - pymuqModeling
     - pymuqOptimization
+    - pymuqSamplingAlgorithms
     - pymuqUtilities
 
 about:
