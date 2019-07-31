@@ -1,6 +1,6 @@
 package:
   name: muq2
-  version: '0.02'
+  version: '0.2.0'
 
 source:
   git_url: https://bitbucket.org/mituq/muq2.git
@@ -17,9 +17,11 @@ requirements:
     - boost
     - eigen
     - h5py
+    - lapack
     - sundials ==2.6.2
     - nanoflann
     - nlopt
+    - lapack
     - mkl
   run:
     - python
