@@ -21,13 +21,13 @@ requirements:
     - sundials ==2.6.2
     - nanoflann
     - nlopt
-    - lapack
     - mkl
   run:
     - python
     - boost
     - eigen
     - h5py
+    - lapack
     - sundials ==2.6.2
     - nanoflann
     - nlopt
@@ -35,11 +35,11 @@ requirements:
 
 test:
   imports:
-    - pymuqApproximation
-    - pymuqModeling
-    - pymuqOptimization
-    - pymuqSamplingAlgorithms
-    - pymuqUtilities
+    - muq.Approximation
+    - muq.Modeling
+    - muq.Optimization
+    - muq.SamplingAlgorithms
+    - muq.Utilities
 
 about:
   home: http://muq.mit.edu
