@@ -8,6 +8,7 @@ CreateTestGroup(
     ModGraphPieceTests.cpp
     ModPieceTests.cpp
     ConstantPieceTests.cpp
+    DerivativePieceTests.cpp
     IdentityPieceTests.cpp
     SplitVectorTests.cpp
     ScaleVectorTests.cpp

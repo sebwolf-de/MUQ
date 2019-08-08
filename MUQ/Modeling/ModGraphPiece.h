@@ -58,6 +58,22 @@ namespace muq {
       */
       std::vector<int> MatchInputs(std::shared_ptr<ModGraphPiece> otherPiece) const;
 
+      // /**
+      // Returns a ModGraphPiece that, when evaluated, returns the gradient of this
+      // ModPiece.  Note that the returned ModPiece will have an additional input
+      // for the sensitivity vector used in the Gradient call.
+      // */
+      // std::shared_ptr<ModGraphPiece> GradientGraph(unsigned int                const  outputDimWrt,
+      //                                              unsigned int                const  inputDimWrt);
+      //
+      // /**
+      //   Returns a ModGraphPiece that, when evaluated, returns the action of the Jacobian of this
+      //   ModPiece on a vector.  Note that the returned ModPiece will have an
+      //   additional input for the vector that we want to apply the Jacobian to.
+      // */
+      // std::shared_ptr<ModGraphPiece> JacobianGraph(unsigned int                const  outputDimWrt,
+      //                                              unsigned int                const  inputDimWrt);
+
     private:
 
       static Eigen::VectorXi ConstructInputSizes(std::vector<std::shared_ptr<ConstantVector> > const& constantPiecesIn);
