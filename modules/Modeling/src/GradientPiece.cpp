@@ -24,6 +24,15 @@ void GradientPiece::EvaluateImpl(ref_vector<Eigen::VectorXd> const& input)
   outputs.at(0) = basePiece->Gradient(outWrt, inWrt, baseInputs, input.at(input.size()-1).get());
 }
 
+void GradientPiece::ApplyJacobianImpl(unsigned int                const  outputDimWrt,
+                                      unsigned int                const  inputDimWrt,
+                                      ref_vector<Eigen::VectorXd> const& input,
+                                      Eigen::VectorXd             const& vec)
+{
+  ref_vector<Eigen::VectorXd> baseInputs(input.begin(), input.end()-1);
+  jacobianAction = basePiece->ApplyHessian(outputDimWrt, inWrt, inputDimWrt, baseInputs, input.at(input.size()-1).get(), vec);
+}
+
 
 Eigen::VectorXi GradientPiece::GetInputSizes(std::shared_ptr<ModPiece> const& basePiece,
                                              unsigned int              const outWrt)

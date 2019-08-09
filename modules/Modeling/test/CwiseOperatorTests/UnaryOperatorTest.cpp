@@ -10,7 +10,7 @@ TEST(CwiseOperators, SimpleBase)
 {
   unsigned int dim = 10;
 
-  typedef CwiseUnaryOperator<std::exp, stan::math::exp> MyExpPiece;
+  typedef CwiseUnaryOperator<std::exp, stan::math::exp,stan::math::exp> MyExpPiece;
   auto piece = std::make_shared<MyExpPiece>(dim);
 
   Eigen::VectorXd input = Eigen::VectorXd::Random(dim);

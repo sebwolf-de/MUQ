@@ -170,7 +170,7 @@ namespace muq{
      *   @details This function returns the number of times the EvaluateImpl, GradientImpl, JacobianImpl,
      * ApplyJacobianImpl, or ApplyHessianImpl functions have been called.
      *   @param[in] method The implemented function of interest.  Possible options are "Evaluate", "Gradient", "Jacobian",
-     * "JacobianAction", or "HessianAction"
+     * "JacobianAction", "HessianAction", "GradientFD", "JacobianActionFD", "HessianActionFD"
      *   @return An integer with the number of calls.
      */
     virtual unsigned long int GetNumCalls(const std::string& method = "Evaluate") const override;
@@ -429,6 +429,13 @@ namespace muq{
     unsigned long int numJacCalls     = 0;
     unsigned long int numJacActCalls  = 0;
     unsigned long int numHessActCalls = 0;
+    unsigned long int numGradFDCalls  = 0;
+    unsigned long int numJacFDCalls  = 0;
+    unsigned long int numJacActFDCalls = 0;
+    unsigned long int numHessActFDCalls = 0;
+
+
+
 
     // these variables keep track of the total wall-clock time spent in each of the Implemented functions.  They are in
     // units of milliseconds

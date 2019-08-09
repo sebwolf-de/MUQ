@@ -74,6 +74,7 @@ Eigen::VectorXd ModPiece::GradientByFD(unsigned int                const  output
                                        ref_vector<Eigen::VectorXd> const& input,
                                        Eigen::VectorXd             const& sensitivity)
 {
+  numGradFDCalls++;
   return JacobianByFD(outputDimWrt,inputDimWrt, input).transpose()*sensitivity;
 }
 
@@ -228,6 +229,8 @@ Eigen::MatrixXd ModPiece::JacobianByFD(unsigned int                const  output
                                        unsigned int                const  inputDimWrt,
                                        ref_vector<Eigen::VectorXd> const& input)
 {
+  numJacFDCalls++;
+
   Eigen::VectorXd f0 = Evaluate(input).at(outputDimWrt);
   Eigen::VectorXd f;
 
@@ -264,6 +267,8 @@ Eigen::VectorXd ModPiece::ApplyJacobianByFD(unsigned int                const  o
                                             ref_vector<Eigen::VectorXd> const& input,
                                             Eigen::VectorXd             const& vec)
 {
+  numJacActFDCalls++;
+
   const double eps = std::max(1e-8, 1e-10*vec.norm());
 
   ref_vector<Eigen::VectorXd> newInputVec = input;
@@ -334,6 +339,8 @@ Eigen::VectorXd ModPiece::ApplyHessianByFD(unsigned int                const  ou
                                            Eigen::VectorXd             const& sens,
                                            Eigen::VectorXd             const& vec)
 {
+  numHessActFDCalls++;
+
   const double stepSize = 1e-8 / vec.norm();
 
   Eigen::VectorXd grad1 = Gradient(outWrt, inWrt1, input, sens);
@@ -397,9 +404,20 @@ unsigned long int ModPiece::GetNumCalls(const std::string& method) const
     return numJacActCalls;
   } else if (method.compare("HessianAction") == 0) {
     return numHessActCalls;
+  } else if (method.compare("GradientFD") == 0) {
+    return numGradFDCalls;
+  } else if (method.compare("JacobianFD") == 0) {
+    return numJacFDCalls;
+  } else if (method.compare("JacobianActionFD") == 0) {
+    return numJacActFDCalls;
+  } else if (method.compare("HessianActionFD") == 0) {
+    return numHessActFDCalls;
   } else {
-    assert(method.compare("Evaluate") == 0 || method.compare("Gradient") == 0 || method.compare(
-             "Jacobian") == 0 || method.compare("JacobianAction") == 0 || method.compare("HessianAction") == 0);
+    assert( (method.compare("Evaluate") == 0) || (method.compare("Gradient") == 0)
+          || (method.compare("Jacobian") == 0) || (method.compare("JacobianAction") == 0)
+          || (method.compare("HessianAction") == 0) || (method.compare("GradientFD")==0)
+          || (method.compare("JacobianFD")==0) || (method.compare("JacobianActionFD")==0)
+          || (method.compare("HessianActionFD")==0));
     return -999;
   }
 }

@@ -21,10 +21,10 @@ namespace Modeling{
 
     virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& input) override;
 
-    // virtual void ApplyJacobianImpl(unsigned int                const  outputDimWrt,
-    //                                unsigned int                const  inputDimWrt,
-    //                                ref_vector<Eigen::VectorXd> const& input,
-    //                                Eigen::VectorXd             const& vec) override;
+    virtual void ApplyJacobianImpl(unsigned int                const  outputDimWrt,
+                                   unsigned int                const  inputDimWrt,
+                                   ref_vector<Eigen::VectorXd> const& input,
+                                   Eigen::VectorXd             const& vec) override;
 
     static Eigen::VectorXi GetInputSizes(std::shared_ptr<ModPiece> const& basePiece,
                                          unsigned int              const outWrt);
