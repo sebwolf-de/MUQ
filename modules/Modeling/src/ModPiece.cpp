@@ -276,6 +276,77 @@ Eigen::VectorXd ModPiece::ApplyJacobianByFD(unsigned int                const  o
   return (f-f0)/eps;
 }
 
+Eigen::VectorXd ModPiece::ApplyHessian(unsigned int                const  outWrt,
+                                       unsigned int                const  inWrt1,
+                                       unsigned int                const  inWrt2,
+                                       std::vector<Eigen::VectorXd> const& input,
+                                       Eigen::VectorXd             const& sens,
+                                       Eigen::VectorXd             const& vec)
+{
+  return ApplyHessian(outWrt,inWrt1, inWrt2, ToRefVector(input), sens, vec);
+}
+
+Eigen::VectorXd ModPiece::ApplyHessian(unsigned int                const  outWrt,
+                                       unsigned int                const  inWrt1,
+                                       unsigned int                const  inWrt2,
+                                       ref_vector<Eigen::VectorXd> const& input,
+                                       Eigen::VectorXd             const& sens,
+                                       Eigen::VectorXd             const& vec)
+{
+  assert(inputSizes(inWrt2)==vec.size());
+  assert(outputSizes(outWrt)==sens.size());
+
+  numHessActCalls++;
+  auto start_time = std::chrono::high_resolution_clock::now();
+
+  ApplyHessianImpl(outWrt, inWrt1, inWrt2, input, sens, vec);
+
+  auto end_time = std::chrono::high_resolution_clock::now();
+  hessActTime += 1e6*static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
+
+  return hessAction;
+}
+
+void ModPiece::ApplyHessianImpl(unsigned int                const  outWrt,
+                                unsigned int                const  inWrt1,
+                                unsigned int                const  inWrt2,
+                                ref_vector<Eigen::VectorXd> const& input,
+                                Eigen::VectorXd             const& sens,
+                                Eigen::VectorXd             const& vec)
+{
+  hessAction = ApplyHessianByFD(outWrt, inWrt1, inWrt2, input, sens, vec);
+}
+
+Eigen::VectorXd ModPiece::ApplyHessianByFD(unsigned int                const  outWrt,
+                                       unsigned int                const  inWrt1,
+                                       unsigned int                const  inWrt2,
+                                       std::vector<Eigen::VectorXd> const& input,
+                                       Eigen::VectorXd             const& sens,
+                                       Eigen::VectorXd             const& vec)
+{
+  return ApplyHessianByFD(outWrt,inWrt1, inWrt2, ToRefVector(input), sens, vec);
+}
+
+Eigen::VectorXd ModPiece::ApplyHessianByFD(unsigned int                const  outWrt,
+                                           unsigned int                const  inWrt1,
+                                           unsigned int                const  inWrt2,
+                                           ref_vector<Eigen::VectorXd> const& input,
+                                           Eigen::VectorXd             const& sens,
+                                           Eigen::VectorXd             const& vec)
+{
+  const double stepSize = 1e-8 / vec.norm();
+
+  Eigen::VectorXd grad1 = Gradient(outWrt, inWrt1, input, sens);
+
+  ref_vector<Eigen::VectorXd> input2 = input;
+  Eigen::VectorXd x2 = input.at(inWrt2).get() + stepSize * vec;
+  input2.at(inWrt2) = std::cref(x2);
+  Eigen::VectorXd grad2 = Gradient(outWrt, inWrt1, input2, sens);
+
+  return (grad2 - grad1)/stepSize;
+}
+
+
 double ModPiece::GetRunTime(const std::string& method) const
 {
   const double toMilli = 1.0e-6;
@@ -289,28 +360,29 @@ double ModPiece::GetRunTime(const std::string& method) const
   } else if (method.compare("JacobianAction") == 0) {
     return (numJacActCalls ==
             0) ? -1.0 : toMilli *static_cast<double>(jacActTime) / static_cast<double>(numJacActCalls);
-  } else if (method.compare("Hessian") == 0) {
-    return (numHessCalls == 0) ? -1.0 : toMilli *static_cast<double>(hessTime) / static_cast<double>(numHessCalls);
+  } else if (method.compare("HessianAction") == 0) {
+    return (numHessActCalls == 0) ? -1.0 : toMilli *static_cast<double>(hessActTime) / static_cast<double>(numHessActCalls);
   } else {
     assert(method.compare("Evaluate") == 0 || method.compare("Gradient") == 0 || method.compare(
-             "Jacobian") == 0 || method.compare("JacobianAction") == 0 || method.compare("Hessian") == 0);
+             "Jacobian") == 0 || method.compare("JacobianAction") == 0 || method.compare("HessianAction") == 0);
     return -999.0;
   }
 }
 
+
 void ModPiece::ResetCallTime()
 {
-  numEvalCalls   = 0;
-  numGradCalls   = 0;
-  numJacCalls    = 0;
-  numJacActCalls = 0;
-  numHessCalls   = 0;
+  numEvalCalls    = 0;
+  numGradCalls    = 0;
+  numJacCalls     = 0;
+  numJacActCalls  = 0;
+  numHessActCalls = 0;
 
-  evalTime   = 0;
-  gradTime   = 0;
-  jacTime    = 0;
-  jacActTime = 0;
-  hessTime   = 0;
+  evalTime    = 0;
+  gradTime    = 0;
+  jacTime     = 0;
+  jacActTime  = 0;
+  hessActTime = 0;
 }
 
 unsigned long int ModPiece::GetNumCalls(const std::string& method) const
@@ -323,11 +395,11 @@ unsigned long int ModPiece::GetNumCalls(const std::string& method) const
     return numJacCalls;
   } else if (method.compare("JacobianAction") == 0) {
     return numJacActCalls;
-  } else if (method.compare("Hessian") == 0) {
-    return numHessCalls;
+  } else if (method.compare("HessianAction") == 0) {
+    return numHessActCalls;
   } else {
     assert(method.compare("Evaluate") == 0 || method.compare("Gradient") == 0 || method.compare(
-             "Jacobian") == 0 || method.compare("JacobianAction") == 0 || method.compare("Hessian") == 0);
+             "Jacobian") == 0 || method.compare("JacobianAction") == 0 || method.compare("HessianAction") == 0);
     return -999;
   }
 }
