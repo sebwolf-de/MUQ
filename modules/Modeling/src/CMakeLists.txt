@@ -47,6 +47,7 @@ CreateCompileGroup(
     MultiLogisticLikelihood.cpp
 
     ReplicateOperator.cpp
+    SumPiece.cpp
 
     LinearSDE.cpp
 

@@ -58,13 +58,13 @@ namespace muq {
       */
       std::vector<int> MatchInputs(std::shared_ptr<ModGraphPiece> otherPiece) const;
 
-      // /**
-      // Returns a ModGraphPiece that, when evaluated, returns the gradient of this
-      // ModPiece.  Note that the returned ModPiece will have an additional input
-      // for the sensitivity vector used in the Gradient call.
-      // */
-      // std::shared_ptr<ModGraphPiece> GradientGraph(unsigned int                const  outputDimWrt,
-      //                                              unsigned int                const  inputDimWrt);
+      /**
+      Returns a ModGraphPiece that, when evaluated, returns the gradient of this
+      ModPiece.  Note that the returned ModPiece will have an additional input
+      for the sensitivity vector used in the Gradient call.
+      */
+      std::shared_ptr<ModGraphPiece> GradientGraph(unsigned int                const  outputDimWrt,
+                                                   unsigned int                const  inputDimWrt);
       //
       // /**
       //   Returns a ModGraphPiece that, when evaluated, returns the action of the Jacobian of this
@@ -75,6 +75,12 @@ namespace muq {
       //                                              unsigned int                const  inputDimWrt);
 
     private:
+
+      /** Returns the input index of this ModGraphPiece that corresponds to the
+          the specified placeholder ModPiece.  If the ModPiece is not an input,
+          than -1 is returned.
+      */
+      int GetInputIndex(std::shared_ptr<WorkPiece> const& piece) const;
 
       static Eigen::VectorXi ConstructInputSizes(std::vector<std::shared_ptr<ConstantVector> > const& constantPiecesIn);
 

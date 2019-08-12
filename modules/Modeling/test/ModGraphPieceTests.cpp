@@ -166,13 +166,25 @@ TEST(Modelling_ModGraphPiece, BasicTest)
   myGraph->AddEdge("y2", 0, "f1", 1);
   myGraph->AddEdge("f1", 0, "f2", 1);
 
+  auto graphMod = myGraph->CreateModPiece("f2");
+  auto gradPiece = graphMod->GradientGraph(0,0);
+  gradPiece->GetGraph()->Visualize("BasicTestGrad.pdf");
+  myGraph->Visualize("BasicTest.pdf");
+
+  EXPECT_EQ(3, graphMod->inputSizes.size());
+  EXPECT_EQ(2, graphMod->inputSizes(0));
+  EXPECT_EQ(2, graphMod->outputSizes(0));
+
   boost::any anyVal1 = Eigen::VectorXd::Constant(2,0.1).eval();
   boost::any anyVal2 = Eigen::VectorXd::Constant(2,0.2).eval();
 
   myGraph->BindNode("y1", {anyVal1});
   myGraph->BindNode("y2", {anyVal2});
 
-  auto graphMod = myGraph->CreateModPiece("f2");
+  graphMod = myGraph->CreateModPiece("f2");
+  myGraph->Visualize("BasicTest2.pdf");
+  gradPiece = graphMod->GradientGraph(0,0);
+  gradPiece->GetGraph()->Visualize("BasicTestGrad2.pdf");
 
   // make sure this modpiece is the size we expect
   EXPECT_EQ(1, graphMod->inputSizes.size());
@@ -186,11 +198,15 @@ TEST(Modelling_ModGraphPiece, BasicTest)
   EXPECT_DOUBLE_EQ(sin(input[0] * input[0]) + sin(sin(0.1) + sin(0.2)), output[0]);
   EXPECT_DOUBLE_EQ(sin(input[1] * input[1]) + sin(sin(0.1) + sin(0.2)), output[1]);
 
-  // // gradient testing (same as J^T*x)
-  // Eigen::VectorXd grad = GraphMod->Gradient(input, Eigen::VectorXd::Ones(2), 0);
-  //
-  // EXPECT_DOUBLE_EQ(2.0 * input[0] * cos(input[0] * input[0]), grad[0]);
-  // EXPECT_DOUBLE_EQ(2.0 * input[1] * cos(input[1] * input[1]), grad[1]);
+  // gradient testing (same as J^T*x)
+  Eigen::VectorXd grad = graphMod->Gradient(0,0, input, Eigen::VectorXd::Ones(2).eval());
+  EXPECT_DOUBLE_EQ(2.0 * input[0] * cos(input[0] * input[0]), grad[0]);
+  EXPECT_DOUBLE_EQ(2.0 * input[1] * cos(input[1] * input[1]), grad[1]);
+
+  Eigen::VectorXd grad2 = gradPiece->Evaluate(input, Eigen::VectorXd::Ones(2).eval()).at(0);
+  EXPECT_DOUBLE_EQ(2.0 * input[0] * cos(input[0] * input[0]), grad2[0]);
+  EXPECT_DOUBLE_EQ(2.0 * input[1] * cos(input[1] * input[1]), grad2[1]);
+
   //
   // // Jacobian action testing (same as J*x)
   // Eigen::VectorXd input2 = input + 1e-2 * Eigen::VectorXd::Random(2);
@@ -233,36 +249,40 @@ TEST(Modelling_ModGraphPiece, BasicTest)
 // }
 //
 //
-// TEST(Modelling_ModGraphPiece, DiamondTest)
-// {
-//   auto myGraph = make_shared<ModGraph>();
-//
-//   // add nodes
-//   myGraph->AddNode(make_shared<sinSumMod>(2), "f1");
-//   myGraph->AddNode(make_shared<squareMod>(2), "x");
-//   myGraph->AddNode(make_shared<squareMod>(2), "y1");
-//   myGraph->AddNode(make_shared<squareMod>(2), "y2");
-//
-//   // add connectivity
-//   myGraph->AddEdge("x", "y1", 0);
-//   myGraph->AddEdge("x", "y2", 0);
-//   myGraph->AddEdge("y1", "f1", 0);
-//   myGraph->AddEdge("y2", "f1", 1);
-//   myGraph->writeGraphViz("results/tests/GraphViz/DiamondTest.pdf");
-//   auto GraphMod = ModGraphPiece::Create(myGraph, "f1");
-//   GraphMod->writeGraphViz("results/tests/GraphViz/DiamondPieceTest.pdf");
-//
-//   // make sure this modpiece is the size we expect
-//   EXPECT_EQ(1, GraphMod->inputSizes.size());
-//   EXPECT_EQ(2, GraphMod->inputSizes[0]);
-//   EXPECT_EQ(2, GraphMod->outputSize);
-//
-//   // evaluation testing
-//   Eigen::VectorXd input  = 0.5 * Eigen::VectorXd::Ones(2);
-//   Eigen::VectorXd output = GraphMod->Evaluate(input);
-//
-//   EXPECT_DOUBLE_EQ(2.0 * sin(pow(input[0], 4.0)), output[0]);
-//   EXPECT_DOUBLE_EQ(2.0 * sin(pow(input[1], 4.0)), output[1]);
+TEST(Modelling_ModGraphPiece, DiamondTest)
+{
+  auto myGraph = make_shared<WorkGraph>();
+
+  // add nodes
+  myGraph->AddNode(make_shared<SinSumMod>(2), "f1");
+  myGraph->AddNode(make_shared<SquareMod>(2), "x");
+  myGraph->AddNode(make_shared<SquareMod>(2), "y1");
+  myGraph->AddNode(make_shared<SquareMod>(2), "y2");
+
+  // add connectivity
+  myGraph->AddEdge("x", 0, "y1", 0);
+  myGraph->AddEdge("x", 0, "y2", 0);
+  myGraph->AddEdge("y1", 0, "f1", 0);
+  myGraph->AddEdge("y2", 0, "f1", 1);
+
+  myGraph->Visualize("DiamondTest.pdf");
+  auto graphMod = myGraph->CreateModPiece("f1");
+  graphMod->GetGraph()->Visualize("DiamondPieceTest.pdf");
+
+  auto gradPiece = graphMod->GradientGraph(0,0);
+  gradPiece->GetGraph()->Visualize("DiamondGrad.pdf");
+
+  // make sure this modpiece is the size we expect
+  EXPECT_EQ(1, graphMod->inputSizes.size());
+  EXPECT_EQ(2, graphMod->inputSizes(0));
+  EXPECT_EQ(2, graphMod->outputSizes(0));
+
+  // evaluation testing
+  Eigen::VectorXd input  = 0.5 * Eigen::VectorXd::Ones(2);
+  Eigen::VectorXd output = graphMod->Evaluate(input).at(0);
+
+  EXPECT_DOUBLE_EQ(2.0 * sin(pow(input[0], 4.0)), output[0]);
+  EXPECT_DOUBLE_EQ(2.0 * sin(pow(input[1], 4.0)), output[1]);
 //
 //
 //   // gradient testing
@@ -294,7 +314,7 @@ TEST(Modelling_ModGraphPiece, BasicTest)
 //   EXPECT_DOUBLE_EQ(hessOut(1, 1), diag);
 //   EXPECT_DOUBLE_EQ(hessOut(1, 0), 0);
 //   EXPECT_DOUBLE_EQ(hessOut(0, 1), 0);
-// }
+}
 //
 // TEST(Modelling_ModGraphPiece, UnionTest)
 // {
