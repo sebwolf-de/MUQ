@@ -275,6 +275,8 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int        
   // Add a node in the graph to hold the vector input
   jacGraph.AddNode(std::make_shared<IdentityOperator>(inputSizes(inputDimWrt)), inputNames.at(inputDimWrt) + "_Vec");
 
+  std::cout << "Here 1" << std::endl;
+  jacGraph.Visualize("JacobianGraph1.pdf");
 
   // Add the Jacobian components
   std::unordered_map<std::string, std::vector<std::string>> cumNames;
@@ -303,9 +305,13 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int        
       }
     }
 
+    std::cout << "Here 2" << std::endl;
+    jacGraph.Visualize("JacobianGraph2.pdf");
+
+    std::cout << "Looking at node " << filtGraph[*node]->name << std::endl;
+
     // For each output in the filtered graph, add a jacobian term for each input in the filtered graph
     for(auto ein=boost::in_edges(*node, filtGraph); ein.first!=ein.second; ++ein.first){
-
       // If we're the last node....
       if(*node == adjointRunOrders[inputDimWrt][0]){
         std::stringstream jacName;
@@ -331,15 +337,13 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int        
 
       }else{
 
-        std::vector<bool> isAdded(piece->outputSizes.size(), false);
         for(auto eout = boost::out_edges(*node, filtGraph); eout.first!=eout.second; ++eout.first){
 
-          if(! isAdded.at(filtGraph[*eout.first]->outputDim)){
-            isAdded.at(filtGraph[*eout.first]->outputDim) = true;
-
-            std::stringstream jacName;
-            jacName << baseName << "_Jacobian[" << filtGraph[*eout.first]->outputDim << "," << filtGraph[*ein.first]->inputDim << "]";
-
+          std::stringstream jacName;
+          jacName << baseName << "_Jacobian[" << filtGraph[*eout.first]->outputDim << "," << filtGraph[*ein.first]->inputDim << "]";
+          std::cout << "Trying to add " << jacName.str() << std::endl;
+          // Try statement needed because we might end up adding the same piece multiple times
+          try{
             auto jacPiece = std::make_shared<JacobianPiece>(piece, filtGraph[*eout.first]->outputDim, filtGraph[*ein.first]->inputDim);
             jacGraph.AddNode(jacPiece, jacName.str());
 
@@ -356,29 +360,34 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int        
             }else if(boost::in_degree(source,filtGraph)>0){
               jacGraph.AddEdge(cumNames[filtGraph[source]->name].at(filtGraph[*ein.first]->outputDim), 0, jacName.str(),  jacPiece->inputSizes.size()-1);
             }
+          }catch(...){
+            std::cout << "duplicate..." << std::endl;
           }
-
         } // Loop over output edges
-
-        // Potentially add up the Jacobians from multiple inputs
-        for(auto eout = boost::out_edges(*node, filtGraph); eout.first!=eout.second; ++eout.first){
-          if(inDegree>1){
-            std::stringstream cumName;
-            cumName << baseName << "_CumulativeJacobian[" << filtGraph[*eout.first]->outputDim << "]";
-
-            // For each input ...
-            unsigned int tempInd = 0;
-            for(auto ein = boost::in_edges(*node, filtGraph); ein.first!=ein.second; ++ein.first){
-              std::stringstream jacName;
-              jacName << baseName << "_Jacobian[" << filtGraph[*eout.first]->outputDim <<  "," << filtGraph[*ein.first]->inputDim << "]";
-              jacGraph.AddEdge(jacName.str(),0, cumName.str(), tempInd);
-              tempInd++;
-            }
-          }// if(inDegree>1)
-        }// loop over outputs
-
       }
     } // Loop over input edges
+
+    // Potentially add up the Jacobians from multiple inputs
+    for(auto eout = boost::out_edges(*node, filtGraph); eout.first!=eout.second; ++eout.first){
+      if(inDegree>1){
+        std::stringstream cumName;
+        cumName << baseName << "_CumulativeJacobian[" << filtGraph[*eout.first]->outputDim << "]";
+
+        // For each input ...
+        unsigned int tempInd = 0;
+        for(auto ein = boost::in_edges(*node, filtGraph); ein.first!=ein.second; ++ein.first){
+          std::stringstream jacName;
+          jacName << baseName << "_Jacobian[" << filtGraph[*eout.first]->outputDim <<  "," << filtGraph[*ein.first]->inputDim << "]";
+          jacGraph.AddEdge(jacName.str(),0, cumName.str(), tempInd);
+          tempInd++;
+        }
+      }// if(inDegree>1)
+    }// loop over outputs
+
+
+
+    std::cout << "Here 3" << std::endl;
+    jacGraph.Visualize("JacobianGraph3.pdf");
 
     // If this is the last node and it has multiple inputs, then we'll need to sum them up
     if(*node == adjointRunOrders[inputDimWrt][0]){
@@ -397,6 +406,9 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int        
         }
       }
     }
+
+    std::cout << "Here 4" << std::endl;
+    jacGraph.Visualize("JacobianGraph4.pdf");
 
   } // Loop over adjoint run order
 
