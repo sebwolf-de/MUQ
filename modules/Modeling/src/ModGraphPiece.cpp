@@ -26,7 +26,6 @@ ModGraphPiece::ModGraphPiece(std::shared_ptr<WorkGraph>                         
                                                                                                  outputID(outputPiece->ID()),
                                                                                                  constantPieces(constantPiecesIn) {
 
-  graph->Visualize("BaseGraph.pdf");
   // build the run order
   assert(graph);
   boost::topological_sort(wgraph->graph, std::front_inserter(runOrder));
@@ -102,7 +101,7 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
   }
 
   // Add a node in the graph to hold the sensitivity input
-  gradGraph.AddNode(std::make_shared<IdentityOperator>(std::dynamic_pointer_cast<ModPiece>(filtGraph[adjointRunOrders[inputDimWrt][0]]->piece)->outputSizes(outputDimWrt)),
+  gradGraph.AddNode(std::make_shared<IdentityOperator>(outputSizes(outputDimWrt)),
                     outputName+"_Sensitivity");
 
 
@@ -236,6 +235,185 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
   }
 
   return gradGraph.CreateModPiece(outNodeName, inputNames);
+}
+
+
+
+std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int                const  outputDimWrt,
+                                                            unsigned int                const  inputDimWrt)
+{
+  assert(outputDimWrt<outputSizes.size());
+  assert(inputDimWrt<inputSizes.size());
+
+  WorkGraph jacGraph;
+  auto& filtGraph = *filtered_graphs[inputDimWrt];
+
+  std::vector<std::string> inputNames(constantPieces.size()+1);
+
+  // Add the forward model
+  for(auto node = runOrder.begin(); node != runOrder.end()-1; ++node){
+    auto piece = wgraph->graph[*node]->piece;
+
+    int placeholderInd = GetInputIndex(piece);
+    if(placeholderInd>=0){
+      auto pieceMod = std::dynamic_pointer_cast<ModPiece>(piece);
+      assert(pieceMod);
+      jacGraph.AddNode(std::make_shared<IdentityOperator>(pieceMod->outputSizes(0)), wgraph->graph[*node]->name);
+      inputNames.at(placeholderInd) = wgraph->graph[*node]->name;
+
+    }else{
+      jacGraph.AddNode(piece, wgraph->graph[*node]->name);
+
+      // Add the input edges
+      for(auto es = in_edges(*node, wgraph->graph); es.first!=es.second; ++es.first){
+        auto source = boost::source(*es.first, wgraph->graph);
+        jacGraph.AddEdge(wgraph->graph[source]->name, wgraph->graph[*es.first]->outputDim, wgraph->graph[*node]->name, wgraph->graph[*es.first]->inputDim);
+      }
+    }
+  }
+
+  // Add a node in the graph to hold the vector input
+  jacGraph.AddNode(std::make_shared<IdentityOperator>(inputSizes(inputDimWrt)), inputNames.at(inputDimWrt) + "_Vec");
+
+
+  // Add the Jacobian components
+  std::unordered_map<std::string, std::vector<std::string>> cumNames;
+
+  for(auto node = adjointRunOrders[inputDimWrt].rbegin(); node!=adjointRunOrders[inputDimWrt].rend(); ++node){
+    std::string baseName = wgraph->graph[*node]->name;
+    auto piece = std::dynamic_pointer_cast<ModPiece>(filtGraph[*node]->piece);
+
+    int inDegree = boost::in_degree(*node, filtGraph);
+    int outDegree = boost::out_degree(*node, filtGraph);
+
+    /** If the node has multiple inputs, than we have to sum the Jacobians for each of them.
+        Here, we add a SumPiece if necessary, and store the name of the node returning the cumulative Jacobian action.
+    */
+    cumNames[baseName] = std::vector<std::string>(out_degree(*node,filtGraph));
+    for(auto eout = boost::out_edges(*node, filtGraph); eout.first!=eout.second; ++eout.first){
+      if(inDegree>1){
+        std::stringstream jacName;
+        jacName << baseName << "_CumulativeJacobian[" << filtGraph[*eout.first]->outputDim << "]";
+        cumNames[baseName].at(filtGraph[*eout.first]->outputDim) = jacName.str();
+        jacGraph.AddNode(std::make_shared<SumPiece>(inDegree), jacName.str());
+      }else if(inDegree==1){
+        std::stringstream jacName;
+        jacName << baseName << "_Jacobian[" << filtGraph[*eout.first]->outputDim <<  ",0]";
+        cumNames[baseName].at(filtGraph[*eout.first]->outputDim) = jacName.str();
+      }
+    }
+
+    // For each output in the filtered graph, add a jacobian term for each input in the filtered graph
+    for(auto ein=boost::in_edges(*node, filtGraph); ein.first!=ein.second; ++ein.first){
+
+      // If we're the last node....
+      if(*node == adjointRunOrders[inputDimWrt][0]){
+        std::stringstream jacName;
+        jacName << baseName << "_Jacobian[" << outputDimWrt << "," << filtGraph[*ein.first]->inputDim << "]";
+        auto jacPiece = std::make_shared<JacobianPiece>(piece, outputDimWrt, filtGraph[*ein.first]->inputDim);
+
+        jacGraph.AddNode(jacPiece, jacName.str());
+
+        // Add input edges from the original forward graph
+        for(auto es=boost::in_edges(*node, wgraph->graph); es.first!=es.second; ++es.first){
+          auto source = boost::source(*es.first, wgraph->graph);
+          jacGraph.AddEdge(wgraph->graph[source]->name, wgraph->graph[*es.first]->outputDim, jacName.str(), wgraph->graph[*es.first]->inputDim);
+        }
+
+        auto source = boost::source(*ein.first,filtGraph);
+        if(filtGraph[source]->name == inputNames.at(inputDimWrt)){
+          jacGraph.AddEdge(inputNames.at(inputDimWrt)+ "_Vec", 0, jacName.str(), jacPiece->inputSizes.size()-1);
+        }else if(boost::in_degree(source,filtGraph)>0){
+          jacGraph.AddEdge(cumNames[filtGraph[source]->name].at(filtGraph[*ein.first]->outputDim), 0, jacName.str(),  jacPiece->inputSizes.size()-1);
+        }
+
+        // If there are multiple inputs, we have to add them up
+
+      }else{
+
+        std::vector<bool> isAdded(piece->outputSizes.size(), false);
+        for(auto eout = boost::out_edges(*node, filtGraph); eout.first!=eout.second; ++eout.first){
+
+          if(! isAdded.at(filtGraph[*eout.first]->outputDim)){
+            isAdded.at(filtGraph[*eout.first]->outputDim) = true;
+
+            std::stringstream jacName;
+            jacName << baseName << "_Jacobian[" << filtGraph[*eout.first]->outputDim << "," << filtGraph[*ein.first]->inputDim << "]";
+
+            auto jacPiece = std::make_shared<JacobianPiece>(piece, filtGraph[*eout.first]->outputDim, filtGraph[*ein.first]->inputDim);
+            jacGraph.AddNode(jacPiece, jacName.str());
+
+            // Add input edges from the original forward graph
+            for(auto es=boost::in_edges(*node, wgraph->graph); es.first!=es.second; ++es.first){
+              auto source = boost::source(*es.first, wgraph->graph);
+              jacGraph.AddEdge(wgraph->graph[source]->name, wgraph->graph[*es.first]->outputDim, jacName.str(), wgraph->graph[*es.first]->inputDim);
+            }
+
+            // Add an input edge for the upstream Jacobian
+            auto source = boost::source(*ein.first,filtGraph);
+            if(filtGraph[source]->name == inputNames.at(inputDimWrt)){
+              jacGraph.AddEdge(inputNames.at(inputDimWrt)+ "_Vec", 0, jacName.str(), jacPiece->inputSizes.size()-1);
+            }else if(boost::in_degree(source,filtGraph)>0){
+              jacGraph.AddEdge(cumNames[filtGraph[source]->name].at(filtGraph[*ein.first]->outputDim), 0, jacName.str(),  jacPiece->inputSizes.size()-1);
+            }
+          }
+
+        } // Loop over output edges
+
+        // Potentially add up the Jacobians from multiple inputs
+        for(auto eout = boost::out_edges(*node, filtGraph); eout.first!=eout.second; ++eout.first){
+          if(inDegree>1){
+            std::stringstream cumName;
+            cumName << baseName << "_CumulativeJacobian[" << filtGraph[*eout.first]->outputDim << "]";
+
+            // For each input ...
+            unsigned int tempInd = 0;
+            for(auto ein = boost::in_edges(*node, filtGraph); ein.first!=ein.second; ++ein.first){
+              std::stringstream jacName;
+              jacName << baseName << "_Jacobian[" << filtGraph[*eout.first]->outputDim <<  "," << filtGraph[*ein.first]->inputDim << "]";
+              jacGraph.AddEdge(jacName.str(),0, cumName.str(), tempInd);
+              tempInd++;
+            }
+          }// if(inDegree>1)
+        }// loop over outputs
+
+      }
+    } // Loop over input edges
+
+    // If this is the last node and it has multiple inputs, then we'll need to sum them up
+    if(*node == adjointRunOrders[inputDimWrt][0]){
+      unsigned int tempInd = 0;
+
+      if(inDegree>1){
+        std::stringstream jacName;
+        jacName << baseName << "_CumulativeJacobian[" << outputDimWrt << "]";
+        jacGraph.AddNode(std::make_shared<SumPiece>(inDegree), jacName.str());
+
+        for(auto ein = boost::in_edges(*node, filtGraph); ein.first!=ein.second; ++ein.first){
+          std::stringstream otherName;
+          otherName << baseName << "_Jacobian[" << outputDimWrt << "," << filtGraph[*ein.first]->inputDim << "]";
+          jacGraph.AddEdge(otherName.str(), 0, jacName.str(), tempInd);
+          tempInd++;
+        }
+      }
+    }
+
+  } // Loop over adjoint run order
+
+  // At this point, there should only be one node with an unconnected output.
+  std::string outNodeName;
+  for(auto vs = boost::vertices(jacGraph.graph); vs.first!=vs.second; ++vs.first){
+    auto pieceMod =  std::dynamic_pointer_cast<ModPiece>(jacGraph.graph[*vs.first]->piece);
+    if(pieceMod){
+      if(out_degree(*vs.first, jacGraph.graph) <pieceMod->outputSizes.size()){
+        outNodeName = jacGraph.graph[*vs.first]->name;
+        break;
+      }
+    }
+  }
+
+  inputNames.at(constantPieces.size()) = inputNames.at(inputDimWrt) + "_Vec";
+  return jacGraph.CreateModPiece(outNodeName, inputNames);
 }
 
 Eigen::VectorXi ModGraphPiece::ConstructInputSizes(std::vector<std::shared_ptr<ConstantVector> > const& constantPiecesIn)
