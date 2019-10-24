@@ -125,15 +125,15 @@ void Gaussian::ComputeNormalization() {
 
   if( mode==Gaussian::Mode::Covariance ) {
     if(covPrec.cols()==1){
-      logDet = -0.5 * covPrec.array().log().sum();
+      logDet = covPrec.array().log().sum();
     }else{
-      logDet = -std::log(sqrtCovPrec.matrixL().determinant());
+      logDet = 2.0*std::log(sqrtCovPrec.matrixL().determinant());
     }
   } else if( mode==Gaussian::Mode::Precision ) {
     if(covPrec.cols()==1){
-      logDet = 0.5 * covPrec.array().log().sum();
+      logDet = -covPrec.array().log().sum();
     }else{
-      logDet = std::log(sqrtCovPrec.matrixL().determinant());
+      logDet = -2.0*std::log(sqrtCovPrec.matrixL().determinant());
     }
   }
 }

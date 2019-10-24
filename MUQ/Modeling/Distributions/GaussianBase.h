@@ -102,7 +102,7 @@ namespace muq {
         where the density needs to known completely, not only up to a normalizing
         constant.
       */
-      virtual double LogDeterminant() const{return 0.0;};
+      virtual double LogDeterminant() const{assert(false);return 0.0;};
 
       /** Process the hyperparameter inputs.  This should be overridden by
           children that have extra inputs.

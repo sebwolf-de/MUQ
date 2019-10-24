@@ -103,8 +103,8 @@ TEST_F(MarkovChainTest, ESS)
   int totalSteps = collection.size();
   Eigen::VectorXd ess = collection.ESS();
 
-  EXPECT_LT(ess(0), totalSteps);
-  EXPECT_LT(ess(1), totalSteps);
+  EXPECT_LE(ess(0), totalSteps);
+  EXPECT_LE(ess(1), totalSteps);
 
   int numWhite = 1e3;
   Eigen::VectorXd whiteNoise = RandomGenerator::GetNormal(numWhite);

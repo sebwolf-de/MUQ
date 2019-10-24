@@ -11,18 +11,17 @@ namespace muq {
     public:
       PyDistribution(unsigned int varSizeIn, Eigen::VectorXi const& hyperSizesIn = Eigen::VectorXi());
 
+      static std::vector<Eigen::VectorXd> ToStdVec(ref_vector<Eigen::VectorXd> const& input);
+
     protected:
 
+      virtual Eigen::VectorXd SampleImpl(std::vector<Eigen::VectorXd> const& inputs) = 0;
       virtual Eigen::VectorXd SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
-      virtual Eigen::VectorXd SampleImpl(std::vector<Eigen::VectorXd> const& inputs) = 0;
 
       virtual double LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
       virtual double LogDensityImpl(std::vector<Eigen::VectorXd> const& inputs) = 0;
-
-
-      static std::vector<Eigen::VectorXd> ToStdVec(ref_vector<Eigen::VectorXd> const& input);
     };
 
 
@@ -46,14 +45,7 @@ namespace muq {
       virtual Eigen::MatrixXd ApplyPrecSqrt(Eigen::MatrixXd const& x) const = 0;
 
       virtual void ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params) override;
-      virtual void ResetHyperparameters(std::vector<Eigen::VectorXd> const& params) = 0;
-
-      virtual Eigen::VectorXd GradLogDensity(unsigned int wrt, std::vector<Eigen::VectorXd> const& inputs);
-
-      virtual double LogDensityImpl(std::vector<Eigen::VectorXd> const& inputs);
-
-      virtual Eigen::VectorXd SampleImpl(std::vector<Eigen::VectorXd> const& inputs);
-
+      virtual void ResetHyperparameters(std::vector<Eigen::VectorXd> const& params){};
     };
 
   } // namespace Modeling

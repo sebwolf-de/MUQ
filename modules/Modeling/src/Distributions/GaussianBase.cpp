@@ -33,7 +33,7 @@ double GaussianBase::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) {
 
   Eigen::VectorXd delta = inputs.at(0).get() - mean;
 
-  return -0.5*varSize*std::log(2.0*M_PI) - LogDeterminant() - 0.5 * delta.dot( ApplyPrecision(delta).col(0) );
+  return -0.5*varSize*std::log(2.0*M_PI) - 0.5*LogDeterminant() - 0.5 * delta.dot( ApplyPrecision(delta).col(0) );
 }
 
 Eigen::VectorXd GaussianBase::SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) {
