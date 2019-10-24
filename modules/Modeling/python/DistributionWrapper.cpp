@@ -39,6 +39,42 @@ public:
 private:
 };
 
+class PyGaussianTramp : public PyGaussianBase {
+public:
+    /* Inherit the constructors */
+    using PyGaussianBase::PyGaussianBase;
+
+    /* Trampoline (need one for each virtual function) */
+    unsigned int Dimension() const override {
+      PYBIND11_OVERLOAD(unsigned int,GaussianBase,Dimension);
+    }
+
+    Eigen::MatrixXd ApplyCovariance(Eigen::MatrixXd const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyCovariance, x);
+    }
+
+    Eigen::MatrixXd ApplyPrecision(Eigen::MatrixXd const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyPrecision, x);
+    }
+
+    Eigen::MatrixXd ApplyCovSqrt(Eigen::MatrixXd const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyCovSqrt, x);
+    }
+
+    Eigen::MatrixXd ApplyPrecSqrt(Eigen::MatrixXd const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyPrecSqrt, x);
+    }
+
+    void ResetHyperparameters(std::vector<Eigen::VectorXd> const& params) override{
+      PYBIND11_OVERLOAD(void, PyGaussianBase, ResetHyperparameters, params);
+    }
+
+    double LogDeterminant() const override{
+      PYBIND11_OVERLOAD(double, PyGaussianBase, LogDeterminant);
+    }
+
+};
+
 class Publicist : public PyDistribution {
 public:
     // Expose protected functions
@@ -61,6 +97,20 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
       .def("AsVariable", &Distribution::AsVariable)
       .def_readonly("varSize", &Distribution::varSize)
       .def_readonly("hyperSizes", &Distribution::hyperSizes);
+
+    py::class_<PyGaussianBase, PyGaussianTramp, Distribution, std::shared_ptr<PyGaussianBase>>(m, "GaussianBase")
+        .def(py::init<unsigned int>())
+        .def(py::init<unsigned int, Eigen::VectorXi>())
+        .def(py::init<Eigen::VectorXd>())
+        .def(py::init<Eigen::VectorXd, Eigen::VectorXi>())
+        .def("Dimension", &PyGaussianBase::Dimension)
+        .def("ApplyCovariance", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyCovariance)
+        .def("ApplyPrecision", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyPrecision)
+        .def("ApplyCovSqrt",(Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const)  &PyGaussianBase::ApplyCovSqrt)
+        .def("ApplyPrecSqrt", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyPrecSqrt)
+        .def("LogDeterminant", &PyGaussianBase::LogDeterminant)
+        .def("GetMean", &PyGaussianBase::GetMean);
+
 
     py::class_<PyDistribution, PyDistributionTramp, Distribution, std::shared_ptr<PyDistribution>> pydist(m, "PyDistribution");
     pydist.def(py::init<unsigned int>());

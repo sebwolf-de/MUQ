@@ -1,13 +1,17 @@
 #ifndef GAUSSIAN_H_
 #define GAUSSIAN_H_
 
-#include "MUQ/Modeling/LinearAlgebra/AnyAlgebra.h"
-
-#include "MUQ/Modeling/Distributions/Distribution.h"
+#include "MUQ/Modeling/Distributions/GaussianBase.h"
 
 namespace muq {
   namespace Modeling {
-    class Gaussian : public Distribution {
+
+    /**
+    @class Gaussian
+    @ingroup Distributions
+    @seealso GaussianBase
+    */
+    class Gaussian : public GaussianBase {
     public:
 
       /// Are we specifying the mean, covariance matrix, or precision matrix
@@ -56,13 +60,11 @@ namespace muq {
 
       Mode GetMode() const{return mode;};
 
-      unsigned int Dimension() const;
+      virtual Eigen::MatrixXd ApplyCovariance(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
+      virtual Eigen::MatrixXd ApplyPrecision(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
 
-      virtual Eigen::MatrixXd ApplyCovariance(Eigen::Ref<const Eigen::MatrixXd> const& x) const;
-      virtual Eigen::MatrixXd ApplyPrecision(Eigen::Ref<const Eigen::MatrixXd> const& x) const;
-
-      virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const;
-      virtual Eigen::MatrixXd ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const;
+      virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
+      virtual Eigen::MatrixXd ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
 
       /// Get the covariance
       /**
@@ -70,18 +72,6 @@ namespace muq {
       */
       Eigen::MatrixXd GetCovariance() const;
       Eigen::MatrixXd GetPrecision() const;
-
-      /// Get the mean
-      /**
-        @return A vector holding the distribution mean.
-      */
-      Eigen::VectorXd const& GetMean() const{return mean;};
-
-      /// Set the mean value
-      /**
-        @param[in] newMu A vector containing the new mean.  Must be the same size as the current mean.
-      */
-      void SetMean(Eigen::VectorXd const& newMu);
 
       /// Set the covariance matrix
       /**
@@ -102,18 +92,11 @@ namespace muq {
                                           Eigen::VectorXd const& data,
                                           Eigen::MatrixXd const& obsCov) const;
 
-      void ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params);
+      void ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params) override;
 
-      virtual Eigen::VectorXd GradLogDensity(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs) override;
-      
-    private:
+      virtual double LogDeterminant() const override{return logDet;};
 
-
-      virtual double LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
-
-      /// Sample the distribution
-      virtual Eigen::VectorXd SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
-
+    protected:
 
       /// Compute the distribution's scaling constant
       /**
@@ -132,17 +115,14 @@ namespace muq {
       /// What form do the extra inputs take? Just the mean, or the mean and covariance?
       Gaussian::InputMask inputTypes;
 
-      // Space to store the mean of the distribution
-      Eigen::VectorXd mean;
-
       // Space to store either the covariance or precision matrix (depending on mode)
       Eigen::MatrixXd covPrec;
 
       // Space to tore the matrix square root of the covariance or precision
       Eigen::LLT<Eigen::MatrixXd> sqrtCovPrec;
 
-      /// The scaling constant for the density
-      double logNormalization;
+      /// The log determinant of the covariance matrix
+      double logDet;
 
     };
   } // namespace Modeling
