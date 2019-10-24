@@ -6,20 +6,18 @@ using namespace muq::Utilities;
 using namespace muq::Modeling;
 
 Gaussian::Gaussian(unsigned int dim,
-                   InputMask    extraInputs) : Distribution(dim, GetExtraSizes(dim, extraInputs)),
+                   InputMask    extraInputs) : GaussianBase(dim, GetExtraSizes(dim, extraInputs)),
                                                mode(ModeFromExtras(extraInputs)),
                                                inputTypes(extraInputs),
-                                               mean(Eigen::VectorXd::Zero(dim)),
                                                covPrec(Eigen::VectorXd::Ones(dim))
 {
   ComputeNormalization();
 }
 
 Gaussian::Gaussian(Eigen::VectorXd const& muIn,
-                   InputMask              extraInputs) : Distribution(muIn.size(), GetExtraSizes(muIn.size(), extraInputs)),
+                   InputMask              extraInputs) : GaussianBase(muIn, GetExtraSizes(muIn.size(), extraInputs)),
                                                          mode(ModeFromExtras(extraInputs)),
                                                          inputTypes(extraInputs),
-                                                         mean(muIn),
                                                          covPrec(Eigen::VectorXd::Ones(muIn.size()))
 {
   ComputeNormalization();
@@ -29,10 +27,9 @@ Gaussian::Gaussian(Eigen::VectorXd const& muIn,
 Gaussian::Gaussian(Eigen::VectorXd const& muIn,
                    Eigen::MatrixXd const& obj,
                    Gaussian::Mode         modeIn,
-                   InputMask              extraInputs) : Distribution(muIn.size(), GetExtraSizes(muIn.size(), extraInputs)),
+                   InputMask              extraInputs) : GaussianBase(muIn, GetExtraSizes(muIn.size(), extraInputs)),
                                                          mode(modeIn),
                                                          inputTypes(extraInputs),
-                                                         mean(muIn),
                                                          covPrec(obj)
 {
   CheckInputTypes(extraInputs, mode);
@@ -125,19 +122,18 @@ Eigen::MatrixXd Gaussian::GetPrecision() const
 
 
 void Gaussian::ComputeNormalization() {
-  logNormalization = -0.5*Dimension()*std::log(2.0*M_PI);
 
   if( mode==Gaussian::Mode::Covariance ) {
     if(covPrec.cols()==1){
-      logNormalization -= 0.5 * covPrec.array().log().sum();
+      logDet = -0.5 * covPrec.array().log().sum();
     }else{
-      logNormalization -= std::log(sqrtCovPrec.matrixL().determinant());
+      logDet = -std::log(sqrtCovPrec.matrixL().determinant());
     }
   } else if( mode==Gaussian::Mode::Precision ) {
     if(covPrec.cols()==1){
-      logNormalization += 0.5 * covPrec.array().log().sum();
+      logDet = 0.5 * covPrec.array().log().sum();
     }else{
-      logNormalization += std::log(sqrtCovPrec.matrixL().determinant());
+      logDet = std::log(sqrtCovPrec.matrixL().determinant());
     }
   }
 }
@@ -169,35 +165,6 @@ void Gaussian::ResetHyperparameters(ref_vector<Eigen::VectorXd> const& inputs)
   }
 
   ComputeNormalization();
-}
-
-double Gaussian::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs) {
-
-  ResetHyperparameters(ref_vector<Eigen::VectorXd>(inputs.begin()+1, inputs.end()));
-
-  Eigen::VectorXd delta = inputs.at(0).get() - mean;
-
-  return logNormalization - 0.5 * delta.dot( ApplyPrecision(delta).col(0) );
-}
-
-Eigen::VectorXd Gaussian::SampleImpl(ref_vector<Eigen::VectorXd> const& inputs) {
-
-  ResetHyperparameters(ref_vector<Eigen::VectorXd>(inputs.begin(), inputs.end()));
-
-  Eigen::VectorXd z = RandomGenerator::GetNormal(mean.rows());
-
-  return mean + ApplyCovSqrt(z);
-}
-
-unsigned int Gaussian::Dimension() const {
-  return mean.rows();
-}
-
-void Gaussian::SetMean(Eigen::VectorXd const& newMu)
-{
-  assert(newMu.rows() == mean.rows());
-
-  mean = newMu;
 }
 
 void Gaussian::SetCovariance(Eigen::MatrixXd const& newCov) {
@@ -326,16 +293,4 @@ std::shared_ptr<Gaussian> Gaussian::Condition(Eigen::MatrixXd const& obsMat,
   Eigen::MatrixXd postCov = GetCovariance() - K*HP;
 
   return std::make_shared<Gaussian>(postMu, postCov);
-}
-
-
-Eigen::VectorXd Gaussian::GradLogDensity(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs)
-{
-  Eigen::VectorXd delta = inputs.at(0).get() - mean;
-  if(wrt==0){
-    return -1.0 * ApplyPrecision(delta);
-  }else{
-    std::cerr << "ERROR: Gradient wrt mean and covariance has not been implemented." << std::endl;
-    assert(false);
-  }
 }

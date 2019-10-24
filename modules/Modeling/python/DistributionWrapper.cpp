@@ -39,6 +39,38 @@ public:
 private:
 };
 
+class PyGaussianTramp : public PyGaussianBase {
+public:
+    /* Inherit the constructors */
+    using GaussianBase::GaussianBase;
+
+    /* Trampoline (need one for each virtual function) */
+    unsigned int Dimension() override {
+      PYBIND11_OVERLOAD(unsigned int,GaussianBase,Dimension);
+    }
+
+    Eigen::MatrixXd ApplyCovariance(Eigen::MatrixXd const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyCovariance, x);
+    }
+
+    Eigen::MatrixXd ApplyPrecision(Eigen::MatrixXd const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyPrecision, x);
+    }
+
+    Eigen::MatrixXd ApplyCovSqrt(Eigen::MatrixXd const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyCovSqrt, x);
+    }
+
+    Eigen::MatrixXd ApplyPrecSqrt(Eigen::MatrixXd const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyPrecSqrt, x);
+    }
+
+    double LogDeterminant() const override{
+      PYBIND11_OVERLOAD(Eigen::MatrixXd, PyGaussianBase, ApplyCovSqrt);
+    }
+
+};
+
 class Publicist : public PyDistribution {
 public:
     // Expose protected functions

@@ -2,6 +2,8 @@
 #define PYDISTRIBUTION_H_
 
 #include "MUQ/Modeling/Distributions/Distribution.h"
+#include "MUQ/Modeling/Distributions/GaussianBase.h"
+
 
 namespace muq {
   namespace Modeling {
@@ -19,10 +21,41 @@ namespace muq {
 
       virtual double LogDensityImpl(std::vector<Eigen::VectorXd> const& inputs) = 0;
 
-    private:
 
-      std::vector<Eigen::VectorXd> ToStdVec(ref_vector<Eigen::VectorXd> const& input);
+      static std::vector<Eigen::VectorXd> ToStdVec(ref_vector<Eigen::VectorXd> const& input);
     };
+
+
+    class PyGaussianBase : public GaussianBase {
+    public:
+
+      using GaussianBase::GaussianBase;
+
+      virtual ~PyGaussianBase() = default;
+
+      virtual Eigen::MatrixXd ApplyCovariance(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
+      virtual Eigen::MatrixXd ApplyCovariance(Eigen::MatrixXd const& x) const = 0;
+
+      virtual Eigen::MatrixXd ApplyPrecision(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
+      virtual Eigen::MatrixXd ApplyPrecision(Eigen::MatrixXd const& x) const = 0;
+
+      virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
+      virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::MatrixXd const& x) const = 0;
+
+      virtual Eigen::MatrixXd ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
+      virtual Eigen::MatrixXd ApplyPrecSqrt(Eigen::MatrixXd const& x) const = 0;
+
+      virtual void ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params) override;
+      virtual void ResetHyperparameters(std::vector<Eigen::VectorXd> const& params) = 0;
+
+      virtual Eigen::VectorXd GradLogDensity(unsigned int wrt, std::vector<Eigen::VectorXd> const& inputs);
+
+      virtual double LogDensityImpl(std::vector<Eigen::VectorXd> const& inputs);
+
+      virtual Eigen::VectorXd SampleImpl(std::vector<Eigen::VectorXd> const& inputs);
+
+    };
+
   } // namespace Modeling
 } // namespace muq
 
