@@ -20,3 +20,29 @@ std::vector<Eigen::VectorXd> PyDistribution::ToStdVec(ref_vector<Eigen::VectorXd
 
   return newIns;
 }
+
+
+Eigen::MatrixXd PyGaussianBase::ApplyCovariance(Eigen::Ref<const Eigen::MatrixXd> const& x) const
+{
+  return ApplyCovariance(Eigen::MatrixXd(x));
+};
+
+Eigen::MatrixXd PyGaussianBase::ApplyPrecision(Eigen::Ref<const Eigen::MatrixXd> const& x) const
+{
+  return ApplyPrecision(Eigen::MatrixXd(x));
+}
+
+Eigen::MatrixXd PyGaussianBase::ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const
+{
+  return ApplyCovSqrt(Eigen::MatrixXd(x));
+}
+
+Eigen::MatrixXd PyGaussianBase::ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const
+{
+  return ApplyPrecSqrt(Eigen::MatrixXd(x));
+}
+
+void PyGaussianBase::ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params)
+{
+  ResetHyperparameters(PyDistribution::ToStdVec(params));
+}
