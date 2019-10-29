@@ -9,14 +9,16 @@ SamplingProblem::SamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const&
 
 
 
-double SamplingProblem::LogDensity(unsigned int const t, std::shared_ptr<SamplingState> const& state, AbstractSamplingProblem::SampleType type) {
+double SamplingProblem::LogDensity(unsigned int const iteration,
+                                   std::shared_ptr<SamplingState> const& state,
+                                   AbstractSamplingProblem::SampleType type) {
   assert(target);
 
   return target->Evaluate(state->state).at(0)(0);
 }
 
 Eigen::VectorXd SamplingProblem::GradLogDensity(std::shared_ptr<SamplingState> const& state,
-                                                unsigned                       blockWrt)
+                                                unsigned                       const  blockWrt)
 {
   return target->Gradient(0,blockWrt, state->state, Eigen::VectorXd::Ones(1).eval());
 }
