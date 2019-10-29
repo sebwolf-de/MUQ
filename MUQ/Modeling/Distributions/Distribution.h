@@ -37,22 +37,6 @@ namespace muq {
       VARIADIC_TO_REFVECTOR(LogDensity, Eigen::VectorXd, double);
 
 
-      // template<typename... Args>
-      // inline double LogDensity(Args const&... args) {
-      //   ref_vector<Eigen::VectorXd> vec;
-      //   return LogDensity(vec, args...);
-      // }
-      // template<typename NextType, typename... Args>                                                                                               \
-      // inline double LogDensity(ref_vector<Eigen::VectorXd>& vec, NextType const& ith, Args const&... args) {     \
-      //     static_assert(typeid(ith)==typeid(Eigen::VectorXd), "In LogDensity, cannot cast input type to Eigen::VectorXd.");
-      //     vec.push_back(std::cref(ith));                                                                                               \
-      //     return LogDensity(vec, args...);                                                                              \
-      // }
-      // inline double LogDensity(ref_vector<Eigen::VectorXd>& vec, Eigen::VectorXd const& last) {
-      //   vec.push_back(std::cref(last));
-      //   return LogDensity(vec);
-      // }
-
       virtual Eigen::VectorXd GradLogDensity(unsigned int wrt, std::vector<Eigen::VectorXd> const& inputs){return GradLogDensity(wrt, ToRefVector(inputs));};;
       virtual Eigen::VectorXd GradLogDensity(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs);
 

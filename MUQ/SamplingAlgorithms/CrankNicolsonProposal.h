@@ -15,7 +15,7 @@ namespace muq {
     @brief An implement of the dimension-independent pCN proposal.
 
     @details
-    This class implements the preconditioned Crank Nicolson proposal (pCN) out
+    This class implements the preconditioned Crank Nicolson proposal (pCN) from
     Cotter et al., 2013.  The proposal takes the form
     \f[
     u^\prime = \sqrt{ 1 - \beta^2} u_c + \beta z,
@@ -35,7 +35,7 @@ namespace muq {
 
       CrankNicolsonProposal(boost::property_tree::ptree       const& pt,
                             std::shared_ptr<AbstractSamplingProblem> prob,
-                            std::shared_ptr<muq::Modeling::Gaussian> prior);
+                            std::shared_ptr<muq::Modeling::GaussianBase> prior);
 
       CrankNicolsonProposal(boost::property_tree::ptree       const& pt,
                             std::shared_ptr<AbstractSamplingProblem> prob);
@@ -62,13 +62,13 @@ namespace muq {
       //std::shared_ptr<muq::Modeling::Gaussian> propPart;
 
       // Sometimes we have to keep track of the prior distribution so we can update the proposal mean and covariance
-      std::shared_ptr<muq::Modeling::Gaussian> priorDist;
+      std::shared_ptr<muq::Modeling::GaussianBase> priorDist;
 
       virtual std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> currentState) override;
 
       virtual double LogDensity(std::shared_ptr<SamplingState> currState,
                                 std::shared_ptr<SamplingState> propState) override;
-      
+
       void ExtractPrior(std::shared_ptr<AbstractSamplingProblem> prob, std::string nodeName);
     };
 

@@ -13,7 +13,10 @@ using namespace muq::SamplingAlgorithms;
 
 REGISTER_TRANSITION_KERNEL(MHKernel)
 
-MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : TransitionKernel(pt, problem), reeval(pt.get<bool>("ReevaluateAcceptedDensity", false)) {
+MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : TransitionKernel(pt, problem),
+                                                                                            reeval(pt.get<bool>("ReevaluateAcceptedDensity", false))
+{
+
   // Extract the proposal parts from the ptree
   std::string proposalName = pt.get<std::string>("Proposal");
 
@@ -25,7 +28,11 @@ MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem>
   assert(proposal);
 }
 
-MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<MCMCProposal> proposalIn) : TransitionKernel(pt, problem), proposal(proposalIn), reeval(pt.get<bool>("ReevaluateAcceptedDensity", false)) {}
+MHKernel::MHKernel(pt::ptree const& pt,
+                   std::shared_ptr<AbstractSamplingProblem> problem,
+                   std::shared_ptr<MCMCProposal> proposalIn) : TransitionKernel(pt, problem),
+                                                               proposal(proposalIn),
+                                                               reeval(pt.get<bool>("ReevaluateAcceptedDensity", false)) {}
 
 #if MUQ_HAS_PARCER
 void MHKernel::SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm) {

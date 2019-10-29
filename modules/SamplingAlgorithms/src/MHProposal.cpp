@@ -1,5 +1,7 @@
 #include "MUQ/SamplingAlgorithms/MHProposal.h"
 
+#include "MUQ/Modeling/Distributions/Gaussian.h"
+
 #include "MUQ/Utilities/AnyHelpers.h"
 
 namespace pt = boost::property_tree;
@@ -25,7 +27,7 @@ MHProposal::MHProposal(pt::ptree const& pt,
 
 MHProposal::MHProposal(pt::ptree const& pt,
                        std::shared_ptr<AbstractSamplingProblem> prob,
-                       std::shared_ptr<Gaussian> proposalIn) :
+                       std::shared_ptr<GaussianBase> proposalIn) :
                        MCMCProposal(pt,prob), proposal(proposalIn) {}
 
 std::shared_ptr<SamplingState> MHProposal::Sample(std::shared_ptr<SamplingState> currentState) {

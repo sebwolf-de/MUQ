@@ -12,58 +12,87 @@ namespace pt = boost::property_tree;
 using namespace muq::Utilities;
 using namespace muq::SamplingAlgorithms;
 
-SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> const& problem) :
-  SamplingAlgorithm(std::make_shared<MarkovChain>()),
-  printLevel(pt.get("PrintLevel",3)) {
-  SetUp(pt, problem);
+SingleChainMCMC::SingleChainMCMC(pt::ptree pt,
+                                 std::shared_ptr<AbstractSamplingProblem> const& problem) :
+                 SamplingAlgorithm(std::make_shared<MarkovChain>()),
+                 printLevel(pt.get("PrintLevel",3))
+{
+  Setup(pt, problem);
 }
 
 #if MUQ_HAS_PARCER
-SingleChainMCMC::SingleChainMCMC(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> const& problem, std::shared_ptr<parcer::Communicator> const& comm) :
-  SamplingAlgorithm(std::make_shared<MarkovChain>(), comm),
-  printLevel(pt.get("PrintLevel",3)) {
-  SetUp(pt, problem);
+SingleChainMCMC::SingleChainMCMC(pt::ptree pt,
+                                 std::shared_ptr<AbstractSamplingProblem> const& problem,
+                                 std::shared_ptr<parcer::Communicator> const& comm) :
+                 SamplingAlgorithm(std::make_shared<MarkovChain>(), comm),
+                 printLevel(pt.get("PrintLevel",3))
+{
+  Setup(pt, problem);
 }
+
+SingleChainMCMC::SingleChainMCMC(pt::ptree pt,
+                                 std::shared_ptr<parcer::Communicator> const& comm,
+                                 std::vector<std::shared_ptr<TransitionKernel> > const& kernelsIn) :
+                 SamplingAlgorithm(std::make_shared<MarkovChain>(), comm),
+                 printLevel(pt.get("PrintLevel",3))
+{
+  Setup(pt, kernelsIn);
+}
+
 #endif
 
-SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree pt, std::vector<std::shared_ptr<TransitionKernel> > const& kernelsIn) :
+SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree pt,
+                                 std::vector<std::shared_ptr<TransitionKernel> > const& kernelsIn) :
                 SamplingAlgorithm(std::make_shared<MarkovChain>()),
-                printLevel(pt.get("PrintLevel",3)),
-                kernels(kernelsIn)
+                printLevel(pt.get("PrintLevel",3))
 {
-  // TODO: clean this up, maybe somehow merge with SetUp(..)
+  Setup(pt,kernelsIn);
+}
+
+void SingleChainMCMC::Setup(pt::ptree pt,
+                            std::vector<std::shared_ptr<TransitionKernel>> const& kernelsIn) {
+
   numSamps = pt.get<unsigned int>("NumSamples");
   burnIn = pt.get("BurnIn",0);
+
+  kernels = kernelsIn;
 
   scheduler = std::make_shared<ThinScheduler>(pt);
   schedulerQOI = std::make_shared<ThinScheduler>(pt);
+  assert(scheduler);
+  assert(schedulerQOI);
+
+#if MUQ_HAS_PARCER
+
+  for(int i=0; i<kernels.size(); ++i)
+    kernels.at(i)->SetCommunicator(comm);
+
+#endif
+
 }
 
-void SingleChainMCMC::SetUp(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem) {
-  numSamps = pt.get<unsigned int>("NumSamples");
-  burnIn = pt.get("BurnIn",0);
+void SingleChainMCMC::Setup(pt::ptree pt, std::shared_ptr<AbstractSamplingProblem> const& problem) {
 
   std::string kernelString = pt.get<std::string>("KernelList");
 
   std::vector<std::string> kernelNames = StringUtilities::Split(kernelString, ',');
 
+  std::vector<std::shared_ptr<TransitionKernel>> kernelVec;
   unsigned int numBlocks = kernelNames.size();
-  kernels.resize(numBlocks);
-
-  scheduler = std::make_shared<ThinScheduler>(pt);
-  schedulerQOI = std::make_shared<ThinScheduler>(pt);
+  kernelVec.resize(numBlocks);
 
   // Add the block id to a child tree and construct a kernel for each block
-  for(int i=0; i<kernels.size(); ++i) {
+  for(int i=0; i<numBlocks; ++i) {
     boost::property_tree::ptree subTree = pt.get_child(kernelNames.at(i));
     subTree.put("BlockIndex",i);
-    if( std::dynamic_pointer_cast<ExpensiveSamplingProblem>(problem) ) { subTree.put("ReevaluateAcceptedDensity", true); }
-    kernels.at(i) = TransitionKernel::Construct(subTree, problem);
 
-#if MUQ_HAS_PARCER
-    kernels.at(i)->SetCommunicator(comm);
-#endif
+    if( std::dynamic_pointer_cast<ExpensiveSamplingProblem>(problem) )
+      subTree.put("ReevaluateAcceptedDensity", true);
+
+    kernelVec.at(i) = TransitionKernel::Construct(subTree, problem);
   }
+
+  Setup(pt, kernelVec);
 }
 
 void SingleChainMCMC::PrintStatus(std::string prefix, unsigned int currInd) const

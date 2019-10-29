@@ -1,10 +1,13 @@
 #include "MUQ/Utilities/AnyHelpers.h"
 
+#include "MUQ/Modeling/Distributions/Gaussian.h"
 #include "MUQ/SamplingAlgorithms/AMProposal.h"
 
 namespace pt = boost::property_tree;
 using namespace muq::Utilities;
 using namespace muq::SamplingAlgorithms;
+using namespace muq::Modeling;
+
 
 REGISTER_MCMC_PROPOSAL(AMProposal)
 AMProposal::AMProposal(pt::ptree const& pt , std::shared_ptr<AbstractSamplingProblem> prob) : MHProposal(pt, prob),
@@ -24,7 +27,7 @@ void AMProposal::Adapt(unsigned int const t, std::vector<std::shared_ptr<Samplin
     Eigen::MatrixXd adjustedCov = adaptScale * cov + 1e-10 * Eigen::MatrixXd::Identity(cov.rows(), cov.cols());
 
     // update the proposal covariance
-    proposal->SetCovariance(adjustedCov);
+    std::dynamic_pointer_cast<Gaussian>(proposal)->SetCovariance(adjustedCov);
   }
 }
 

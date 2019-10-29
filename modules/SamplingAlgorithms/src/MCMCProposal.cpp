@@ -5,7 +5,7 @@ using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
 MCMCProposal::MCMCProposal(boost::property_tree::ptree       const& pt,
-                           std::shared_ptr<AbstractSamplingProblem> prob) : blockInd(pt.get<int>("BlockIndex")) {}
+                           std::shared_ptr<AbstractSamplingProblem> prob) : blockInd(pt.get("BlockIndex",0)) {}
 
 std::shared_ptr<MCMCProposal> MCMCProposal::Construct(pt::ptree                         const& pt,
                                                       std::shared_ptr<AbstractSamplingProblem> prob) {
