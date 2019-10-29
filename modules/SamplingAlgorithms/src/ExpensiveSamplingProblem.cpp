@@ -214,3 +214,8 @@ void ExpensiveSamplingProblem::RefineSurrogate(Eigen::VectorXd const& point, uns
 }
 
 unsigned int ExpensiveSamplingProblem::CacheSize() const { return reg->CacheSize(); }
+
+
+void ExpensiveSamplingProblem::AddOptions(boost::property_tree::ptree & pt) const {
+  pt.put("ReevaluateAcceptedDensity", true);
+}

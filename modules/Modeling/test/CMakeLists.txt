@@ -14,10 +14,17 @@ CreateTestGroup(
     CombineVectorsTests.cpp
 
     MultiLogisticTest.cpp
+)
+
+CreateTestGroup(
+  MODELING_STAN
+  CwiseOperatorTests/UnaryOperatorTest.cpp
+)
+
+CreateTestGroup(
+    MODELING_FLANN
 
     FlannTest/FlannCacheTests.cpp
-
-    CwiseOperatorTests/UnaryOperatorTest.cpp
 )
 
 CreateTestGroup(
@@ -45,12 +52,6 @@ CreateParallelTestGroup(
     ODEParallelTests.cpp
 )
 
-
-CreateTestGroup(
-    MODELING_FLANN
-
-    FlannTest/FlannCacheTests.cpp
-)
 
 CreateTestGroup(
     MODELING_DISTRIBUTIONS
