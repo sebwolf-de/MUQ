@@ -6,7 +6,6 @@
 #include "MUQ/Utilities/StringUtilities.h"
 
 #include "MUQ/SamplingAlgorithms/MarkovChain.h"
-#include "MUQ/SamplingAlgorithms/ExpensiveSamplingProblem.h"
 
 namespace pt = boost::property_tree;
 using namespace muq::Utilities;
@@ -86,9 +85,7 @@ void SingleChainMCMC::Setup(pt::ptree pt, std::shared_ptr<AbstractSamplingProble
     boost::property_tree::ptree subTree = pt.get_child(kernelNames.at(i));
     subTree.put("BlockIndex",i);
 
-    if( std::dynamic_pointer_cast<ExpensiveSamplingProblem>(problem) )
-      subTree.put("ReevaluateAcceptedDensity", true);
-
+    problem->AddOptions(subTree);
     kernelVec.at(i) = TransitionKernel::Construct(subTree, problem);
   }
 

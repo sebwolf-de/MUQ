@@ -17,7 +17,7 @@ CreateCompileGroup(
     "The basic building blocks of the Modeling library."
     muqModeling
     "MODELING_LINEARALGEBRA;UTILITIES_CORE"
-    "EIGEN3;BOOST;SUNDIALS;NANOFLANN"
+    "EIGEN3;BOOST"
     ""
     WorkPiece.cpp
 
@@ -48,7 +48,25 @@ CreateCompileGroup(
 
     LinearSDE.cpp
 
-    Flann/FlannCache.cpp
+)
+
+CreateCompileGroup(
+  MODELING_STAN
+  "Modeling tools that depend on STAN."
+  muqModeling
+  "MODELING_CORE"
+  "EIGEN3;BOOST;STANMATH"
+  ""
+)
+
+CreateCompileGroup(
+  MODELING_FLANN
+  "Modeling tools that also depend on FLANN."
+  muqModeling
+  "MODELING_CORE"
+  "EIGEN3;BOOST;NANOFLANN"
+  ""
+  Flann/FlannCache.cpp
 )
 
 CreateCompileGroup(
@@ -57,7 +75,7 @@ CreateCompileGroup(
     muqModeling
     "MODELING_CORE"
     "EIGEN3"
-    "SUNDIALS"
+    ""
     LinearAlgebra/LinearOperator.cpp
     LinearAlgebra/CompanionMatrix.cpp
     LinearAlgebra/BlockDiagonalOperator.cpp

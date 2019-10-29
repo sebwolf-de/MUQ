@@ -7,6 +7,7 @@
 #include <memory>
 
 #include <Eigen/Core>
+#include <boost/property_tree/ptree.hpp>
 
 namespace muq{
   namespace SamplingAlgorithms{
@@ -44,6 +45,12 @@ namespace muq{
 
       virtual std::shared_ptr<SamplingState> QOI();
 
+
+      /** Sometimes, there will be problem-specific options that need to be passed
+          to the SamplingAlgorithm.  This function adds any of those options to the
+          given property_tree.
+      */
+      virtual void AddOptions(boost::property_tree::ptree & pt) const{};
 
       const int numBlocks;
       const Eigen::VectorXi blockSizes;

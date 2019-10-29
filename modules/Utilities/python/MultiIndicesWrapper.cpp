@@ -56,6 +56,7 @@ void muq::Utilities::PythonBindings::MultiIndicesWrapper(py::module &m)
 
   py::class_<NoLimiter, MultiIndexLimiter, std::shared_ptr<NoLimiter>> noLim(m, "NoLimiter");
   noLim
+    .def(py::init<>())
     .def("IsFeasible", &NoLimiter::IsFeasible);
 
   py::class_<AndLimiter, MultiIndexLimiter, std::shared_ptr<AndLimiter>> andLim(m, "AndLimiter");

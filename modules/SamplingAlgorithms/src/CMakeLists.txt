@@ -14,13 +14,23 @@
 
 CreateCompileGroup(
     SAMPLING_PROBLEMS
-    "Implement sampling algorithms such as Monte Carlo, importance sampling, and Markov chain Monte Carlo"
+    "Implement sampling sampling problems for MCMC."
+    muqSamplingAlgorithms
+    "MODELING_CORE"
+    ""
+    ""
+
+    SamplingProblem.cpp
+)
+
+CreateCompileGroup(
+    FANCY_SAMPLING_PROBLEMS
+    "Implement more advanced sampling problem."
     muqSamplingAlgorithms
     "MODELING_CORE;APPROXIMATION_REGRESSION"
     ""
     ""
 
-    SamplingProblem.cpp
     ExpensiveSamplingProblem.cpp
 )
 
@@ -29,7 +39,7 @@ CreateCompileGroup(
     SAMPLING_ALGORITHM
     "Implement sampling algorithms such as Monte Carlo, importance sampling, and Markov chain Monte Carlo"
     muqSamplingAlgorithms
-    "MODELING_CORE;UTILITIES_CORE;SAMPLING_PROBLEMS"
+    "MODELING_CORE;MODELING_DISTRIBUTIONS;UTILITIES_CORE;UTILITIES_HDF5;SAMPLING_PROBLEMS"
     ""
     ""
     AbstractSamplingProblem.cpp
