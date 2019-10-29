@@ -24,10 +24,7 @@ namespace muq {
       virtual ~SamplingProblem() = default;
 
 
-      virtual double LogDensity(unsigned int                   const  iteration,
-                                std::shared_ptr<SamplingState> const& state,
-                                AbstractSamplingProblem::SampleType   type) override;
-
+      virtual double LogDensity(std::shared_ptr<SamplingState> const& state) override;
 
       virtual Eigen::VectorXd GradLogDensity(std::shared_ptr<SamplingState> const& state,
                                              unsigned                       const  blockWrt) override;

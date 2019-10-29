@@ -145,6 +145,11 @@ void SingleChainMCMC::Sample() {
 
   // Loop through each parameter block
   for(int blockInd=0; blockInd<kernels.size(); ++blockInd){
+
+    // Set some metadata that might be needed by the expensive sampling problem
+    prevState->meta["iteration"] = sampNum;
+    prevState->meta["IsProposal"] = false;
+
     // kernel prestep
     kernels.at(blockInd)->PreStep(sampNum, prevState);
 
@@ -155,7 +160,6 @@ void SingleChainMCMC::Sample() {
     const double now = std::chrono::duration<double>(std::chrono::high_resolution_clock::now()-startTime).count();
     for( auto it=newStates.begin(); it!=newStates.end(); ++it ) {
        (*it)->meta["time"] = now;
-       (*it)->meta["iteration"] = sampNum;
     }
 
     // kernel post-processing

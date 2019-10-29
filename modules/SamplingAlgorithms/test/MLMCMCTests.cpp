@@ -36,7 +36,7 @@ public:
   virtual ~MySamplingProblem() = default;
 
 
-  virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> const& state, AbstractSamplingProblem::SampleType type) override {
+  virtual double LogDensity(std::shared_ptr<SamplingState> const& state) override {
     lastState = state;
     return target->Evaluate(state->state).at(0)(0);
   };

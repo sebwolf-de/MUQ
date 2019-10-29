@@ -52,6 +52,11 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   // propose a new point
   std::shared_ptr<SamplingState> prop = proposal->Sample(prevState);
 
+  // The following metadata is needed by the expensive sampling problem
+  if(prevState->HasMeta("iteration"))
+    prop->meta["iteration"] = prevState->meta["iteration"];
+  prop->meta["IsProposal"] = true;
+
   // compute acceptance probability
   double propTarget;
   double currentTarget;
@@ -59,14 +64,14 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   if( prevState->HasMeta("LogTarget") && !reeval ){
     currentTarget = AnyCast( prevState->meta["LogTarget"]);
   }else{
-    currentTarget = problem->LogDensity(t, prevState, AbstractSamplingProblem::SampleType::Accepted);
+    currentTarget = problem->LogDensity(prevState);
     if (problem->numBlocksQOI > 0) {
       prevState->meta["QOI"] = problem->QOI();
     }
     prevState->meta["LogTarget"] = currentTarget;
   }
 
-  propTarget = problem->LogDensity(t, prop, AbstractSamplingProblem::SampleType::Proposed);
+  propTarget = problem->LogDensity(prop);
   prop->meta["LogTarget"] = propTarget;
 
   // Aceptance probability
@@ -81,6 +86,8 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
       prop->meta["QOI"] = problem->QOI();
     }
     numAccepts++;
+
+    prop->meta["IsProposal"] = false;
     return std::vector<std::shared_ptr<SamplingState>>(1, prop);
   } else {
     return std::vector<std::shared_ptr<SamplingState>>(1, prevState);

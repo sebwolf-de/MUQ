@@ -9,9 +9,7 @@ SamplingProblem::SamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const&
 
 
 
-double SamplingProblem::LogDensity(unsigned int const iteration,
-                                   std::shared_ptr<SamplingState> const& state,
-                                   AbstractSamplingProblem::SampleType type) {
+double SamplingProblem::LogDensity(std::shared_ptr<SamplingState> const& state) {
   assert(target);
 
   return target->Evaluate(state->state).at(0)(0);
