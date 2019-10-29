@@ -51,7 +51,6 @@ pybind11 can map the following core C++ features to Python
 - Custom operators
 - Single and multiple inheritance
 - STL data structures
-- Iterators and ranges
 - Smart pointers with reference counting like ``std::shared_ptr``
 - Internal references with correct reference counting
 - C++ classes with virtual (and pure virtual) methods can be extended in Python
@@ -106,6 +105,7 @@ In addition to the core functionality, pybind11 provides some extra goodies:
 This project was created by [Wenzel Jakob](http://rgl.epfl.ch/people/wjakob).
 Significant features and/or improvements to the code were contributed by
 Jonas Adler,
+Lori A. Burns,
 Sylvain Corlay,
 Trent Houliston,
 Axel Huebl,
@@ -118,6 +118,7 @@ Ben Pritchard,
 Jason Rhinelander,
 Boris Schäling,
 Pim Schellart,
+Henry Schreiner,
 Ivan Smirnov, and
 Patrick Stewart.
 

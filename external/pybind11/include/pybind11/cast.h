@@ -17,6 +17,7 @@
 #include <array>
 #include <limits>
 #include <tuple>
+#include <type_traits>
 
 #if defined(PYBIND11_CPP17)
 #  if defined(__has_include)
@@ -203,10 +204,10 @@ PYBIND11_NOINLINE inline handle get_type_handle(const std::type_info &tp, bool t
 }
 
 struct value_and_holder {
-    instance *inst;
-    size_t index;
-    const detail::type_info *type;
-    void **vh;
+    instance *inst = nullptr;
+    size_t index = 0u;
+    const detail::type_info *type = nullptr;
+    void **vh = nullptr;
 
     // Main constructor for a found value/holder:
     value_and_holder(instance *i, const detail::type_info *type, size_t vpos, size_t index) :
@@ -215,7 +216,7 @@ struct value_and_holder {
     {}
 
     // Default constructor (used to signal a value-and-holder not found by get_value_and_holder())
-    value_and_holder() : inst{nullptr} {}
+    value_and_holder() {}
 
     // Used for past-the-end iterator
     value_and_holder(size_t index) : index{index} {}
@@ -269,8 +270,8 @@ public:
 
     struct iterator {
     private:
-        instance *inst;
-        const type_vec *types;
+        instance *inst = nullptr;
+        const type_vec *types = nullptr;
         value_and_holder curr;
         friend struct values_and_holders;
         iterator(instance *inst, const type_vec *tinfo)
@@ -532,9 +533,17 @@ public:
             case return_value_policy::copy:
                 if (copy_constructor)
                     valueptr = copy_constructor(src);
-                else
-                    throw cast_error("return_value_policy = copy, but the "
-                                     "object is non-copyable!");
+                else {
+#if defined(NDEBUG)
+                    throw cast_error("return_value_policy = copy, but type is "
+                                     "non-copyable! (compile in debug mode for details)");
+#else
+                    std::string type_name(tinfo->cpptype->name());
+                    detail::clean_type_id(type_name);
+                    throw cast_error("return_value_policy = copy, but type " +
+                                     type_name + " is non-copyable!");
+#endif
+                }
                 wrapper->owned = true;
                 break;
 
@@ -543,9 +552,18 @@ public:
                     valueptr = move_constructor(src);
                 else if (copy_constructor)
                     valueptr = copy_constructor(src);
-                else
-                    throw cast_error("return_value_policy = move, but the "
-                                     "object is neither movable nor copyable!");
+                else {
+#if defined(NDEBUG)
+                    throw cast_error("return_value_policy = move, but type is neither "
+                                     "movable nor copyable! "
+                                     "(compile in debug mode for details)");
+#else
+                    std::string type_name(tinfo->cpptype->name());
+                    detail::clean_type_id(type_name);
+                    throw cast_error("return_value_policy = move, but type " +
+                                     type_name + " is neither movable nor copyable!");
+#endif
+                }
                 wrapper->owned = true;
                 break;
 
@@ -570,7 +588,17 @@ public:
         // Lazy allocation for unallocated values:
         if (vptr == nullptr) {
             auto *type = v_h.type ? v_h.type : typeinfo;
-            vptr = type->operator_new(type->type_size);
+            if (type->operator_new) {
+                vptr = type->operator_new(type->type_size);
+            } else {
+                #ifdef __cpp_aligned_new
+                    if (type->type_align > __STDCPP_DEFAULT_NEW_ALIGNMENT__)
+                        vptr = ::operator new(type->type_size,
+                                              std::align_val_t(type->type_align));
+                    else
+                #endif
+                vptr = ::operator new(type->type_size);
+            }
         }
         value = vptr;
     }
@@ -764,7 +792,9 @@ template <typename T, typename SFINAE = void> struct is_copy_constructible : std
 // so, copy constructability depends on whether the value_type is copy constructible.
 template <typename Container> struct is_copy_constructible<Container, enable_if_t<all_of<
         std::is_copy_constructible<Container>,
-        std::is_same<typename Container::value_type &, typename Container::reference>
+        std::is_same<typename Container::value_type &, typename Container::reference>,
+        // Avoid infinite recursion
+        negation<std::is_same<Container, typename Container::value_type>>
     >::value>> : is_copy_constructible<typename Container::value_type> {};
 
 #if !defined(PYBIND11_CPP17)
@@ -984,9 +1014,11 @@ public:
         }
 
         bool py_err = py_value == (py_type) -1 && PyErr_Occurred();
+
+        // Protect std::numeric_limits::min/max with parentheses
         if (py_err || (std::is_integral<T>::value && sizeof(py_type) != sizeof(T) &&
-                       (py_value < (py_type) std::numeric_limits<T>::min() ||
-                        py_value > (py_type) std::numeric_limits<T>::max()))) {
+                       (py_value < (py_type) (std::numeric_limits<T>::min)() ||
+                        py_value > (py_type) (std::numeric_limits<T>::max)()))) {
             bool type_error = py_err && PyErr_ExceptionMatches(
 #if PY_VERSION_HEX < 0x03000000 && !defined(PYPY_VERSION)
                 PyExc_SystemError
@@ -1009,21 +1041,34 @@ public:
         return true;
     }
 
-    static handle cast(T src, return_value_policy /* policy */, handle /* parent */) {
-        if (std::is_floating_point<T>::value) {
-            return PyFloat_FromDouble((double) src);
-        } else if (sizeof(T) <= sizeof(ssize_t)) {
-            // This returns a long automatically if needed
-            if (std::is_signed<T>::value)
-                return PYBIND11_LONG_FROM_SIGNED(src);
-            else
-                return PYBIND11_LONG_FROM_UNSIGNED(src);
-        } else {
-            if (std::is_signed<T>::value)
-                return PyLong_FromLongLong((long long) src);
-            else
-                return PyLong_FromUnsignedLongLong((unsigned long long) src);
-        }
+    template<typename U = T>
+    static typename std::enable_if<std::is_floating_point<U>::value, handle>::type
+    cast(U src, return_value_policy /* policy */, handle /* parent */) {
+        return PyFloat_FromDouble((double) src);
+    }
+
+    template<typename U = T>
+    static typename std::enable_if<!std::is_floating_point<U>::value && std::is_signed<U>::value && (sizeof(U) <= sizeof(long)), handle>::type
+    cast(U src, return_value_policy /* policy */, handle /* parent */) {
+        return PYBIND11_LONG_FROM_SIGNED((long) src);
+    }
+
+    template<typename U = T>
+    static typename std::enable_if<!std::is_floating_point<U>::value && std::is_unsigned<U>::value && (sizeof(U) <= sizeof(unsigned long)), handle>::type
+    cast(U src, return_value_policy /* policy */, handle /* parent */) {
+        return PYBIND11_LONG_FROM_UNSIGNED((unsigned long) src);
+    }
+
+    template<typename U = T>
+    static typename std::enable_if<!std::is_floating_point<U>::value && std::is_signed<U>::value && (sizeof(U) > sizeof(long)), handle>::type
+    cast(U src, return_value_policy /* policy */, handle /* parent */) {
+        return PyLong_FromLongLong((long long) src);
+    }
+
+    template<typename U = T>
+    static typename std::enable_if<!std::is_floating_point<U>::value && std::is_unsigned<U>::value && (sizeof(U) > sizeof(unsigned long)), handle>::type
+    cast(U src, return_value_policy /* policy */, handle /* parent */) {
+        return PyLong_FromUnsignedLongLong((unsigned long long) src);
     }
 
     PYBIND11_TYPE_CASTER(T, _<std::is_integral<T>::value>("int", "float"));
@@ -1423,7 +1468,7 @@ public:
 
     explicit operator type*() { return this->value; }
     explicit operator type&() { return *(this->value); }
-    explicit operator holder_type*() { return &holder; }
+    explicit operator holder_type*() { return std::addressof(holder); }
 
     // Workaround for Intel compiler bug
     // see pybind11 issue 94
@@ -1493,7 +1538,7 @@ struct move_only_holder_caster {
 
     static handle cast(holder_type &&src, return_value_policy, handle) {
         auto *ptr = holder_helper<holder_type>::get(src);
-        return type_caster_base<type>::cast_holder(ptr, &src);
+        return type_caster_base<type>::cast_holder(ptr, std::addressof(src));
     }
     static constexpr auto name = type_caster_base<type>::name;
 };
@@ -1587,17 +1632,23 @@ template <typename T> using move_never = none_of<move_always<T>, move_if_unrefer
 // everything else returns a reference/pointer to a local variable.
 template <typename type> using cast_is_temporary_value_reference = bool_constant<
     (std::is_reference<type>::value || std::is_pointer<type>::value) &&
-    !std::is_base_of<type_caster_generic, make_caster<type>>::value
+    !std::is_base_of<type_caster_generic, make_caster<type>>::value &&
+    !std::is_same<intrinsic_t<type>, void>::value
 >;
 
 // When a value returned from a C++ function is being cast back to Python, we almost always want to
 // force `policy = move`, regardless of the return value policy the function/method was declared
-// with.  Some classes (most notably Eigen::Ref and related) need to avoid this, and so can do so by
-// specializing this struct.
+// with.
 template <typename Return, typename SFINAE = void> struct return_value_policy_override {
+    static return_value_policy policy(return_value_policy p) { return p; }
+};
+
+template <typename Return> struct return_value_policy_override<Return,
+        detail::enable_if_t<std::is_base_of<type_caster_generic, make_caster<Return>>::value, void>> {
     static return_value_policy policy(return_value_policy p) {
-        return !std::is_lvalue_reference<Return>::value && !std::is_pointer<Return>::value
-            ? return_value_policy::move : p;
+        return !std::is_lvalue_reference<Return>::value &&
+               !std::is_pointer<Return>::value
+                   ? return_value_policy::move : p;
     }
 };
 
@@ -1825,7 +1876,7 @@ struct function_record;
 
 /// Internal data associated with a single function call
 struct function_call {
-    function_call(function_record &f, handle p); // Implementation in attr.h
+    function_call(const function_record &f, handle p); // Implementation in attr.h
 
     /// The function data:
     const function_record &func;
