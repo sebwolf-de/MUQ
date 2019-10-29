@@ -21,6 +21,7 @@ std::shared_ptr<TransitionKernel::TransitionKernelMap> TransitionKernel::GetTran
 }
 
 std::shared_ptr<TransitionKernel> TransitionKernel::Construct(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) {
+
   // get the name of the kernel
   const std::string& kernelName = pt.get<std::string>("Method");
 

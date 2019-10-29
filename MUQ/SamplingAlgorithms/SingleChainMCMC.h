@@ -31,12 +31,20 @@ namespace muq{
     public:
 
 #if MUQ_HAS_PARCER
-      SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> const& problem, std::shared_ptr<parcer::Communicator> const& comm);
+      SingleChainMCMC(boost::property_tree::ptree pt,
+                      std::shared_ptr<parcer::Communicator> const& comm,
+                      std::vector<std::shared_ptr<TransitionKernel> > const& kernelsIn);
+
+      SingleChainMCMC(boost::property_tree::ptree pt,
+                      std::shared_ptr<AbstractSamplingProblem> const& problem,
+                      std::shared_ptr<parcer::Communicator> const& comm);
 #endif
 
-      SingleChainMCMC(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> const& problem);
+      SingleChainMCMC(boost::property_tree::ptree pt,
+                      std::shared_ptr<AbstractSamplingProblem> const& problem);
 
-      SingleChainMCMC(boost::property_tree::ptree pt, std::vector<std::shared_ptr<TransitionKernel> > const& kernels);
+      SingleChainMCMC(boost::property_tree::ptree pt,
+                      std::vector<std::shared_ptr<TransitionKernel> > const& kernels);
 
       virtual ~SingleChainMCMC() = default;
 
@@ -98,7 +106,10 @@ namespace muq{
       std::shared_ptr<SamplingState> lastSavedState = nullptr;
       double totalTime = 0.0;
 
-      void SetUp(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> problem);
+      void Setup(boost::property_tree::ptree pt,
+                 std::vector<std::shared_ptr<TransitionKernel>> const& kernelsIn);
+
+      void Setup(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> const& problem);
     }; // class SingleChainMCMC
   } // namespace SamplingAlgorithms
 } // namespace muq

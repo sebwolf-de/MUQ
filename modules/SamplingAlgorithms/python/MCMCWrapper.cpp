@@ -5,6 +5,7 @@
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 #include "MUQ/SamplingAlgorithms/SamplingAlgorithm.h"
 #include "MUQ/SamplingAlgorithms/MCMCFactory.h"
+#include "MUQ/SamplingAlgorithms/MHKernel.h"
 
 #include "MUQ/Utilities/PyDictConversion.h"
 
@@ -38,8 +39,7 @@ void PythonBindings::MCMCWrapper(py::module &m) {
 
   py::class_<MCMCFactory, std::shared_ptr<MCMCFactory>> fact(m, "MCMCFactory");
   fact
-    .def_static("CreateSingleChain", (std::shared_ptr<SingleChainMCMC> (*)(
-                boost::property_tree::ptree& pt, std::shared_ptr<AbstractSamplingProblem> problem)) &MCMCFactory::CreateSingleChain,
+    .def_static("CreateSingleChain", [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem) {return MCMCFactory::CreateSingleChain(ConvertDictToPtree(d), problem);},
                 py::call_guard<py::scoped_ostream_redirect,py::scoped_estream_redirect>() );
 
 

@@ -94,12 +94,13 @@ TEST(MCMC, MHKernel_MHProposal) {
 
   // Make sure the kernel and proposal are correct
   std::shared_ptr<TransitionKernel> kernelBase = mcmc->Kernels().at(0);
+  ASSERT_TRUE(kernelBase);
   std::shared_ptr<MHKernel> kernelMH = std::dynamic_pointer_cast<MHKernel>(kernelBase);
-  EXPECT_TRUE(kernelMH);
+  ASSERT_TRUE(kernelMH);
 
   std::shared_ptr<MCMCProposal> proposalBase = kernelMH->Proposal();
   std::shared_ptr<MHProposal> proposalMH = std::dynamic_pointer_cast<MHProposal>(proposalBase);
-  EXPECT_TRUE(proposalMH);
+  ASSERT_TRUE(proposalMH);
 
   std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
 

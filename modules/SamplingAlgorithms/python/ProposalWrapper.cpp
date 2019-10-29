@@ -31,12 +31,15 @@ void PythonBindings::ProposalWrapper(py::module &m) {
 
   py::class_<MHProposal, MCMCProposal, std::shared_ptr<MHProposal>> mhPro(m, "MHProposal");
   mhPro
-    .def(py::init<boost::property_tree::ptree const&, std::shared_ptr<AbstractSamplingProblem>>());
+    .def(py::init([](py::dict d, std::shared_ptr<AbstractSamplingProblem> prob) {return new MHProposal(ConvertDictToPtree(d), prob);} ))
+    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<muq::Modeling::GaussianBase> gauss) { return new MHProposal(ConvertDictToPtree(d), prob, gauss);}));
+
 
   py::class_<CrankNicolsonProposal, MCMCProposal, std::shared_ptr<CrankNicolsonProposal>> cnPro(m, "CrankNicolsonProposal");
   cnPro
     .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> prob) {return new CrankNicolsonProposal(ConvertDictToPtree(d), prob);} ))
-    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<muq::Modeling::Gaussian> gauss) { return new CrankNicolsonProposal(ConvertDictToPtree(d), prob, gauss);}));
+    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<muq::Modeling::GaussianBase> gauss) { return new CrankNicolsonProposal(ConvertDictToPtree(d), prob, gauss);}));
+
 
   py::class_<AMProposal, MHProposal, std::shared_ptr<AMProposal>> amPro(m, "AMProposal");
   amPro

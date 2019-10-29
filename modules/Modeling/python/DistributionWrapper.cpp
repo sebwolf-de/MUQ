@@ -98,19 +98,6 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
       .def_readonly("varSize", &Distribution::varSize)
       .def_readonly("hyperSizes", &Distribution::hyperSizes);
 
-    py::class_<PyGaussianBase, PyGaussianTramp, Distribution, std::shared_ptr<PyGaussianBase>>(m, "GaussianBase")
-        .def(py::init<unsigned int>())
-        .def(py::init<unsigned int, Eigen::VectorXi>())
-        .def(py::init<Eigen::VectorXd>())
-        .def(py::init<Eigen::VectorXd, Eigen::VectorXi>())
-        .def("Dimension", &PyGaussianBase::Dimension)
-        .def("ApplyCovariance", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyCovariance)
-        .def("ApplyPrecision", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyPrecision)
-        .def("ApplyCovSqrt",(Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const)  &PyGaussianBase::ApplyCovSqrt)
-        .def("ApplyPrecSqrt", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyPrecSqrt)
-        .def("LogDeterminant", &PyGaussianBase::LogDeterminant)
-        .def("GetMean", &PyGaussianBase::GetMean);
-
 
     py::class_<PyDistribution, PyDistributionTramp, Distribution, std::shared_ptr<PyDistribution>> pydist(m, "PyDistribution");
     pydist.def(py::init<unsigned int>());
@@ -138,7 +125,12 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
     uBox
       .def(py::init<Eigen::MatrixXd const&>());
 
-    py::class_<Gaussian, Distribution, std::shared_ptr<Gaussian>> gauss(m,"Gaussian");
+    py::class_<GaussianBase, Distribution, std::shared_ptr<GaussianBase>>(m,"GaussianBase")
+      .def("Dimension", &Gaussian::Dimension)
+      .def("GetMean", &Gaussian::GetMean)
+      .def("SetMean", &Gaussian::SetMean);
+
+    py::class_<Gaussian, GaussianBase, std::shared_ptr<Gaussian>> gauss(m,"Gaussian");
     gauss
       .def(py::init<unsigned int>())
       .def(py::init<unsigned int, Gaussian::InputMask>())
@@ -160,6 +152,19 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
       .def("SetCovariance", &Gaussian::SetCovariance)
       .def("SetPrecision", &Gaussian::SetPrecision)
       .def("Condition", &Gaussian::Condition);
+
+    py::class_<PyGaussianBase, PyGaussianTramp, GaussianBase, Distribution, std::shared_ptr<PyGaussianBase>>(m, "PyGaussianBase")
+        .def(py::init<unsigned int>())
+        .def(py::init<unsigned int, Eigen::VectorXi>())
+        .def(py::init<Eigen::VectorXd>())
+        .def(py::init<Eigen::VectorXd, Eigen::VectorXi>())
+        .def("Dimension", &PyGaussianBase::Dimension)
+        .def("ApplyCovariance", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyCovariance)
+        .def("ApplyPrecision", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyPrecision)
+        .def("ApplyCovSqrt",(Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const)  &PyGaussianBase::ApplyCovSqrt)
+        .def("ApplyPrecSqrt", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyPrecSqrt)
+        .def("LogDeterminant", &PyGaussianBase::LogDeterminant)
+        .def("GetMean", &PyGaussianBase::GetMean);
 
     py::enum_<Gaussian::Mode>(gauss, "Mode")
           .value("Covariance", Gaussian::Mode::Covariance)

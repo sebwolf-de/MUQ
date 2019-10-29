@@ -16,9 +16,9 @@ REGISTER_MCMC_PROPOSAL(CrankNicolsonProposal)
 
 CrankNicolsonProposal::CrankNicolsonProposal(boost::property_tree::ptree       const& pt,
                                              std::shared_ptr<AbstractSamplingProblem> prob,
-                                             std::shared_ptr<Gaussian>                priorIn) : MCMCProposal(pt,prob),
-                                                                                                 beta(pt.get("Beta",0.5)),
-                                                                                                 priorDist(priorIn)
+                                             std::shared_ptr<GaussianBase>                priorIn) : MCMCProposal(pt,prob),
+                                                                                                     beta(pt.get("Beta",0.5)),
+                                                                                                     priorDist(priorIn)
 {
 }
 
@@ -66,7 +66,7 @@ std::vector<Eigen::VectorXd> CrankNicolsonProposal::GetPriorInputs(std::vector<E
     ref_vector<Eigen::VectorXd> meanIns;
     for(int i=0; i<priorMeanInds.size(); ++i)
       meanIns.push_back( std::cref( currState.at(priorMeanInds.at(i)) ) );
-    
+
     hyperParams.push_back(priorMeanModel->Evaluate(meanIns).at(0));
   }
 
@@ -105,11 +105,15 @@ void CrankNicolsonProposal::ExtractPrior(std::shared_ptr<AbstractSamplingProblem
   std::shared_ptr<Density> priorDens = std::dynamic_pointer_cast<Density>(priorPiece);
   assert(priorDens);
 
-  priorDist = std::dynamic_pointer_cast<Gaussian>(priorDens->GetDistribution());
+  priorDist = std::dynamic_pointer_cast<GaussianBase>(priorDens->GetDistribution());
   assert(priorDist);
 
   // Check to see if the prior has a mean or covariance input.
-  Gaussian::InputMask inputTypes = priorDist->GetInputTypes();
+  auto gaussPrior = std::dynamic_pointer_cast<Gaussian>(priorDist);
+  if(gaussPrior==nullptr)
+    return;
+
+  Gaussian::InputMask inputTypes = gaussPrior->GetInputTypes();
 
   if(inputTypes == Gaussian::None)
     return;
