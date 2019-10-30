@@ -25,4 +25,5 @@ CreateCompileGroup(
     wrappers/PolynomialsWrapper.cpp
     wrappers/KLWrapper.cpp
     wrappers/QuadratureWrapper.cpp
+    wrappers/PolynomialChaosWrapper.cpp
 )

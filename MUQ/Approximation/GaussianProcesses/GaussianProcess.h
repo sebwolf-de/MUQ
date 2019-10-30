@@ -245,7 +245,7 @@ namespace muq
       };
 
       virtual ~SumMean() = default;
-      
+
       virtual std::shared_ptr<MeanFunctionBase> Clone() const override
       {
         return std::make_shared<SumMean>(*this);
@@ -296,6 +296,8 @@ namespace muq
         GaussianProcess(std::shared_ptr<MeanFunctionBase> meanIn,
                         std::shared_ptr<KernelBase>       covKernelIn);
 
+        virtual ~GaussianProcess() = default;
+        
         /** Update this Gaussian process with with direct observations of the field at the columns of loc. */
         virtual GaussianProcess& Condition(Eigen::Ref<const Eigen::MatrixXd> const& loc,
                                            Eigen::Ref<const Eigen::MatrixXd> const& vals)
