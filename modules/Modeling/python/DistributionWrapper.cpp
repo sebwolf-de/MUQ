@@ -126,9 +126,9 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
       .def(py::init<Eigen::MatrixXd const&>());
 
     py::class_<GaussianBase, Distribution, std::shared_ptr<GaussianBase>>(m,"GaussianBase")
-      .def("Dimension", &Gaussian::Dimension)
-      .def("GetMean", &Gaussian::GetMean)
-      .def("SetMean", &Gaussian::SetMean);
+      .def("Dimension", &GaussianBase::Dimension)
+      .def("GetMean", &GaussianBase::GetMean)
+      .def("SetMean", &GaussianBase::SetMean);
 
     py::class_<Gaussian, GaussianBase, std::shared_ptr<Gaussian>> gauss(m,"Gaussian");
     gauss
@@ -140,15 +140,12 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
       .def(py::init<Eigen::VectorXd const&, Eigen::MatrixXd const&, Gaussian::Mode>())
       .def(py::init<Eigen::VectorXd const&, Eigen::MatrixXd const&, Gaussian::Mode, Gaussian::InputMask>())
       .def("GetMode", &Gaussian::GetMode)
-      .def("Dimension", &Gaussian::Dimension)
       .def("GetCovariance", &Gaussian::GetCovariance)
       .def("GetPrecision", &Gaussian::GetPrecision)
       .def("ApplyPrecision", &Gaussian::ApplyPrecision)
       .def("ApplyCovariance", &Gaussian::ApplyCovariance)
       .def("ApplyCovSqrt", &Gaussian::ApplyCovSqrt)
       .def("ApplyPrecSqrt", &Gaussian::ApplyPrecSqrt)
-      .def("GetMean", &Gaussian::GetMean)
-      .def("SetMean", &Gaussian::SetMean)
       .def("SetCovariance", &Gaussian::SetCovariance)
       .def("SetPrecision", &Gaussian::SetPrecision)
       .def("Condition", &Gaussian::Condition);
@@ -164,6 +161,7 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
         .def("ApplyCovSqrt",(Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const)  &PyGaussianBase::ApplyCovSqrt)
         .def("ApplyPrecSqrt", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyPrecSqrt)
         .def("LogDeterminant", &PyGaussianBase::LogDeterminant)
+        .def("SetMean", &PyGaussianBase::SetMean)
         .def("GetMean", &PyGaussianBase::GetMean);
 
     py::enum_<Gaussian::Mode>(gauss, "Mode")

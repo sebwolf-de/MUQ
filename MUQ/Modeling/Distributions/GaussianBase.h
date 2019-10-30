@@ -94,7 +94,7 @@ namespace muq {
         Set the mean of this Gaussian.  The new mean must be the same size as the old mean.
         @param[in] newMu The new mean.
       */
-      void SetMean(Eigen::VectorXd const& newMu);
+      virtual void SetMean(Eigen::VectorXd const& newMu);
 
       /**
         Return the log determinant of the covariance matrix.  Defaults to 0.0, so
