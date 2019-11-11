@@ -257,7 +257,7 @@ namespace muq {
           if (!isSampling)
             break;
         }
-        std::cout << "Sampling completed" << std::endl;
+        spdlog::debug("Sampling completed");
       }
 
 

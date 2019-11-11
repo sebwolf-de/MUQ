@@ -215,13 +215,13 @@ namespace muq {
 
               // Burn in coarsest chains
               if (samplingProblemIndex->Max() == 0) {
-                spdlog::debug("Burning in");
+                spdlog::debug("Rank {} burning in", comm->GetRank());
                 for (int i = 0; i < pt.get<int>("MCMC.burnin"); i++)
                   box->Sample();
-                spdlog::debug("Burned in");
+                spdlog::debug("Rank {} burned in", comm->GetRank());
               }
 
-              spdlog::debug("Begin sampling");
+              spdlog::debug("Rank {} begins sampling", comm->GetRank());
               const int subsampling = pt.get<int>("MLMCMC.Subsampling");
               for (int i = 0; i < 1 + subsampling; i++) // TODO: Really subsampling on every level? Maybe subsample when requesting samples?
                 box->Sample();
