@@ -17,6 +17,11 @@ class MyGauss(mm.PyGaussianBase):
         self.gamma = gamma
         self.L = la.cho_factor(gamma,lower=True)[0]
 
+    def SampleImpl(self, inputs):
+        """ Overloading this function is optional. """
+        z = np.random.randn(self.gamma.shape[0])
+        return self.GetMean() + self.ApplyCovSqrt(z)
+
     def ApplyCovariance(self, x):
         return self.gamma @ x
 

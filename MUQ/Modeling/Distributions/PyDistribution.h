@@ -12,6 +12,7 @@ namespace muq {
       PyDistribution(unsigned int varSizeIn, Eigen::VectorXi const& hyperSizesIn = Eigen::VectorXi());
 
       static std::vector<Eigen::VectorXd> ToStdVec(ref_vector<Eigen::VectorXd> const& input);
+      static ref_vector<Eigen::VectorXd> ToRefVec(std::vector<Eigen::VectorXd> const& input);
 
     protected:
 
@@ -32,20 +33,9 @@ namespace muq {
 
       virtual ~PyGaussianBase() = default;
 
-      virtual Eigen::MatrixXd ApplyCovariance(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
-      virtual Eigen::MatrixXd ApplyCovariance(Eigen::MatrixXd const& x) const = 0;
+      // This is needed to make SampleImpl public in PyGaussianBase
+      using GaussianBase::SampleImpl;
 
-      virtual Eigen::MatrixXd ApplyPrecision(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
-      virtual Eigen::MatrixXd ApplyPrecision(Eigen::MatrixXd const& x) const = 0;
-
-      virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
-      virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::MatrixXd const& x) const = 0;
-
-      virtual Eigen::MatrixXd ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const override;
-      virtual Eigen::MatrixXd ApplyPrecSqrt(Eigen::MatrixXd const& x) const = 0;
-
-      virtual void ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params) override;
-      virtual void ResetHyperparameters(std::vector<Eigen::VectorXd> const& params){};
     };
 
   } // namespace Modeling
