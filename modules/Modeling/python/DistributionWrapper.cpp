@@ -49,23 +49,27 @@ public:
       PYBIND11_OVERLOAD(unsigned int,GaussianBase,Dimension);
     }
 
-    Eigen::MatrixXd ApplyCovariance(Eigen::MatrixXd const& x) const override{
+    Eigen::MatrixXd ApplyCovariance(Eigen::Ref<const Eigen::MatrixXd> const& x) const override{
       PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyCovariance, x);
     }
 
-    Eigen::MatrixXd ApplyPrecision(Eigen::MatrixXd const& x) const override{
+    Eigen::MatrixXd ApplyPrecision(Eigen::Ref<const Eigen::MatrixXd> const& x) const override{
       PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyPrecision, x);
     }
 
-    Eigen::MatrixXd ApplyCovSqrt(Eigen::MatrixXd const& x) const override{
+    virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const override{
       PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyCovSqrt, x);
     }
 
-    Eigen::MatrixXd ApplyPrecSqrt(Eigen::MatrixXd const& x) const override{
+    Eigen::MatrixXd ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const override{
       PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyPrecSqrt, x);
     }
 
-    void ResetHyperparameters(std::vector<Eigen::VectorXd> const& params) override{
+    Eigen::VectorXd SampleImpl(ref_vector<Eigen::VectorXd> const& params) override{
+      PYBIND11_OVERLOAD(Eigen::VectorXd, PyGaussianBase, SampleImpl, params);
+    }
+
+    void ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params) override{
       PYBIND11_OVERLOAD(void, PyGaussianBase, ResetHyperparameters, params);
     }
 
@@ -162,7 +166,9 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
         .def("ApplyPrecSqrt", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyPrecSqrt)
         .def("LogDeterminant", &PyGaussianBase::LogDeterminant)
         .def("SetMean", &PyGaussianBase::SetMean)
-        .def("GetMean", &PyGaussianBase::GetMean);
+        .def("GetMean", &PyGaussianBase::GetMean)
+        .def("SampleImpl", (Eigen::VectorXd (PyGaussianBase::*)(ref_vector<Eigen::VectorXd> const&)) &PyGaussianBase::SampleImpl);
+
 
     py::enum_<Gaussian::Mode>(gauss, "Mode")
           .value("Covariance", Gaussian::Mode::Covariance)
