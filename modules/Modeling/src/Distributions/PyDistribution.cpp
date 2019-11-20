@@ -12,6 +12,11 @@ double PyDistribution::LogDensityImpl(ref_vector<Eigen::VectorXd> const& inputs)
   return LogDensityImpl(ToStdVec(inputs));
 }
 
+ref_vector<Eigen::VectorXd> PyDistribution::ToRefVec(std::vector<Eigen::VectorXd> const& input) {
+  ref_vector<Eigen::VectorXd> output(input.begin(),input.end());
+  return output;
+}
+
 std::vector<Eigen::VectorXd> PyDistribution::ToStdVec(ref_vector<Eigen::VectorXd> const& input) {
   std::vector<Eigen::VectorXd> newIns(input.size());
 
@@ -19,30 +24,4 @@ std::vector<Eigen::VectorXd> PyDistribution::ToStdVec(ref_vector<Eigen::VectorXd
     newIns.at(i) = input.at(i).get();
 
   return newIns;
-}
-
-
-Eigen::MatrixXd PyGaussianBase::ApplyCovariance(Eigen::Ref<const Eigen::MatrixXd> const& x) const
-{
-  return ApplyCovariance(Eigen::MatrixXd(x));
-};
-
-Eigen::MatrixXd PyGaussianBase::ApplyPrecision(Eigen::Ref<const Eigen::MatrixXd> const& x) const
-{
-  return ApplyPrecision(Eigen::MatrixXd(x));
-}
-
-Eigen::MatrixXd PyGaussianBase::ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const
-{
-  return ApplyCovSqrt(Eigen::MatrixXd(x));
-}
-
-Eigen::MatrixXd PyGaussianBase::ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const
-{
-  return ApplyPrecSqrt(Eigen::MatrixXd(x));
-}
-
-void PyGaussianBase::ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params)
-{
-  ResetHyperparameters(PyDistribution::ToStdVec(params));
 }
