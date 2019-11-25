@@ -12,7 +12,7 @@ CreateTestGroup(
     SplitVectorTests.cpp
     ScaleVectorTests.cpp
     CombineVectorsTests.cpp
-
+    SumPieceTests.cpp
     MultiLogisticTest.cpp
 )
 
@@ -32,7 +32,8 @@ CreateTestGroup(
 
     LinearAlgebra/LinearOperatorTests.cpp
     LinearAlgebra/LyapunovSolverTests.cpp
-
+    LinearAlgebra/AffineOperatorTests.cpp
+    
     #LinearAlgebra/ScalarAlgebraTests.cpp
     #LinearAlgebra/EigenVectorAlgebraTests.cpp
     #LinearAlgebra/EigenMatrixAlgebraTests.cpp
