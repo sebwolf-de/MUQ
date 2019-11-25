@@ -102,6 +102,24 @@ namespace muq {
 
       std::vector<std::shared_ptr<MCMCProposal>> Proposals() const{return proposals;};
 
+
+      /** Generates a sample of a stage proposal at the point x.  This function
+          handles all necessary scaling.
+      */
+      std::shared_ptr<SamplingState> SampleProposal(unsigned int                          stage,
+                                                    std::shared_ptr<SamplingState> const& state) const;
+
+      /** Evaluates the log density of a stage proposal at point y of the proposal
+          located at point x.  This function takes care of all necessary scaling.
+      */
+      double EvaluateProposal(unsigned int                          stage,
+                              std::shared_ptr<SamplingState> const& x,
+                              std::shared_ptr<SamplingState> const& y) const;
+
+
+      /** Returns a vector with the scaling used for each proposal stage. */
+      std::vector<double> GetScales() const{return propScales;};
+
     protected:
 
       /** Extracts information from the property tree and creates MCMC proposals.
@@ -138,19 +156,6 @@ namespace muq {
       Eigen::VectorXi numProposalAccepts;
 
 
-      /** Evaluates the log density of a stage proposal at point y of the proposal
-          located at point x.  This function takes care of all necessary scaling.
-      */
-      double EvaluateProposal(unsigned int                          stage,
-                              std::shared_ptr<SamplingState> const& x,
-                              std::shared_ptr<SamplingState> const& y) const;
-
-
-      /** Generates a sample of a stage proposal at the point x.  This function
-          handles all necessary scaling.
-      */
-      std::shared_ptr<SamplingState> SampleProposal(unsigned int                          stage,
-                                                    std::shared_ptr<SamplingState> const& state) const;
 
       template<typename VecType1, typename VecType2>
       double Alpha(VecType1& likelies, VecType2& proposed_points) const

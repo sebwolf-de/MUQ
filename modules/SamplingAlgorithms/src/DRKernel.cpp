@@ -40,6 +40,12 @@ DRKernel::DRKernel(pt::ptree                           const& pt,
   numProposalCalls = Eigen::VectorXi::Zero(proposals.size());
   numProposalAccepts = Eigen::VectorXi::Zero(proposals.size());
 
+  for(unsigned int i=0; i<propScales.size(); ++i){
+    if(std::abs(propScales.at(i)-1.0)>std::numeric_limits<double>::epsilon()){
+      isScaled = true;
+    }
+  }
+
 }
 
 void DRKernel::PostStep(unsigned int const t,
@@ -55,7 +61,7 @@ std::shared_ptr<SamplingState> DRKernel::SampleProposal(unsigned int            
 {
   std::shared_ptr<SamplingState> prop = proposals.at(stage)->Sample(state);
   if(isScaled){
-    prop->state.at(blockInd) /= propScales.at(stage);
+    prop->state.at(blockInd) = (prop->state.at(blockInd) - state->state.at(blockInd))*propScales.at(stage) + state->state.at(blockInd);
   }
   return prop;
 }
@@ -64,10 +70,13 @@ double DRKernel::EvaluateProposal(unsigned int                          stage,
                                   std::shared_ptr<SamplingState> const& x,
                                   std::shared_ptr<SamplingState> const& y) const
 {
+
   if(isScaled){
+    const double dim = x->state.at(blockInd).size();
+
     std::shared_ptr<SamplingState> yCopy = std::make_shared<SamplingState>(*y);
-    yCopy->state.at(blockInd) *= propScales.at(stage);
-    return proposals.at(stage)->LogDensity(x, yCopy) - propScales.at(stage);
+    yCopy->state.at(blockInd) = x->state.at(blockInd) + (yCopy->state.at(blockInd) - x->state.at(blockInd))/propScales.at(stage);
+    return proposals.at(stage)->LogDensity(x, yCopy) - dim*std::log(propScales.at(stage));
   }else{
     return proposals.at(stage)->LogDensity(x,y);
   }
