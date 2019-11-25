@@ -41,6 +41,7 @@ CreateCompileGroup(
     SplitVector.cpp
     ScaleVector.cpp
     CombineVectors.cpp
+    SumPiece.cpp
 
     MultiLogisticLikelihood.cpp
 
@@ -85,7 +86,8 @@ CreateCompileGroup(
     LinearAlgebra/ConcatenateOperator.cpp
     LinearAlgebra/DiagonalOperator.cpp
     LinearAlgebra/ProductOperator.cpp
-
+    LinearAlgebra/AffineOperator.cpp
+    
     #LinearAlgebra/AnyAlgebra.cpp
     #LinearAlgebra/ScalarAlgebra.cpp
     #LinearAlgebra/EigenVectorAlgebra.cpp
