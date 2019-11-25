@@ -57,6 +57,7 @@ CreateCompileGroup(
     #MCKernel.cpp
     #ISKernel.cpp
     MHKernel.cpp
+    DRKernel.cpp
     MIKernel.cpp
     GreedyMLMCMC.cpp
     MIMCMC.cpp

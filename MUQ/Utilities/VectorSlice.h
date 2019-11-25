@@ -51,12 +51,12 @@ namespace Utilities {
       @parm[in] skip.  The number of
       */
       VectorSlice(VecType& dataIn,
-                 int startIndIn,
-                 int endIndIn,
-                 int skipIn=1) : data(dataIn),
-                                 startInd(startIndIn),
-                                 endInd(endIndIn),
-                                 skip(skipIn)
+                  int startIndIn,
+                  int endIndIn,
+                  int skipIn=1) : data(dataIn),
+                                  startInd(startIndIn),
+                                  endInd(endIndIn),
+                                  skip(skipIn)
       {
         assert(skip!=0);
         assert(startInd>=0);

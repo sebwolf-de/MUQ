@@ -13,8 +13,7 @@ using namespace muq::SamplingAlgorithms;
 
 REGISTER_TRANSITION_KERNEL(MHKernel)
 
-MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : TransitionKernel(pt, problem),
-                                                                                            reeval(pt.get<bool>("ReevaluateAcceptedDensity", false))
+MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : TransitionKernel(pt, problem)
 {
 
   // Extract the proposal parts from the ptree
@@ -31,15 +30,8 @@ MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem>
 MHKernel::MHKernel(pt::ptree const& pt,
                    std::shared_ptr<AbstractSamplingProblem> problem,
                    std::shared_ptr<MCMCProposal> proposalIn) : TransitionKernel(pt, problem),
-                                                               proposal(proposalIn),
-                                                               reeval(pt.get<bool>("ReevaluateAcceptedDensity", false)) {}
+                                                               proposal(proposalIn) {}
 
-#if MUQ_HAS_PARCER
-void MHKernel::SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm) {
-  comm = newcomm;
-  proposal->SetCommunicator(newcomm);
-}
-#endif
 
 void MHKernel::PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state){
   proposal->Adapt(t,state);
