@@ -12,7 +12,7 @@ CreateTestGroup(
     SplitVectorTests.cpp
     ScaleVectorTests.cpp
     CombineVectorsTests.cpp
-
+    SumPieceTests.cpp
     MultiLogisticTest.cpp
 )
 

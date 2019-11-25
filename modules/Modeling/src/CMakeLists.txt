@@ -41,7 +41,8 @@ CreateCompileGroup(
     SplitVector.cpp
     ScaleVector.cpp
     CombineVectors.cpp
-
+    SumPiece.cpp
+    
     MultiLogisticLikelihood.cpp
 
     ReplicateOperator.cpp
