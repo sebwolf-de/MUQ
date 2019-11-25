@@ -12,7 +12,6 @@ AffineOperator::AffineOperator(std::shared_ptr<LinearOperator> const& Ain,
   assert(A->rows()==b.rows());
 };
 
-
 void AffineOperator::EvaluateImpl(muq::Modeling::ref_vector<Eigen::VectorXd> const& input)
 {
   outputs.resize(1);

@@ -35,6 +35,9 @@ std::shared_ptr<muq::Modeling::AffineOperator> Aop = muq::Modeling::AffineOperat
 class AffineOperator : public muq::Modeling::ModPiece{
 public:
 
+  template<typename T>
+  AffineOperator(T const& Ain, Eigen::VectorXd const& bIn) : AffineOperator(LinearOperator::Create(Ain), bIn) {}
+
   AffineOperator(std::shared_ptr<LinearOperator> const& Ain, Eigen::VectorXd const& bIn);
 
   virtual ~AffineOperator(){};
