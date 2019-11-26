@@ -51,10 +51,10 @@ namespace muq {
        */
       virtual void Adapt(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state) {};
 
-      virtual std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> currentState) = 0;
+      virtual std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> const& currentState) = 0;
 
-      virtual double LogDensity(std::shared_ptr<SamplingState> currState,
-                                std::shared_ptr<SamplingState> propState) = 0;
+      virtual double LogDensity(std::shared_ptr<SamplingState> const& currState,
+                                std::shared_ptr<SamplingState> const& propState) = 0;
 
 #if MUQ_HAS_PARCER
       void SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm);

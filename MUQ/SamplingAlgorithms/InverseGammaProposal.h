@@ -26,6 +26,18 @@ namespace muq {
       \sigma^2 | x \sim IG(\alpha + \frac{N}{2}, \beta + \frac{1}{2}\sum_{i=1}^Nx_i^2.
       \f]
       This is the proposal density defined by this class.
+
+      The class assumes that the provided AbstractSamplingProblem is an instance
+      of the SamplingProblem class, which contains a WorkGraph defining the
+      relationship between the inverse gamma and Gaussian distributions.
+
+      <B>Configuration Parameters:</B>
+
+      Parameter Key      | Type   | Default Value | Description |
+      ------------------ | ------ | ------------- | ------------- |
+      "InverseGammaNode" | string | -             |  The name of the node in the WorkGraph that contains the InverseGamma density. |
+      "GaussianNode"     | string | -             |  The name of the node in the WorkGraph that contains the Gaussian distribution with a variance input. |
+
     */
     class InverseGammaProposal : public MCMCProposal {
     public:
@@ -49,10 +61,10 @@ namespace muq {
       /// The mean of the Gaussian distribution
       const Eigen::VectorXd gaussMean;
 
-      virtual std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> currentState) override;
+      virtual std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> const& currentState) override;
 
-      virtual double LogDensity(std::shared_ptr<SamplingState> currState,
-                                std::shared_ptr<SamplingState> propState) override;
+      virtual double LogDensity(std::shared_ptr<SamplingState> const& currState,
+                                std::shared_ptr<SamplingState> const& propState) override;
 
 
       static Eigen::VectorXd ExtractMean(std::shared_ptr<AbstractSamplingProblem> prob, std::string const& gaussNode);

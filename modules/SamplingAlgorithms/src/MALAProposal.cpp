@@ -39,7 +39,7 @@ MALAProposal::MALAProposal(pt::ptree                                       pt,
   assert(stepSize>0);
 }
 
-std::shared_ptr<SamplingState> MALAProposal::Sample(std::shared_ptr<SamplingState> currentState) {
+std::shared_ptr<SamplingState> MALAProposal::Sample(std::shared_ptr<SamplingState> const& currentState) {
   assert(currentState->state.size()>blockInd);
 
   // the mean of the proposal is the current point
@@ -72,8 +72,8 @@ std::shared_ptr<SamplingState> MALAProposal::Sample(std::shared_ptr<SamplingStat
   return std::make_shared<SamplingState>(props, 1.0);
 }
 
-double MALAProposal::LogDensity(std::shared_ptr<SamplingState> currState,
-                                std::shared_ptr<SamplingState> propState) {
+double MALAProposal::LogDensity(std::shared_ptr<SamplingState> const& currState,
+                                std::shared_ptr<SamplingState> const& propState) {
 
   // Get the gradient from the previous step
   Eigen::VectorXd grad; // vector holding the gradient of the log density
