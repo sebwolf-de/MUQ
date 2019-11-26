@@ -137,7 +137,6 @@ TEST(MCMC, MHKernel_MixtureProposal) {
   pt.put("Kernel1.MyProposal.SubProp2.Method","MHProposal");
   pt.put("Kernel1.MyProposal.SubProp2.ProposalVariance", 1.0);
 
-
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
   const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
   auto dist = std::make_shared<Gaussian>(mu)->AsDensity(); // standard normal Gaussian
