@@ -41,9 +41,10 @@ void PythonBindings::ProposalWrapper(py::module &m) {
     .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<muq::Modeling::GaussianBase> gauss) { return new CrankNicolsonProposal(ConvertDictToPtree(d), prob, gauss);}));
 
 
-  py::class_<AMProposal, MHProposal, std::shared_ptr<AMProposal>> amPro(m, "AMProposal");
+  py::class_<AMProposal, MCMCProposal, std::shared_ptr<AMProposal>> amPro(m, "AMProposal");
   amPro
-    .def(py::init<boost::property_tree::ptree const&, std::shared_ptr<AbstractSamplingProblem>>())
+    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> prob) {return new AMProposal(ConvertDictToPtree(d), prob);} ))
+    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> prob, Eigen::MatrixXd const& cov) {return new AMProposal(ConvertDictToPtree(d), prob, cov);} ))
     .def("Adapt", &AMProposal::Adapt);
 
 }
