@@ -12,3 +12,6 @@ message("${MUQ_LIBRARIES}")
 
 add_executable(MultiindexGaussianSampling MultiindexGaussianSampling.cpp)
 target_link_libraries(MultiindexGaussianSampling ${MUQ_LIBRARIES} ${MUQ_LINK_LIBRARIES})
+
+add_executable(FullParallelMultiindexGaussianSampling FullParallelMultiindexGaussianSampling.cpp)
+target_link_libraries(FullParallelMultiindexGaussianSampling ${MUQ_LIBRARIES} ${MUQ_LINK_LIBRARIES})

@@ -8,8 +8,8 @@
 #endif
 
 
-#include "MUQ/spdlog/spdlog.h"
-#include "MUQ/spdlog/fmt/ostr.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/fmt/ostr.h"
 #include "MUQ/SamplingAlgorithms/MarkovChain.h"
 #include "MUQ/SamplingAlgorithms/DistributedCollection.h"
 #include "MUQ/SamplingAlgorithms/ParallelFlags.h"

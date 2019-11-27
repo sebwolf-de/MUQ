@@ -7,7 +7,7 @@
 #error
 #endif
 
-#include "MUQ/spdlog/spdlog.h"
+#include "spdlog/spdlog.h"
 #include <boost/property_tree/ptree.hpp>
 
 #include "MUQ/SamplingAlgorithms/ParallelMIMCMCWorker.h"
