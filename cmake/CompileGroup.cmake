@@ -15,11 +15,11 @@
 # Specify a group of sources files, as well their dependencies, and ultimate target library.
 function(CreateCompileGroup
          GROUP_NAME
-	 DESCRIPTION
-	 LIBRARY_NAME
-	 GROUP_DEPENDENCIES
-	 REQUIRED_DEPENDENCIES
-	 OPTIONAL_DEPENDENCIES)
+	       DESCRIPTION
+	       LIBRARY_NAME
+	       GROUP_DEPENDENCIES
+	       REQUIRED_DEPENDENCIES
+	       OPTIONAL_DEPENDENCIES)
 
   option(MUQ_ENABLEGROUP_${GROUP_NAME} "Should the group ${GROUP_NAME} be compiled?" ${MUQ_ENABLEGROUP_DEFAULT})
 
@@ -34,7 +34,7 @@ function(CreateCompileGroup
   set(${GROUP_NAME}_LIBRARY ${LIBRARY_NAME} CACHE INTERNAL "The library this group will contribute to.")
 
   # Compute the path to the source file relative to the root directory
-  string(REPLACE "${CMAKE_SOURCE_DIR}/"  ""  RELATIVE_DIR ${CMAKE_CURRENT_LIST_DIR})
+  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/"  ""  RELATIVE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
   set(SOURCES )
   foreach(source ${ARGN})
