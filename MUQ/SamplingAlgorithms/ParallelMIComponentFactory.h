@@ -79,7 +79,7 @@ namespace muq {
         std::cout << "Finalized" << std::endl;
       }
 
-      virtual std::shared_ptr<MCMCProposal> Proposal (std::shared_ptr<MultiIndex> index, std::shared_ptr<AbstractSamplingProblem> samplingProblem) override {
+      virtual std::shared_ptr<MCMCProposal> Proposal (std::shared_ptr<MultiIndex> const& index, std::shared_ptr<AbstractSamplingProblem> const& samplingProblem) override {
         return componentFactory->Proposal(index, samplingProblem);
       }
 
@@ -87,13 +87,13 @@ namespace muq {
         return componentFactory->FinestIndex();
       }
 
-      virtual std::shared_ptr<MCMCProposal> CoarseProposal (std::shared_ptr<MultiIndex> index,
-                                                            std::shared_ptr<AbstractSamplingProblem> coarseProblem,
-                                                            std::shared_ptr<SingleChainMCMC> coarseChain) override {
+      virtual std::shared_ptr<MCMCProposal> CoarseProposal (std::shared_ptr<MultiIndex> const& index,
+                                                            std::shared_ptr<AbstractSamplingProblem> const& coarseProblem,
+                                                            std::shared_ptr<SingleChainMCMC> const& coarseChain) override {
         return componentFactory->CoarseProposal(index, coarseProblem, coarseChain);
       }
 
-      virtual std::shared_ptr<AbstractSamplingProblem> SamplingProblem (std::shared_ptr<MultiIndex> index) override {
+      virtual std::shared_ptr<AbstractSamplingProblem> SamplingProblem (std::shared_ptr<MultiIndex> const& index) override {
         //int idcnt = index->GetValue(0);
         idcnt++;
         if (comm->GetRank() == 0) {
@@ -108,11 +108,11 @@ namespace muq {
         return samplingProblems[idcnt];
       }
 
-      virtual std::shared_ptr<MIInterpolation> Interpolation (std::shared_ptr<MultiIndex> index) override {
+      virtual std::shared_ptr<MIInterpolation> Interpolation (std::shared_ptr<MultiIndex> const& index) override {
         return componentFactory->Interpolation(index);
       }
 
-      virtual Eigen::VectorXd StartingPoint (std::shared_ptr<MultiIndex> index) override {
+      virtual Eigen::VectorXd StartingPoint (std::shared_ptr<MultiIndex> const& index) override {
         return componentFactory->StartingPoint(index);
       }
 

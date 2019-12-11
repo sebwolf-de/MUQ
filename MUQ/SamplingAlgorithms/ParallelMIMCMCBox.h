@@ -51,7 +51,8 @@ namespace muq {
 
               Eigen::VectorXd startPtCoarse = componentFactory->StartingPoint(boxLowestIndex);
 
-              coarse_chain = std::make_shared<SingleChainMCMC>(ptChains,coarse_kernels,startPtCoarse);
+              coarse_chain = std::make_shared<SingleChainMCMC>(ptChains,coarse_kernels);
+              coarse_chain->SetState(startPtCoarse);
               boxChains[boxIndices->MultiToIndex(boxIndex)] = coarse_chain;
 
             } else { // or we have to request proposals from the next coarser chain
@@ -83,7 +84,8 @@ namespace muq {
               auto startingState = std::make_shared<SamplingState>(startingPoint);
               startingState->meta["coarseSample"] = std::make_shared<SamplingState>(componentFactory->StartingPoint(remoteIndex));
 
-              coarse_chain = std::make_shared<SingleChainMCMC>(pt,kernels,startingState);
+              coarse_chain = std::make_shared<SingleChainMCMC>(pt,kernels);
+              coarse_chain->SetState(startingState);
 
               boxChains[boxIndices->MultiToIndex(boxIndex)] = coarse_chain;
               coarse_problem = problem;
@@ -106,7 +108,8 @@ namespace muq {
             //auto startingState = std::make_shared<SamplingState>(startingPoint);
             //startingState->meta["coarseSample"] = std::make_shared<SamplingState>(componentFactory->StartingPoint(index));
 
-            auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels,startingPoint);
+            auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels);
+            chain->SetState(startingPoint);
 
             boxChains[boxIndices->MultiToIndex(boxIndex)] = chain;
 

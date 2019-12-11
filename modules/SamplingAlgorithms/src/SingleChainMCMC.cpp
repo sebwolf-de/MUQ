@@ -71,7 +71,7 @@ void SingleChainMCMC::Setup(pt::ptree pt,
 }
 
 SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree pt,
-                std::vector<std::shared_ptr<TransitionKernel>> kernelsIn,
+                std::vector<std::shared_ptr<TransitionKernel>> const& kernelsIn,
                 std::shared_ptr<SamplingState> x0) :
                 SamplingAlgorithm(std::make_shared<MarkovChain>()),
                 printLevel(pt.get("PrintLevel",3)),

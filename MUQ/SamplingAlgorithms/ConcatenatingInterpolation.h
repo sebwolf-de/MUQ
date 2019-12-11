@@ -8,10 +8,10 @@ namespace muq {
 
     class ConcatenatingInterpolation : public MIInterpolation {
     public:
-    	ConcatenatingInterpolation(std::shared_ptr<MultiIndex> index) : index(index) {
+      ConcatenatingInterpolation(std::shared_ptr<MultiIndex> const& index) : index(index) {
     	}
 
-    	virtual std::shared_ptr<SamplingState> Interpolate (std::shared_ptr<SamplingState> coarseProposal, std::shared_ptr<SamplingState> fineProposal) override {
+    	virtual std::shared_ptr<SamplingState> Interpolate (std::shared_ptr<SamplingState> const& coarseProposal, std::shared_ptr<SamplingState> const& fineProposal) override {
     		int fine_part_size = fineProposal->state[0].size() - coarseProposal->state[0].size();
 
     		Eigen::VectorXd interpolatedState(fineProposal->state[0].size());

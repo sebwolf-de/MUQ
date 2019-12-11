@@ -262,7 +262,7 @@ namespace muq {
 
 
     protected:
-      virtual std::shared_ptr<SampleCollection> RunImpl() {
+      virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) {
 
         RequestSamplesAll(pt.get<int>("MCMC.NumSamples"));
         RunSamples();

@@ -28,7 +28,7 @@ namespace muq {
 
       virtual ~ParallelAbstractSamplingProblem() = default;
 
-      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> state, AbstractSamplingProblem::SampleType type) override {
+      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> const& state, AbstractSamplingProblem::SampleType type) override {
 
         if (comm->GetRank() == 0) {
           for (int dest = 1; dest < comm->GetSize(); dest++) {

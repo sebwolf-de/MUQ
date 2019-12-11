@@ -66,7 +66,7 @@ void ODE::Integrate(ref_vector<Eigen::VectorXd> const& inputs, int const wrtIn, 
 
   // create the state vector
 #if MUQ_HAS_PARCER==1
-  assert(!comm || !isnan(globalSize));
+  assert(!comm || !std::isnan(globalSize));
   N_Vector state = comm?
     N_VNew_Parallel(comm->GetComm(), stateSize, globalSize) :
     N_VNew_Serial(stateSize);

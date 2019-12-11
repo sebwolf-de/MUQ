@@ -13,7 +13,7 @@ namespace muq {
 
     class ParallelizableMIComponentFactory : public MIComponentFactory {
     public:
-      virtual void SetComm(std::shared_ptr<parcer::Communicator> comm) = 0;
+      virtual void SetComm(std::shared_ptr<parcer::Communicator> const& comm) = 0;
     };
 
   }
