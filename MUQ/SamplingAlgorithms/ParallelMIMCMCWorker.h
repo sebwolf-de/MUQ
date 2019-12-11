@@ -7,7 +7,7 @@
 #error
 #endif
 
-
+#include <list>
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/ostr.h"
 #include "MUQ/SamplingAlgorithms/MarkovChain.h"
