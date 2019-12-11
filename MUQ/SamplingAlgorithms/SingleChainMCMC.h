@@ -56,12 +56,13 @@ namespace muq{
         If no steps have been taken, this function sets the starting point.
         Set the current state AND adds it to the sample collection.
       */
+      virtual void SetState(std::shared_ptr<SamplingState> const& x0);
       virtual void SetState(std::vector<Eigen::VectorXd> const& x0) override;
 
       template<typename... Args>
-        inline void SetState(Args const&... args) {
-          std::vector<Eigen::VectorXd> vec;
-          SetStateRecurse(vec, args...);
+      inline void SetState(Args const&... args) {
+        std::vector<Eigen::VectorXd> vec;
+        SetStateRecurse(vec, args...);
       }
 
       virtual std::vector<std::shared_ptr<TransitionKernel>>& Kernels(){return kernels;};
@@ -96,10 +97,10 @@ namespace muq{
     private:
 
       template<typename... Args>
-        inline void SetStateRecurse(std::vector<Eigen::VectorXd>& vec, Eigen::VectorXd const& it, Args const&... args) {
-          vec.push_back(it);
-          SetStateRecurse(vec, args...);
-        }
+      inline void SetStateRecurse(std::vector<Eigen::VectorXd>& vec, Eigen::VectorXd const& it, Args const&... args) {
+        vec.push_back(it);
+        SetStateRecurse(vec, args...);
+      }
 
       inline void SetStateRecurse(std::vector<Eigen::VectorXd>& vec, Eigen::VectorXd const& last) {
         vec.push_back(last);
