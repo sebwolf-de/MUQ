@@ -310,6 +310,39 @@ std::vector<unsigned int> MultiIndexSet::GetBackwardNeighbors(unsigned int activ
   return output;
 }
 
+std::vector<unsigned int> MultiIndexSet::GetBackwardNeighbors(std::shared_ptr<MultiIndex> const& multiIndex) const
+{
+  auto iter = multi2global.find(multiIndex);
+
+  assert(iter!=multi2global.end());
+
+  unsigned int globalInd = iter->second;
+  std::vector<unsigned int> output;
+  for(auto neighbor : inEdges[globalInd])
+    output.push_back(global2active.at(neighbor));
+
+  return output;
+}
+
+
+unsigned int MultiIndexSet::NumActiveForward(unsigned int activeInd) const
+{
+  unsigned int globalInd = active2global.at(activeInd);
+
+  unsigned int numActive = 0;
+  for( auto neighbor : outEdges[globalInd])
+  {
+    if(IsActive(neighbor))
+      numActive++;
+  }
+  return numActive;
+}
+
+unsigned int MultiIndexSet::NumForward(unsigned int activeInd) const
+{
+  unsigned int globalInd = active2global.at(activeInd);
+  return outEdges[globalInd].size();
+}
 
 void MultiIndexSet::AddBackwardNeighbors(unsigned int globalIndex, bool addInactive)
 {

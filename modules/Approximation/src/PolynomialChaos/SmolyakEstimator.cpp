@@ -97,6 +97,11 @@ EstimateType SmolyakEstimator<EstimateType>::Adapt(boost::property_tree::ptree o
 
     auto t_curr =std::chrono::high_resolution_clock::now();
     runtime = std::chrono::duration<double, std::milli>(t_curr-t_start).count()/1e3;
+
+    // keep track of the convergence diagnostics
+    errorHistory.push_back(globalError);
+    timeHistory.push_back(runtime);
+    evalHistory.push_back(numEvals);
   }
 
 
@@ -116,17 +121,55 @@ bool SmolyakEstimator<EstimateType>::Refine()
     }
   }
 
+  std::cout << "Current MI set:" << std::endl;
+  for(int i=0; i<termMultis->Size(); ++i){
+    std::cout << "  " << termMultis->IndexToMulti(i)->GetVector() << std::endl;
+  }
+  std::cout << "Expanding index " << expandInd << " = " << termMultis->IndexToMulti(expandInd)->GetVector() << std::endl;
+
   // If no admissible terms were found, just return
   if(expandInd==-1)
     return false;
 
+  terms.at(expandInd).isOld = true;
+
   // Add the new terms to the set
   std::vector<std::shared_ptr<MultiIndex>> neighs = termMultis->GetAdmissibleForwardNeighbors(expandInd);
+
   std::vector<std::shared_ptr<MultiIndex>> termsToAdd;
   for(auto& neigh : neighs){
-    if(!termMultis->IsActive(neigh))
-      termsToAdd.push_back(neigh);
+    // Make sure the forward neighbor is not already in the set and has old backward neighbors
+    std::cout << "Should we add " << neigh->GetVector() << " ?" << std::endl;
+    if(!termMultis->IsActive(neigh)){
+      std::cout << "Well it's not active..." << std::endl;
+
+      bool shouldAdd = true;
+
+      // Look through all of the backward neighbors. They should all be "old" to add this term.
+      std::vector<unsigned int> backNeighInds = termMultis->GetBackwardNeighbors(neigh);
+
+      for(auto backInd : backNeighInds){
+        shouldAdd = shouldAdd && terms.at(backInd).isOld;
+      }
+
+
+      if(shouldAdd)
+        termsToAdd.push_back(neigh);
+
+      if(shouldAdd){
+        std::cout << "Yes!" << std::endl;
+      }else{
+        std::cout << "No!" << std::endl;
+      }
+    }
+
+
   }
+  std::cout << "Adding terms = \n";
+  for(auto& neigh : termsToAdd)
+    std::cout << "  " << neigh->GetVector() << std::endl;
+
+
   AddTerms(termsToAdd);
 
   return true;
@@ -143,6 +186,20 @@ void SmolyakEstimator<EstimateType>::AddTerms(std::shared_ptr<muq::Utilities::Mu
 }
 
 template<typename EstimateType>
+std::vector<std::vector<Eigen::VectorXd>> SmolyakEstimator<EstimateType>::PointHistory() const
+{
+  std::vector<std::vector<Eigen::VectorXd>> output(pointHistory.size());
+  for(int adaptInd=0; adaptInd<pointHistory.size(); ++adaptInd)
+  {
+    output.at(adaptInd).reserve(pointHistory.at(adaptInd).size());
+    for(auto& ptInd : pointHistory.at(adaptInd))
+      output.at(adaptInd).push_back( GetFromCache(ptInd) );
+  }
+  return output;
+}
+
+
+template<typename EstimateType>
 void SmolyakEstimator<EstimateType>::AddTerms(std::vector<std::shared_ptr<MultiIndex>> const& fixedSet)
 {
   /* For each term in the fixed set we want to construct a tensor product approximation.
@@ -152,6 +209,9 @@ void SmolyakEstimator<EstimateType>::AddTerms(std::vector<std::shared_ptr<MultiI
      were needed for each tensor product approximation by storing the index of
      the cached points.
   */
+
+
+  termHistory.push_back(fixedSet);
 
   for(unsigned int i=0; i<fixedSet.size(); ++i) {
     unsigned int termInd = terms.size();
@@ -228,6 +288,8 @@ void SmolyakEstimator<EstimateType>::AddTerms(std::vector<std::shared_ptr<MultiI
   // Evaluate all the points we need to -- could easily be parallelized
   EvaluatePoints(ptsToEval);
 
+  pointHistory.push_back(ptsToEval);
+
   ////////////////////////////////////////////////////////
   // Now, compute any new tensor product estimates that are necessary
   for(unsigned int i=0; i<termMultis->Size(); ++i) {
@@ -295,6 +357,13 @@ void SmolyakEstimator<EstimateType>::Reset()
   termMultis = std::make_shared<MultiIndexSet>(model->inputSizes(0));
   terms.clear();
   globalError = std::numeric_limits<double>::infinity();
+
+  errorHistory.clear();
+  evalHistory.clear();
+  timeHistory.clear();
+  termHistory.clear();
+  pointHistory.clear();
+  numEvals = 0;
 }
 
 
