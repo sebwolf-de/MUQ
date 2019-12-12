@@ -8,7 +8,7 @@ if(NOT HDF5_EXTERNAL_SOURCE)
 
   set(HDF5_EXTERNAL_SOURCE https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-${MUQ_INTERNAL_HDF5_VERSION}/src/CMake-hdf5-${MUQ_INTERNAL_HDF5_VERSION}.tar.gz)
   message(STATUS "Will download HDF5 from ${HDF5_EXTERNAL_SOURCE} during compile.")
-  
+
 endif()
 
 if(MUQ_USE_OPENMPI)
@@ -30,7 +30,7 @@ ExternalProject_Add(
 
 set_property( TARGET HDF5 PROPERTY FOLDER "Externals")
 
-			   
+
   set(HDF5_INCLUDE_DIRS "${HDF5_INSTALL_DIR}include" )
   if(MUQ_USE_OPENMPI)
       set( HDF5_LIBRARIES ${HDF5_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}hdf5_hl${CMAKE_STATIC_LIBRARY_SUFFIX} ${HDF5_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}hdf5${CMAKE_STATIC_LIBRARY_SUFFIX})

@@ -1,22 +1,27 @@
 cmake_minimum_required (VERSION 2.8.12)
 
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/finds)
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/checks)
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/builds)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/finds)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/checks)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/builds)
 
 INCLUDE(CheckCXXSourceCompiles)
 INCLUDE(CheckCXXSourceRuns)
 INCLUDE(CheckFunctionExists)
 
 # define the project name
-project(MUQ_PRIVATE)
-set(${CMAKE_PROJECT_NAME}_MAJOR_VERSION 1)
-set(${CMAKE_PROJECT_NAME}_MINOR_VERSION 0)
+project(MUQ)
+set(${CMAKE_PROJECT_NAME}_MAJOR_VERSION 0)
+set(${CMAKE_PROJECT_NAME}_MINOR_VERSION 2)
 set(${CMAKE_PROJECT_NAME}_PATCH_VERSION 0)
 set(${CMAKE_PROJECT_NAME}_VERSION ${${CMAKE_PROJECT_NAME}_MAJOR_VERSION}.${${CMAKE_PROJECT_NAME}_MINOR_VERSION}.${${CMAKE_PROJECT_NAME}_PATCH_VERSION})
 
 message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
+
+# Make the external project installation directory if it doesn't exist already
+file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/muq_external/)
+file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/muq_external/include)
+file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/muq_external/lib)
 
 ###############################################
 # Compiler configuration
@@ -89,7 +94,7 @@ install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAM
 	    COMPONENT dev)
 
 # Install the pymuq libraries
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/modules/Modeling/python/pymuqModeling/"
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/modules/Modeling/python/pymuqModeling/"
     DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pymuqModeling"
 	    COMPONENT dev)
 
@@ -104,7 +109,7 @@ install(DIRECTORY MUQ
 	      FILES_MATCHING PATTERN "*.h")
 
 # install the python libraries -- Is there a way to avoid copying this for each library?
-#install(DIRECTORY "${CMAKE_SOURCE_DIR}/modules/Approximation/python/pymuqApproximation/"
+#install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/modules/Approximation/python/pymuqApproximation/"
 #        DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pymuqApproximation"
 #        PATTERN "wrappers/" EXCLUDE)
 
