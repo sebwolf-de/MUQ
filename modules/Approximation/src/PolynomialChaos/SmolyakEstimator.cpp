@@ -72,6 +72,9 @@ EstimateType SmolyakEstimator<EstimateType>::ComputeWeightedSum() const
 template<typename EstimateType>
 EstimateType SmolyakEstimator<EstimateType>::Adapt(boost::property_tree::ptree options)
 {
+  auto t_start = std::chrono::high_resolution_clock::now();
+  double runtime = 0.0; // <- Time since the beginning of adapting (in seconds)
+
   UpdateErrors();
 
   timeTol = options.get("MaximumAdaptTime", std::numeric_limits<double>::infinity());
@@ -87,9 +90,6 @@ EstimateType SmolyakEstimator<EstimateType>::Adapt(boost::property_tree::ptree o
     throw std::runtime_error(msg.str());
   }
 
-  auto t_start = std::chrono::high_resolution_clock::now();
-  double runtime = 0.0; // <- Time since the beginning of adapting (in seconds)
-
   // Adapt until we've reached a stopping criteria
   while((globalError>errorTol)&&(runtime<timeTol)&&(numEvals<maxNumEvals)) {
     Refine();
@@ -100,8 +100,7 @@ EstimateType SmolyakEstimator<EstimateType>::Adapt(boost::property_tree::ptree o
 
     // keep track of the convergence diagnostics
     errorHistory.push_back(globalError);
-    timeHistory.push_back(runtime);
-    evalHistory.push_back(numEvals);
+    timeHistory.push_back(runtime+timeHistory.at(0)); // Adding the zero is necessary because the first time corresponds to terms added before adaptation
   }
 
 
@@ -115,17 +114,15 @@ bool SmolyakEstimator<EstimateType>::Refine()
   int expandInd = -1;
   double maxError = 0.0;
   for(unsigned int termInd : termMultis->GetFrontier()){
-    if(terms.at(termInd).localError > maxError){
-      expandInd = termInd;
-      maxError = terms.at(termInd).localError;
+
+    // Make sure all the backward neighbors are old
+    if(!terms.at(termInd).isOld){
+      if(terms.at(termInd).localError > maxError){
+        expandInd = termInd;
+        maxError = terms.at(termInd).localError;
+      }
     }
   }
-
-  std::cout << "Current MI set:" << std::endl;
-  for(int i=0; i<termMultis->Size(); ++i){
-    std::cout << "  " << termMultis->IndexToMulti(i)->GetVector() << std::endl;
-  }
-  std::cout << "Expanding index " << expandInd << " = " << termMultis->IndexToMulti(expandInd)->GetVector() << std::endl;
 
   // If no admissible terms were found, just return
   if(expandInd==-1)
@@ -138,37 +135,24 @@ bool SmolyakEstimator<EstimateType>::Refine()
 
   std::vector<std::shared_ptr<MultiIndex>> termsToAdd;
   for(auto& neigh : neighs){
+
     // Make sure the forward neighbor is not already in the set and has old backward neighbors
-    std::cout << "Should we add " << neigh->GetVector() << " ?" << std::endl;
     if(!termMultis->IsActive(neigh)){
-      std::cout << "Well it's not active..." << std::endl;
 
       bool shouldAdd = true;
 
       // Look through all of the backward neighbors. They should all be "old" to add this term.
       std::vector<unsigned int> backNeighInds = termMultis->GetBackwardNeighbors(neigh);
 
-      for(auto backInd : backNeighInds){
+      for(auto backInd : backNeighInds)
         shouldAdd = shouldAdd && terms.at(backInd).isOld;
-      }
-
 
       if(shouldAdd)
         termsToAdd.push_back(neigh);
-
-      if(shouldAdd){
-        std::cout << "Yes!" << std::endl;
-      }else{
-        std::cout << "No!" << std::endl;
-      }
     }
 
 
   }
-  std::cout << "Adding terms = \n";
-  for(auto& neigh : termsToAdd)
-    std::cout << "  " << neigh->GetVector() << std::endl;
-
 
   AddTerms(termsToAdd);
 
@@ -289,6 +273,7 @@ void SmolyakEstimator<EstimateType>::AddTerms(std::vector<std::shared_ptr<MultiI
   EvaluatePoints(ptsToEval);
 
   pointHistory.push_back(ptsToEval);
+  evalHistory.push_back(numEvals);
 
   ////////////////////////////////////////////////////////
   // Now, compute any new tensor product estimates that are necessary
@@ -328,8 +313,10 @@ void SmolyakEstimator<EstimateType>::UpdateErrors()
 
   // For each frontier term, compute a local error estimate
   for(unsigned int termInd : frontierTerms){
-    terms.at(termInd).localError = ComputeMagnitude( ComputeWeightedSum( terms.at(termInd).diffWeights ));
-    globalError += terms.at(termInd).localError;
+    if(!terms.at(termInd).isOld){
+      terms.at(termInd).localError = ComputeMagnitude( ComputeWeightedSum( terms.at(termInd).diffWeights ));
+      globalError += terms.at(termInd).localError;
+    }
   }
 }
 
@@ -337,11 +324,27 @@ template<typename EstimateType>
 EstimateType SmolyakEstimator<EstimateType>::Compute(std::shared_ptr<muq::Utilities::MultiIndexSet> const& fixedSet,
                                                      boost::property_tree::ptree                           options)
 {
+  auto t_start = std::chrono::high_resolution_clock::now();
+  double runtime = 0.0; // <- Time since the beginning of adapting (in seconds)
+
   Reset();
 
   AddTerms(fixedSet);
 
+
+  // Make all terms not on the strict frontier old
+  for(unsigned i=0;i<terms.size();++i)
+    terms.at(i).isOld = true;
+  for(unsigned int termInd : termMultis->GetStrictFrontier())
+    terms.at(termInd).isOld = false;
+
   UpdateErrors();
+
+  // Keep track of how long that took us
+  auto t_curr =std::chrono::high_resolution_clock::now();
+  runtime = std::chrono::duration<double, std::milli>(t_curr-t_start).count()/1e3;
+  timeHistory.push_back(runtime);
+  errorHistory.push_back(globalError);
 
   bool shouldAdapt = options.get("ShouldAdapt",false);
   if(shouldAdapt)

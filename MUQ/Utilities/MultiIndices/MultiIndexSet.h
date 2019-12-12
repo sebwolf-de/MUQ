@@ -306,6 +306,11 @@ namespace muq{
       */
       virtual std::vector<unsigned int> GetFrontier() const;
 
+      /** We define the strict frontier to be the collection of multiindices, whose
+          forward neighbors are all inactive.
+      */
+      virtual std::vector<unsigned int> GetStrictFrontier() const;
+
       /** Returns the indices for the backward neighbors of a currently active multiindex.
       @param[in] activeIndex The linear index of the MultiIndex of interest
       @return A std::vector containing the linear indices of the backward neighbors.
