@@ -85,7 +85,8 @@ CreateCompileGroup(
     LinearAlgebra/ConcatenateOperator.cpp
     LinearAlgebra/DiagonalOperator.cpp
     LinearAlgebra/ProductOperator.cpp
-
+    LinearAlgebra/LOBPCG.cpp
+    
     #LinearAlgebra/AnyAlgebra.cpp
     #LinearAlgebra/ScalarAlgebra.cpp
     #LinearAlgebra/EigenVectorAlgebra.cpp
