@@ -301,16 +301,24 @@ namespace muq{
       virtual std::vector<std::shared_ptr<MultiIndex>>  GetAdmissibleForwardNeighbors(unsigned int activeIndex);
 
       /** Here, we define a term on the "frontier" of the multiindex set as one
-          that has inactive admissable forward neighbors.  These terms are expandable.
+          that has at least one inactive admissable forward neighbors.  These terms are expandable.
           @return A vector of active "frontier" indices.
       */
       virtual std::vector<unsigned int> GetFrontier() const;
+
+      /** We define the strict frontier to be the collection of multiindices, whose
+          forward neighbors are all inactive.
+      */
+      virtual std::vector<unsigned int> GetStrictFrontier() const;
 
       /** Returns the indices for the backward neighbors of a currently active multiindex.
       @param[in] activeIndex The linear index of the MultiIndex of interest
       @return A std::vector containing the linear indices of the backward neighbors.
       */
       virtual std::vector<unsigned int> GetBackwardNeighbors(unsigned int activeIndex) const;
+
+      /** Returns indices for backward neighbors of an active or inactive multiindex. */
+      virtual std::vector<unsigned int> GetBackwardNeighbors(std::shared_ptr<MultiIndex> const& multiIndex) const;
 
       //*********************************************************
       //Testing properties of an index/multiIndex
@@ -325,6 +333,11 @@ namespace muq{
       ///Return true if the multiIndex is active
       virtual bool IsActive(std::shared_ptr<MultiIndex> const& multiIndex) const;
 
+      /// Returns the number of active forward neighbors
+      virtual unsigned int NumActiveForward(unsigned int activeInd) const;
+
+      /// Returns the number of forward neighbors (active or inactive)
+      virtual unsigned int NumForward(unsigned int activeInd) const;
 
     protected:
 

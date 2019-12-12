@@ -64,6 +64,11 @@ void muq::Approximation::PythonBindings::PolynomialChaosWrapper(py::module &m)
                        py::dict d) {return self.Compute(fixedSet, ConvertDictToPtree(d));})
     .def("Adapt", [](AdaptiveSmolyakPCE & self, py::dict d) {return self.Adapt(ConvertDictToPtree(d));})
     .def("Error", &SmolyakEstimator<std::shared_ptr<PolynomialChaosExpansion>>::Error)
-    .def("NumEvals", &SmolyakEstimator<std::shared_ptr<PolynomialChaosExpansion>>::NumEvals);
+    .def("NumEvals", &SmolyakEstimator<std::shared_ptr<PolynomialChaosExpansion>>::NumEvals)
+    .def("ErrorHistory", &SmolyakEstimator<std::shared_ptr<PolynomialChaosExpansion>>::ErrorHistory)
+    .def("EvalHistory", &SmolyakEstimator<std::shared_ptr<PolynomialChaosExpansion>>::EvalHistory)
+    .def("TimeHistory", &SmolyakEstimator<std::shared_ptr<PolynomialChaosExpansion>>::TimeHistory)
+    .def("PointHistory", &SmolyakEstimator<std::shared_ptr<PolynomialChaosExpansion>>::PointHistory)
+    .def("TermHistory", &SmolyakEstimator<std::shared_ptr<PolynomialChaosExpansion>>::TermHistory);
 
 }

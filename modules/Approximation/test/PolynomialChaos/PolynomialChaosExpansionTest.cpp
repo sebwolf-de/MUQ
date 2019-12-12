@@ -123,10 +123,10 @@ TEST(PolynomialChaos, PCE_WeightedSum)
   Eigen::VectorXd testPt = Eigen::VectorXd::Random(inputDim);
 
   Eigen::VectorXd trueEval = weights(0)*expansions.at(0)->Evaluate(testPt).at(0) + weights(1)*expansions.at(1)->Evaluate(testPt).at(0);
-  EXPECT_DOUBLE_EQ(trueEval(0),sumExpansion->Evaluate(testPt).at(0)(0));
+  EXPECT_NEAR(trueEval(0),sumExpansion->Evaluate(testPt).at(0)(0), 1e-14);
 
   weights << 0.5, 0.25, 1.0;
   sumExpansion = PolynomialChaosExpansion::ComputeWeightedSum(expansions,weights);
   trueEval = weights(0)*expansions.at(0)->Evaluate(testPt).at(0) + weights(1)*expansions.at(1)->Evaluate(testPt).at(0) + weights(2)*expansions.at(2)->Evaluate(testPt).at(0);
-  EXPECT_DOUBLE_EQ(trueEval(0),sumExpansion->Evaluate(testPt).at(0)(0));
+  EXPECT_NEAR(trueEval(0),sumExpansion->Evaluate(testPt).at(0)(0), 1e-14);
 }
