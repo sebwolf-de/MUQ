@@ -40,6 +40,26 @@ namespace Approximation {
     /** Returns the number of model evaluations this factory has performed. */
     virtual unsigned int NumEvals() const{return numEvals;};
 
+    /** Returns the history of the global error for each adaptation iteration.*/
+    virtual std::vector<double> ErrorHistory() const{return errorHistory;};
+
+    /** Returns the cumulative number of evaluations after each adaptation iteration.
+    Note that when Compute() is called, the number of evaluations is reset but the
+    evaluation cache is not.  If Compute() is called more than once, this may lead
+    to counterintuitive evaluation histories because the points that were evaluated
+    in the first call to Compute() will not be added to the history.
+    */
+    virtual std::vector<int> EvalHistory() const{return evalHistory;};
+
+    /** Returns the cumulative runtime (in seconds) for each adaptation iteration. */
+    virtual std::vector<double> TimeHistory() const{return timeHistory;};
+
+    /** Return the points that were evaluated during each adaptation step. */
+    virtual std::vector<std::vector<Eigen::VectorXd>> PointHistory() const;
+
+    /** Returns the terms used in the estimate as the a function of adaptation iterations. */
+    virtual std::vector<std::vector<std::shared_ptr<muq::Utilities::MultiIndex>>> TermHistory() const{return termHistory;};
+
   protected:
 
     virtual void Reset();
@@ -99,6 +119,20 @@ namespace Approximation {
     /// Multiindices defining each tensor product term in the Smolyak approximation
     std::shared_ptr<muq::Utilities::MultiIndexSet> termMultis;
 
+    /// Holds the history of the error.  Each component corresponds to an iteration
+    std::vector<double> errorHistory;
+
+    /// Holds the history of how many model evaluations have occured.  Each component corresponds to an adaptation iteration
+    std::vector<int> evalHistory;
+
+    /// Holds the history of how.  Each component corresponds to an adaptation iteration.
+    std::vector<double> timeHistory;
+
+    /// Indices in the cache for the points that were evaluated during each adaptation iteration.
+    std::vector<std::set<unsigned int>> pointHistory;
+
+    /// The terms that are added during each refinement
+    std::vector<std::vector<std::shared_ptr<muq::Utilities::MultiIndex>>> termHistory;
 
     /// A cache of model evaluations
     muq::Modeling::DynamicKDTreeAdaptor<> pointCache;
@@ -109,7 +143,7 @@ namespace Approximation {
     int AddToCache(Eigen::VectorXd const& newPt);
     int CacheSize() const{return pointCache.m_data.size();};
 
-    const double cacheTol = 4e-15; // <- points are considered equal if they are closer than this
+    const double cacheTol = 10.0*std::numeric_limits<double>::epsilon(); // <- points are considered equal if they are closer than this
 
     /// Tolerance on the time (in seconds) allowed to continue adapting
     double timeTol = std::numeric_limits<double>::infinity();
@@ -135,6 +169,9 @@ namespace Approximation {
 
       /* Has val been computed for this term yet? */
       bool isComputed = false;
+
+      /* Whether or not this term is part of the "old" set as defined by G&G */
+      bool isOld = false;
 
       /* Is this term needed for the estimate or an error indicator? */
       bool isNeeded = false;
