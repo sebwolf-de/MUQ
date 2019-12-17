@@ -169,3 +169,4 @@ endif()
 ########################################
 
 list( REMOVE_DUPLICATES MUQ_EXTERNAL_INCLUDES)
+set(MUQ_EXTERNAL_INCLUDE_DIRS ${MUQ_EXTERNAL_INCLUDES} CACHE INTERNAL "List of external include directories for MUQ.")
