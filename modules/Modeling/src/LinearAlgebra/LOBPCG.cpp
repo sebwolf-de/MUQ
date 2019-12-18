@@ -28,7 +28,7 @@ LOBPCG::LOBPCG(boost::property_tree::ptree const& opts) : LOBPCG(opts.get<int>("
                                                                  opts.get("Verbosity",0))
 {}
 
-Eigen::MatrixXd LOBPCG::Orthonormalizer::Compute(Eigen::MatrixXd const& V)
+Eigen::MatrixXd LOBPCG::Orthonormalizer::Compute(Eigen::Ref<const Eigen::MatrixXd> const& V)
 {
   Eigen::MatrixXd output(V);
   if(B!=nullptr){
@@ -39,14 +39,14 @@ Eigen::MatrixXd LOBPCG::Orthonormalizer::Compute(Eigen::MatrixXd const& V)
   return output;
 }
 
-Eigen::MatrixXd LOBPCG::Orthonormalizer::Compute(Eigen::MatrixXd const& V, Eigen::MatrixXd const& BVin)
+Eigen::MatrixXd LOBPCG::Orthonormalizer::Compute(Eigen::Ref<const Eigen::MatrixXd> const& V, Eigen::Ref<const Eigen::MatrixXd> const& BVin)
 {
   Eigen::MatrixXd output(V);
   ComputeInPlace(output, BVin);
   return output;
 }
 
-void LOBPCG::Orthonormalizer::ComputeInPlace(Eigen::MatrixXd& V)
+void LOBPCG::Orthonormalizer::ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V)
 {
   if(B!=nullptr){
     ComputeInPlace(V, B->Apply(V));
@@ -55,7 +55,7 @@ void LOBPCG::Orthonormalizer::ComputeInPlace(Eigen::MatrixXd& V)
   }
 }
 
-void LOBPCG::Orthonormalizer::ComputeInPlace(Eigen::MatrixXd& V, Eigen::MatrixXd const& BVin)
+void LOBPCG::Orthonormalizer::ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V, Eigen::Ref<const Eigen::MatrixXd> const& BVin)
 {
   vDim = V.cols();
 
@@ -91,6 +91,43 @@ void LOBPCG::Constraints::ApplyInPlace(Eigen::MatrixXd& x)
     x -= Y*YBY_llt.solve(YBX);
 }
 
+void LOBPCG::SortVec(std::vector<std::pair<int,int>> const& swapInds,
+                     Eigen::Ref<Eigen::VectorXd>            matrix)
+{
+  for(auto& swap : swapInds)
+    std::swap(matrix(swap.first),matrix(swap.second));
+}
+
+void LOBPCG::SortCols(std::vector<std::pair<int,int>> const& swapInds,
+                      Eigen::Ref<Eigen::MatrixXd>            matrix)
+{
+  for(auto& swap : swapInds)
+    matrix.col(swap.first).swap(matrix.col(swap.second));
+}
+
+
+std::vector<std::pair<int,int>> LOBPCG::GetSortSwaps(Eigen::Ref<const Eigen::VectorXd> const& resids)
+{
+  Eigen::VectorXd newResids = resids;
+  const unsigned int size = resids.size();
+
+  std::vector<std::pair<int,int>> swaps;
+  unsigned int maxInd;
+
+  for(unsigned int i=0; i<size-1; ++i)
+  {
+    // Find the maximum index
+    maxInd = std::distance(newResids.data(), std::max_element(&newResids(i), newResids.data()+size));
+
+    // Swap indices if needed
+    if(maxInd!=i){
+      swaps.push_back( std::make_pair(i, maxInd) );
+      std::swap(newResids(i), newResids(maxInd));
+    }
+  }
+
+  return swaps;
+}
 
 LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
                         Eigen::MatrixXd                 const& constMat,
@@ -154,109 +191,137 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
 
   X = (X*subEigVecs).eval();
   AX = (AX*subEigVecs).eval();
-  if(B!=nullptr)
+  if(B!=nullptr){
     BX = (BX*subEigVecs).eval();
+  }else{
+    BX = X;
+  }
 
   //
-  Eigen::MatrixXd resids;
+  Eigen::MatrixXd resids(X.rows(),X.cols());
   Eigen::VectorXd residNorms;
   Eigen::MatrixXd AR, P, BP, AP;
-
-  std::vector<int> sortInds(numEigs);
-  for(int i=0; i<numEigs; ++i)
-    sortInds[i] = i;
+  AR.resize(X.rows(),X.cols());
 
   for(unsigned it=0; it<maxIts; ++it){
-    std::cout << "Iteration " << it << std::endl;
-    std::cout << "  starting eigVals = " << subEigVals.transpose() << std::endl;
+
+    if(verbosity>1)
+      std::cout << "Iteration " << it << std::endl;
 
     // Compute the residuals
-    resids = AX - BX*subEigVals.asDiagonal();
+    resids.leftCols(numActive) = AX.leftCols(numActive) - BX.leftCols(numActive)*subEigVals.head(numActive).asDiagonal();
 
+    //
     // Compute the norm of the residuals
     residNorms = resids.colwise().norm();
-    std::cout << "  residNorms = " << residNorms.transpose() << std::endl;
-    std::cout << "  X=\n" << X << std::endl;
 
-    // Figure out what vectors we're still working on by sorting
-    std::sort(sortInds.begin(), sortInds.end(), [&residNorms](int i1, int i2) {return residNorms(i1) < residNorms(i2);});
-    std::cout << "Sorted residual norm = \n";
-    for(unsigned int k=0; k<numEigs; ++k){
-      std::cout << residNorms(sortInds[k]) << "  ";
+    // Figure out how many indices are active
+    numActive=0;
+    for(unsigned int i=0; i<residNorms.size(); ++i){
+      if(residNorms(i)>tol){
+        numActive++;
+      }
     }
-    std::cout << std::endl;
+
+
+    if(verbosity>2)
+      std::cout << "  eigenvalues = " << subEigVals.transpose() << std::endl;
+
+    if(verbosity>1)
+      std::cout << "  residNorms = " << residNorms.transpose() << std::endl;
+
+      
+    // If we've converged for all the vectors, break
+    if(numActive==0){
+      eigVecs = X;
+      eigVals = subEigVals;
+      return *this;
+    }
+
+    auto swaps = GetSortSwaps(residNorms);
+
+    // Sort everything so the first columns corresponds to the largest residuals
+    SortVec(swaps, subEigVals.head(numActive));
+    SortCols(swaps, X.leftCols(numActive));
+    SortCols(swaps, AX.leftCols(numActive));
+    SortCols(swaps, BX.leftCols(numActive));
+    SortCols(swaps, resids);
+
+    if(it!=0){
+      SortCols(swaps, P.leftCols(numActive));
+      SortCols(swaps, AP.leftCols(numActive));
+      SortCols(swaps, BP.leftCols(numActive));
+    }
 
     // Make residuals B-orthogonal to current values
-    resids -= (X*(BX.transpose()*resids)).eval();
-    std::cout << "Residual ortho=\n" << X.transpose()*resids << std::endl;
+    //std::cout << "  X.dot(X) = \n" << X.transpose()*X << std::endl;
+    resids -= (X.leftCols(numActive)*(BX.leftCols(numActive).transpose()*resids)).eval();
 
-    // Apply constraints
 
     // Orthonormalize residuals wrt B-inner product
-    bOrtho.ComputeInPlace(resids);
+    bOrtho.ComputeInPlace(resids.leftCols(numActive));
     Eigen::MatrixXd BR;
     if(B != nullptr){
       BR = bOrtho.GetBV();
     } else {
-      BR = resids;
+      BR = resids.leftCols(numActive);
     }
 
-
-
-    AR = A->Apply(resids);
+    AR.leftCols(numActive) = A->Apply(resids.leftCols(numActive));
 
     if(it!=0){
       // Orthonormalize P
-      bOrtho.ComputeInPlace(P,BP);
-      AP = bOrtho.VBV_Chol.triangularView<Eigen::Lower>().solve(AP.transpose()).transpose();
+      bOrtho.ComputeInPlace(P.leftCols(numActive),BP.leftCols(numActive));
+      AP.leftCols(numActive) = bOrtho.VBV_Chol.triangularView<Eigen::Lower>().solve(AP.leftCols(numActive).transpose()).transpose();
+
+      if(B!=nullptr){
+        BP = B->Apply(P);
+      }else{
+        BP = P;
+      }
     }
 
-    Eigen::MatrixXd XAR = X.transpose()*AR;
-    Eigen::MatrixXd RAR = resids.transpose()*AR;
+    Eigen::MatrixXd XAR = X.transpose()*AR.leftCols(numActive);
+    Eigen::MatrixXd RAR = resids.leftCols(numActive).transpose()*AR.leftCols(numActive);
     Eigen::MatrixXd XAX = X.transpose()*AX;
     Eigen::MatrixXd XBX, RBR, XBR;
 
     XBX = BX.transpose() * X;
-    RBR = BR.transpose() * resids;
-    XBR = X.transpose() * BR;
-
-
-    //gramXAR=full(blockVectorAX'*blockVectorR(:,activeMask));
-    //gramRAR=full(blockVectorAR(:,activeMask)'*blockVectorR(:,activeMask));
-    //gramRAR=(gramRAR'+gramRAR)*0.5;
+    RBR = BR.transpose() * resids.leftCols(numActive);
+    XBR = X.transpose() * BR.leftCols(numActive);
 
     Eigen::MatrixXd gramA(3*numEigs,3*numEigs);
     Eigen::MatrixXd gramB(3*numEigs,3*numEigs);
 
     if(it!=0){
-      gramA.resize(3*numEigs,3*numEigs);
-      gramB.resize(3*numEigs,3*numEigs);
+      gramA.resize(numEigs+2*numActive,numEigs+2*numActive);
+      gramB.resize(numEigs+2*numActive,numEigs+2*numActive);
 
-      Eigen::MatrixXd XAP = X.transpose() * AP;
-      Eigen::MatrixXd RAP = resids.transpose()*AP;
-      Eigen::MatrixXd PAP = P.transpose()*AP;
-      Eigen::MatrixXd XBP = X.transpose()*BP;
-      Eigen::MatrixXd RBP = resids.transpose()*BP;
+      Eigen::MatrixXd XAP = X.transpose() * AP.leftCols(numActive);
+      Eigen::MatrixXd RAP = resids.leftCols(numActive).transpose()*AP.leftCols(numActive);
+      Eigen::MatrixXd PAP = P.leftCols(numActive).transpose()*AP.leftCols(numActive);
+      Eigen::MatrixXd XBP = X.transpose()*BP.leftCols(numActive);
+      Eigen::MatrixXd RBP = resids.leftCols(numActive).transpose()*BP.leftCols(numActive);
 
       gramA.block(0,0,numEigs,numEigs) = subEigVals.asDiagonal();
-      gramA.block(0,numEigs,numEigs,numEigs) = XAR;
-      gramA.block(0,2*numEigs,numEigs,numEigs) = XAP;
-      gramA.block(numEigs,0,numEigs,numEigs) = XAR.transpose();
-      gramA.block(numEigs,numEigs,numEigs,numEigs) = RAR;
-      gramA.block(numEigs,2*numEigs,numEigs,numEigs) = RAP;
-      gramA.block(2*numEigs,0,numEigs,numEigs) = XAP.transpose();
-      gramA.block(2*numEigs,numEigs,numEigs,numEigs) = RAP.transpose();
-      gramA.block(2*numEigs,2*numEigs,numEigs,numEigs) = PAP;
+      gramA.block(0,numEigs,numEigs,numActive) = XAR;
+      gramA.block(0,numEigs+numActive,numEigs,numActive) = XAP;
+      gramA.block(numEigs,0,numActive,numEigs) = XAR.transpose();
+      gramA.block(numEigs,numEigs,numActive,numActive) = RAR;
+      gramA.block(numEigs,numEigs+numActive,numActive,numActive) = RAP;
+      gramA.block(numEigs+numActive,0,numActive,numEigs) = XAP.transpose();
+      gramA.block(numEigs+numActive,numEigs,numActive,numActive) = RAP.transpose();
+      gramA.block(numEigs+numActive,numEigs+numActive,numActive,numActive) = PAP;
 
       gramB.block(0,0,numEigs,numEigs) = Eigen::MatrixXd::Identity(numEigs,numEigs);
-      gramB.block(0,numEigs,numEigs,numEigs) = XBR;
-      gramB.block(0,2*numEigs,numEigs,numEigs) = XBP;
-      gramB.block(numEigs,0,numEigs,numEigs) = XBR.transpose();
-      gramB.block(numEigs,numEigs,numEigs,numEigs) = Eigen::MatrixXd::Identity(numEigs,numEigs);
-      gramB.block(numEigs,2*numEigs,numEigs,numEigs) = RBP;
-      gramB.block(2*numEigs,0,numEigs,numEigs) = XBP.transpose();
-      gramB.block(2*numEigs,numEigs,numEigs,numEigs) = RBP.transpose();
-      gramB.block(2*numEigs,2*numEigs,numEigs,numEigs) = Eigen::MatrixXd::Identity(numEigs,numEigs);
+      gramB.block(0,numEigs,numEigs,numActive) = XBR;
+      gramB.block(0,numEigs+numActive,numEigs,numActive) = XBP;
+      gramB.block(numEigs,0,numActive,numEigs) = XBR.transpose();
+      gramB.block(numEigs,numEigs,numActive,numActive) = Eigen::MatrixXd::Identity(numActive,numActive);
+      gramB.block(numEigs,numEigs+numActive,numActive,numActive) = RBP;
+      gramB.block(numEigs+numActive,0,numActive,numEigs) = XBP.transpose();
+      gramB.block(numEigs+numActive,numEigs,numActive,numActive) = RBP.transpose();
+      gramB.block(numEigs+numActive,numEigs+numActive,numActive,numActive) = Eigen::MatrixXd::Identity(numActive,numActive);
 
     }else{
 
@@ -279,39 +344,37 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     assert(subEigVals(0)<subEigVals(1));
     Eigen::Ref<const Eigen::MatrixXd> subEigVecs = ritzSolver.eigenvectors().rightCols(numEigs);
 
-    std::cout << "  subEigVals = " << subEigVals.transpose() << std::endl;
-
 
     Eigen::Ref<const Eigen::MatrixXd> eigX = subEigVecs.topRows(numEigs);
     Eigen::Ref<const Eigen::MatrixXd> eigR = subEigVecs.block(numEigs,0,numEigs,subEigVecs.cols());
 
-    Eigen::MatrixXd pp  = resids * eigR;
-    Eigen::MatrixXd app = AR*eigR;
-    Eigen::MatrixXd bpp = BR*eigR;
+    Eigen::MatrixXd pp  = resids.leftCols(numActive) * eigR;
+    Eigen::MatrixXd app = AR.leftCols(numActive)*eigR;
+    Eigen::MatrixXd bpp = BR.leftCols(numActive)*eigR;
 
     if(it!=0){
-
       Eigen::Ref<const Eigen::MatrixXd> eigP = subEigVecs.bottomRows(numEigs);
 
-      pp  += P*eigP;
-      app += AP*eigP;
-      bpp += BP*eigP;
-
+      pp  += P.leftCols(numActive)*eigP;
+      app += AP.leftCols(numActive)*eigP;
+      bpp += BP.leftCols(numActive)*eigP;
     }
-
 
     X = (X*eigX + pp).eval();
     AX = (AX*eigX + app).eval();
+    BX = (BX*eigX + bpp).eval();
 
-    if(B!=nullptr){
-      BX = (BX*eigX + bpp).eval();
-    }else{
-      BX = X;
-    }
+    //if(B!=nullptr){
+    //  BX = (BX*eigX + bpp).eval();
+    //}else{
+    //  BX = X;
+    //}
+
 
     P = pp;
     AP = app;
     BP = bpp;
+
   }
 
   return *this;

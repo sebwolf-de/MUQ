@@ -13,7 +13,7 @@ namespace Modeling{
   /** @class LOBPCG
       @ingroup LinearOperators
       @brief The Locally Optimal Block Preconditioned Conjugate Gradient Method (LOBPCG) method for matrix-free computation of eigenvalues and eigenvectors.
-      @details This class solves generalized eigenvalue problems of the form \f$Av = \lambda Bv\f$ when the matrix \f$A\f$ is symmetric and the matrix \f$Bf$ is symmetric positive definite.  It uses the The Locally Optimal Block Preconditioned Conjugate Gradient Method (LOBPCG) method described in
+      @details This class solves generalized eigenvalue problems of the form \f$Av = \lambda Bv\f$ when the matrix \f$A\f$ is symmetric and the matrix \f$B\f$ is symmetric positive definite.  It uses the The Locally Optimal Block Preconditioned Conjugate Gradient Method (LOBPCG) method described in
       "TOWARD THE OPTIMAL PRECONDITIONED EIGENSOLVER: LOCALLY OPTIMAL BLOCK PRECONDITIONED CONJUGATE GRADIENT METHOD" by ANDREW V. KNYAZEV.
    */
   class LOBPCG
@@ -87,16 +87,30 @@ namespace Modeling{
 
   private:
 
+    /**
+    Sorts the columns of the matrix using precomputed swaps from the GetSortSwaps function.
+    */
+    static void SortCols(std::vector<std::pair<int,int>> const& swapInds,
+                         Eigen::Ref<Eigen::MatrixXd>            matrix);
+
+    static void SortVec(std::vector<std::pair<int,int>> const& swapInds,
+                             Eigen::Ref<Eigen::VectorXd>       matrix);
+
+    /**
+    Returns a vector of swaps needed to sort the provided matrix using a selection sort.
+    */
+    static std::vector<std::pair<int,int>> GetSortSwaps(Eigen::Ref<const Eigen::VectorXd> const& residNorms);
+
     /** Makes the columns of a matrix V orthonormal wrt the B inner product \f$v^T B v\f$. */
     class Orthonormalizer{
     public:
       Orthonormalizer(std::shared_ptr<LinearOperator> const& Bin) : B(Bin){};
 
-      void ComputeInPlace(Eigen::MatrixXd& V);
-      void ComputeInPlace(Eigen::MatrixXd& V, Eigen::MatrixXd const& BVin);
+      void ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V);
+      void ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V, Eigen::Ref<const Eigen::MatrixXd> const& BVin);
 
-      Eigen::MatrixXd Compute(Eigen::MatrixXd const& V);
-      Eigen::MatrixXd Compute(Eigen::MatrixXd const& V, Eigen::MatrixXd const& BVin);
+      Eigen::MatrixXd Compute(Eigen::Ref<const Eigen::MatrixXd> const& V);
+      Eigen::MatrixXd Compute(Eigen::Ref<const Eigen::MatrixXd> const& V, Eigen::Ref<const Eigen::MatrixXd> const& BVin);
 
       Eigen::MatrixXd InverseVBV() const;
       Eigen::MatrixXd const& GetBV() const{return BV;};
