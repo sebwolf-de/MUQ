@@ -127,7 +127,7 @@ namespace Modeling{
       Constraints(std::shared_ptr<LinearOperator> const& B,
                   Eigen::MatrixXd                 const& constVec);
 
-      void ApplyInPlace(Eigen::MatrixXd& x);
+      void ApplyInPlace(Eigen::Ref<Eigen::MatrixXd> x);
 
       int size() const{return BY.cols();};
 

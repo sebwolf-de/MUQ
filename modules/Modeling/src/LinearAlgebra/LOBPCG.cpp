@@ -63,7 +63,7 @@ void LOBPCG::Orthonormalizer::ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V, Eige
   V = VBV_Chol.triangularView<Eigen::Lower>().solve(V.transpose()).transpose();
 
   if(B!=nullptr){
-    BV = VBV_Chol.triangularView<Eigen::Lower>().solve(BV.transpose()).transpose();
+    BV = VBV_Chol.triangularView<Eigen::Lower>().solve(BVin.transpose()).transpose();
   }
 }
 
@@ -85,7 +85,7 @@ LOBPCG::Constraints::Constraints(std::shared_ptr<LinearOperator> const& B,
   YBY_llt = (constMat.transpose() * BY).eval().llt();
 }
 
-void LOBPCG::Constraints::ApplyInPlace(Eigen::MatrixXd& x)
+void LOBPCG::Constraints::ApplyInPlace(Eigen::Ref<Eigen::MatrixXd> x)
 {
     Eigen::MatrixXd YBX = BY.transpose()*x;
     x -= Y*YBY_llt.solve(YBX);
@@ -136,7 +136,7 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
 {
 
   const int dim = A->rows();
-  if(numEigs>int(std::ceil(0.2*dim))){
+  if(numEigs>int(std::floor(0.2*dim))){
     std::cerr << "ERROR: LOBPCG can fail when more than 20\% of the eigenvalues are computed." << std::endl;
     assert(numEigs>int(std::ceil(0.2*dim)));
   }
@@ -161,13 +161,24 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
 
   Eigen::MatrixXd X = eigVecs;
 
+  // std::cout << "X0 =\n";
+  // for(int i=0; i<X.rows(); ++i){
+  //   std::cout << "[";
+  //   for(int j=0; j<X.cols()-1; ++j)
+  //     std::cout << X(i,j) << ", ";
+  //   std::cout << X(i,X.cols()-1) << "],\n";
+  // }
+  // std::cout << std::endl;
+
   // To start with, all of the indices are active
   unsigned int numActive = numEigs;
 
   // Get ready to apply constraints (e.g., build Y, BY, )
-  Constraints consts(B, constMat);
-  if(consts.size()>0)
-    consts.ApplyInPlace(X); // this will remove components of the eigenvectors that lie in the constraint subspace
+  std::shared_ptr<Constraints> consts;
+  if(constMat.rows()>0){
+    consts = std::make_shared<Constraints>(B, constMat);
+    consts->ApplyInPlace(X);
+  }
 
   // Make the current vectors orthogonal wrt B
   Orthonormalizer bOrtho(B);
@@ -211,10 +222,9 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     // Compute the residuals
     resids.leftCols(numActive) = AX.leftCols(numActive) - BX.leftCols(numActive)*subEigVals.head(numActive).asDiagonal();
 
-    //
     // Compute the norm of the residuals
     residNorms = resids.colwise().norm();
-
+  
     // Figure out how many indices are active
     numActive=0;
     for(unsigned int i=0; i<residNorms.size(); ++i){
@@ -223,14 +233,13 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
       }
     }
 
-
     if(verbosity>2)
       std::cout << "  eigenvalues = " << subEigVals.transpose() << std::endl;
 
     if(verbosity>1)
       std::cout << "  residNorms = " << residNorms.transpose() << std::endl;
 
-      
+
     // If we've converged for all the vectors, break
     if(numActive==0){
       eigVecs = X;
@@ -241,21 +250,25 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     auto swaps = GetSortSwaps(residNorms);
 
     // Sort everything so the first columns corresponds to the largest residuals
-    SortVec(swaps, subEigVals.head(numActive));
-    SortCols(swaps, X.leftCols(numActive));
-    SortCols(swaps, AX.leftCols(numActive));
-    SortCols(swaps, BX.leftCols(numActive));
+    SortVec(swaps, subEigVals);//.head(numActive));
+    SortCols(swaps, X);//.leftCols(numActive));
+    SortCols(swaps, AX);//.leftCols(numActive));
+    SortCols(swaps, BX);//.leftCols(numActive));
     SortCols(swaps, resids);
 
     if(it!=0){
-      SortCols(swaps, P.leftCols(numActive));
-      SortCols(swaps, AP.leftCols(numActive));
-      SortCols(swaps, BP.leftCols(numActive));
+      SortCols(swaps, P);//.leftCols(numActive));
+      SortCols(swaps, AP);//.leftCols(numActive));
+      SortCols(swaps, BP);//.leftCols(numActive));
     }
 
-    // Make residuals B-orthogonal to current values
-    //std::cout << "  X.dot(X) = \n" << X.transpose()*X << std::endl;
-    resids -= (X.leftCols(numActive)*(BX.leftCols(numActive).transpose()*resids)).eval();
+    // Apply the preconditioner
+    if(M!=nullptr)
+      resids.leftCols(numActive) = M->Apply(resids.leftCols(numActive));
+
+    // Apply the constraints
+    if(consts!=nullptr)
+      consts->ApplyInPlace(resids.leftCols(numActive));
 
 
     // Orthonormalize residuals wrt B-inner product
@@ -266,7 +279,6 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     } else {
       BR = resids.leftCols(numActive);
     }
-
     AR.leftCols(numActive) = A->Apply(resids.leftCols(numActive));
 
     if(it!=0){
@@ -290,8 +302,7 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     RBR = BR.transpose() * resids.leftCols(numActive);
     XBR = X.transpose() * BR.leftCols(numActive);
 
-    Eigen::MatrixXd gramA(3*numEigs,3*numEigs);
-    Eigen::MatrixXd gramB(3*numEigs,3*numEigs);
+    Eigen::MatrixXd gramA, gramB;
 
     if(it!=0){
       gramA.resize(numEigs+2*numActive,numEigs+2*numActive);
@@ -325,18 +336,18 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
 
     }else{
 
-      gramA.resize(2*numEigs,2*numEigs);
-      gramB.resize(2*numEigs,2*numEigs);
+      gramA.resize(numEigs+numActive,numEigs+numActive);
+      gramB.resize(numEigs+numActive,numEigs+numActive);
 
       gramA.block(0,0,numEigs,numEigs) = subEigVals.asDiagonal();
-      gramA.block(0,numEigs,numEigs,numEigs) = XAR;
-      gramA.block(numEigs,0,numEigs,numEigs) = XAR.transpose();
-      gramA.block(numEigs,numEigs,numEigs,numEigs) = RAR;
+      gramA.block(0,numEigs,numEigs,numActive) = XAR;
+      gramA.block(numEigs,0,numActive,numEigs) = XAR.transpose();
+      gramA.block(numEigs,numEigs,numActive,numActive) = RAR;
 
       gramB.block(0,0,numEigs,numEigs) = Eigen::MatrixXd::Identity(numEigs,numEigs);
-      gramB.block(0,numEigs,numEigs,numEigs) = XBR;
-      gramB.block(numEigs,0,numEigs,numEigs) = XBR.transpose();
-      gramB.block(numEigs,numEigs,numEigs,numEigs) = Eigen::MatrixXd::Identity(numEigs,numEigs);
+      gramB.block(0,numEigs,numEigs,numActive) = XBR;
+      gramB.block(numEigs,0,numActive,numEigs) = XBR.transpose();
+      gramB.block(numEigs,numEigs,numActive,numActive) = Eigen::MatrixXd::Identity(numActive,numActive);
     }
 
     Eigen::GeneralizedSelfAdjointEigenSolver<Eigen::MatrixXd> ritzSolver(gramA, gramB);
@@ -344,16 +355,15 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     assert(subEigVals(0)<subEigVals(1));
     Eigen::Ref<const Eigen::MatrixXd> subEigVecs = ritzSolver.eigenvectors().rightCols(numEigs);
 
-
     Eigen::Ref<const Eigen::MatrixXd> eigX = subEigVecs.topRows(numEigs);
-    Eigen::Ref<const Eigen::MatrixXd> eigR = subEigVecs.block(numEigs,0,numEigs,subEigVecs.cols());
+    Eigen::Ref<const Eigen::MatrixXd> eigR = subEigVecs.block(numEigs,0,numActive,subEigVecs.cols());
 
     Eigen::MatrixXd pp  = resids.leftCols(numActive) * eigR;
     Eigen::MatrixXd app = AR.leftCols(numActive)*eigR;
     Eigen::MatrixXd bpp = BR.leftCols(numActive)*eigR;
 
     if(it!=0){
-      Eigen::Ref<const Eigen::MatrixXd> eigP = subEigVecs.bottomRows(numEigs);
+      Eigen::Ref<const Eigen::MatrixXd> eigP = subEigVecs.bottomRows(numActive);
 
       pp  += P.leftCols(numActive)*eigP;
       app += AP.leftCols(numActive)*eigP;
@@ -377,6 +387,9 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
 
   }
 
+  std::cerr << "WARNING: LOBPCG reached maximum iterations." << std::endl;
+  eigVecs = X;
+  eigVals = subEigVals;
   return *this;
 }
 
@@ -394,10 +407,10 @@ LOBPCG& LOBPCG::reset(int dim)
     tol = dim * std::sqrt(std::numeric_limits<double>::epsilon());
 
   if(maxIts<0)
-    maxIts = std::min(dim,20);
+    maxIts = std::max(50,3*dim);
 
   eigVals.resize(numEigs);
-  eigVecs = RandomGenerator::GetNormal(dim,numEigs);
+  eigVecs = RandomGenerator::GetUniform(dim,numEigs);
 
   return *this;
 }
