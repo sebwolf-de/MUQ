@@ -21,26 +21,32 @@ namespace Modeling{
   public:
 
     /**
-    @param[in] numEigsIn The maximum number of eigenvalues to compute.
-    @param[in] tolIn Solver tolerance
+    @param[in] numEigsIn The maximum number of eigenvalues to compute used as a stopping criteria.
+    @param[in] blockSizeIn The number of eigenvalues to compute at once
+    @param[in] eigTolIn Fraction of the largest eigenvalue used as stopping criteria.
+    @param[in] solverTolIn Solver tolerance
     @param[in] maxItsIn The maximum number of iterations the solver is allowed to take.
     @param[in] largestIn A boolean specifying if the largest (true) or smallest (false) eigenvalues should be computed.
     @param[in] verbosityIn An integer {0,1,2,3} specifying how much information the solver should print.  When verbosityIn=0 (default), nothing is printed.
     */
     LOBPCG(int    numEigsIn,
-           double tolIn=-1,
+           double eigRelTolIn=0.0,
+           double eigAbsTolIn=0.0,
+           int    blockSizeIn=-1,
+           double solverTolIn=-1,
            int    maxItsIn=-1,
-           bool   largestIn=true,
            int    verbosityIn=0);
 
     /**
       <B>Configuration Parameters:</B>
-      Parameter Key | Type | Default Value | Description |
-      ------------- | ------------- | ------------- | ------------- |
-      "NumEigs"     | integer       | -             | The maximum number of eigenvalues to compute. |
-      "Tolerance"   | double        | \f$d\sqrt{\epsilon}\f$ | Tolerance used for stopping criteria.  |
+      Parameter Key  | Type | Default Value | Description |
+      -------------  | ------------- | ------------- | ------------- |
+      "NumEigs"      | integer       | -             | The maximum number of eigenvalues to compute. Used as stopping criteria. |
+      "RelativeTolerance" | double        | 0.0           | Fraction of the largest eigenvalue used as stopping criteria. |
+      "AbsoluteTolerance" | double        | 0.0           | Value of smallest eigenvalue to compute.  Used as stopping criteria. |
+      "BlockSize"    | integer       | 1       | How many eigenvalues and eigenvectors should be computed simultaneously. |
+      "SolverTolerance" | double        | \f$d\sqrt{\epsilon}\f$ | Tolerance used for stopping criteria.  |
       "MaxIts"      | integer       | min(d,20)   | Maximum number of iterations to take. |
-      "Largest"     | bool          | True |  If true, the largest eigenvalues are computed.  If false, the smallest eigenvalues are returned. |
       "Verbosity"   | integer       | 0  |  Specifies how much is printed to the screen.  Valid values are 0 (print nothing), 1, 2, or 3       |
     */
     LOBPCG(boost::property_tree::ptree const& options);
@@ -68,6 +74,12 @@ namespace Modeling{
                     std::shared_ptr<LinearOperator>        B = nullptr,
                     std::shared_ptr<LinearOperator>        M = nullptr);
 
+
+    /** Initializes the eigenvectors to a specific value.
+    */
+    void InitializeVectors(Eigen::MatrixXd const& vecs);
+
+
     /** Return a reference to the computed vector of eigenvalues.  The vector
         will only be valid after calling compute.
     */
@@ -86,6 +98,14 @@ namespace Modeling{
     LOBPCG& reset(int dim);
 
   private:
+
+    /** Computes a single block of eigenvalues and eigenvectors that are orthogonal to the columns of constmat.
+    */
+    std::pair<Eigen::VectorXd, Eigen::MatrixXd> ComputeBlock(std::shared_ptr<LinearOperator>   const& A,
+                                                             Eigen::Ref<const Eigen::MatrixXd> const& X0,
+                                                             Eigen::Ref<const Eigen::MatrixXd> const& constMat,
+                                                             std::shared_ptr<LinearOperator>          B,
+                                                             std::shared_ptr<LinearOperator>          M);
 
     /**
     Sorts the columns of the matrix using precomputed swaps from the GetSortSwaps function.
@@ -124,8 +144,8 @@ namespace Modeling{
 
     class Constraints{
     public:
-      Constraints(std::shared_ptr<LinearOperator> const& B,
-                  Eigen::MatrixXd                 const& constVec);
+      Constraints(std::shared_ptr<LinearOperator>   const& B,
+                  Eigen::Ref<const Eigen::MatrixXd> const& constVec);
 
       void ApplyInPlace(Eigen::Ref<Eigen::MatrixXd> x);
 
@@ -133,7 +153,7 @@ namespace Modeling{
 
     private:
       Eigen::MatrixXd BY;
-      Eigen::MatrixXd const& Y;
+      Eigen::Ref<const Eigen::MatrixXd> const& Y;
       Eigen::LLT<Eigen::MatrixXd> YBY_llt;
 
     }; // class LOBPCG::Constraints
@@ -141,14 +161,17 @@ namespace Modeling{
     /// The maximum number of eigenvalues to compute
     int numEigs;
 
+    /// Number of eigenvalues to compute simultaneously
+    int blockSize;
+
     /// Solver tolerance
-    double tol;
+    double solverTol;
+
+    /// Fraction of largest eigenvalue used to terminate
+    double eigRelTol, eigAbsTol;
 
     /// Maximum number of iterations
     int maxIts;
-
-    /// Do we want to pursue the largest or smallest eigenvalues?  If largest==true, then we go for the big ones.
-    const bool largest;
 
     /// Controls how much information we want to print
     int verbosity;

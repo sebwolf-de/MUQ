@@ -17,7 +17,7 @@
 using namespace muq::Modeling;
 using namespace muq::Utilities;
 
-TEST(LOBPCG, Diagonal)
+TEST(LOBPCG, Diagonal_BigBlock)
 {
 
     const int dim = 20;
@@ -33,12 +33,126 @@ TEST(LOBPCG, Diagonal)
     auto op = LinearOperator::Create(A);
 
     const int numEigs = 4;
-    const double tol = 1e-7;
-    LOBPCG solver(numEigs, tol);
+    const double solveTol = 1e-7;
+    const double eigTol = 0.0;
+    const int blockSize = numEigs;
+
+    LOBPCG solver(numEigs, eigTol, eigTol, blockSize, solveTol);
 
     solver.compute(op);
+
+    EXPECT_NEAR(A(0,0), solver.eigenvalues()(0), 1e-4);
+    EXPECT_NEAR(A(1,1), solver.eigenvalues()(1), 1e-4);
+    EXPECT_NEAR(A(2,2), solver.eigenvalues()(2), 1e-4);
+    EXPECT_NEAR(A(3,3), solver.eigenvalues()(3), 1e-4);
 }
 
+TEST(LOBPCG, Diagonal_MedBlock)
+{
+
+    const int dim = 20;
+    const double nugget = 1e-12;
+
+    // Create a random symmetric positive definite matrix
+    Eigen::MatrixXd A = nugget*Eigen::MatrixXd::Identity(dim,dim);
+    A(0,0) = 1.0;
+    A(1,1) = 0.5;
+    A(2,2) = 0.25;
+    A(3,3) = 0.125;
+
+    auto op = LinearOperator::Create(A);
+
+    const int numEigs = 4;
+    const double solveTol = 1e-7;
+    const double eigTol = 0.0;
+    const int blockSize = 2;
+
+    LOBPCG solver(numEigs, eigTol, eigTol, blockSize, solveTol);
+
+    solver.compute(op);
+
+    EXPECT_NEAR(A(0,0), solver.eigenvalues()(0), 1e-4);
+    EXPECT_NEAR(A(1,1), solver.eigenvalues()(1), 1e-4);
+    EXPECT_NEAR(A(2,2), solver.eigenvalues()(2), 1e-4);
+    EXPECT_NEAR(A(3,3), solver.eigenvalues()(3), 1e-4);
+}
+
+TEST(LOBPCG, Diagonal_SmallBlock)
+{
+
+    const int dim = 20;
+    const double nugget = 1e-12;
+
+    // Create a random symmetric positive definite matrix
+    Eigen::MatrixXd A = nugget*Eigen::MatrixXd::Identity(dim,dim);
+    A(0,0) = 1.0;
+    A(1,1) = 0.5;
+    A(2,2) = 0.25;
+    A(3,3) = 0.125;
+
+    auto op = LinearOperator::Create(A);
+
+    const int numEigs = 4;
+    const double solveTol = 1e-7;
+    const double eigTol = 0.0;
+    const int blockSize = 1;
+
+    LOBPCG solver(numEigs, eigTol, eigTol, blockSize, solveTol);
+
+    solver.compute(op);
+
+    EXPECT_NEAR(A(0,0), solver.eigenvalues()(0), 1e-4);
+    EXPECT_NEAR(A(1,1), solver.eigenvalues()(1), 1e-4);
+    EXPECT_NEAR(A(2,2), solver.eigenvalues()(2), 1e-4);
+    EXPECT_NEAR(A(3,3), solver.eigenvalues()(3), 1e-4);
+}
+
+TEST(LOBPCG, Diagonal_Tolerance)
+{
+
+    const int dim = 20;
+    const double nugget = 1e-12;
+
+    // Create a random symmetric positive definite matrix
+    Eigen::MatrixXd A = nugget*Eigen::MatrixXd::Identity(dim,dim);
+    A(0,0) = 1.0;
+    A(1,1) = 0.5;
+    A(2,2) = 0.09;
+    A(3,3) = 0.05;
+
+    auto op = LinearOperator::Create(A);
+
+    const int numEigs = 4;
+    const double solveTol = 1e-7;
+    double relTol = 0.1;
+    double absTol = 0.0;
+    const int blockSize =1;
+
+    {
+      LOBPCG solver(numEigs, relTol, absTol, blockSize, solveTol);
+
+      solver.compute(op);
+
+      EXPECT_EQ(3, solver.eigenvalues().size());
+      EXPECT_NEAR(A(0,0), solver.eigenvalues()(0), 1e-4);
+      EXPECT_NEAR(A(1,1), solver.eigenvalues()(1), 1e-4);
+      EXPECT_NEAR(A(2,2), solver.eigenvalues()(2), 1e-4);
+    }
+
+    {
+      double relTol = 0.0;
+      double absTol = 0.1;
+
+      LOBPCG solver(numEigs, relTol, absTol, blockSize, solveTol);
+
+      solver.compute(op);
+
+      EXPECT_EQ(3, solver.eigenvalues().size());
+      EXPECT_NEAR(A(0,0), solver.eigenvalues()(0), 1e-4);
+      EXPECT_NEAR(A(1,1), solver.eigenvalues()(1), 1e-4);
+      EXPECT_NEAR(A(2,2), solver.eigenvalues()(2), 1e-4);
+    }
+}
 
 TEST(LOBPCG, Random)
 {
@@ -69,17 +183,18 @@ TEST(LOBPCG, Random)
     // Create a matrix with the specified eigenvalues and eigenvectors
     Eigen::MatrixXd A = trueVecs * trueVals.asDiagonal() * trueVecs.transpose() + nugget*Eigen::MatrixXd::Identity(dim,dim);
 
-
     auto op = LinearOperator::Create(A);
 
     const int numEigs = subDim-2;
-    const double tol = 1e-7;
-    LOBPCG solver(numEigs, tol);
+    const double solveTol = 1e-7;
+    const double eigTol = 0.0;
+    const int blockSize = numEigs;
 
+    LOBPCG solver(numEigs, eigTol, eigTol, blockSize, solveTol);
     solver.compute(op);
 
-    for(unsigned int i=0; i<subDim-2; ++i)
-      EXPECT_NEAR(trueVals(subDim-i-1), solver.eigenvalues()(subDim-3-i), 1e-10);
+    for(unsigned int i=0; i<numEigs; ++i)
+      EXPECT_NEAR(trueVals(subDim-1-i), solver.eigenvalues()(i), 1e-10);
 
 }
 
@@ -117,13 +232,16 @@ TEST(LOBPCG, RandomIdentity)
     auto opB = std::make_shared<IdentityOperator>(dim);
 
     const int numEigs = subDim-2;
-    const double tol = 1e-7;
-    LOBPCG solver(numEigs, tol);
+    const double solveTol = 1e-7;
+    const double eigTol = 0.0;
+    const int blockSize = numEigs;
+
+    LOBPCG solver(numEigs, eigTol, eigTol, blockSize, solveTol);
 
     solver.compute(opA,opB);
 
-    for(unsigned int i=0; i<subDim-2; ++i)
-      EXPECT_NEAR(trueVals(subDim-i-1), solver.eigenvalues()(subDim-3-i), 1e-10);
+    for(unsigned int i=0; i<numEigs; ++i)
+      EXPECT_NEAR(trueVals(subDim-1-i), solver.eigenvalues()(i), 1e-10);
 
 }
 
@@ -151,12 +269,15 @@ TEST(LOBPCG, RandomGeneral)
     auto opB = LinearOperator::Create(B);
 
     const int numEigs = 3;
-    const double tol = 1e-6;
-    LOBPCG solver(numEigs, tol);
+    const double solveTol = 1e-6;
+    const double eigTol = 0.0;
+    const int blockSize = numEigs;
+
+    LOBPCG solver(numEigs, eigTol, eigTol, blockSize, solveTol);
     solver.compute(opA,opB);
 
     for(int i=1;i<numEigs+1;++i)
-      EXPECT_NEAR(dirSolver.eigenvalues()(dim-i), solver.eigenvalues()(numEigs-i),1e-3*dirSolver.eigenvalues()(dim-i));
+      EXPECT_NEAR(dirSolver.eigenvalues()(dim-i), solver.eigenvalues()(i-1),1e-3*dirSolver.eigenvalues()(dim-i));
 }
 
 TEST(LOBPCG, RandomGeneralPrecond)
@@ -184,12 +305,16 @@ TEST(LOBPCG, RandomGeneralPrecond)
     auto opM = LinearOperator::Create(B.ldlt().solve(Eigen::MatrixXd::Identity(dim,dim)).eval());
 
     const int numEigs = 5;
-    const double tol = 1e-6;
-    LOBPCG solver(numEigs, tol);
+    const double solveTol = 1e-6;
+    const double eigTol = 0.0;
+    const int blockSize = numEigs;
+
+    LOBPCG solver(numEigs, eigTol, eigTol, blockSize, solveTol);
+
     solver.compute(opA,opB, opM);
 
-    for(int i=1;i<numEigs+1;++i)
-      EXPECT_NEAR(dirSolver.eigenvalues()(dim-i), solver.eigenvalues()(numEigs-i),1e-3*dirSolver.eigenvalues()(dim-i));
+    for(int i=0;i<numEigs;++i)
+      EXPECT_NEAR(dirSolver.eigenvalues()(dim-i-1), solver.eigenvalues()(i),1e-3*dirSolver.eigenvalues()(dim-i-1));
 }
 
 TEST(LOBPCG, RandomGeneralPrecondConstrained)
@@ -218,11 +343,16 @@ TEST(LOBPCG, RandomGeneralPrecondConstrained)
 
     Eigen::MatrixXd constraints = dirSolver.eigenvectors().rightCols(2);
 
+
     const int numEigs = 3;
-    const double tol = 1e-6;
-    LOBPCG solver(numEigs, tol);
+    const double solveTol = 1e-6;
+    const double eigTol = 0.0;
+    const int blockSize = numEigs;
+
+    LOBPCG solver(numEigs, eigTol, eigTol, blockSize, solveTol);
+
     solver.compute(opA, constraints, opB, opM);
 
-    for(int i=1;i<numEigs+1;++i)
-      EXPECT_NEAR(dirSolver.eigenvalues()(dim-i-constraints.cols()), solver.eigenvalues()(numEigs-i),1e-3*dirSolver.eigenvalues()(dim-i-constraints.cols()));
+    for(int i=0;i<numEigs;++i)
+      EXPECT_NEAR(dirSolver.eigenvalues()(dim-i-constraints.cols()-1), solver.eigenvalues()(i),1e-3*dirSolver.eigenvalues()(dim-i-constraints.cols()-1));
 }

@@ -8,23 +8,32 @@ using namespace muq::Modeling;
 using namespace muq::Utilities;
 
 LOBPCG::LOBPCG(int    numEigsIn,
-               double tolIn,
+               double eigRelTolIn,
+               double eigAbsTolIn,
+               int    blockSizeIn,
+               double solverTolIn,
                int    maxItsIn,
-               bool   largestIn,
                int    verbosityIn) : numEigs(numEigsIn),
-                                     tol(tolIn),
+                                     blockSize(blockSizeIn),
+                                     solverTol(solverTolIn),
+                                     eigRelTol(eigRelTolIn),
+                                     eigAbsTol(eigAbsTolIn),
                                      maxIts(maxItsIn),
-                                     largest(largestIn),
                                      verbosity(verbosityIn)
 {
   assert(numEigs>0);
+  assert(blockSize>0);
+  assert(eigRelTol>=0.0);
+  assert(solverTol>=0.0);
 }
 
 
 LOBPCG::LOBPCG(boost::property_tree::ptree const& opts) : LOBPCG(opts.get<int>("NumEigs"),
-                                                                 opts.get("Tolerance",-1.0),
-                                                                 opts.get("MaxIts", -1),
-                                                                 opts.get("Largest",true),
+                                                                 opts.get("RelativeTolerance",0.0),
+                                                                 opts.get("AbsoluteTolerance",0.0),
+                                                                 opts.get("BlockSize", 1),
+                                                                 opts.get("SolverTolerance", -1.0),
+                                                                 opts.get("MaxIts",-1),
                                                                  opts.get("Verbosity",0))
 {}
 
@@ -73,8 +82,8 @@ Eigen::MatrixXd LOBPCG::Orthonormalizer::InverseVBV() const
 }
 
 
-LOBPCG::Constraints::Constraints(std::shared_ptr<LinearOperator> const& B,
-                                 Eigen::MatrixXd                 const& constMat) : Y(constMat)
+LOBPCG::Constraints::Constraints(std::shared_ptr<LinearOperator>   const& B,
+                                 Eigen::Ref<const Eigen::MatrixXd> const& constMat) : Y(constMat)
 {
   if(B!=nullptr){
     BY = B->Apply(constMat);
@@ -156,22 +165,92 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
   }
 
   // If this is the first call to compute, initialize everything
-  if(eigVals.size()==0)
-    reset(dim); // This will initialize the eigenvectors to random values
+  reset(dim);
 
-  Eigen::MatrixXd X = eigVecs;
+  // Initialize the eigenvalue and eigenvector matrices if they haven't been initialized yet
+  if(eigVecs.rows()==0){
+    eigVecs.resize(dim, numEigs);
+    eigVecs = RandomGenerator::GetUniform(dim,numEigs);
+    eigVals.resize(numEigs);
+  }
 
-  // std::cout << "X0 =\n";
-  // for(int i=0; i<X.rows(); ++i){
-  //   std::cout << "[";
-  //   for(int j=0; j<X.cols()-1; ++j)
-  //     std::cout << X(i,j) << ", ";
-  //   std::cout << X(i,X.cols()-1) << "],\n";
-  // }
-  // std::cout << std::endl;
+
+  Eigen::VectorXd blockVals;
+  Eigen::MatrixXd blockVecs;
+
+  Eigen::MatrixXd constraints;
+  if(constMat.cols()+numEigs-blockSize > 0)
+    constraints.resize(dim, constMat.cols()+numEigs-blockSize);
+  if(constMat.cols()>0)
+    constraints.leftCols(constMat.cols()) = constMat;
+
+  // Loop over the blocks needed to compute the eigenvalues
+  for(int numComputed=0; numComputed<numEigs; numComputed+=blockSize){
+
+    if(numComputed>0)
+      constraints.block(0,numComputed+constMat.cols()-blockSize,dim,blockSize) = eigVecs.block(0,numComputed-blockSize,dim,blockSize);
+
+    // Make sure the eigenvalue and eigenvector matrices have enough space.  Intialize any new vectors to random values
+    if(numComputed + blockSize > eigVecs.cols()){
+      int numNew = numComputed + blockSize - eigVecs.cols();
+      eigVals.conservativeResize(numComputed + blockSize);
+      eigVecs.conservativeResize(dim, numComputed + blockSize);
+      eigVecs.rightCols(numNew) = RandomGenerator::GetUniform(dim, numNew);
+    }
+
+    std::tie(blockVals, blockVecs) = ComputeBlock(A,
+                                                  eigVecs.block(0,numComputed,dim,blockSize), // initial guess
+                                                  constraints.leftCols(numComputed+constMat.cols()), // Make sure this block produces vectors that are perpendicular to the previously computed vectors
+                                                  B,  // RHS matrix
+                                                  M); // preconditioner
+
+    eigVals.segment(numComputed, blockSize) = blockVals;
+    eigVecs.block(0,numComputed, dim, blockSize) = blockVecs;
+
+    // Check to see if we've capture the dominant eigenvalues
+    if(numComputed>0){
+      if( (eigVals(numComputed-1)< eigRelTol*eigVals(0))||(eigVals(numComputed-1)<eigAbsTol)){
+        eigVals.conservativeResize(numComputed);
+        eigVecs = eigVecs.leftCols(numComputed).eval();
+        return *this;
+      }
+    }
+
+  }
+
+  return *this;
+}
+
+std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr<LinearOperator>   const& A,
+                                                                 Eigen::Ref<const Eigen::MatrixXd> const& X0,
+                                                                 Eigen::Ref<const Eigen::MatrixXd> const& constMat,
+                                                                 std::shared_ptr<LinearOperator>          B,
+                                                                 std::shared_ptr<LinearOperator>          M)
+{
+
+  // Make sure X0 has the right shape
+  assert(X0.cols()==blockSize);
+  assert(X0.rows()==A->rows());
+  assert(A->rows()==A->cols());
+
+  if(B!=nullptr){
+    assert(B->rows()==A->rows());
+    assert(B->rows()==B->cols());
+  }
+
+  if(M!=nullptr){
+    assert(M->rows()==A->rows());
+    assert(M->rows()==M->cols());
+  }
+
+  if(constMat.rows()>0){
+    assert(constMat.rows()==A->rows());
+  }
+
+  Eigen::MatrixXd X = X0;
 
   // To start with, all of the indices are active
-  unsigned int numActive = numEigs;
+  unsigned int numActive = blockSize;
 
   // Get ready to apply constraints (e.g., build Y, BY, )
   std::shared_ptr<Constraints> consts;
@@ -224,11 +303,11 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
 
     // Compute the norm of the residuals
     residNorms = resids.colwise().norm();
-  
+
     // Figure out how many indices are active
     numActive=0;
     for(unsigned int i=0; i<residNorms.size(); ++i){
-      if(residNorms(i)>tol){
+      if(residNorms(i)>solverTol){
         numActive++;
       }
     }
@@ -242,14 +321,16 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
 
     // If we've converged for all the vectors, break
     if(numActive==0){
-      eigVecs = X;
-      eigVals = subEigVals;
-      return *this;
+      auto swaps = GetSortSwaps(subEigVals);
+      SortVec(swaps, subEigVals);//.head(numActive));
+      SortCols(swaps, X);//.leftCols(numActive));
+      return std::make_pair(subEigVals, X);
     }
 
-    auto swaps = GetSortSwaps(residNorms);
 
     // Sort everything so the first columns corresponds to the largest residuals
+    auto swaps = GetSortSwaps(residNorms);
+
     SortVec(swaps, subEigVals);//.head(numActive));
     SortCols(swaps, X);//.leftCols(numActive));
     SortCols(swaps, AX);//.leftCols(numActive));
@@ -305,8 +386,8 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     Eigen::MatrixXd gramA, gramB;
 
     if(it!=0){
-      gramA.resize(numEigs+2*numActive,numEigs+2*numActive);
-      gramB.resize(numEigs+2*numActive,numEigs+2*numActive);
+      gramA.resize(blockSize+2*numActive,blockSize+2*numActive);
+      gramB.resize(blockSize+2*numActive,blockSize+2*numActive);
 
       Eigen::MatrixXd XAP = X.transpose() * AP.leftCols(numActive);
       Eigen::MatrixXd RAP = resids.leftCols(numActive).transpose()*AP.leftCols(numActive);
@@ -314,49 +395,51 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
       Eigen::MatrixXd XBP = X.transpose()*BP.leftCols(numActive);
       Eigen::MatrixXd RBP = resids.leftCols(numActive).transpose()*BP.leftCols(numActive);
 
-      gramA.block(0,0,numEigs,numEigs) = subEigVals.asDiagonal();
-      gramA.block(0,numEigs,numEigs,numActive) = XAR;
-      gramA.block(0,numEigs+numActive,numEigs,numActive) = XAP;
-      gramA.block(numEigs,0,numActive,numEigs) = XAR.transpose();
-      gramA.block(numEigs,numEigs,numActive,numActive) = RAR;
-      gramA.block(numEigs,numEigs+numActive,numActive,numActive) = RAP;
-      gramA.block(numEigs+numActive,0,numActive,numEigs) = XAP.transpose();
-      gramA.block(numEigs+numActive,numEigs,numActive,numActive) = RAP.transpose();
-      gramA.block(numEigs+numActive,numEigs+numActive,numActive,numActive) = PAP;
+      gramA.block(0,0,blockSize,blockSize) = subEigVals.asDiagonal();
+      gramA.block(0,blockSize,blockSize,numActive) = XAR;
+      gramA.block(0,blockSize+numActive,blockSize,numActive) = XAP;
+      gramA.block(blockSize,0,numActive,blockSize) = XAR.transpose();
+      gramA.block(blockSize,blockSize,numActive,numActive) = RAR;
+      gramA.block(blockSize,blockSize+numActive,numActive,numActive) = RAP;
+      gramA.block(blockSize+numActive,0,numActive,blockSize) = XAP.transpose();
+      gramA.block(blockSize+numActive,blockSize,numActive,numActive) = RAP.transpose();
+      gramA.block(blockSize+numActive,blockSize+numActive,numActive,numActive) = PAP;
 
-      gramB.block(0,0,numEigs,numEigs) = Eigen::MatrixXd::Identity(numEigs,numEigs);
-      gramB.block(0,numEigs,numEigs,numActive) = XBR;
-      gramB.block(0,numEigs+numActive,numEigs,numActive) = XBP;
-      gramB.block(numEigs,0,numActive,numEigs) = XBR.transpose();
-      gramB.block(numEigs,numEigs,numActive,numActive) = Eigen::MatrixXd::Identity(numActive,numActive);
-      gramB.block(numEigs,numEigs+numActive,numActive,numActive) = RBP;
-      gramB.block(numEigs+numActive,0,numActive,numEigs) = XBP.transpose();
-      gramB.block(numEigs+numActive,numEigs,numActive,numActive) = RBP.transpose();
-      gramB.block(numEigs+numActive,numEigs+numActive,numActive,numActive) = Eigen::MatrixXd::Identity(numActive,numActive);
+      gramB.block(0,0,blockSize,blockSize) = Eigen::MatrixXd::Identity(blockSize,blockSize);
+      gramB.block(0,blockSize,blockSize,numActive) = XBR;
+      gramB.block(0,blockSize+numActive,blockSize,numActive) = XBP;
+      gramB.block(blockSize,0,numActive,blockSize) = XBR.transpose();
+      gramB.block(blockSize,blockSize,numActive,numActive) = Eigen::MatrixXd::Identity(numActive,numActive);
+      gramB.block(blockSize,blockSize+numActive,numActive,numActive) = RBP;
+      gramB.block(blockSize+numActive,0,numActive,blockSize) = XBP.transpose();
+      gramB.block(blockSize+numActive,blockSize,numActive,numActive) = RBP.transpose();
+      gramB.block(blockSize+numActive,blockSize+numActive,numActive,numActive) = Eigen::MatrixXd::Identity(numActive,numActive);
 
     }else{
 
-      gramA.resize(numEigs+numActive,numEigs+numActive);
-      gramB.resize(numEigs+numActive,numEigs+numActive);
+      gramA.resize(blockSize+numActive,blockSize+numActive);
+      gramB.resize(blockSize+numActive,blockSize+numActive);
 
-      gramA.block(0,0,numEigs,numEigs) = subEigVals.asDiagonal();
-      gramA.block(0,numEigs,numEigs,numActive) = XAR;
-      gramA.block(numEigs,0,numActive,numEigs) = XAR.transpose();
-      gramA.block(numEigs,numEigs,numActive,numActive) = RAR;
+      gramA.block(0,0,blockSize,blockSize) = subEigVals.asDiagonal();
+      gramA.block(0,blockSize,blockSize,numActive) = XAR;
+      gramA.block(blockSize,0,numActive,blockSize) = XAR.transpose();
+      gramA.block(blockSize,blockSize,numActive,numActive) = RAR;
 
-      gramB.block(0,0,numEigs,numEigs) = Eigen::MatrixXd::Identity(numEigs,numEigs);
-      gramB.block(0,numEigs,numEigs,numActive) = XBR;
-      gramB.block(numEigs,0,numActive,numEigs) = XBR.transpose();
-      gramB.block(numEigs,numEigs,numActive,numActive) = Eigen::MatrixXd::Identity(numActive,numActive);
+      gramB.block(0,0,blockSize,blockSize) = Eigen::MatrixXd::Identity(blockSize,blockSize);
+      gramB.block(0,blockSize,blockSize,numActive) = XBR;
+      gramB.block(blockSize,0,numActive,blockSize) = XBR.transpose();
+      gramB.block(blockSize,blockSize,numActive,numActive) = Eigen::MatrixXd::Identity(numActive,numActive);
     }
 
     Eigen::GeneralizedSelfAdjointEigenSolver<Eigen::MatrixXd> ritzSolver(gramA, gramB);
-    subEigVals = ritzSolver.eigenvalues().tail(numEigs);
-    assert(subEigVals(0)<subEigVals(1));
-    Eigen::Ref<const Eigen::MatrixXd> subEigVecs = ritzSolver.eigenvectors().rightCols(numEigs);
+    subEigVals = ritzSolver.eigenvalues().tail(blockSize);
+    if(subEigVals.size()>1)
+      assert(subEigVals(0)<subEigVals(1));
 
-    Eigen::Ref<const Eigen::MatrixXd> eigX = subEigVecs.topRows(numEigs);
-    Eigen::Ref<const Eigen::MatrixXd> eigR = subEigVecs.block(numEigs,0,numActive,subEigVecs.cols());
+    Eigen::Ref<const Eigen::MatrixXd> subEigVecs = ritzSolver.eigenvectors().rightCols(blockSize);
+
+    Eigen::Ref<const Eigen::MatrixXd> eigX = subEigVecs.topRows(blockSize);
+    Eigen::Ref<const Eigen::MatrixXd> eigR = subEigVecs.block(blockSize,0,numActive,subEigVecs.cols());
 
     Eigen::MatrixXd pp  = resids.leftCols(numActive) * eigR;
     Eigen::MatrixXd app = AR.leftCols(numActive)*eigR;
@@ -374,13 +457,6 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     AX = (AX*eigX + app).eval();
     BX = (BX*eigX + bpp).eval();
 
-    //if(B!=nullptr){
-    //  BX = (BX*eigX + bpp).eval();
-    //}else{
-    //  BX = X;
-    //}
-
-
     P = pp;
     AP = app;
     BP = bpp;
@@ -388,9 +464,13 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
   }
 
   std::cerr << "WARNING: LOBPCG reached maximum iterations." << std::endl;
-  eigVecs = X;
-  eigVals = subEigVals;
-  return *this;
+
+  // Sort the results so that the eigenvalues are descending
+  auto swaps = GetSortSwaps(subEigVals);
+  SortVec(swaps, subEigVals);//.head(numActive));
+  SortCols(swaps, X);//.leftCols(numActive));
+
+  return std::make_pair(subEigVals, X);
 }
 
 
@@ -401,16 +481,20 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
   return compute(A,Eigen::MatrixXd(), B,M);
 };
 
+
+void LOBPCG::InitializeVectors(Eigen::MatrixXd const& X0)
+{
+  eigVals.resize(numEigs);
+  eigVecs = X0;
+}
+
 LOBPCG& LOBPCG::reset(int dim)
 {
-  if(tol<0.0)
-    tol = dim * std::sqrt(std::numeric_limits<double>::epsilon());
+  if(solverTol<0.0)
+    solverTol = dim * std::sqrt(std::numeric_limits<double>::epsilon());
 
   if(maxIts<0)
     maxIts = std::max(50,3*dim);
-
-  eigVals.resize(numEigs);
-  eigVecs = RandomGenerator::GetUniform(dim,numEigs);
 
   return *this;
 }
