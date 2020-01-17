@@ -15,6 +15,7 @@
 #include "MUQ/SamplingAlgorithms/MALAProposal.h"
 #include "MUQ/SamplingAlgorithms/AMProposal.h"
 #include "MUQ/Utilities/AnyHelpers.h"
+#include "MUQ/Utilities/RandomGenerator.h"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
@@ -34,7 +35,7 @@ TEST(MCMC, MHKernel_ThinScheduler) {
   pt.put("MyMCMC.Kernel1.Method","MHKernel");
   pt.put("MyMCMC.Kernel1.Proposal", "MyProposal"); // the proposal
   pt.put("MyMCMC.Kernel1.MyProposal.Method", "MHProposal");
-  pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 0.5); // the variance of the isotropic MH proposal
+  pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 3.0); // the variance of the isotropic MH proposal
 
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
   const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
@@ -44,7 +45,7 @@ TEST(MCMC, MHKernel_ThinScheduler) {
   auto problem = std::make_shared<SamplingProblem>(dist);
 
   // starting point
-  const Eigen::VectorXd start = mu;
+  const Eigen::VectorXd start = mu + RandomGenerator::GetNormal(2);
 
   // create an instance of MCMC
   auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
@@ -55,14 +56,14 @@ TEST(MCMC, MHKernel_ThinScheduler) {
 
   //boost::any anyMean = samps.Mean();
   Eigen::VectorXd mean = samps->Mean();
-  EXPECT_NEAR(mu(0), mean(0), 5e-2);
-  EXPECT_NEAR(mu(1), mean(1), 5e-2);
+  EXPECT_NEAR(mu(0), mean(0), 8e-2);
+  EXPECT_NEAR(mu(1), mean(1), 8e-2);
 
   Eigen::MatrixXd cov = samps->Covariance();
-  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
-  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
-  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
-  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
+  EXPECT_NEAR(1.0, cov(0,0), 1.2e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1.2e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1.2e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1.2e-1);
 
 }
 
