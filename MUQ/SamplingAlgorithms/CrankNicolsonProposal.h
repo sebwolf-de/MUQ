@@ -64,12 +64,12 @@ namespace muq {
       // Sometimes we have to keep track of the prior distribution so we can update the proposal mean and covariance
       std::shared_ptr<muq::Modeling::GaussianBase> priorDist;
 
-      virtual std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> currentState) override;
+      virtual std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> const& currentState) override;
 
-      virtual double LogDensity(std::shared_ptr<SamplingState> currState,
-                                std::shared_ptr<SamplingState> propState) override;
+      virtual double LogDensity(std::shared_ptr<SamplingState> const& currState,
+                                std::shared_ptr<SamplingState> const& propState) override;
 
-      void ExtractPrior(std::shared_ptr<AbstractSamplingProblem> prob, std::string nodeName);
+      void ExtractPrior(std::shared_ptr<AbstractSamplingProblem> const& prob, std::string nodeName);
     };
 
   } // namespace SamplingAlgoirthms

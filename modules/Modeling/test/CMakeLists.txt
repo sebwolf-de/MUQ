@@ -33,7 +33,8 @@ CreateTestGroup(
     LinearAlgebra/LinearOperatorTests.cpp
     LinearAlgebra/LyapunovSolverTests.cpp
     LinearAlgebra/AffineOperatorTests.cpp
-    
+    LinearAlgebra/LOBPCGTests.cpp
+
     #LinearAlgebra/ScalarAlgebraTests.cpp
     #LinearAlgebra/EigenVectorAlgebraTests.cpp
     #LinearAlgebra/EigenMatrixAlgebraTests.cpp
