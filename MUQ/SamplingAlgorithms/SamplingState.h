@@ -31,7 +31,9 @@ namespace muq {
     class SamplingState {
     public:
 
+
       SamplingState() = default;
+
       /*SamplingState(SamplingState const& in) {
         state = in.state;
         weight = in.weight;

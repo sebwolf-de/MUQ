@@ -12,8 +12,10 @@
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 #include "MUQ/SamplingAlgorithms/MHKernel.h"
 #include "MUQ/SamplingAlgorithms/MHProposal.h"
+#include "MUQ/SamplingAlgorithms/MALAProposal.h"
 #include "MUQ/SamplingAlgorithms/AMProposal.h"
 #include "MUQ/Utilities/AnyHelpers.h"
+#include "MUQ/Utilities/RandomGenerator.h"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
@@ -21,7 +23,7 @@ using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
 TEST(MCMC, MHKernel_ThinScheduler) {
-  const unsigned int N = 1e5;
+  const unsigned int N = 1e4;
 
   // parameters for the sampler
   pt::ptree pt;
@@ -33,7 +35,7 @@ TEST(MCMC, MHKernel_ThinScheduler) {
   pt.put("MyMCMC.Kernel1.Method","MHKernel");
   pt.put("MyMCMC.Kernel1.Proposal", "MyProposal"); // the proposal
   pt.put("MyMCMC.Kernel1.MyProposal.Method", "MHProposal");
-  pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 0.5); // the variance of the isotropic MH proposal
+  pt.put("MyMCMC.Kernel1.MyProposal.ProposalVariance", 3.0); // the variance of the isotropic MH proposal
 
   // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
   const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
@@ -43,7 +45,7 @@ TEST(MCMC, MHKernel_ThinScheduler) {
   auto problem = std::make_shared<SamplingProblem>(dist);
 
   // starting point
-  const Eigen::VectorXd start = mu;
+  const Eigen::VectorXd start = mu + RandomGenerator::GetNormal(2);
 
   // create an instance of MCMC
   auto mcmc = std::make_shared<SingleChainMCMC>(pt.get_child("MyMCMC"),problem);
@@ -54,19 +56,19 @@ TEST(MCMC, MHKernel_ThinScheduler) {
 
   //boost::any anyMean = samps.Mean();
   Eigen::VectorXd mean = samps->Mean();
-  EXPECT_NEAR(mu(0), mean(0), 5e-2);
-  EXPECT_NEAR(mu(1), mean(1), 5e-2);
+  EXPECT_NEAR(mu(0), mean(0), 8e-2);
+  EXPECT_NEAR(mu(1), mean(1), 8e-2);
 
   Eigen::MatrixXd cov = samps->Covariance();
-  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
-  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
-  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
-  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
+  EXPECT_NEAR(1.0, cov(0,0), 1.2e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1.2e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1.2e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1.2e-1);
 
 }
 
 TEST(MCMC, MHKernel_MHProposal) {
-  const unsigned int N = 1e5;
+  const unsigned int N = 1e4;
 
   // parameters for the sampler
   pt::ptree pt;
@@ -105,6 +107,61 @@ TEST(MCMC, MHKernel_MHProposal) {
   std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
 
   EXPECT_EQ(pt.get<int>("MyMCMC.NumSamples"), samps->size());
+
+  //boost::any anyMean = samps.Mean();
+  Eigen::VectorXd mean = samps->Mean();
+  EXPECT_NEAR(mu(0), mean(0), 1e-1);
+  EXPECT_NEAR(mu(1), mean(1), 1e-1);
+
+  Eigen::MatrixXd cov = samps->Covariance();
+  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
+}
+
+TEST(MCMC, MHKernel_MALAProposal) {
+  const unsigned int N = 1e4;
+
+  // parameters for the sampler
+  pt::ptree pt;
+  pt.put("NumSamples", N); // number of Monte Carlo samples
+  pt.put("PrintLevel",0);
+  pt.put("KernelList", "Kernel1"); // the transition kernel
+  pt.put("Kernel1.Method","MHKernel");
+  pt.put("Kernel1.Proposal", "MyProposal"); // the proposal
+  pt.put("Kernel1.MyProposal.Method", "MALAProposal");
+  pt.put("Kernel1.MyProposal.StepSize", 1.0); // the variance of the isotropic MH proposal
+
+  // create a Gaussian distribution---the sampling problem is built around characterizing this distribution
+  const Eigen::VectorXd mu = Eigen::VectorXd::Ones(2);
+  auto dist = std::make_shared<Gaussian>(mu)->AsDensity(); // standard normal Gaussian
+
+  // create a sampling problem
+  auto problem = std::make_shared<SamplingProblem>(dist);
+
+  // starting point
+  const Eigen::VectorXd start = mu;
+
+  // evaluate
+  // create an instance of MCMC
+  auto mcmc = std::make_shared<SingleChainMCMC>(pt,problem);
+
+  // Make sure the kernel and proposal are correct
+  std::shared_ptr<TransitionKernel> kernelBase = mcmc->Kernels().at(0);
+  ASSERT_TRUE(kernelBase);
+  std::shared_ptr<MHKernel> kernelMH = std::dynamic_pointer_cast<MHKernel>(kernelBase);
+  ASSERT_TRUE(kernelMH);
+
+  std::shared_ptr<MCMCProposal> proposalBase = kernelMH->Proposal();
+  std::shared_ptr<MALAProposal> proposalMALA = std::dynamic_pointer_cast<MALAProposal>(proposalBase);
+  ASSERT_TRUE(proposalMALA);
+
+  std::shared_ptr<SampleCollection> samps = mcmc->Run(start);
+
+  EXPECT_GE(N, dist->GetNumCalls("Evaluate"));
+  EXPECT_GE(N, dist->GetNumCalls("Gradient"));
+  EXPECT_EQ(pt.get<int>("NumSamples"), samps->size());
 
   //boost::any anyMean = samps.Mean();
   Eigen::VectorXd mean = samps->Mean();

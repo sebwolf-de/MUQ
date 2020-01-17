@@ -11,6 +11,7 @@ CreateTestGroup(
     #MonteCarloTests.cpp
     ImportanceSamplingTests.cpp
     MCMCTests.cpp
+    DelayedRejectionTests.cpp
     CrankNicolsonTests.cpp
 )
 

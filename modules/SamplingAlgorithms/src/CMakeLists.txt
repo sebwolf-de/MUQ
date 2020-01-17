@@ -57,6 +57,7 @@ CreateCompileGroup(
     #MCKernel.cpp
     #ISKernel.cpp
     MHKernel.cpp
+    DRKernel.cpp
     MIKernel.cpp
     GreedyMLMCMC.cpp
     MIMCMC.cpp
@@ -74,6 +75,7 @@ CreateCompileGroup(
     MCMCProposal.cpp
     MHProposal.cpp
     AMProposal.cpp
+    MALAProposal.cpp
     ParallelAMProposal.cpp
     InverseGammaProposal.cpp
     CrankNicolsonProposal.cpp
