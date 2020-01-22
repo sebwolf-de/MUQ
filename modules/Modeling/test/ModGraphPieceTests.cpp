@@ -113,7 +113,7 @@ private:
 };
 
 
-TEST(Modelling_ModGraphPiece, MatchInputs)
+TEST(Modeling_ModGraphPiece, MatchInputs)
 {
   auto myGraph = make_shared<WorkGraph>();
 
@@ -149,7 +149,7 @@ TEST(Modelling_ModGraphPiece, MatchInputs)
 }
 
 
-TEST(Modelling_ModGraphPiece, BasicTest)
+TEST(Modeling_ModGraphPiece, BasicTest)
 {
   auto myGraph = make_shared<WorkGraph>();
 
@@ -166,13 +166,25 @@ TEST(Modelling_ModGraphPiece, BasicTest)
   myGraph->AddEdge("y2", 0, "f1", 1);
   myGraph->AddEdge("f1", 0, "f2", 1);
 
+  auto graphMod = myGraph->CreateModPiece("f2");
+  auto gradPiece = graphMod->GradientGraph(0,0);
+  auto jacPiece = graphMod->JacobianGraph(0,0);
+
+  EXPECT_EQ(3, graphMod->inputSizes.size());
+  EXPECT_EQ(2, graphMod->inputSizes(0));
+  EXPECT_EQ(2, graphMod->outputSizes(0));
+
   boost::any anyVal1 = Eigen::VectorXd::Constant(2,0.1).eval();
   boost::any anyVal2 = Eigen::VectorXd::Constant(2,0.2).eval();
 
   myGraph->BindNode("y1", {anyVal1});
   myGraph->BindNode("y2", {anyVal2});
 
-  auto graphMod = myGraph->CreateModPiece("f2");
+  graphMod = myGraph->CreateModPiece("f2");
+  myGraph->Visualize("BasicTest2.pdf");
+  gradPiece = graphMod->GradientGraph(0,0);
+  jacPiece = graphMod->JacobianGraph(0,0);
+  gradPiece->GetGraph()->Visualize("BasicTestGrad2.pdf");
 
   // make sure this modpiece is the size we expect
   EXPECT_EQ(1, graphMod->inputSizes.size());
@@ -186,28 +198,25 @@ TEST(Modelling_ModGraphPiece, BasicTest)
   EXPECT_DOUBLE_EQ(sin(input[0] * input[0]) + sin(sin(0.1) + sin(0.2)), output[0]);
   EXPECT_DOUBLE_EQ(sin(input[1] * input[1]) + sin(sin(0.1) + sin(0.2)), output[1]);
 
-  // // gradient testing (same as J^T*x)
-  // Eigen::VectorXd grad = GraphMod->Gradient(input, Eigen::VectorXd::Ones(2), 0);
-  //
-  // EXPECT_DOUBLE_EQ(2.0 * input[0] * cos(input[0] * input[0]), grad[0]);
-  // EXPECT_DOUBLE_EQ(2.0 * input[1] * cos(input[1] * input[1]), grad[1]);
-  //
-  // // Jacobian action testing (same as J*x)
-  // Eigen::VectorXd input2 = input + 1e-2 * Eigen::VectorXd::Random(2);
-  // Eigen::VectorXd linOut = GraphMod->JacobianAction(input, input2, 0);
-  // EXPECT_DOUBLE_EQ(2.0 * input[0] * cos(input[0] * input[0]) * input2[0], linOut[0]);
-  // EXPECT_DOUBLE_EQ(2.0 * input[1] * cos(input[1] * input[1]) * input2[1], linOut[1]);
-  //
-  // // Jacobian testing
-  // Eigen::MatrixXd jacOut = GraphMod->Jacobian(input, 0);
-  // EXPECT_DOUBLE_EQ(2.0 * input[0] * cos(input[0] * input[0]), jacOut(0, 0));
-  // EXPECT_DOUBLE_EQ(0,                                         jacOut(1, 0));
-  // EXPECT_DOUBLE_EQ(0,                                         jacOut(0, 1));
-  // EXPECT_DOUBLE_EQ(2.0 * input[1] * cos(input[1] * input[1]), jacOut(1, 1));
+  // gradient testing (same as J^T*x)
+  Eigen::VectorXd vec = Eigen::VectorXd::Ones(2);
+  Eigen::VectorXd jacAct = graphMod->ApplyJacobian(0,0,input,vec);
+  Eigen::VectorXd grad = graphMod->Gradient(0,0, input, Eigen::VectorXd::Ones(2).eval());
+  EXPECT_DOUBLE_EQ(2.0 * input[0] * cos(input[0] * input[0]), grad[0]);
+  EXPECT_DOUBLE_EQ(2.0 * input[1] * cos(input[1] * input[1]), grad[1]);
+
+  Eigen::VectorXd jacAct2 = jacPiece->Evaluate(input,vec).at(0);
+  Eigen::VectorXd grad2 = gradPiece->Evaluate(input, Eigen::VectorXd::Ones(2).eval()).at(0);
+  EXPECT_DOUBLE_EQ(2.0 * input[0] * cos(input[0] * input[0]), grad2[0]);
+  EXPECT_DOUBLE_EQ(2.0 * input[1] * cos(input[1] * input[1]), grad2[1]);
+
+  EXPECT_NEAR(jacAct(0), jacAct2(0), 5e-8);
+  EXPECT_NEAR(jacAct(1), jacAct2(1), 5e-8);
+
 }
 
 
-// TEST(Modelling_ModGraphPiece, NodeOrdering)
+// TEST(Modeling_ModGraphPiece, NodeOrdering)
 // {
 //   auto myGraph = make_shared<ModGraph>();
 //
@@ -233,70 +242,59 @@ TEST(Modelling_ModGraphPiece, BasicTest)
 // }
 //
 //
-// TEST(Modelling_ModGraphPiece, DiamondTest)
-// {
-//   auto myGraph = make_shared<ModGraph>();
+TEST(Modeling_ModGraphPiece, DiamondTest)
+{
+  auto myGraph = make_shared<WorkGraph>();
+
+  // add nodes
+  myGraph->AddNode(make_shared<SinSumMod>(2), "f1");
+  myGraph->AddNode(make_shared<SquareMod>(2), "x");
+  myGraph->AddNode(make_shared<SquareMod>(2), "y1");
+  myGraph->AddNode(make_shared<SquareMod>(2), "y2");
+
+  // add connectivity
+  myGraph->AddEdge("x", 0, "y1", 0);
+  myGraph->AddEdge("x", 0, "y2", 0);
+  myGraph->AddEdge("y1", 0, "f1", 0);
+  myGraph->AddEdge("y2", 0, "f1", 1);
+
+  myGraph->Visualize("DiamondTest.pdf");
+  auto graphMod = myGraph->CreateModPiece("f1");
+  graphMod->GetGraph()->Visualize("DiamondPieceTest.pdf");
+
+  auto gradPiece = graphMod->GradientGraph(0,0);
+  auto jacPiece = graphMod->JacobianGraph(0,0);
+  gradPiece->GetGraph()->Visualize("DiamondGrad.pdf");
+  gradPiece->JacobianGraph(0,0)->GetGraph()->Visualize("DiamondHess.pdf");
+  
+  // make sure this modpiece is the size we expect
+  EXPECT_EQ(1, graphMod->inputSizes.size());
+  EXPECT_EQ(2, graphMod->inputSizes(0));
+  EXPECT_EQ(2, graphMod->outputSizes(0));
+
+  // evaluation testing
+  Eigen::VectorXd input  = 0.5 * Eigen::VectorXd::Ones(2);
+  Eigen::VectorXd output = graphMod->Evaluate(input).at(0);
+
+  EXPECT_DOUBLE_EQ(2.0 * sin(pow(input[0], 4.0)), output[0]);
+  EXPECT_DOUBLE_EQ(2.0 * sin(pow(input[1], 4.0)), output[1]);
+
+  Eigen::VectorXd ones = Eigen::VectorXd::Ones(2);
+  Eigen::VectorXd grad1 = graphMod->Gradient(0,0,input,ones);
+  Eigen::VectorXd grad2 = gradPiece->Evaluate(input,ones).at(0);
+
+  EXPECT_NEAR(grad1(0), grad2(0), 5e-8);
+  EXPECT_NEAR(grad1(1), grad2(1), 5e-8);
+
+  Eigen::VectorXd jac1 = graphMod->ApplyJacobian(0,0,input,ones);
+  Eigen::VectorXd jac2 = jacPiece->Evaluate(input,ones).at(0);
+
+  EXPECT_NEAR(jac1(0), jac1(0), 5e-8);
+  EXPECT_NEAR(jac1(1), jac1(1), 5e-8);
+
+}
 //
-//   // add nodes
-//   myGraph->AddNode(make_shared<sinSumMod>(2), "f1");
-//   myGraph->AddNode(make_shared<squareMod>(2), "x");
-//   myGraph->AddNode(make_shared<squareMod>(2), "y1");
-//   myGraph->AddNode(make_shared<squareMod>(2), "y2");
-//
-//   // add connectivity
-//   myGraph->AddEdge("x", "y1", 0);
-//   myGraph->AddEdge("x", "y2", 0);
-//   myGraph->AddEdge("y1", "f1", 0);
-//   myGraph->AddEdge("y2", "f1", 1);
-//   myGraph->writeGraphViz("results/tests/GraphViz/DiamondTest.pdf");
-//   auto GraphMod = ModGraphPiece::Create(myGraph, "f1");
-//   GraphMod->writeGraphViz("results/tests/GraphViz/DiamondPieceTest.pdf");
-//
-//   // make sure this modpiece is the size we expect
-//   EXPECT_EQ(1, GraphMod->inputSizes.size());
-//   EXPECT_EQ(2, GraphMod->inputSizes[0]);
-//   EXPECT_EQ(2, GraphMod->outputSize);
-//
-//   // evaluation testing
-//   Eigen::VectorXd input  = 0.5 * Eigen::VectorXd::Ones(2);
-//   Eigen::VectorXd output = GraphMod->Evaluate(input);
-//
-//   EXPECT_DOUBLE_EQ(2.0 * sin(pow(input[0], 4.0)), output[0]);
-//   EXPECT_DOUBLE_EQ(2.0 * sin(pow(input[1], 4.0)), output[1]);
-//
-//
-//   // gradient testing
-//   Eigen::VectorXd grad = GraphMod->Gradient(input, Eigen::VectorXd::Ones(2), 0);
-//
-//   EXPECT_DOUBLE_EQ(8.0 * pow(input[0], 3) * cos(pow(input[0], 4.0)), grad[0]);
-//   EXPECT_DOUBLE_EQ(8.0 * pow(input[1], 3) * cos(pow(input[1], 4.0)), grad[1]);
-//
-//   // jacobian action testing
-//   Eigen::VectorXd input2 = input + 1e-2 * Eigen::VectorXd::Random(2);
-//   Eigen::VectorXd linOut = GraphMod->JacobianAction(input, input2, 0);
-//   EXPECT_DOUBLE_EQ(8.0 * pow(input[0], 3) * cos(pow(input[0], 4.0)) * input2[0], linOut[0]);
-//   EXPECT_DOUBLE_EQ(8.0 * pow(input[1], 3) * cos(pow(input[1], 4.0)) * input2[1], linOut[1]);
-//
-//   // jacobian testing
-//   Eigen::MatrixXd jacOut = GraphMod->Jacobian(input, 0);
-//   EXPECT_DOUBLE_EQ(8.0 * pow(input[0], 3) * cos(pow(input[0], 4.0)), jacOut(0, 0));
-//   EXPECT_DOUBLE_EQ(0,                                                jacOut(1, 0));
-//   EXPECT_DOUBLE_EQ(0,                                                jacOut(0, 1));
-//   EXPECT_DOUBLE_EQ(8.0 * pow(input[1], 3) * cos(pow(input[1], 4.0)), jacOut(1, 1));
-//
-//   // Hessian testing
-//   Eigen::MatrixXd hessOut = GraphMod->Hessian(input, Eigen::VectorXd::Ones(2), 0);
-//   const double    diag    = -32.0 *
-//                             pow(input[0],
-//                                 6.0) * sin(pow(input[0], 4.0)) + 24 * pow(input[0], 2.0) * cos(pow(input[0], 4.0));
-//
-//   EXPECT_DOUBLE_EQ(hessOut(0, 0), diag);
-//   EXPECT_DOUBLE_EQ(hessOut(1, 1), diag);
-//   EXPECT_DOUBLE_EQ(hessOut(1, 0), 0);
-//   EXPECT_DOUBLE_EQ(hessOut(0, 1), 0);
-// }
-//
-// TEST(Modelling_ModGraphPiece, UnionTest)
+// TEST(Modeling_ModGraphPiece, UnionTest)
 // {
 //   auto a = make_shared<ModGraph>();
 //   auto b = make_shared<ModGraph>();
@@ -335,7 +333,7 @@ TEST(Modelling_ModGraphPiece, BasicTest)
 //   EXPECT_EQ(2, unionGraph->NumOutputs()); //and we have both model outputs
 // }
 //
-// TEST(Modelling_ModGraphPiece, UnionNameClashDeath)
+// TEST(Modeling_ModGraphPiece, UnionNameClashDeath)
 // {
 //   auto a = make_shared<ModGraph>();
 //   auto b = make_shared<ModGraph>();
@@ -353,7 +351,7 @@ TEST(Modelling_ModGraphPiece, BasicTest)
 //
 // }
 //
-// TEST(Modelling_ModGraphPiece, UnionEdgeClashDeath)
+// TEST(Modeling_ModGraphPiece, UnionEdgeClashDeath)
 // {
 // 	//Both graphs share a node correctly, but both try to provide an input, so we don't know how to
 // 	//uniquely resolve it and hence assert out

@@ -30,6 +30,8 @@ CreateCompileGroup(
     PyModPiece.cpp
 
     ModPiece.cpp
+    GradientPiece.cpp
+    JacobianPiece.cpp
     ModGraphPiece.cpp
     WorkGraphPiece.cpp
     LinearSDE.cpp
@@ -46,6 +48,7 @@ CreateCompileGroup(
     MultiLogisticLikelihood.cpp
 
     ReplicateOperator.cpp
+    SumPiece.cpp
 
     LinearSDE.cpp
 
