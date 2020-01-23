@@ -181,10 +181,10 @@ TEST(Modeling_ModGraphPiece, BasicTest)
   myGraph->BindNode("y2", {anyVal2});
 
   graphMod = myGraph->CreateModPiece("f2");
-  myGraph->Visualize("BasicTest2.pdf");
+  //myGraph->Visualize("BasicTest2.pdf");
   gradPiece = graphMod->GradientGraph(0,0);
   jacPiece = graphMod->JacobianGraph(0,0);
-  gradPiece->GetGraph()->Visualize("BasicTestGrad2.pdf");
+  //gradPiece->GetGraph()->Visualize("BasicTestGrad2.pdf");
 
   // make sure this modpiece is the size we expect
   EXPECT_EQ(1, graphMod->inputSizes.size());
@@ -258,15 +258,15 @@ TEST(Modeling_ModGraphPiece, DiamondTest)
   myGraph->AddEdge("y1", 0, "f1", 0);
   myGraph->AddEdge("y2", 0, "f1", 1);
 
-  myGraph->Visualize("DiamondTest.pdf");
+  //myGraph->Visualize("DiamondTest.pdf");
   auto graphMod = myGraph->CreateModPiece("f1");
-  graphMod->GetGraph()->Visualize("DiamondPieceTest.pdf");
+  //graphMod->GetGraph()->Visualize("DiamondPieceTest.pdf");
 
   auto gradPiece = graphMod->GradientGraph(0,0);
   auto jacPiece = graphMod->JacobianGraph(0,0);
-  gradPiece->GetGraph()->Visualize("DiamondGrad.pdf");
-  gradPiece->JacobianGraph(0,0)->GetGraph()->Visualize("DiamondHess.pdf");
-  
+  //gradPiece->GetGraph()->Visualize("DiamondGrad.pdf");
+  //gradPiece->JacobianGraph(0,0)->GetGraph()->Visualize("DiamondHess.pdf");
+
   // make sure this modpiece is the size we expect
   EXPECT_EQ(1, graphMod->inputSizes.size());
   EXPECT_EQ(2, graphMod->inputSizes(0));
