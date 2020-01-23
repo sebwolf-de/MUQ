@@ -181,58 +181,58 @@ class DiffusionEquation(mm.PyModPiece):
         return rhs
 
 
+if __name__ == "__main__":
+    numCells = 200
+    mod = DiffusionEquation(numCells)
 
-numCells = 200
-mod = DiffusionEquation(numCells)
+    # Create an exponential operator to transform log-conductivity into conductivity
+    cond = mm.ExpOperator(numCells)
 
-# Create an exponential operator to transform log-conductivity into conductivity
-cond = mm.ExpOperator(numCells)
+    # Combine the two models into a graph
+    graph = mm.WorkGraph()
+    graph.AddNode(mm.IdentityOperator(numCells), "Log-Conductivity")
+    graph.AddNode(cond, "Conductivity")
+    graph.AddNode(mod,"Forward Model")
+    graph.AddEdge("Log-Conductivity", 0, "Conductivity", 0)
+    graph.AddEdge("Conductivity",0,"Forward Model",0)
+    graph.Visualize("ModelGraph.png")
 
-# Combine the two models into a graph
-graph = mm.WorkGraph()
-graph.AddNode(mm.IdentityOperator(numCells), "Log-Conductivity")
-graph.AddNode(cond, "Conductivity")
-graph.AddNode(mod,"Forward Model")
-graph.AddEdge("Log-Conductivity", 0, "Conductivity", 0)
-graph.AddEdge("Conductivity",0,"Forward Model",0)
-graph.Visualize("ModelGraph.png")
+    # Create a ModGraphPiece with two inputs: [log-conductivity, recharge]
+    fullMod = graph.CreateModPiece("Forward Model")
+    print('Full model input sizes  = ', fullMod.inputSizes)
+    print('Full model output sizes = ', fullMod.outputSizes)
 
-# Create a ModGraphPiece with two inputs: [log-conductivity, recharge]
-fullMod = graph.CreateModPiece("Forward Model")
-print('Full model input sizes  = ', fullMod.inputSizes)
-print('Full model output sizes = ', fullMod.outputSizes)
+    # Create an arbitrary log-conductivity field
+    logCond = np.linspace(-1,2,numCells)
 
-# Create an arbitrary log-conductivity field
-logCond = np.linspace(-1,2,numCells)
+    # Set the recharge to be constant across the domain
+    recharge = np.ones(numCells)
 
-# Set the recharge to be constant across the domain
-recharge = np.ones(numCells)
+    # Solve for the hydraulic head
+    hydHead = fullMod.Evaluate([logCond,recharge])
 
-# Solve for the hydraulic head
-hydHead = fullMod.Evaluate([logCond,recharge])
+    # Compute the gradient with respect to the conductivity field.
+    sens = np.ones((numCells+1))
+    condGrad = mod.Gradient(0,0,[logCond,recharge],sens)
+    condGradFD = mod.GradientByFD(0,0,[logCond,recharge],sens)
 
-# Compute the gradient with respect to the conductivity field.
-sens = np.ones((numCells+1))
-condGrad = mod.Gradient(0,0,[logCond,recharge],sens)
-condGradFD = mod.GradientByFD(0,0,[logCond,recharge],sens)
+    # Compute the gradient with respect to the recharge field
+    rchgGrad = mod.Gradient(0,1,[logCond,recharge],sens)
+    rchgGradFD = mod.GradientByFD(0,1,[logCond,recharge],sens)
 
-# Compute the gradient with respect to the recharge field
-rchgGrad = mod.Gradient(0,1,[logCond,recharge],sens)
-rchgGradFD = mod.GradientByFD(0,1,[logCond,recharge],sens)
+    # Plot the gradients for comparison of adjoint and FD solutions
+    fig, axs = plt.subplots(ncols=3,figsize=(14,5))
+    axs[0].plot(mod.xs, hydHead[0])
+    axs[0].set_title('PDE Solution: Hydraulic Head')
 
-# Plot the gradients for comparison of adjoint and FD solutions
-fig, axs = plt.subplots(ncols=3,figsize=(14,5))
-axs[0].plot(mod.xs, hydHead[0])
-axs[0].set_title('PDE Solution: Hydraulic Head')
+    axs[1].plot(mod.xs[0:-1], condGrad, label='Adjoint')
+    axs[1].plot(mod.xs[0:-1], condGradFD, label='Finite Difference')
+    axs[1].set_title('Gradient wrt Conductivity')
+    axs[1].legend()
 
-axs[1].plot(mod.xs[0:-1], condGrad, label='Adjoint')
-axs[1].plot(mod.xs[0:-1], condGradFD, label='Finite Difference')
-axs[1].set_title('Gradient wrt Conductivity')
-axs[1].legend()
+    axs[2].plot(mod.xs[0:-1], rchgGrad, label='Adjoint')
+    axs[2].plot(mod.xs[0:-1], rchgGradFD, label='Finite Difference')
+    axs[2].set_title('Gradient wrt Recharge')
+    axs[2].legend()
 
-axs[2].plot(mod.xs[0:-1], rchgGrad, label='Adjoint')
-axs[2].plot(mod.xs[0:-1], rchgGradFD, label='Finite Difference')
-axs[2].set_title('Gradient wrt Recharge')
-axs[2].legend()
-
-plt.show()
+    plt.show()
