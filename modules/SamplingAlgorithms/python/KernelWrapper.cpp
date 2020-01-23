@@ -1,6 +1,7 @@
 #include "AllClassWrappers.h"
 
 #include "MUQ/SamplingAlgorithms/MHKernel.h"
+#include "MUQ/SamplingAlgorithms/DRKernel.h"
 #include "MUQ/SamplingAlgorithms/TransitionKernel.h"
 
 #include "MUQ/Utilities/PyDictConversion.h"
@@ -35,5 +36,15 @@ void PythonBindings::KernelWrapper(py::module &m) {
     .def("Proposal", &MHKernel::Proposal)
     .def("PostStep", &MHKernel::PostStep)
     .def("Step", &MHKernel::Step);
+
+    py::class_<DRKernel, TransitionKernel, std::shared_ptr<DRKernel>>(m, "DRKernel")
+      .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem) {return new DRKernel(ConvertDictToPtree(d), problem);}))
+      .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem, std::vector<std::shared_ptr<MCMCProposal>> proposals, std::vector<double> scales) {return new DRKernel(ConvertDictToPtree(d), problem, proposals, scales);}))
+      .def("PostStep", &DRKernel::PostStep)
+      .def("Step", &DRKernel::Step)
+      .def("Proposals",&DRKernel::Proposals)
+      .def("AcceptanceRates",&DRKernel::AcceptanceRates)
+      .def("SampleProposal", &DRKernel::SampleProposal)
+      .def("EvaluateProposal", &DRKernel::EvaluateProposal);
 
 }

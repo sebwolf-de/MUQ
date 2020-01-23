@@ -258,7 +258,7 @@ TEST(Modeling_ModGraphPiece, DiamondTest)
   myGraph->AddEdge("y1", 0, "f1", 0);
   myGraph->AddEdge("y2", 0, "f1", 1);
 
-  //myGraph->Visualize("DiamondTest.pdf");
+  //myGraph->Visualize("DiamondForward.pdf");
   auto graphMod = myGraph->CreateModPiece("f1");
   //graphMod->GetGraph()->Visualize("DiamondPieceTest.pdf");
 

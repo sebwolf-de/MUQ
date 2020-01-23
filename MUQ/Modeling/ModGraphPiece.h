@@ -4,6 +4,8 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/filtered_graph.hpp>
 
+#include <map>
+
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/WorkGraphPiece.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
@@ -65,7 +67,7 @@ namespace muq {
       */
       std::shared_ptr<ModGraphPiece> GradientGraph(unsigned int                const  outputDimWrt,
                                                    unsigned int                const  inputDimWrt);
-      
+
       /**
         Returns a ModGraphPiece that, when evaluated, returns the action of the Jacobian of this
         ModPiece on a vector.  Note that the returned ModPiece will have an
@@ -75,6 +77,10 @@ namespace muq {
                                                    unsigned int                const  inputDimWrt);
 
     private:
+
+      // Indices are [outWrt][inWrt]
+      std::map<std::pair<unsigned int, unsigned int>, std::shared_ptr<ModGraphPiece>> gradientPieces;
+      std::map<std::pair<unsigned int, unsigned int>, std::shared_ptr<ModGraphPiece>> jacobianPieces;
 
       /** Returns the input index of this ModGraphPiece that corresponds to the
           the specified placeholder ModPiece.  If the ModPiece is not an input,
@@ -97,10 +103,10 @@ namespace muq {
       @param[in] vec We are applying the Jacobian transpose to this object
       @param[in] inputs Inputs to the muq::Modeling::WorkGraphPiece
        */
-      // virtual void GradientImpl(unsigned int                const  outputDimWrt,
-      //                           unsigned int                const  inputDimWrt,
-      //                           ref_vector<Eigen::VectorXd> const& input,
-      //                           Eigen::VectorXd             const& sensitivity);
+      virtual void GradientImpl(unsigned int                const  outputDimWrt,
+                                unsigned int                const  inputDimWrt,
+                                ref_vector<Eigen::VectorXd> const& input,
+                                Eigen::VectorXd             const& sensitivity) override;
 
       /// Compute the Jacobian for this muq::Modeling::WorkGraphPiece using the chain rule
       /**
@@ -119,10 +125,10 @@ namespace muq {
          @param[in] vec We are applying the Jacobian to this object
          @param[in] inputs Inputs to the muq::Modeling::WorkGraphPiece
        */
-      // virtual void ApplyJacobianImpl(unsigned int                const  outputDimWrt,
-      //                                unsigned int                const  inputDimWrt,
-      //                                ref_vector<Eigen::VectorXd> const& input,
-      //                                Eigen::VectorXd             const& vec);
+      virtual void ApplyJacobianImpl(unsigned int                const  outputDimWrt,
+                                     unsigned int                const  inputDimWrt,
+                                     ref_vector<Eigen::VectorXd> const& input,
+                                     Eigen::VectorXd             const& vec) override;
 
       /// Get the required outputs for a node in one of the filtered graphs
       /**

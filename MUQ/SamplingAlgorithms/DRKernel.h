@@ -100,8 +100,6 @@ namespace muq {
       */
       virtual inline Eigen::VectorXd AcceptanceRates() const{return numProposalAccepts.cast<double>().array()/numProposalCalls.cast<double>().array();};
 
-      std::vector<std::shared_ptr<MCMCProposal>> Proposals() const{return proposals;};
-
 
       /** Generates a sample of a stage proposal at the point x.  This function
           handles all necessary scaling.

@@ -129,8 +129,10 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
         unsigned int inDim = filtGraph[*e.first]->inputDim;
         auto gradPiece = std::make_shared<GradientPiece>(piece, outputDimWrt, inDim);
         nodeName << filtGraph[adjointRunOrders[inputDimWrt][0]]->name << "_Gradient[" << outputDimWrt << "," << inDim << "]";
+        try{
+          gradGraph.AddNode(gradPiece, nodeName.str());
+        }catch(std::logic_error){}
 
-        gradGraph.AddNode(gradPiece, nodeName.str());
         gradGraph.AddEdge(outputName +"_Sensitivity", 0 , nodeName.str(), gradPiece->inputSizes.size()-1);
 
         // Add edges for the inputs
@@ -184,11 +186,11 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
             unsigned int edgeInd = 0;
             for(unsigned int i = 0; i<outEdges.at(outInd).size(); ++i){
               auto nextNode = filtGraph[outEdges.at(outInd).at(i).first];
+
               for(auto es=out_edges(outEdges.at(outInd).at(i).first, filtGraph); es.first!=es.second; ++es.first){
                 std::stringstream otherNodeName;
                 otherNodeName << nextNode->name << "_Gradient[" << filtGraph[*es.first]->outputDim << "," << outEdges.at(outInd).at(i).second << "]";
                 gradGraph.AddEdge(otherNodeName.str(),0, sumName.str(), edgeInd);
-
                 edgeInd++;
               }
 
@@ -352,8 +354,8 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int        
             }else if(boost::in_degree(source,filtGraph)>0){
               jacGraph.AddEdge(cumNames[filtGraph[source]->name].at(filtGraph[*ein.first]->outputDim), 0, jacName.str(),  jacPiece->inputSizes.size()-1);
             }
-          }catch(std::logic_error){
-            //std::cout << "duplicate..." << std::endl;
+          }catch(std::logic_error e){
+             //std::cout << "duplicate..." << std::endl;
           }
         } // Loop over output edges
       }
@@ -393,6 +395,7 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int        
         }
       }
     }
+
   } // Loop over adjoint run order
 
   // At this point, there should only be one node with an unconnected output.
@@ -421,6 +424,24 @@ Eigen::VectorXi ModGraphPiece::ConstructInputSizes(std::vector<std::shared_ptr<C
   return sizes;
 }
 
+void ModGraphPiece::ApplyJacobianImpl(unsigned int                const  outputDimWrt,
+                                      unsigned int                const  inputDimWrt,
+                                      ref_vector<Eigen::VectorXd> const& input,
+                                      Eigen::VectorXd             const& vec)
+{
+  ref_vector<Eigen::VectorXd> newInputs(input.begin(),input.end());
+  newInputs.push_back( std::cref(vec));
+
+  // Check to see if this input-output pair has been computed before.  If so, we don't need to recomptue the gradient graph
+  std::pair<unsigned int, unsigned int> indexPair = std::make_pair(outputDimWrt, inputDimWrt);
+  auto iter = jacobianPieces.find(indexPair);
+  if(iter==jacobianPieces.end())
+    jacobianPieces[indexPair] = GradientGraph(outputDimWrt,inputDimWrt);
+
+  // Evaluate the gradient
+  jacobianAction = jacobianPieces[indexPair]->Evaluate(newInputs).at(0);
+}
+
 void ModGraphPiece::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
   // set the inputs
   SetInputs(inputs);
@@ -433,6 +454,24 @@ void ModGraphPiece::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
   for(int i=0; i<outputs.size(); ++i) {
     outputs.at(i) = valMap[outputID].at(i).get();
   }
+}
+
+void ModGraphPiece::GradientImpl(unsigned int                const  outputDimWrt,
+                                 unsigned int                const  inputDimWrt,
+                                 ref_vector<Eigen::VectorXd> const& input,
+                                 Eigen::VectorXd             const& sensitivity) {
+
+  ref_vector<Eigen::VectorXd> newInputs(input.begin(),input.end());
+  newInputs.push_back( std::cref(sensitivity));
+
+  // Check to see if this input-output pair has been computed before.  If so, we don't need to recomptue the gradient graph
+  std::pair<unsigned int, unsigned int> indexPair = std::make_pair(outputDimWrt, inputDimWrt);
+  auto iter = gradientPieces.find(indexPair);
+  if(iter==gradientPieces.end())
+    gradientPieces[indexPair] = GradientGraph(outputDimWrt,inputDimWrt);
+
+  // Evaluate the gradient
+  gradient = gradientPieces[indexPair]->Evaluate(newInputs).at(0);
 }
 
 void ModGraphPiece::JacobianImpl(unsigned int                const  wrtOut,
