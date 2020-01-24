@@ -6,6 +6,7 @@
 
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
+#include "MUQ/Modeling/CwiseOperators/CwiseUnaryOperator.h"
 
 #include "WorkPieceTestClasses.h"
 
@@ -51,6 +52,24 @@ private:
   {
     jacobianAction = 2.0*input.at(0).get().array()*vec.array();
   };
+
+  virtual void ApplyHessianImpl(unsigned int                const  outWrt,
+                                unsigned int                const  inWrt1,
+                                unsigned int                const  inWrt2,
+                                ref_vector<Eigen::VectorXd> const& input,
+                                Eigen::VectorXd             const& sens,
+                                Eigen::VectorXd             const& vec) override
+  {
+    // If the hessian is with respect to the sensitivity
+    if(inWrt2==inputSizes.size()){
+      hessAction = 2.0*input.at(0).get().array() * vec.array();
+
+    // Otherwise, the hessian is with respect to the input
+    }else{
+      hessAction = 2.0 * sens.array() * vec.array();
+    }
+
+  }
 
 };
 
@@ -109,6 +128,28 @@ private:
     for(int i=0; i<outputSizes(0); ++i)
       jacobianAction(i) = cos(input.at(inputDimWrt)(i))*vec(i);
   };
+
+  virtual void ApplyHessianImpl(unsigned int                const  outWrt,
+                                unsigned int                const  inWrt1,
+                                unsigned int                const  inWrt2,
+                                ref_vector<Eigen::VectorXd> const& input,
+                                Eigen::VectorXd             const& sens,
+                                Eigen::VectorXd             const& vec) override
+  {
+    hessAction = Eigen::VectorXd::Zero(vec.size());
+
+    // If the second derivative is with respect to the sensitivity
+    if(inWrt2==inputSizes.size()){
+
+      for (int i = 0; i < outputSizes(0); ++i)
+        hessAction(i) = cos(input.at(inWrt1)(i))*vec(i);
+
+    // Otherwise, if the derivatives are with respect to the same input
+    }if(inWrt1==inWrt2){
+      for (int i = 0; i < outputSizes(0); ++i)
+        hessAction(i) = -1.0*sens(i) * sin(input.at(inWrt1)(i))*vec(i);
+    }
+  }
 
 };
 
@@ -292,7 +333,74 @@ TEST(Modeling_ModGraphPiece, DiamondTest)
   EXPECT_NEAR(jac1(0), jac1(0), 5e-8);
   EXPECT_NEAR(jac1(1), jac1(1), 5e-8);
 
+  // Hessian checks
+  Eigen::VectorXd vec = Eigen::VectorXd::Random(input.size());
+  Eigen::VectorXd hessAct = graphMod->ApplyHessian(0, 0, 0, std::vector<Eigen::VectorXd>{input}, ones, vec);
+  Eigen::VectorXd hessActFD = graphMod->ApplyHessianByFD(0, 0, 0, std::vector<Eigen::VectorXd>{input}, ones, vec);
+
+  EXPECT_NEAR(hessActFD(0), hessAct(0), 1e-7);
+  EXPECT_NEAR(hessActFD(1), hessAct(1), 1e-7);
 }
+
+TEST(Modeling_ModGraphPiece, DiamondTestOperator)
+{
+  auto myGraph = make_shared<WorkGraph>();
+
+  // add nodes
+  myGraph->AddNode(make_shared<SinSumMod>(2), "f1");
+  myGraph->AddNode(make_shared<SquareOperator>(2), "x");
+  myGraph->AddNode(make_shared<SquareOperator>(2), "y1");
+  myGraph->AddNode(make_shared<SquareOperator>(2), "y2");
+
+  // add connectivity
+  myGraph->AddEdge("x", 0, "y1", 0);
+  myGraph->AddEdge("x", 0, "y2", 0);
+  myGraph->AddEdge("y1", 0, "f1", 0);
+  myGraph->AddEdge("y2", 0, "f1", 1);
+
+  //myGraph->Visualize("DiamondForward.pdf");
+  auto graphMod = myGraph->CreateModPiece("f1");
+  //graphMod->GetGraph()->Visualize("DiamondPieceTest.pdf");
+
+  auto gradPiece = graphMod->GradientGraph(0,0);
+  auto jacPiece = graphMod->JacobianGraph(0,0);
+  //gradPiece->GetGraph()->Visualize("DiamondGrad.pdf");
+  //gradPiece->JacobianGraph(0,0)->GetGraph()->Visualize("DiamondHess.pdf");
+
+  // make sure this modpiece is the size we expect
+  EXPECT_EQ(1, graphMod->inputSizes.size());
+  EXPECT_EQ(2, graphMod->inputSizes(0));
+  EXPECT_EQ(2, graphMod->outputSizes(0));
+
+  // evaluation testing
+  Eigen::VectorXd input  = 0.5 * Eigen::VectorXd::Ones(2);
+  Eigen::VectorXd output = graphMod->Evaluate(input).at(0);
+
+  EXPECT_DOUBLE_EQ(2.0 * sin(pow(input[0], 4.0)), output[0]);
+  EXPECT_DOUBLE_EQ(2.0 * sin(pow(input[1], 4.0)), output[1]);
+
+  Eigen::VectorXd ones = Eigen::VectorXd::Ones(2);
+  Eigen::VectorXd grad1 = graphMod->Gradient(0,0,input,ones);
+  Eigen::VectorXd grad2 = gradPiece->Evaluate(input,ones).at(0);
+
+  EXPECT_NEAR(grad1(0), grad2(0), 5e-8);
+  EXPECT_NEAR(grad1(1), grad2(1), 5e-8);
+
+  Eigen::VectorXd jac1 = graphMod->ApplyJacobian(0,0,input,ones);
+  Eigen::VectorXd jac2 = jacPiece->Evaluate(input,ones).at(0);
+
+  EXPECT_NEAR(jac1(0), jac1(0), 5e-8);
+  EXPECT_NEAR(jac1(1), jac1(1), 5e-8);
+
+  // Hessian checks
+  Eigen::VectorXd vec = Eigen::VectorXd::Random(input.size());
+  Eigen::VectorXd hessAct = graphMod->ApplyHessian(0, 0, 0, std::vector<Eigen::VectorXd>{input}, ones, vec);
+  Eigen::VectorXd hessActFD = graphMod->ApplyHessianByFD(0, 0, 0, std::vector<Eigen::VectorXd>{input}, ones, vec);
+
+  EXPECT_NEAR(hessActFD(0), hessAct(0), 1e-7);
+  EXPECT_NEAR(hessActFD(1), hessAct(1), 1e-7);
+}
+
 //
 // TEST(Modeling_ModGraphPiece, UnionTest)
 // {

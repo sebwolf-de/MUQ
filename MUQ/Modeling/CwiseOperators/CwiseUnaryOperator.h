@@ -69,9 +69,20 @@ namespace muq{
                         Eigen::VectorXd const& vec) override
       {
         hessAction.resize(inputSizes(0));
-        for(int i=0; i<inputSizes(0); ++i){
-          stan::math::fvar<stan::math::fvar<double>> x(stan::math::fvar<double>(in.at(0).get()(i), 1.0),1.0);
-          hessAction(i) = vec(i)*T3(x).tangent().tangent();
+
+        // If this is with respect to the sensitivity input
+        if(inWrt2==1){
+
+          for(int i=0; i<inputSizes(0); ++i){
+            stan::math::fvar<double> x(in.at(0).get()(i), 1.0);
+            hessAction(i) = vec(i)*T2(x).tangent();
+          }
+
+        }else{
+          for(int i=0; i<inputSizes(0); ++i){
+            stan::math::fvar<stan::math::fvar<double>> x(stan::math::fvar<double>(in.at(0).get()(i), 1.0),1.0);
+            hessAction(i) = sens(i)*vec(i)*T3(x).tangent().tangent();
+          }
         }
       };
 

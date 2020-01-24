@@ -424,6 +424,22 @@ Eigen::VectorXi ModGraphPiece::ConstructInputSizes(std::vector<std::shared_ptr<C
   return sizes;
 }
 
+void ModGraphPiece::ApplyHessianImpl(unsigned int                const  outWrt,
+                                     unsigned int                const  inWrt1,
+                                     unsigned int                const  inWrt2,
+                                     ref_vector<Eigen::VectorXd> const& input,
+                                     Eigen::VectorXd             const& sens,
+                                     Eigen::VectorXd             const& vec)
+{
+  ref_vector<Eigen::VectorXd> newInputs(input.begin(),input.end());
+  newInputs.push_back( std::cref(sens));
+  newInputs.push_back( std::cref(vec));
+
+  auto gradGraph = GradientGraph(outWrt,inWrt1);
+  auto gradJacGraph = gradGraph->JacobianGraph(0,inWrt2);
+  hessAction = gradJacGraph->Evaluate(newInputs).at(0);
+}
+
 void ModGraphPiece::ApplyJacobianImpl(unsigned int                const  outputDimWrt,
                                       unsigned int                const  inputDimWrt,
                                       ref_vector<Eigen::VectorXd> const& input,
@@ -436,7 +452,7 @@ void ModGraphPiece::ApplyJacobianImpl(unsigned int                const  outputD
   std::pair<unsigned int, unsigned int> indexPair = std::make_pair(outputDimWrt, inputDimWrt);
   auto iter = jacobianPieces.find(indexPair);
   if(iter==jacobianPieces.end())
-    jacobianPieces[indexPair] = GradientGraph(outputDimWrt,inputDimWrt);
+    jacobianPieces[indexPair] = JacobianGraph(outputDimWrt,inputDimWrt);
 
   // Evaluate the gradient
   jacobianAction = jacobianPieces[indexPair]->Evaluate(newInputs).at(0);
@@ -702,6 +718,7 @@ void ModGraphPiece::FillOutputMap() {
 
   // loop over the run order
   for( auto it : runOrder ) {
+
     // the inputs to this WorkPiece
     const ref_vector<Eigen::VectorXd>& ins = GetNodeInputs(it);
 

@@ -81,6 +81,7 @@ namespace muq {
       // Indices are [outWrt][inWrt]
       std::map<std::pair<unsigned int, unsigned int>, std::shared_ptr<ModGraphPiece>> gradientPieces;
       std::map<std::pair<unsigned int, unsigned int>, std::shared_ptr<ModGraphPiece>> jacobianPieces;
+      std::map<std::tuple<unsigned int, unsigned int, unsigned int>, std::shared_ptr<ModGraphPiece>> hessianPieces;
 
       /** Returns the input index of this ModGraphPiece that corresponds to the
           the specified placeholder ModPiece.  If the ModPiece is not an input,
@@ -129,6 +130,15 @@ namespace muq {
                                      unsigned int                const  inputDimWrt,
                                      ref_vector<Eigen::VectorXd> const& input,
                                      Eigen::VectorXd             const& vec) override;
+
+
+     virtual void ApplyHessianImpl(unsigned int                const  outWrt,
+                                   unsigned int                const  inWrt1,
+                                   unsigned int                const  inWrt2,
+                                   ref_vector<Eigen::VectorXd> const& input,
+                                   Eigen::VectorXd             const& sens,
+                                   Eigen::VectorXd             const& vec) override;
+
 
       /// Get the required outputs for a node in one of the filtered graphs
       /**

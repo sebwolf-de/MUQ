@@ -298,8 +298,14 @@ Eigen::VectorXd ModPiece::ApplyHessian(unsigned int                const  outWrt
                                        Eigen::VectorXd             const& sens,
                                        Eigen::VectorXd             const& vec)
 {
-  assert(inputSizes(inWrt2)==vec.size());
+  assert(inWrt2<inputSizes.size()+1);
+  assert(outWrt<sens.size());
   assert(outputSizes(outWrt)==sens.size());
+  if(inWrt2<inputSizes.size()){
+    assert(inputSizes(inWrt2)==vec.size());
+  }else{
+    assert(vec.size()==outputSizes(outWrt));
+  }
 
   numHessActCalls++;
   auto start_time = std::chrono::high_resolution_clock::now();
