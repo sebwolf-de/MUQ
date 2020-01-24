@@ -435,9 +435,14 @@ void ModGraphPiece::ApplyHessianImpl(unsigned int                const  outWrt,
   newInputs.push_back( std::cref(sens));
   newInputs.push_back( std::cref(vec));
 
-  auto gradGraph = GradientGraph(outWrt,inWrt1);
-  auto gradJacGraph = gradGraph->JacobianGraph(0,inWrt2);
-  hessAction = gradJacGraph->Evaluate(newInputs).at(0);
+  std::shared_ptr<ModGraphPiece> hessGraph;
+  std::tuple<unsigned int, unsigned int, unsigned int> wrts = std::make_tuple(outWrt,inWrt1,inWrt2);
+
+  auto iter = hessianPieces.find(wrts);
+  if(iter==hessianPieces.end())
+    hessianPieces[wrts] = GradientGraph(outWrt,inWrt1)->JacobianGraph(0,inWrt2);
+
+  hessAction = hessianPieces[wrts]->Evaluate(newInputs).at(0);
 }
 
 void ModGraphPiece::ApplyJacobianImpl(unsigned int                const  outputDimWrt,
