@@ -55,8 +55,8 @@ void GaussianBase::SetMean(Eigen::VectorXd const& newMu)
   mean = newMu;
 }
 
-Eigen::VectorXd GaussianBase::GradLogDensity(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs)
-{
+Eigen::VectorXd GaussianBase::GradLogDensityImpl(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs)
+{  
   Eigen::VectorXd delta = inputs.at(0).get() - mean;
   if(wrt==0){
     return -1.0 * ApplyPrecision(delta);

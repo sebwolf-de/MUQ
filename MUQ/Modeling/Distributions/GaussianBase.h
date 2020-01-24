@@ -117,7 +117,7 @@ namespace muq {
           @param[in] wrt Specifies the index of the variable we wish to take the gradient wrt.  If wrt==0, then the gradient should be taken wrt the input variable.
           @return The gradient of the log density.
       */
-      virtual Eigen::VectorXd GradLogDensity(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs) override;
+      virtual Eigen::VectorXd GradLogDensityImpl(unsigned int wrt, ref_vector<Eigen::VectorXd> const& inputs) override;
 
     protected:
 
