@@ -28,7 +28,7 @@ std::vector<Eigen::VectorXd> const& ModPiece::Evaluate(ref_vector<Eigen::VectorX
   EvaluateImpl(input);
 
   auto end_time = std::chrono::high_resolution_clock::now();
-  evalTime += 1e6*static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
+  evalTime += static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
 
   return outputs;
 }
@@ -55,7 +55,7 @@ Eigen::VectorXd const& ModPiece::Gradient(unsigned int                const  out
   GradientImpl(outputDimWrt, inputDimWrt, input, sensitivity);
 
   auto end_time = std::chrono::high_resolution_clock::now();
-  gradTime += 1e6*static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
+  gradTime += static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
 
   return gradient;
 }
@@ -97,7 +97,7 @@ Eigen::MatrixXd const& ModPiece::Jacobian(unsigned int                const  out
   JacobianImpl(outputDimWrt, inputDimWrt, input);
 
   auto end_time = std::chrono::high_resolution_clock::now();
-  jacTime += 1e6*static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
+  jacTime += static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
 
   return jacobian;
 }
@@ -124,7 +124,7 @@ Eigen::VectorXd const& ModPiece::ApplyJacobian(unsigned int                const
   ApplyJacobianImpl(outputDimWrt, inputDimWrt, input, vec);
 
   auto end_time = std::chrono::high_resolution_clock::now();
-  jacActTime += 1e6*static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
+  jacActTime += static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
 
   return jacobianAction;
 }
@@ -313,7 +313,7 @@ Eigen::VectorXd ModPiece::ApplyHessian(unsigned int                const  outWrt
   ApplyHessianImpl(outWrt, inWrt1, inWrt2, input, sens, vec);
 
   auto end_time = std::chrono::high_resolution_clock::now();
-  hessActTime += 1e6*static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
+  hessActTime += static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
 
   return hessAction;
 }
@@ -348,13 +348,22 @@ Eigen::VectorXd ModPiece::ApplyHessianByFD(unsigned int                const  ou
   numHessActFDCalls++;
 
   const double stepSize = 1e-8 / vec.norm();
-
   Eigen::VectorXd grad1 = Gradient(outWrt, inWrt1, input, sens);
+  Eigen::VectorXd grad2;
 
-  ref_vector<Eigen::VectorXd> input2 = input;
-  Eigen::VectorXd x2 = input.at(inWrt2).get() + stepSize * vec;
-  input2.at(inWrt2) = std::cref(x2);
-  Eigen::VectorXd grad2 = Gradient(outWrt, inWrt1, input2, sens);
+  // If the Hessian is wrt to one of the inputs, not the sensitivity vector
+  if(inWrt2<inputSizes.size()){
+
+    ref_vector<Eigen::VectorXd> input2 = input;
+    Eigen::VectorXd x2 = input.at(inWrt2).get() + stepSize * vec;
+    input2.at(inWrt2) = std::cref(x2);
+    grad2 = Gradient(outWrt, inWrt1, input2, sens);
+
+  // Otherwise, we want the Jacobian of the Gradient piece wrt to the sensitivity vector
+  }else{
+    Eigen::VectorXd sens2 = sens + stepSize * vec;
+    grad2 = Gradient(outWrt, inWrt1, input, sens2);
+  }
 
   return (grad2 - grad1)/stepSize;
 }
@@ -362,7 +371,7 @@ Eigen::VectorXd ModPiece::ApplyHessianByFD(unsigned int                const  ou
 
 double ModPiece::GetRunTime(const std::string& method) const
 {
-  const double toMilli = 1.0e-6;
+  const double toMilli = 1e-6;
 
   if (method.compare("Evaluate") == 0) {
     return (numEvalCalls == 0) ? -1.0 : toMilli *static_cast<double>(evalTime) / static_cast<double>(numEvalCalls);
