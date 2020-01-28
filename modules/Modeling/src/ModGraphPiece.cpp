@@ -287,6 +287,9 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int        
     int inDegree = boost::in_degree(*node, filtGraph);
     int outDegree = boost::out_degree(*node, filtGraph);
 
+    auto modCast = std::dynamic_pointer_cast<ModPiece>(filtGraph[*node]->piece);
+    assert(modCast);
+
     /** If the node has multiple inputs, than we have to sum the Jacobians for each of them.
         Here, we add a SumPiece if necessary, and store the name of the node returning the cumulative Jacobian action.
     */
@@ -296,7 +299,8 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int        
         std::stringstream jacName;
         jacName << baseName << "_CumulativeJacobian[" << filtGraph[*eout.first]->outputDim << "]";
         cumNames[baseName].at(filtGraph[*eout.first]->outputDim) = jacName.str();
-        jacGraph.AddNode(std::make_shared<SumPiece>(inDegree), jacName.str());
+
+        jacGraph.AddNode(std::make_shared<SumPiece>(modCast->outputSizes(filtGraph[*eout.first]->outputDim),inDegree), jacName.str());
       }else if(inDegree==1){
         std::stringstream jacName;
         jacName << baseName << "_Jacobian[" << filtGraph[*eout.first]->outputDim <<  ",0]";
@@ -385,7 +389,7 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int        
       if(inDegree>1){
         std::stringstream jacName;
         jacName << baseName << "_CumulativeJacobian[" << outputDimWrt << "]";
-        jacGraph.AddNode(std::make_shared<SumPiece>(inDegree), jacName.str());
+        jacGraph.AddNode(std::make_shared<SumPiece>(modCast->outputSizes(outputDimWrt), inDegree), jacName.str());
 
         for(auto ein = boost::in_edges(*node, filtGraph); ein.first!=ein.second; ++ein.first){
           std::stringstream otherName;
@@ -472,6 +476,7 @@ void ModGraphPiece::EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) {
 
   // store the result in the output vector
   outputs.resize(valMap[outputID].size());
+
   for(int i=0; i<outputs.size(); ++i) {
     outputs.at(i) = valMap[outputID].at(i).get();
   }
@@ -732,15 +737,14 @@ void ModGraphPiece::FillOutputMap() {
     auto currPiece = std::dynamic_pointer_cast<ModPiece>(wPiece);
 
     if(!currPiece){
+
       // If it can't be cast to a ModPiece, check to see if the output can be cast to an Eigen vector
       ref_vector<Eigen::VectorXd> output;
-
       std::vector<boost::any> anyIns(ins.size());
       for(int i=0; i<ins.size(); ++i)
         anyIns.at(i) = boost::any(ins.at(i));
 
       std::vector<boost::any> const& anyOut = wPiece->Evaluate(anyIns);
-
 
       for(int i=0; i<anyOut.size(); ++i){
         Eigen::VectorXd const& temp = AnyConstCast(anyOut.at(i));

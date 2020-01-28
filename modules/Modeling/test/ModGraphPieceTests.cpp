@@ -6,6 +6,11 @@
 
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
+#include "MUQ/Modeling/LinearAlgebra/EigenLinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Modeling/Distributions/Gaussian.h"
+#include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
+#include "MUQ/Modeling/Distributions/DensityProduct.h"
 #include "MUQ/Modeling/CwiseOperators/CwiseUnaryOperator.h"
 
 #include "WorkPieceTestClasses.h"
@@ -341,6 +346,49 @@ TEST(Modeling_ModGraphPiece, DiamondTest)
   EXPECT_NEAR(hessActFD(0), hessAct(0), 1e-7);
   EXPECT_NEAR(hessActFD(1), hessAct(1), 1e-7);
 }
+
+
+TEST(Modeling_ModGraphPiece, LinearGaussPosterior)
+{
+  const unsigned int numNodes = 200;
+  const unsigned int dataDim = 10;
+  const double noiseStd = 1e-3;
+
+  auto forwardMod = LinearOperator::Create(Eigen::MatrixXd::Random(dataDim,numNodes).eval());
+  auto prior = std::make_shared<Gaussian>(Eigen::VectorXd::Zero(numNodes), Eigen::VectorXd::Ones(numNodes));
+
+  Eigen::VectorXd data = forwardMod->Apply(prior->Sample());
+  auto noiseModel = std::make_shared<Gaussian>(data, noiseStd*Eigen::VectorXd::Ones(dataDim));
+
+  WorkGraph graph;
+  graph.AddNode(std::make_shared<IdentityOperator>(numNodes), "Parameters");
+  graph.AddNode(prior->AsDensity(), "Prior");
+  graph.AddNode(forwardMod, "ForwardModel");
+  graph.AddNode(noiseModel->AsDensity(), "Likelihood");
+  graph.AddNode(std::make_shared<DensityProduct>(2),"Posterior");
+  graph.AddEdge("Parameters",0,"Prior",0);
+  graph.AddEdge("Parameters",0,"ForwardModel",0);
+  graph.AddEdge("ForwardModel",0,"Likelihood",0);
+  graph.AddEdge("Prior",0,"Posterior",0);
+  graph.AddEdge("Likelihood",0,"Posterior",1);
+
+  auto logLikely = graph.CreateModPiece("Likelihood");
+  logLikely->GradientGraph(0,0)->GetGraph()->Visualize("Posterior_GradientGraph.png");
+  logLikely->GradientGraph(0,0)->JacobianGraph(0,0)->GetGraph()->Visualize("Posterior_HessianGraph.png");
+
+  Eigen::VectorXd input = prior->Sample();
+
+  // Hessian checks
+  Eigen::VectorXd ones = Eigen::VectorXd::Ones(1);
+  Eigen::VectorXd vec = Eigen::VectorXd::Random(numNodes);
+  Eigen::VectorXd hessAct = logLikely->ApplyHessian(0, 0, 0, std::vector<Eigen::VectorXd>{input}, ones, vec);
+
+  Eigen::VectorXd hessActFD = logLikely->ApplyHessianByFD(0, 0, 0, std::vector<Eigen::VectorXd>{input}, ones, vec);
+
+  for(unsigned int i=0; i<numNodes; ++i)
+    EXPECT_NEAR(hessActFD(i), hessAct(i), 1e-3*std::abs(hessActFD(i)));
+}
+
 
 TEST(Modeling_ModGraphPiece, DiamondTestOperator)
 {
