@@ -24,7 +24,6 @@ LOBPCG::LOBPCG(int    numEigsIn,
   assert(numEigs>0);
   assert(blockSize>0);
   assert(eigRelTol>=0.0);
-  assert(solverTol>=0.0);
 }
 
 
@@ -68,7 +67,10 @@ void LOBPCG::Orthonormalizer::ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V, Eige
 {
   vDim = V.cols();
 
-  VBV_Chol = (V.transpose()*BVin).eval().llt().matrixL();
+  auto cholFact = (V.transpose()*BVin).eval().selfadjointView<Eigen::Lower>().llt();
+  assert(cholFact.info()==Eigen::Success);
+
+  VBV_Chol = cholFact.matrixL();
   V = VBV_Chol.triangularView<Eigen::Lower>().solve(V.transpose()).transpose();
 
   if(B!=nullptr){
@@ -91,7 +93,7 @@ LOBPCG::Constraints::Constraints(std::shared_ptr<LinearOperator>   const& B,
     BY = constMat;
   }
 
-  YBY_llt = (constMat.transpose() * BY).eval().llt();
+  YBY_llt = (constMat.transpose() * BY).eval().selfadjointView<Eigen::Lower>().llt();
 }
 
 void LOBPCG::Constraints::ApplyInPlace(Eigen::Ref<Eigen::MatrixXd> x)
@@ -107,6 +109,13 @@ void LOBPCG::SortVec(std::vector<std::pair<int,int>> const& swapInds,
     std::swap(matrix(swap.first),matrix(swap.second));
 }
 
+void LOBPCG::SortVec(std::vector<std::pair<int,int>> const& swapInds,
+                     std::vector<bool>                    & vec)
+{
+  for(auto& swap : swapInds)
+    std::swap(vec[swap.first],vec[swap.second]);
+}
+
 void LOBPCG::SortCols(std::vector<std::pair<int,int>> const& swapInds,
                       Eigen::Ref<Eigen::MatrixXd>            matrix)
 {
@@ -114,19 +123,53 @@ void LOBPCG::SortCols(std::vector<std::pair<int,int>> const& swapInds,
     matrix.col(swap.first).swap(matrix.col(swap.second));
 }
 
+std::vector<std::pair<int,int>> LOBPCG::GetSortSwaps(Eigen::Ref<const Eigen::VectorXd> const& residNorms)
+{
+  std::vector<bool> allActive(residNorms.size(), true);
+  return GetSortSwaps(residNorms, allActive);
+}
 
-std::vector<std::pair<int,int>> LOBPCG::GetSortSwaps(Eigen::Ref<const Eigen::VectorXd> const& resids)
+std::vector<std::pair<int,int>> LOBPCG::GetSortSwaps(Eigen::Ref<const Eigen::VectorXd> const& resids,
+                                                     std::vector<bool>                 const& isActive)
 {
   Eigen::VectorXd newResids = resids;
+  std::vector<bool> newIsActive = isActive;
+
+
   const unsigned int size = resids.size();
 
   std::vector<std::pair<int,int>> swaps;
   unsigned int maxInd;
 
-  for(unsigned int i=0; i<size-1; ++i)
+  // First, put all the active indices at the begining
+  int firstInactiveInd = 0;
+  while((firstInactiveInd<isActive.size())&&(newIsActive.at(firstInactiveInd)))
+    firstInactiveInd++;
+
+  int lastActiveInd = isActive.size()-1;
+  while((lastActiveInd>=0)&&(!newIsActive.at(lastActiveInd)))
+    lastActiveInd--;
+
+  while(firstInactiveInd<lastActiveInd){
+
+    swaps.push_back(std::make_pair(firstInactiveInd,lastActiveInd));
+    std::swap(newIsActive.at(firstInactiveInd), newIsActive.at(lastActiveInd));
+    std::swap(newResids(firstInactiveInd), newResids(lastActiveInd));
+
+    while((firstInactiveInd<isActive.size())&&(newIsActive.at(firstInactiveInd)))
+      firstInactiveInd++;
+
+    while((lastActiveInd>=0)&&(!newIsActive.at(lastActiveInd)))
+      lastActiveInd--;
+  }
+
+  unsigned int numActive = lastActiveInd+1;
+
+  // Now, sort all of the active residuals according to magnitude
+  for(unsigned int i=0; i<numActive; ++i)
   {
     // Find the maximum index
-    maxInd = std::distance(newResids.data(), std::max_element(&newResids(i), newResids.data()+size));
+    maxInd = std::distance(newResids.data(), std::max_element(&newResids(i), newResids.data()+numActive));
 
     // Swap indices if needed
     if(maxInd!=i){
@@ -174,18 +217,28 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     eigVals.resize(numEigs);
   }
 
+  // Get an estimate of matrix norms
+  { // TODO: Move this into a function
+    const int numNormTest = std::min(numEigs,5);
+    Eigen::MatrixXd gaussMat = RandomGenerator::GetNormal(dim, numNormTest);
+    double gaussMatNorm = gaussMat.norm();
+    Anorm = A->Apply(gaussMat).norm() / gaussMatNorm;
+    Bnorm = B->Apply(gaussMat).norm() / gaussMatNorm;
+  }
 
   Eigen::VectorXd blockVals;
   Eigen::MatrixXd blockVecs;
 
   Eigen::MatrixXd constraints;
+  unsigned int maxBlocks = std::ceil(float(numEigs)/float(blockSize));
   if(constMat.cols()+numEigs-blockSize > 0)
-    constraints.resize(dim, constMat.cols()+numEigs-blockSize);
+    constraints.resize(dim, constMat.cols()+maxBlocks*blockSize-blockSize);
   if(constMat.cols()>0)
     constraints.leftCols(constMat.cols()) = constMat;
 
   // Loop over the blocks needed to compute the eigenvalues
-  for(int numComputed=0; numComputed<numEigs; numComputed+=blockSize){
+  int numComputed;
+  for(numComputed=0; numComputed<numEigs; numComputed+=blockSize){
 
     if(numComputed>0)
       constraints.block(0,numComputed+constMat.cols()-blockSize,dim,blockSize) = eigVecs.block(0,numComputed-blockSize,dim,blockSize);
@@ -212,10 +265,21 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
       if( (eigVals(numComputed-1)< eigRelTol*eigVals(0))||(eigVals(numComputed-1)<eigAbsTol)){
         eigVals.conservativeResize(numComputed);
         eigVecs = eigVecs.leftCols(numComputed).eval();
-        return *this;
+        break;
       }
     }
 
+  }
+
+
+  int numToKeep;
+  for(numToKeep=1; numToKeep<numEigs; ++numToKeep){
+    if((eigVals(numToKeep)< eigRelTol*eigVals(0))||(eigVals(numToKeep)<eigAbsTol))
+      break;
+  }
+  if(numToKeep<eigVecs.cols()){
+    eigVals = eigVals.head(numToKeep).eval();
+    eigVecs = eigVecs.leftCols(numToKeep).eval();
   }
 
   return *this;
@@ -252,6 +316,10 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
   // To start with, all of the indices are active
   unsigned int numActive = blockSize;
 
+
+  // A vector full of booleans measuring if each eigenvalue is fixed or not
+  std::vector<bool> isActive(blockSize,true);
+
   // Get ready to apply constraints (e.g., build Y, BY, )
   std::shared_ptr<Constraints> consts;
   if(constMat.rows()>0){
@@ -274,10 +342,16 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
   Eigen::MatrixXd AX = A->Apply(X);
 
   Eigen::MatrixXd XAX = X.transpose() * AX;
+  XAX = 0.5*(XAX+XAX.transpose()).eval();
 
   Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> ritzSolver(XAX);
   Eigen::VectorXd subEigVals = ritzSolver.eigenvalues();
-  Eigen::MatrixXd const& subEigVecs = ritzSolver.eigenvectors();
+  Eigen::MatrixXd subEigVecs = ritzSolver.eigenvectors();
+
+  auto swaps = GetSortSwaps(subEigVals);
+  SortVec(swaps,subEigVals);
+  SortCols(swaps, subEigVecs);
+
 
   X = (X*subEigVecs).eval();
   AX = (AX*subEigVecs).eval();
@@ -295,28 +369,39 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
 
   for(unsigned it=0; it<maxIts; ++it){
 
-    if(verbosity>1)
+    if(verbosity>0)
       std::cout << "Iteration " << it << std::endl;
 
     // Compute the residuals
+    Eigen::MatrixXd trueResids = A->Apply(X) - B->Apply(X)*subEigVals.asDiagonal();
     resids.leftCols(numActive) = AX.leftCols(numActive) - BX.leftCols(numActive)*subEigVals.head(numActive).asDiagonal();
 
     // Compute the norm of the residuals
     residNorms = resids.colwise().norm();
 
+    // Compute the convergence criteria
+    Eigen::VectorXd convCrit = residNorms.array() / ((Anorm + Bnorm*subEigVals.array())*X.colwise().norm().transpose().array());
+
     // Figure out how many indices are active
-    numActive=0;
+
+    numActive = 0;
     for(unsigned int i=0; i<residNorms.size(); ++i){
-      if(residNorms(i)>solverTol){
-        numActive++;
+      if(convCrit(i)<solverTol){
+        isActive.at(i) = false;
       }
+      numActive += int(isActive.at(i));
     }
+
+    if(verbosity>2)
+      std::cout << "  numActive = " << numActive << std::endl;
 
     if(verbosity>2)
       std::cout << "  eigenvalues = " << subEigVals.transpose() << std::endl;
 
-    if(verbosity>1)
+    if(verbosity>1){
       std::cout << "  residNorms = " << residNorms.transpose() << std::endl;
+      std::cout << "  convergence criteria = " << convCrit.transpose() << std::endl;
+    }
 
 
     // If we've converged for all the vectors, break
@@ -324,13 +409,16 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
       auto swaps = GetSortSwaps(subEigVals);
       SortVec(swaps, subEigVals);//.head(numActive));
       SortCols(swaps, X);//.leftCols(numActive));
+
       return std::make_pair(subEigVals, X);
     }
 
 
     // Sort everything so the first columns corresponds to the largest residuals
-    auto swaps = GetSortSwaps(residNorms);
+    auto swaps = GetSortSwaps(residNorms,isActive);
 
+    SortVec(swaps, residNorms);
+    SortVec(swaps, isActive);
     SortVec(swaps, subEigVals);//.head(numActive));
     SortCols(swaps, X);//.leftCols(numActive));
     SortCols(swaps, AX);//.leftCols(numActive));
@@ -351,6 +439,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
     if(consts!=nullptr)
       consts->ApplyInPlace(resids.leftCols(numActive));
 
+    resids.leftCols(numActive) -= (X * BX.transpose() * resids.leftCols(numActive)).eval();
 
     // Orthonormalize residuals wrt B-inner product
     bOrtho.ComputeInPlace(resids.leftCols(numActive));
@@ -360,6 +449,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
     } else {
       BR = resids.leftCols(numActive);
     }
+
     AR.leftCols(numActive) = A->Apply(resids.leftCols(numActive));
 
     if(it!=0){
@@ -376,11 +466,16 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
 
     Eigen::MatrixXd XAR = X.transpose()*AR.leftCols(numActive);
     Eigen::MatrixXd RAR = resids.leftCols(numActive).transpose()*AR.leftCols(numActive);
+    RAR = 0.5*(RAR+RAR.transpose()).eval();
     Eigen::MatrixXd XAX = X.transpose()*AX;
+    XAX = 0.5*(XAX+XAX.transpose()).eval();
+
     Eigen::MatrixXd XBX, RBR, XBR;
 
     XBX = BX.transpose() * X;
+    XBX = 0.5*(XBX+XBX.transpose()).eval();
     RBR = BR.transpose() * resids.leftCols(numActive);
+    XAX = 0.5*(RBR+RBR.transpose()).eval();
     XBR = X.transpose() * BR.leftCols(numActive);
 
     Eigen::MatrixXd gramA, gramB;
@@ -392,6 +487,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
       Eigen::MatrixXd XAP = X.transpose() * AP.leftCols(numActive);
       Eigen::MatrixXd RAP = resids.leftCols(numActive).transpose()*AP.leftCols(numActive);
       Eigen::MatrixXd PAP = P.leftCols(numActive).transpose()*AP.leftCols(numActive);
+      PAP = 0.5*(PAP+PAP.transpose()).eval();
       Eigen::MatrixXd XBP = X.transpose()*BP.leftCols(numActive);
       Eigen::MatrixXd RBP = resids.leftCols(numActive).transpose()*BP.leftCols(numActive);
 
@@ -432,11 +528,18 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
     }
 
     Eigen::GeneralizedSelfAdjointEigenSolver<Eigen::MatrixXd> ritzSolver(gramA, gramB);
+    assert(ritzSolver.info()==Eigen::Success);
+
+    // Get and sort the ritz values
     subEigVals = ritzSolver.eigenvalues().tail(blockSize);
     if(subEigVals.size()>1)
       assert(subEigVals(0)<subEigVals(1));
 
-    Eigen::Ref<const Eigen::MatrixXd> subEigVecs = ritzSolver.eigenvectors().rightCols(blockSize);
+    subEigVecs = ritzSolver.eigenvectors().rightCols(blockSize);
+
+    swaps = GetSortSwaps(subEigVals);
+    SortVec(swaps,subEigVals);
+    SortCols(swaps, subEigVecs);
 
     Eigen::Ref<const Eigen::MatrixXd> eigX = subEigVecs.topRows(blockSize);
     Eigen::Ref<const Eigen::MatrixXd> eigR = subEigVecs.block(blockSize,0,numActive,subEigVecs.cols());
@@ -466,7 +569,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
   std::cerr << "WARNING: LOBPCG reached maximum iterations." << std::endl;
 
   // Sort the results so that the eigenvalues are descending
-  auto swaps = GetSortSwaps(subEigVals);
+  swaps = GetSortSwaps(subEigVals);
   SortVec(swaps, subEigVals);//.head(numActive));
   SortCols(swaps, X);//.leftCols(numActive));
 

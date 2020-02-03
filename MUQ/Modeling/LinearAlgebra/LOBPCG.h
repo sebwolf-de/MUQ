@@ -116,9 +116,14 @@ namespace Modeling{
     static void SortVec(std::vector<std::pair<int,int>> const& swapInds,
                              Eigen::Ref<Eigen::VectorXd>       matrix);
 
+    static void SortVec(std::vector<std::pair<int,int>> const& swapInds,
+                        std::vector<bool>                    & vec);
     /**
     Returns a vector of swaps needed to sort the provided matrix using a selection sort.
     */
+    static std::vector<std::pair<int,int>> GetSortSwaps(Eigen::Ref<const Eigen::VectorXd> const& residNorms,
+                                                        std::vector<bool>                 const& isActive);
+
     static std::vector<std::pair<int,int>> GetSortSwaps(Eigen::Ref<const Eigen::VectorXd> const& residNorms);
 
     /** Makes the columns of a matrix V orthonormal wrt the B inner product \f$v^T B v\f$. */
@@ -180,6 +185,7 @@ namespace Modeling{
     Eigen::MatrixXd eigVecs;
 
     std::shared_ptr<LinearOperator> A, B, M;
+    double Anorm, Bnorm;
 
   }; // class LOBPCG
 }
