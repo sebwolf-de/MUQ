@@ -90,6 +90,9 @@ CreateCompileGroup(
     LinearAlgebra/DiagonalOperator.cpp
     LinearAlgebra/ProductOperator.cpp
     LinearAlgebra/AffineOperator.cpp
+    LinearAlgebra/HessianOperator.cpp
+    LinearAlgebra/GaussianOperator.cpp
+    LinearAlgebra/GaussNewtonOperator.cpp
     LinearAlgebra/LOBPCG.cpp
     #LinearAlgebra/AnyAlgebra.cpp
     #LinearAlgebra/ScalarAlgebra.cpp

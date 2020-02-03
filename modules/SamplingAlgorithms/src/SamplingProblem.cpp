@@ -5,7 +5,7 @@ using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 
 SamplingProblem::SamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& targetIn) : AbstractSamplingProblem(targetIn->inputSizes),
-                                                                                      target(targetIn) {}
+                                                                                             target(targetIn) {}
 
 
 

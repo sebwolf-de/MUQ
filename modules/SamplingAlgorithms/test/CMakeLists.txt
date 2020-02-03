@@ -12,6 +12,7 @@ CreateTestGroup(
     ImportanceSamplingTests.cpp
     MCMCTests.cpp
     DelayedRejectionTests.cpp
+    DILITests.cpp
     CrankNicolsonTests.cpp
 )
 

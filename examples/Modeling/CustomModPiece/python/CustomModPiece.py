@@ -108,9 +108,6 @@ class DiffusionEquation(mm.PyModPiece):
 
             sol = spla.spsolve(K,rhs)
             adjSol = spla.spsolve(K.T,adjRhs)
-
-            adjSol[0] = 0.0
-            adjSol[-1]=0.0
             self.gradient = -1.0*(-adjSol[0:-1]/self.dx + adjSol[1:]/self.dx)*(-sol[0:-1]/self.dx + sol[1:]/self.dx)
 
         # Otherwise, if the gradient is with respect to the recharge...
@@ -125,10 +122,59 @@ class DiffusionEquation(mm.PyModPiece):
             self.gradient = grad
 
 
+    def ApplyHessianImpl(self, outWrt, inWrt1, inWrt2, inputs, sensitivity, vec):
+
+        condVals = inputs[0]
+        recharge = inputs[1]
+
+        # If this is the second derivative wrt recharge, return 0
+        if((inWrt1==1)&(inWrt2==1)):
+            self.hessAction = np.zeros(vec.shape)
+
+        # if it's a mixed derivative (conductivity then recharge)
+        elif((inWrt1==0)&(inWrt2==1)):
+            assert(False)
+
+        # if it's a mixed derivative (recharge then conductivity)
+        elif((inWrt1==1)&(inWrt2==0)):
+            ApplyHessianImpl(self,outWrt,inWrt2,inWrt1, inputs,sensitivity,vec)
+
+        # Both wrt conductivity
+        elif((inWrt1==0)&(inWrt2==0)):
+
+            # Solve the forward system
+            K = self.BuildStiffness(condVals)
+            rhs = self.BuildRhs(recharge)
+            sol = spla.spsolve(K,rhs)
+
+            # Solve the adjoint system
+            adjRhs = self.BuildAdjointRhs(sensitivity)
+            adjSol = spla.spsolve(K,adjRhs) # Because K is symmetric
+
+            # Solve the incremental forward system
+            incrForRhs = -self.BuildIncrementalRhs(adjSol)
+            incrForSol = spla.spsolve(K,incrForRhs)
+
+            # Solve the incremental adjoint system
+            incrAdjRhs = self.BuildIncrementalRhs(sol)
+            incrAdjSol = spla.spsolve(K,incrAdjRhs) # Because K is symmetric
+
+            # Construct the Hessian action
+            solDeriv = -sol[0:-1]/self.dx + sol[1:]/self.dx
+            adjDeriv = -adjSol[0:-1]/self.dx + adjSol[1:]/self.dx
+            incrForDeriv = -incrForSol[0:-1]/self.dx + incrForSol[1:]/self.dx
+            incrAdjDeriv = -incrAdjSol[0:-1]/self.dx + incrAdjSol[1:]/self.dx
+
+            self.hessAction = (vec*incrAdjDeriv * solDeriv - vec*incrForDeriv * adjDeriv)#*2.
+
+        else:
+            print('Have not implement Hessian wrt sensitivity yet.')
+            assert(False)
+
+
 
     def BuildStiffness(self, condVals):
         """ Constructs the stiffness matrix for the conductivity defined within each cell. """
-        diags = np.zeros((3,self.numNodes))
 
         rows = []
         cols = []
@@ -139,7 +185,11 @@ class DiffusionEquation(mm.PyModPiece):
         # Left Dirichlet BC
         rows.append(0)
         cols.append(0)
-        vals.append(1.0)
+        vals.append(1e10) # Trick to approximately enforce Dirichlet BC at x=0 while keeping matrix symmetric
+
+        rows.append(0)
+        cols.append(1)
+        vals.append(-condVals[0]/dx2)
 
         # Interior nodes
         for i in range(1,self.numNodes-1):
@@ -162,7 +212,8 @@ class DiffusionEquation(mm.PyModPiece):
 
         rows.append(self.numCells)
         cols.append(self.numCells)
-        vals.append(condVals[self.numCells-1]/self.dx)
+        vals.append(1e10)
+        #vals.append(condVals[self.numCells-1]/self.dx)
 
         return sp.csr_matrix((vals,(rows,cols)), shape=(self.numNodes, self.numNodes))
 
@@ -178,12 +229,40 @@ class DiffusionEquation(mm.PyModPiece):
     def BuildAdjointRhs(self,sensitivity):
         rhs = copy.deepcopy(sensitivity)
         rhs[0] = 0.0
+        rhs[-1] = 0.0
         return rhs
 
+    def BuildIncrementalRhs(self, sol):
+        # The derivative of the solution in each cell
+        solGrad = -sol[0:-1]/self.dx + sol[1:]/self.dx
+
+        rhs = np.zeros((self.numNodes,))
+        rhs[0:-1] = -1.0*solGrad #/ self.dx * self.dx
+        rhs[1:] += solGrad #* self.dx * self.dx
+        rhs[0]=0.0
+        rhs[-1]=0.0
+        return rhs
 
 if __name__ == "__main__":
     numCells = 200
     mod = DiffusionEquation(numCells)
+
+    cond = np.linspace(1,2,numCells)
+    rchg = 1.0*np.ones(numCells)
+    sens = np.ones(numCells+1)
+    dir = np.ones(numCells)
+    hessActFD = mod.ApplyHessianByFD(0,0,0, [cond,rchg], sens, dir)
+    hessActFD2 = (mod.Gradient(0,0,[cond+1e-6*dir,rchg],sens) - mod.Gradient(0,0,[cond,rchg],sens))/1e-6
+    hessAct = mod.ApplyHessian(0,0,0, [cond,rchg], sens, dir)
+    print(hessActFD)
+    print('vs')
+    print(hessAct)
+    plt.plot(hessActFD,label='fd1')
+    plt.plot(hessActFD2,'--',label='fd2')
+    plt.plot(hessAct,label='adjoint')
+    plt.legend()
+    plt.show()
+    quit()
 
     # Create an exponential operator to transform log-conductivity into conductivity
     cond = mm.ExpOperator(numCells)

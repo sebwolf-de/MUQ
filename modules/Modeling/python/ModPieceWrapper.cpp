@@ -49,6 +49,15 @@ public:
                          Eigen::VectorXd              const& vec) override {
     PYBIND11_OVERLOAD(void, PyModPiece, ApplyJacobianImpl, outputDimWrt, inputDimWrt, input, vec);
   }
+
+  void ApplyHessianImpl(unsigned int                 const  outputDimWrt,
+                        unsigned int                 const  inputDimWrt1,
+                        unsigned int                 const  inputDimWrt2,
+                        std::vector<Eigen::VectorXd> const& input,
+                        Eigen::VectorXd              const& sens,
+                        Eigen::VectorXd              const& vec) override {
+    PYBIND11_OVERLOAD(void, PyModPiece, ApplyHessianImpl, outputDimWrt, inputDimWrt1, inputDimWrt2, input, sens, vec);
+  }
 };
 
 class Publicist : public PyModPiece {
@@ -58,12 +67,14 @@ public:
     using PyModPiece::GradientImpl;
     using PyModPiece::JacobianImpl;
     using PyModPiece::ApplyJacobianImpl;
+    using PyModPiece::ApplyHessianImpl;
 
     // Expose protected member variables
     using PyModPiece::outputs;
     using PyModPiece::gradient;
     using PyModPiece::jacobian;
     using PyModPiece::jacobianAction;
+    using PyModPiece::hessAction;
 };
 
 void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
@@ -83,7 +94,9 @@ void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
     .def("ApplyJacobian", (Eigen::VectorXd const& (ModPiece::*)(unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&)) &ModPiece::ApplyJacobian)
     .def("GradientByFD", (Eigen::VectorXd (ModPiece::*)(unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&)) &ModPiece::GradientByFD)
     .def("JacobianByFD", (Eigen::MatrixXd (ModPiece::*)(unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&)) &ModPiece::JacobianByFD)
-    .def("ApplyJacobianByFD", (Eigen::VectorXd (ModPiece::*)(unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&)) &ModPiece::ApplyJacobianByFD);
+    .def("ApplyJacobianByFD", (Eigen::VectorXd (ModPiece::*)(unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&)) &ModPiece::ApplyJacobianByFD)
+    .def("ApplyHessian", (Eigen::VectorXd (ModPiece::*)(unsigned int, unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&, Eigen::VectorXd const&)) &ModPiece::ApplyHessian)
+    .def("ApplyHessianByFD", (Eigen::VectorXd (ModPiece::*)(unsigned int, unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&, Eigen::VectorXd const&)) &ModPiece::ApplyHessianByFD);
 
   py::class_<PyModPiece, PyModPieceTramp, ModPiece, std::shared_ptr<PyModPiece>> pymp(m, "PyModPiece");
   pymp
@@ -95,7 +108,10 @@ void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
     .def("JacobianImpl", (void (PyModPiece::*)(unsigned int const, unsigned int const, std::vector<Eigen::VectorXd> const&)) &Publicist::JacobianImpl)
     .def_readwrite("jacobian", &Publicist::jacobian)
     .def("ApplyJacobianImpl", (void (PyModPiece::*)(unsigned int const, unsigned int const, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&)) &Publicist::ApplyJacobianImpl)
-    .def_readwrite("jacobianAction", &Publicist::jacobianAction);
+    .def_readwrite("jacobianAction", &Publicist::jacobianAction)
+    .def("ApplyHessianImpl", (void (PyModPiece::*)(unsigned int const, unsigned int const, unsigned int const, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&, Eigen::VectorXd const&)) &Publicist::ApplyHessianImpl)
+    .def_readwrite("hessAction", &Publicist::hessAction);
+
 
   py::class_<ConstantVector, ModPiece, WorkPiece, std::shared_ptr<ConstantVector>> cv(m, "ConstantVector");
   cv

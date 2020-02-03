@@ -53,3 +53,23 @@ void PyModPiece::ApplyJacobianImpl(unsigned int                 const  outputDim
 {
   jacobianAction = ApplyJacobianByFD(outputDimWrt, inputDimWrt, input, vec);
 }
+
+void PyModPiece::ApplyHessianImpl(unsigned int                 const  outputDimWrt,
+                                  unsigned int                 const  inputDimWrt1,
+                                  unsigned int                 const  inputDimWrt2,
+                                  ref_vector<Eigen::VectorXd> const& input,
+                                  Eigen::VectorXd              const& sens,
+                                  Eigen::VectorXd              const& vec)
+{
+  ApplyHessianImpl(outputDimWrt, inputDimWrt1, inputDimWrt2, ToStdVec(input), sens, vec);
+}
+
+void PyModPiece::ApplyHessianImpl(unsigned int                 const  outputDimWrt,
+                                   unsigned int                 const  inputDimWrt1,
+                                   unsigned int                 const  inputDimWrt2,
+                                   std::vector<Eigen::VectorXd> const& input,
+                                   Eigen::VectorXd              const& sens,
+                                   Eigen::VectorXd              const& vec)
+{
+  jacobianAction = ApplyHessianByFD(outputDimWrt, inputDimWrt1, inputDimWrt2, input, sens, vec);
+}
