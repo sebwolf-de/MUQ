@@ -7,7 +7,7 @@
 #error
 #endif
 
-
+#include "spdlog/spdlog.h"
 #include "MUQ/SamplingAlgorithms/ParallelAbstractSamplingProblem.h"
 
 namespace muq {
@@ -25,21 +25,21 @@ namespace muq {
           //Dune::Timer timer_idle;
           //Dune::Timer timer_full;
           while (true) {
-            std::cout << "Rank " << comm->GetRank() << " waiting..." << std::endl;
+            spdlog::trace("Parallel factory rank {} waiting...", comm->GetRank());
             //timer_idle.start();
             ControlFlag command = comm->Recv<ControlFlag>(0, WorkgroupTag);
             //timer_idle.stop();
-            std::cout << "Rank " << comm->GetRank() << " received " << command << std::endl;
+            spdlog::trace("Parallel factory rank {} received command", comm->GetRank(), command);
             if (command == ControlFlag::FINALIZE) {
               samplingProblems.clear(); // Tear down models synchronously
               comm->Barrier();
-              std::cout << "Rank " << comm->GetRank() << " went through barrier" << std::endl;
+              spdlog::trace("Parallel factory rank {} passed finalize barrier", comm->GetRank());
               break;
             }
             if (command == ControlFlag::INIT_PROBLEM) {
               auto index = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(0, WorkgroupTag));
               int id = comm->Recv<int>(0, WorkgroupTag);
-              std::cout << "Rank " << comm->GetRank() << " building model index " << *index << std::endl;
+              spdlog::trace("Parallel factory rank {} building model index {}", comm->GetRank(), *index);
               samplingProblems[id] = componentFactory->SamplingProblem(index);//std::make_shared<MySamplingProblem>(index, comm, id, measurements);
             }
             else if (command == ControlFlag::LOGDENSITY) {
@@ -71,12 +71,12 @@ namespace muq {
       void finalize() {
         if (comm->GetRank() != 0)
           return;
-        std::cout << "Send finalize" << std::endl;
+        spdlog::trace("Parallel factory sending finalize");
         for (int dest = 1; dest < comm->GetSize(); dest++)
           comm->Send(ControlFlag::FINALIZE, dest, WorkgroupTag);
         samplingProblems.clear(); // Tear down models synchronously
         comm->Barrier();
-        std::cout << "Finalized" << std::endl;
+        spdlog::trace("Parallel factory finalized");
       }
 
       virtual std::shared_ptr<MCMCProposal> Proposal (std::shared_ptr<MultiIndex> const& index, std::shared_ptr<AbstractSamplingProblem> const& samplingProblem) override {
@@ -97,7 +97,7 @@ namespace muq {
         //int idcnt = index->GetValue(0);
         idcnt++;
         if (comm->GetRank() == 0) {
-          std::cout << "Rank " << comm->GetRank() << " requesting model " << *index << std::endl;
+          spdlog::debug("Rank {} requesting model {} from parallel factory", comm->GetRank(), *index);
           for (int dest = 1; dest < comm->GetSize(); dest++) {
             comm->Send(ControlFlag::INIT_PROBLEM, dest, WorkgroupTag);
             comm->Send(*index, dest, WorkgroupTag);

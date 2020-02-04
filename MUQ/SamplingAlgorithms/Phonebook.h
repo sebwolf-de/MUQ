@@ -7,6 +7,8 @@
 #error
 #endif
 
+#include "spdlog/fmt/ostr.h"
+#include "spdlog/spdlog.h"
 #include <parcer/Communicator.h>
 #include "MUQ/SamplingAlgorithms/ParallelFlags.h"
 #include "MUQ/Utilities/Cereal/MultiIndexSerializer.h"
@@ -46,7 +48,7 @@ namespace muq {
               phonebook[index] = WorkerList();
             }
             phonebook[index].AddWorker(rank);
-            std::cout << "Phonebook entry for " << *index << " set" << std::endl;
+            spdlog::trace("Phonebook entry for {} set", *index);
           } else if (command == ControlFlag::UNSET_WORKGROUP) {
             auto index = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(status.MPI_SOURCE, ControlTag));
             int rank = comm->Recv<int>(status.MPI_SOURCE, ControlTag, &status);
@@ -56,10 +58,10 @@ namespace muq {
             }
             phonebook[index].RemoveWorker(rank);
             if (phonebook[index].NumWorkers() == 0) {
-              std::cout << "erasing index " << *index << std::endl;
+              spdlog::debug("Phonebook erasing index", *index);
               phonebook.erase(index);
             }
-            std::cout << "Phonebook entry for " << *index << " unset" << std::endl;
+            spdlog::trace("Phonebook entry for {} unset", *index);
           } else if (command == ControlFlag::GET_WORKGROUPS) {
             auto index = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(status.MPI_SOURCE, ControlTag));
 
@@ -70,10 +72,10 @@ namespace muq {
           } else if (command == ControlFlag::GET_LARGEST_INDEX) {
             if (phonebook.empty()) {
               comm->Send(-1, status.MPI_SOURCE, ControlTag);
-              std::cout << "Sent empty largest index" << std::endl;
+              spdlog::trace("Sent empty largest index");
             } else {
               comm->Send(*phonebook.rbegin()->first, status.MPI_SOURCE, ControlTag);
-              std::cout << "Sent largest index " << *phonebook.rbegin()->first << std::endl;
+              spdlog::trace("Sent largest index {} unset", *phonebook.rbegin()->first);
             }
           } else if (command == ControlFlag::SET_WORKER_READY) {
             auto index = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(status.MPI_SOURCE, ControlTag));
@@ -84,7 +86,7 @@ namespace muq {
             }
             phonebook[index].SetWorkerReady(rank);
           } else if (command == ControlFlag::QUIT) {
-            std::cout << "Rank " << comm->GetRank() << " quit" << std::endl;
+            spdlog::trace("Rank {} quit", comm->GetRank());
             break;
           }
 
@@ -131,7 +133,7 @@ namespace muq {
         void RemoveWorker(int worker) {
           workers_ready.erase(std::remove(workers_ready.begin(), workers_ready.end(), worker), workers_ready.end());
           workers.erase(std::remove(workers.begin(), workers.end(), worker), workers.end());
-          std::cout << "Removed worker " << worker << ", " << NumWorkers() << " remaining" << std::endl;
+          spdlog::trace("Removed worker {}, {} remaining", worker, NumWorkers());
         }
         int NumWorkers() {
           return workers.size();
@@ -182,7 +184,7 @@ namespace muq {
               phonebook[index] = WorkerList();
             }
             phonebook[index].AddWorker(rank);
-            std::cout << "Phonebook entry for " << *index << " set" << std::endl;
+            spdlog::trace("Phonebook entry for  {} set", *index);
           } else if (command == ControlFlag::UNSET_WORKGROUP) {
             auto index = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(status.MPI_SOURCE, ControlTag));
             int rank = comm->Recv<int>(status.MPI_SOURCE, ControlTag, &status);
@@ -192,14 +194,14 @@ namespace muq {
             }
             phonebook[index].RemoveWorker(rank);
             if (phonebook[index].NumWorkers() == 0) {
-              std::cout << "erasing index " << *index << std::endl;
+              spdlog::trace("erasing index {}", *index);
               phonebook.erase(phonebook.find(index));
             }
-            std::cout << "Phonebook entry for " << *index << " unset" << std::endl;
+            spdlog::trace("Phonebook entry for {} unset", *index);
           } else if (command == ControlFlag::GET_LARGEST_INDEX) {
             if (phonebook.empty()) {
               comm->Send(-1, status.MPI_SOURCE, ControlTag);
-              std::cout << "Sent empty largest index" << std::endl;
+              spdlog::trace("Sent empty largest index");
             } else
               comm->Send(*phonebook.rbegin()->first, status.MPI_SOURCE, ControlTag);
           } else if (command == ControlFlag::SET_WORKER_READY) {
@@ -207,7 +209,7 @@ namespace muq {
             comm->Recv<int>(status.MPI_SOURCE, ControlTag);
             comm->Recv<int>(status.MPI_SOURCE, ControlTag, &status);
           } else if (command == ControlFlag::QUIT) {
-            std::cout << "Rank " << comm->GetRank() << " quit" << std::endl;
+            spdlog::trace("Rank {} quit", comm->GetRank());
             break;
           }
         }

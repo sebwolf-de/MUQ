@@ -155,7 +155,7 @@ namespace muq {
       }
 
       void UnassignGroup (std::shared_ptr<MultiIndex> modelIndex, int groupRootRank) {
-        std::cout << "Sending unassign to " << groupRootRank << std::endl;
+        spdlog::trace("Sending unassign to {}", groupRootRank);
         phonebookClient->UnRegister(modelIndex, groupRootRank);
         comm->Ssend(ControlFlag::UNASSIGN, groupRootRank, ControlTag);
       }
@@ -164,7 +164,7 @@ namespace muq {
         std::shared_ptr<MultiIndex> largest = nullptr;
         do {
           largest = phonebookClient->LargestIndex();
-          std::cout << "Unassigning model " << *largest << std::endl;
+          spdlog::trace("Unassigning model {}", *largest);
           std::vector<int> ranks = phonebookClient->GetWorkgroups(largest);
           for (int rank : ranks) {
             UnassignGroup(largest, rank);
@@ -288,7 +288,7 @@ namespace muq {
             }
 
             parallelComponentFactory->finalize();
-            std::cout << "Rank " << comm->GetRank() << " finalized" << std::endl;
+            spdlog::trace("Rank {} finalized", comm->GetRank());
           } else if (command == ControlFlag::ASSIGN_COLLECTOR) {
             std::vector<int> subgroup_proc = comm->Recv<std::vector<int>>(RootRank, ControlTag);
             auto boxHighestIndex = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(RootRank, ControlTag));
@@ -338,6 +338,8 @@ namespace muq {
 
                 for (int i = 0; i < numSamples; i++) {
                   spdlog::trace("Requesting sample box for model {}", *boxHighestIndex);
+                  if (i % (numSamples / 10) == 0)
+                    spdlog::debug("Collected {} out of {} samples for model {}", i, numSamples, *boxHighestIndex);
                   int remoteRank = phonebookClient->Query(boxHighestIndex);
                   comm->Send(ControlFlag::SAMPLE_BOX, remoteRank, ControlTag); // TODO: Receive sample in one piece?
                   for (uint i = 0; i < boxIndices->Size(); i++) {
@@ -377,7 +379,7 @@ namespace muq {
 
 
           } else if (command == ControlFlag::QUIT) {
-            std::cout << "Rank " << comm->GetRank() << " quit" << std::endl;
+            spdlog::trace("Rank {} quit", comm->GetRank());
             break;
           } else {
             std::cerr << "Unexpected command!" << std::endl;
