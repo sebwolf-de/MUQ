@@ -587,7 +587,7 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
 
 void LOBPCG::InitializeVectors(Eigen::MatrixXd const& X0)
 {
-  eigVals.resize(numEigs);
+  eigVals.resize(X0.cols());
   eigVecs = X0;
 }
 

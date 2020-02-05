@@ -22,9 +22,11 @@ class GaussNewtonOperator : public LinearOperator {
 public:
 
   GaussNewtonOperator(std::shared_ptr<ModPiece>     const& forwardModelIn,
-                      std::shared_ptr<GaussianBase> const& noiseModelIn,
+                      std::shared_ptr<ModPiece>     const& noiseModelIn,
                       std::vector<Eigen::VectorXd>  const& inputsIn,
-                      unsigned int                         inWrt);
+                      unsigned int                         inWrt,
+                      double                               scaleIn=1.0,
+                      double                               nuggetIn=0.0);
 
   virtual ~GaussNewtonOperator() = default;
 
@@ -36,11 +38,13 @@ public:
 
 protected:
   std::shared_ptr<ModPiece> forwardModel;
-  std::shared_ptr<GaussianBase> noiseModel;
+  std::shared_ptr<ModPiece> noiseModel;
 
   const std::vector<Eigen::VectorXd> inputs;
-
+  const std::vector<Eigen::VectorXd> noiseInputs;
   const unsigned int inWrt;
+  const double scale;
+  const double nugget;
 
 };
 

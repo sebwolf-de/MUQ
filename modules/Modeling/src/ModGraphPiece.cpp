@@ -20,10 +20,11 @@ using namespace muq::Utilities;
 ModGraphPiece::ModGraphPiece(std::shared_ptr<WorkGraph>                           graph,
                              std::vector<std::shared_ptr<ConstantVector> > const& constantPiecesIn,
                              std::vector<std::string>                      const& inputNames,
-                             std::shared_ptr<ModPiece>                            outputPiece) : ModPiece(ConstructInputSizes(constantPiecesIn),
-                                                                                                          outputPiece->outputSizes),
+                             std::shared_ptr<ModPiece>                            outputPieceIn) : ModPiece(ConstructInputSizes(constantPiecesIn),
+                                                                                                          outputPieceIn->outputSizes),
                                                                                                  wgraph(graph),
-                                                                                                 outputID(outputPiece->ID()),
+                                                                                                 outputID(outputPieceIn->ID()),
+                                                                                                 outputPiece(outputPieceIn),
                                                                                                  constantPieces(constantPiecesIn) {
 
   // build the run order
@@ -238,8 +239,6 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
 
   return gradGraph.CreateModPiece(outNodeName, inputNames);
 }
-
-
 
 std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int                const  outputDimWrt,
                                                             unsigned int                const  inputDimWrt)
@@ -833,6 +832,17 @@ std::vector<std::tuple<unsigned int, unsigned int, unsigned int> > ModGraphPiece
   }
 
   return requiredIns;
+}
+
+std::shared_ptr<ModGraphPiece> ModGraphPiece::GetSubModel(std::string const& nodeName) const
+{
+
+  // Create a new workgraph wit the nodes necessary to evaluate nodeName
+  auto subGraph = wgraph->Clone();
+  for(auto piece : constantPieces)
+    subGraph->RemoveNode(wgraph->GetName(piece));
+
+  return subGraph->CreateModPiece(nodeName);
 }
 
 std::vector<int> ModGraphPiece::MatchInputs(std::shared_ptr<ModGraphPiece> otherPiece) const
