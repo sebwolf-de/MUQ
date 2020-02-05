@@ -159,6 +159,9 @@ namespace muq {
       void UpdateLIS(unsigned int                        numSamps,
                      std::vector<Eigen::VectorXd> const& currState);
 
+      // Used to reconstruct the LIS and CS kernels when lisU, lisW, or lisL changes.
+      void UpdateKernels();
+
       boost::property_tree::ptree lisKernelOpts;
       boost::property_tree::ptree csKernelOpts;
 

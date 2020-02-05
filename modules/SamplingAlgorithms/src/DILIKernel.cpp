@@ -198,6 +198,11 @@ void DILIKernel::CreateLIS(std::vector<Eigen::VectorXd> const& currState)
 
   lisL = std::make_shared<Eigen::MatrixXd>(subCov.selfadjointView<Eigen::Lower>().llt().matrixL());
 
+  UpdateKernels();
+}
+
+void DILIKernel::UpdateKernels()
+{
   lisToFull = std::make_shared<LIS2Full>(lisU,lisL);
   fullToCS = std::make_shared<CSProjector>(lisU, lisW);
 
@@ -250,6 +255,10 @@ void DILIKernel::UpdateLIS(unsigned int                        numSamps,
   lisU = std::make_shared<Eigen::MatrixXd>(solver.eigenvectors());
   lisEigVals = std::make_shared<Eigen::VectorXd>(solver.eigenvalues());
 
+  // Has the subspace dimension changed?
+  bool subDimChange = lisU->cols() == lisW->cols();
+
+  // Update the other part of the projector
   lisW = std::make_shared<Eigen::MatrixXd>(prior->ApplyPrecision(solver.eigenvectors()));
 
   Eigen::VectorXd deltaVec = solver.eigenvalues().array()/(1.0+solver.eigenvalues().array());
@@ -257,6 +266,10 @@ void DILIKernel::UpdateLIS(unsigned int                        numSamps,
   subCov -= deltaVec.asDiagonal();
 
   lisL = std::make_shared<Eigen::MatrixXd>(subCov.selfadjointView<Eigen::Lower>().llt().matrixL());
+
+  // If the dimension of the subspace has changed, we need to recreate the transition kernels
+  if(subDimChange)
+    UpdateKernels();
 }
 
 std::shared_ptr<muq::Modeling::GaussianBase> DILIKernel::ExtractPrior(std::shared_ptr<AbstractSamplingProblem> const& problem,
