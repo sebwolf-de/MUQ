@@ -386,7 +386,7 @@ TEST(Modeling_ModGraphPiece, LinearGaussPosterior)
   Eigen::VectorXd hessActFD = logLikely->ApplyHessianByFD(0, 0, 0, std::vector<Eigen::VectorXd>{input}, ones, vec);
 
   for(unsigned int i=0; i<numNodes; ++i)
-    EXPECT_NEAR(hessActFD(i), hessAct(i), 1e-3*std::abs(hessActFD(i)));
+    EXPECT_NEAR(hessActFD(i), hessAct(i), 1e-2*std::abs(hessActFD(i)));
 }
 
 
