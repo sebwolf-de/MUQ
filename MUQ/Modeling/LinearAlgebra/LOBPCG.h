@@ -131,8 +131,8 @@ namespace Modeling{
     public:
       Orthonormalizer(std::shared_ptr<LinearOperator> const& Bin) : B(Bin){};
 
-      void ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V);
-      void ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V, Eigen::Ref<const Eigen::MatrixXd> const& BVin);
+      bool ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V);
+      bool ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V, Eigen::Ref<const Eigen::MatrixXd> const& BVin);
 
       Eigen::MatrixXd Compute(Eigen::Ref<const Eigen::MatrixXd> const& V);
       Eigen::MatrixXd Compute(Eigen::Ref<const Eigen::MatrixXd> const& V, Eigen::Ref<const Eigen::MatrixXd> const& BVin);

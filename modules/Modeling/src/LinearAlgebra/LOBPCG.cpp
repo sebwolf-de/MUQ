@@ -54,28 +54,34 @@ Eigen::MatrixXd LOBPCG::Orthonormalizer::Compute(Eigen::Ref<const Eigen::MatrixX
   return output;
 }
 
-void LOBPCG::Orthonormalizer::ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V)
+bool LOBPCG::Orthonormalizer::ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V)
 {
   if(B!=nullptr){
-    ComputeInPlace(V, B->Apply(V));
+    return ComputeInPlace(V, B->Apply(V));
   }else{
-    ComputeInPlace(V,V);
+    return ComputeInPlace(V,V);
   }
 }
 
-void LOBPCG::Orthonormalizer::ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V, Eigen::Ref<const Eigen::MatrixXd> const& BVin)
+bool LOBPCG::Orthonormalizer::ComputeInPlace(Eigen::Ref<Eigen::MatrixXd> V, Eigen::Ref<const Eigen::MatrixXd> const& BVin)
 {
   vDim = V.cols();
+  BV = BVin;
 
-  auto cholFact = (V.transpose()*BVin).eval().selfadjointView<Eigen::Lower>().llt();
-  assert(cholFact.info()==Eigen::Success);
+  auto cholFact = (V.transpose()*BV).eval().selfadjointView<Eigen::Lower>().llt();
+  if(cholFact.info() != Eigen::Success)
+    return false;
 
   VBV_Chol = cholFact.matrixL();
   V = VBV_Chol.triangularView<Eigen::Lower>().solve(V.transpose()).transpose();
 
   if(B!=nullptr){
-    BV = VBV_Chol.triangularView<Eigen::Lower>().solve(BVin.transpose()).transpose();
+    BV = VBV_Chol.triangularView<Eigen::Lower>().solve(BV.transpose()).transpose();
+  }else{
+    BV = V;
   }
+
+  return true;
 }
 
 Eigen::MatrixXd LOBPCG::Orthonormalizer::InverseVBV() const
@@ -223,7 +229,12 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     Eigen::MatrixXd gaussMat = RandomGenerator::GetNormal(dim, numNormTest);
     double gaussMatNorm = gaussMat.norm();
     Anorm = A->Apply(gaussMat).norm() / gaussMatNorm;
-    Bnorm = B->Apply(gaussMat).norm() / gaussMatNorm;
+
+    if(B!=nullptr){
+      Bnorm = B->Apply(gaussMat).norm() / gaussMatNorm;
+    }else{
+      Bnorm = 1.0;
+    }
   }
 
   Eigen::VectorXd blockVals;
@@ -291,7 +302,6 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
                                                                  std::shared_ptr<LinearOperator>          B,
                                                                  std::shared_ptr<LinearOperator>          M)
 {
-
   // Make sure X0 has the right shape
   assert(X0.cols()==blockSize);
   assert(X0.rows()==A->rows());
@@ -315,7 +325,6 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
 
   // To start with, all of the indices are active
   unsigned int numActive = blockSize;
-
 
   // A vector full of booleans measuring if each eigenvalue is fixed or not
   std::vector<bool> isActive(blockSize,true);
@@ -367,26 +376,33 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
   Eigen::MatrixXd AR, P, BP, AP;
   AR.resize(X.rows(),X.cols());
 
+  Eigen::VectorXd convCrit, oldConvCrit;
+  convCrit = Eigen::VectorXd::Constant(X.cols(), std::numeric_limits<double>::infinity());
+
   for(unsigned it=0; it<maxIts; ++it){
+
+    if(consts!=nullptr)
+      consts->ApplyInPlace(X);
 
     if(verbosity>0)
       std::cout << "Iteration " << it << std::endl;
 
     // Compute the residuals
-    Eigen::MatrixXd trueResids = A->Apply(X) - B->Apply(X)*subEigVals.asDiagonal();
     resids.leftCols(numActive) = AX.leftCols(numActive) - BX.leftCols(numActive)*subEigVals.head(numActive).asDiagonal();
 
     // Compute the norm of the residuals
     residNorms = resids.colwise().norm();
 
     // Compute the convergence criteria
-    Eigen::VectorXd convCrit = residNorms.array() / ((Anorm + Bnorm*subEigVals.array())*X.colwise().norm().transpose().array());
+    oldConvCrit = convCrit;
+    convCrit = residNorms.array() / ((Anorm + Bnorm*subEigVals.array())*X.colwise().norm().transpose().array());
 
     // Figure out how many indices are active
-
     numActive = 0;
     for(unsigned int i=0; i<residNorms.size(); ++i){
-      if(convCrit(i)<solverTol){
+
+      // Fix a vector if we've converged or haven't improved
+      if((convCrit(i)<solverTol)||(std::abs(convCrit(i)-oldConvCrit(i))<1e-10)){
         isActive.at(i) = false;
       }
       numActive += int(isActive.at(i));
@@ -402,7 +418,6 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
       std::cout << "  residNorms = " << residNorms.transpose() << std::endl;
       std::cout << "  convergence criteria = " << convCrit.transpose() << std::endl;
     }
-
 
     // If we've converged for all the vectors, break
     if(numActive==0){
@@ -443,6 +458,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
 
     // Orthonormalize residuals wrt B-inner product
     bOrtho.ComputeInPlace(resids.leftCols(numActive));
+
     Eigen::MatrixXd BR;
     if(B != nullptr){
       BR = bOrtho.GetBV();
@@ -597,7 +613,7 @@ LOBPCG& LOBPCG::reset(int dim)
     solverTol = dim * std::sqrt(std::numeric_limits<double>::epsilon());
 
   if(maxIts<0)
-    maxIts = std::max(50,3*dim);
+    maxIts = 500;
 
   return *this;
 }

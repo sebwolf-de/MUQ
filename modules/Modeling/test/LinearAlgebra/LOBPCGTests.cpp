@@ -33,7 +33,7 @@ TEST(LOBPCG, Diagonal_BigBlock)
     auto op = LinearOperator::Create(A);
 
     const int numEigs = 4;
-    const double solveTol = 1e-7;
+    const double solveTol = 1e-6;
     const double eigTol = 0.0;
     const int blockSize = numEigs;
 
@@ -93,7 +93,7 @@ TEST(LOBPCG, Diagonal_SmallBlock)
     auto op = LinearOperator::Create(A);
 
     const int numEigs = 4;
-    const double solveTol = 1e-7;
+    const double solveTol = 1e-6;
     const double eigTol = 0.0;
     const int blockSize = 1;
 
@@ -123,10 +123,10 @@ TEST(LOBPCG, Diagonal_Tolerance)
     auto op = LinearOperator::Create(A);
 
     const int numEigs = 4;
-    const double solveTol = 1e-7;
-    double relTol = 0.1;
+    const double solveTol = 1e-5;
+    double relTol = 0.07;
     double absTol = 0.0;
-    const int blockSize =1;
+    const int blockSize = 1;
 
     {
       LOBPCG solver(numEigs, relTol, absTol, blockSize, solveTol);
@@ -147,10 +147,9 @@ TEST(LOBPCG, Diagonal_Tolerance)
 
       solver.compute(op);
 
-      EXPECT_EQ(3, solver.eigenvalues().size());
+      EXPECT_EQ(2, solver.eigenvalues().size());
       EXPECT_NEAR(A(0,0), solver.eigenvalues()(0), 1e-4);
       EXPECT_NEAR(A(1,1), solver.eigenvalues()(1), 1e-4);
-      EXPECT_NEAR(A(2,2), solver.eigenvalues()(2), 1e-4);
     }
 }
 
@@ -186,7 +185,7 @@ TEST(LOBPCG, Random)
     auto op = LinearOperator::Create(A);
 
     const int numEigs = subDim-2;
-    const double solveTol = 1e-7;
+    const double solveTol = 1e-5;
     const double eigTol = 0.0;
     const int blockSize = numEigs;
 
@@ -194,7 +193,7 @@ TEST(LOBPCG, Random)
     solver.compute(op);
 
     for(unsigned int i=0; i<numEigs; ++i)
-      EXPECT_NEAR(trueVals(subDim-1-i), solver.eigenvalues()(i), 1e-10);
+      EXPECT_NEAR(trueVals(subDim-1-i), solver.eigenvalues()(i), 1e-4);
 
 }
 
@@ -232,7 +231,7 @@ TEST(LOBPCG, RandomIdentity)
     auto opB = std::make_shared<IdentityOperator>(dim);
 
     const int numEigs = subDim-2;
-    const double solveTol = 1e-7;
+    const double solveTol = 1e-5;
     const double eigTol = 0.0;
     const int blockSize = numEigs;
 
@@ -241,7 +240,7 @@ TEST(LOBPCG, RandomIdentity)
     solver.compute(opA,opB);
 
     for(unsigned int i=0; i<numEigs; ++i)
-      EXPECT_NEAR(trueVals(subDim-1-i), solver.eigenvalues()(i), 1e-10);
+      EXPECT_NEAR(trueVals(subDim-1-i), solver.eigenvalues()(i), 1e-4);
 
 }
 
@@ -258,7 +257,7 @@ TEST(LOBPCG, RandomGeneral)
     Eigen::MatrixXd temp = Eigen::MatrixXd::Random(dim,subDim);
     Eigen::MatrixXd A = temp * temp.transpose() + nugget*Eigen::MatrixXd::Identity(dim,dim);
 
-    temp = Eigen::MatrixXd::Random(dim,10);
+    temp = Eigen::MatrixXd::Random(dim,dim);
     Eigen::MatrixXd B = temp * temp.transpose() + 1e-1*Eigen::MatrixXd::Identity(dim,dim);
 
     // Solve the generalized problem with Eigen3's direct solver for comparison
