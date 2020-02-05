@@ -5,6 +5,7 @@
 #include "MUQ/Modeling/WorkGraph.h"
 #include "MUQ/Modeling/WorkGraphPiece.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
+#include "MUQ/Modeling/CwiseOperators/CwiseUnaryOperator.h"
 
 #include "MUQ/Modeling/Distributions/Gaussian.h"
 #include "MUQ/Modeling/Distributions/DensityProduct.h"
@@ -371,4 +372,78 @@ TEST(MCMC, DILIKernel_AutomaticGaussNewton) {
     double estVar = trueCov(i,i)/ess(i);
     EXPECT_NEAR(trueMean(i), sampMean(i), 3.0*std::sqrt(estVar));
   }
+}
+
+
+TEST(MCMC, DILIKernel_LogNormal) {
+
+  const unsigned int numNodes = 100;
+  const unsigned int dataDim = 5;
+  const double noiseStd = 1e-2;
+
+  std::shared_ptr<Gaussian> prior = DILITest_CreatePrior(numNodes);
+
+  Eigen::MatrixXd forwardMat = Eigen::MatrixXd::Zero(dataDim,numNodes);
+  forwardMat.row(0) = Eigen::RowVectorXd::Ones(numNodes)/numNodes;
+  for(unsigned int i=1; i<dataDim; ++i)
+    forwardMat(i,10*i) = 1.0;
+
+  auto forwardMod = LinearOperator::Create(forwardMat);
+  Eigen::VectorXd trueField = prior->Sample();
+  Eigen::VectorXd data = forwardMod->Apply(trueField.array().exp().matrix());
+
+  auto noiseModel = std::make_shared<Gaussian>(data, noiseStd*noiseStd*Eigen::VectorXd::Ones(dataDim));
+
+  WorkGraph graph;
+  graph.AddNode(std::make_shared<IdentityOperator>(numNodes), "Parameters");
+  graph.AddNode(prior->AsDensity(), "Prior");
+  graph.AddNode(forwardMod, "ForwardModel");
+  graph.AddNode(std::make_shared<ExpOperator>(numNodes), "ExpOperator");
+  graph.AddNode(noiseModel->AsDensity(), "Likelihood");
+  graph.AddNode(std::make_shared<DensityProduct>(2),"Posterior");
+  graph.AddEdge("Parameters",0,"Prior",0);
+  graph.AddEdge("Parameters",0,"ExpOperator",0);
+  graph.AddEdge("ExpOperator",0,"ForwardModel",0);
+  graph.AddEdge("ForwardModel",0,"Likelihood",0);
+  graph.AddEdge("Prior",0,"Posterior",0);
+  graph.AddEdge("Likelihood",0,"Posterior",1);
+
+  pt::ptree pt;
+  const unsigned int numSamps = 20000;
+  pt.put("NumSamples",numSamps);
+  pt.put("BurnIn", 1000);
+  pt.put("PrintLevel",0);
+  pt.put("HessianType","Exact");
+  pt.put("Adapt Interval", 1000);
+
+  pt.put("Eigensolver Block", "LOBPCG");
+  pt.put("LOBPCG.NumEigs",15); // Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
+  pt.put("LOBPCG.RelativeTolerance", 1e-3); // Fraction of the largest eigenvalue used as stopping criteria on how many eigenvalues to compute
+  pt.put("LOBPCG.AbsoluteTolerance",0.0); // Minimum allowed eigenvalue
+  pt.put("LOBPCG.BlockSize",20);
+  pt.put("LOBPCG.MaxIts",200);
+  pt.put("LOBPCG.Verbosity",0);
+  pt.put("LOBPCG.SolverTolerance",1e-6);
+
+  pt.put("LIS Block", "LIS");
+  pt.put("LIS.Method", "MHKernel");
+  pt.put("LIS.Proposal","MyProposal");
+  pt.put("LIS.MyProposal.Method","MHProposal");
+  pt.put("LIS.MyProposal.ProposalVariance", 1.0);
+
+  pt.put("CS Block", "CS");
+  pt.put("CS.Method", "MHKernel");
+  pt.put("CS.Proposal","MyProposal");
+  pt.put("CS.MyProposal.Method", "CrankNicolsonProposal");
+  pt.put("CS.MyProposal.Beta",0.2);
+  pt.put("CS.MyProposal.PriorNode","Prior");
+
+  // create a sampling problem
+  auto problem = std::make_shared<SamplingProblem>(graph.CreateModPiece("Posterior"));
+
+  auto kernel = std::make_shared<DILIKernel>(pt, problem);
+
+  auto sampler = std::make_shared<SingleChainMCMC>(pt, std::vector<std::shared_ptr<TransitionKernel>>{kernel});
+
+  auto diliSamps = sampler->Run(trueField); // Use a true posterior sample to avoid burnin
 }

@@ -229,12 +229,12 @@ void DILIKernel::UpdateKernels()
 
   csKernelOpts.put("BlockIndex",1);
   csKernel = TransitionKernel::Construct(csKernelOpts,prob);
+
 }
 
 void DILIKernel::UpdateLIS(unsigned int                        numSamps,
                            std::vector<Eigen::VectorXd> const& currState)
 {
-
   std::shared_ptr<LinearOperator> hessOp, newOp, precOp, covOp;
   if(hessType=="Exact"){
     newOp = std::make_shared<HessianOperator>(logLikelihood, currState, 0, blockInd, blockInd, Eigen::VectorXd::Ones(1), -1.0, 0.0);
@@ -256,7 +256,7 @@ void DILIKernel::UpdateLIS(unsigned int                        numSamps,
   lisEigVals = std::make_shared<Eigen::VectorXd>(solver.eigenvalues());
 
   // Has the subspace dimension changed?
-  bool subDimChange = lisU->cols() == lisW->cols();
+  bool subDimChange = lisU->cols() != lisW->cols();
 
   // Update the other part of the projector
   lisW = std::make_shared<Eigen::MatrixXd>(prior->ApplyPrecision(solver.eigenvectors()));
