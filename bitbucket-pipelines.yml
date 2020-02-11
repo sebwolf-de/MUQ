@@ -16,8 +16,11 @@ pipelines:
           - cd /usr/src/gtest
           - cmake CMakeLists.txt
           - make
-          - make install
-          
+          - cp *.a /usr/lib
+
+
+          - apt-get install -y libhdf5-dev libeigen3-dev libboost-dev libsundials-dev libnlopt-dev
+
           - cd
           - cd build
           - cmake -DMUQ_USE_GTEST=ON ..
