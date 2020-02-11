@@ -11,6 +11,17 @@ pipelines:
         script: # Modify the commands below to build your repository.
           - apt-get update
           - apt-get install -y cmake
-          - cd build
-          - cmake ..
+
+          - apt-get install -y libgtest-dev # Build gtest
+          - cd /usr/src/gtest
+          - cmake CMakeLists.txt
           - make
+          - make install
+          
+          - cd
+          - cd build
+          - cmake -DMUQ_USE_GTEST=ON ..
+          - make
+          - make install
+          - ./runTests
+          
