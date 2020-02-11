@@ -25,4 +25,4 @@ pipelines:
           - cmake -DMUQ_HDF5_DIR=/usr/lib/x86_64-linux-gnu/hdf5/serial -DMUQ_USE_GTEST=ON ..
           - make
           - make install
-          - ./runTests
+          - build/modules/RunAllTests
