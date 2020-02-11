@@ -3,12 +3,12 @@
 # Only use spaces to indent your .yml configuration.
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
-image: gcc:6.5
+image: gcc:latest
 
 pipelines:
   default:
     - step:
-        script: # Modify the commands below to build your repository.
+        script:
           - apt-get update
           - apt-get install -y cmake libgtest-dev libhdf5-dev libeigen3-dev libboost-dev libsundials-serial-dev libnlopt-dev
           
@@ -19,7 +19,8 @@ pipelines:
           - cp *.a /usr/lib
 
 
-          - cd
+          # Build muq
+          - cd $BUILD_DIR
           - cd build
           - cmake -DMUQ_USE_GTEST=ON ..
           - make
