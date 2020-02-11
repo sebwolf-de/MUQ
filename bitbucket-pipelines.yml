@@ -10,7 +10,7 @@ pipelines:
     - step:
         script:
           - apt-get update
-          - apt-get install -y cmake libgtest-dev g++ libhdf5-dev libeigen3-dev libboost-all-dev libsundials-dev libnlopt-dev
+          - apt-get install -y cmake libgtest-dev g++ libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev
 
           # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
           - cd /usr/src/gtest
