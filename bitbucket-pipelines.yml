@@ -3,14 +3,14 @@
 # Only use spaces to indent your .yml configuration.
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
-image: gcc:latest
+image: debian:latest
 
 pipelines:
   default:
     - step:
         script:
           - apt-get update
-          - apt-get install -y cmake libgtest-dev libhdf5-dev libeigen3-dev libboost-dev libnlopt-dev
+          - apt-get install -y cmake libgtest-dev g++ libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev
 
           # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
           - cd /usr/src/gtest
