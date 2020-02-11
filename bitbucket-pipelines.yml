@@ -10,16 +10,14 @@ pipelines:
     - step:
         script: # Modify the commands below to build your repository.
           - apt-get update
-          - apt-get install -y cmake
-
-          - apt-get install -y libgtest-dev # Build gtest
+          - apt-get install -y cmake libgtest-dev libhdf5-dev libeigen3-dev libboost-dev libsundials-serial-dev libnlopt-dev
+          
+          # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
           - cd /usr/src/gtest
           - cmake CMakeLists.txt
           - make
           - cp *.a /usr/lib
 
-
-          - apt-get install -y libhdf5-dev libeigen3-dev libboost-dev libsundials-dev libnlopt-dev
 
           - cd
           - cd build
@@ -27,4 +25,3 @@ pipelines:
           - make
           - make install
           - ./runTests
-          
