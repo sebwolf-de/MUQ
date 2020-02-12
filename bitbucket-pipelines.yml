@@ -2,50 +2,51 @@ image: debian:latest
 
 pipelines:
   default:
-    - step:
-        name: gcc
-        script:
-          - apt-get update
-          # Need graphviz for some tests' postprocessing
-          # Current (as of 11.2.2020) sundials package incompatible with muq, so not including it here)
-          - apt-get install -y cmake libgtest-dev g++ libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev graphviz
+    - parallel:
+      - step:
+          name: gcc
+          script:
+            - apt-get update
+            # Need graphviz for some tests' postprocessing
+            # Current (as of 11.2.2020) sundials package incompatible with muq, so not including it here)
+            - apt-get install -y cmake libgtest-dev g++ libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev graphviz
 
 
-          # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
-          - cd /usr/src/gtest
-          - cmake CMakeLists.txt
-          - make
-          - cp *.a /usr/lib
+            # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
+            - cd /usr/src/gtest
+            - cmake CMakeLists.txt
+            - make
+            - cp *.a /usr/lib
 
 
-          # Build muq
-          - cd $BITBUCKET_CLONE_DIR
-          - cd build
-          - cmake -DMUQ_HDF5_DIR=/usr/lib/x86_64-linux-gnu/hdf5/serial -DMUQ_USE_GTEST=ON ..
-          - make
-          - make install
-          - ./RunAllTests
+            # Build muq
+            - cd $BITBUCKET_CLONE_DIR
+            - cd build
+            - cmake -DMUQ_HDF5_DIR=/usr/lib/x86_64-linux-gnu/hdf5/serial -DMUQ_USE_GTEST=ON ..
+            - make
+            - make install
+            - ./RunAllTests
 
-    - step:
-        name: clang
-        script:
-          - apt-get update
-          # Need graphviz for some tests' postprocessing
-          # Current (as of 11.2.2020) sundials package incompatible with muq, so not including it here)
-          - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev graphviz
-
-
-          # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
-          - cd /usr/src/gtest
-          - cmake CMakeLists.txt
-          - make
-          - cp *.a /usr/lib
+      - step:
+          name: clang
+          script:
+            - apt-get update
+            # Need graphviz for some tests' postprocessing
+            # Current (as of 11.2.2020) sundials package incompatible with muq, so not including it here)
+            - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev graphviz
 
 
-          # Build muq
-          - cd $BITBUCKET_CLONE_DIR
-          - cd build
-          - cmake -DMUQ_HDF5_DIR=/usr/lib/x86_64-linux-gnu/hdf5/serial -DMUQ_USE_GTEST=ON ..
-          - make
-          - make install
-          - ./RunAllTests
+            # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
+            - cd /usr/src/gtest
+            - cmake CMakeLists.txt
+            - make
+            - cp *.a /usr/lib
+
+
+            # Build muq
+            - cd $BITBUCKET_CLONE_DIR
+            - cd build
+            - cmake -DMUQ_HDF5_DIR=/usr/lib/x86_64-linux-gnu/hdf5/serial -DMUQ_USE_GTEST=ON ..
+            - make
+            - make install
+            - ./RunAllTests
