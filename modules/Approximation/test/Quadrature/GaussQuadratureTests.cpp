@@ -11,6 +11,7 @@
 #include <Eigen/Core>
 
 #include <iomanip>
+#include <limits>
 
 using namespace muq::Approximation;
 
