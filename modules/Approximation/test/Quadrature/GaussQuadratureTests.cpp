@@ -286,7 +286,7 @@ TEST(Quadrature, JacobiDefault) {
 
 }
 
-TEST(Quadrature, Jacobi) {
+/*TEST(Quadrature, Jacobi) {
 
   // polynomial order
   int order = 4;
@@ -327,4 +327,4 @@ TEST(Quadrature, Jacobi) {
 
   }
 
-}
+}*/
