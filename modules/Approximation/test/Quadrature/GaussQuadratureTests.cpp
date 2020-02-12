@@ -10,6 +10,8 @@
 
 #include <Eigen/Core>
 
+#include <iomanip>
+
 using namespace muq::Approximation;
 
 TEST(Quadrature, PhysicistHermite) {
@@ -286,7 +288,7 @@ TEST(Quadrature, JacobiDefault) {
 
 }
 
-/*TEST(Quadrature, Jacobi) {
+TEST(Quadrature, Jacobi) {
 
   // polynomial order
   int order = 4;
@@ -319,7 +321,9 @@ TEST(Quadrature, JacobiDefault) {
   Eigen::VectorXd gaussPts = gq.Points().transpose();
   Eigen::VectorXd gaussWts = gq.Weights();
 
-  std::cout << gaussPts << std::endl;
+  std::cout << std::setprecision(std::numeric_limits<double>::digits10 + 1);
+  std::cout << "Points: " << std::endl << gaussPts << std::endl;
+  std::cout << "Weights: " << std::endl << gaussWts << std::endl;
   for (int i=0; i<order+1; i++) {
 
     EXPECT_NEAR(gaussPts(i), gaussPtsTable[i], 1e-9);
@@ -327,4 +331,4 @@ TEST(Quadrature, JacobiDefault) {
 
   }
 
-}*/
+}
