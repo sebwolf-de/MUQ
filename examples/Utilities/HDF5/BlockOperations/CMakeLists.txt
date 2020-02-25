@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-find_package(MUQ_PRIVATE REQUIRED)
+find_package(MUQ REQUIRED)
 
 set(CMAKE_CXX_COMPILER ${MUQ_CXX_COMPILER})
 set(CMAKE_CXX_FLAGS ${MUQ_CXX_FLAGS})
