@@ -60,9 +60,11 @@ fi
 
 # cd into build directory and remove all previous files
 cd "$BUILD_DIR"
-rm CMakeCache.txt
-rm -rf CMakeFiles
-rm -rf modules
+if [-d "CMakeFiles"]
+  rm CMakeCache.txt
+  rm -rf CMakeFiles
+  rm -rf modules
+fi
 
 #######################################
 ##### RUN CMAKE
@@ -81,7 +83,7 @@ cmake \
 -DSTANMATH_EXTERNAL_SOURCE=$STANMATH_SOURCE \
 -DMUQ_USE_OPENMPI=OFF \
 $dir
-
+a
 #######################################
 ##### BUILD MUQ
 #######################################
