@@ -159,3 +159,5 @@ if(DOXYGEN_FOUND)
 
 
 endif(DOXYGEN_FOUND)
+
+add_subdirectory(examples EXCLUDE_FROM_ALL)
