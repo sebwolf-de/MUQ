@@ -14,12 +14,6 @@ else
   with_python=0
 fi
 
-if echo $bin_dir| grep -q "NLOPT"; then
-  with_nlopt=1
-else
-  with_nlopt=0
-fi
-
 #######################################
 ##### Update the library path if on OSX
 #######################################
@@ -42,24 +36,18 @@ fi
 build/RunAllTests --gtest_output=xml:results/tests/TestResults.xml
 if [ $with_python -eq 1 ]; then
   export PYTHONPATH=$PYTHONPATH:$WORKSPACE/install/lib
-
-  if [ $with_nlopt -eq 1 ]; then
-    $PYTEST -v --junitxml results/tests/PythonTestResults.xml modules/RunPythonTests.py
-  else
-    $PYTEST -v -k "not Nlopt and not PolynomialApproximator" --junitxml results/tests/PythonTestResults.xml modules/RunPythonTests.py
-  fi
 fi
 
 #######################################
 ##### Run the examples
 #######################################
-for f in $(find $WORKSPACE/examples/ -name build -prune -o -type d -name example-* -print); do
-  cd $f
-  # run any executables that were created in the build directory
-  for e in $(find build/ -maxdepth 1 -type f -perm +0111); do
-    $e
-  done
-done
+#for f in $(find $WORKSPACE/examples/ -name build -prune -o -type d -name example-* -print); do
+#  cd $f
+#  # run any executables that were created in the build directory
+#  for e in $(find build/ -maxdepth 1 -type f -perm +0111); do
+#    $e
+#  done
+#done
 
 cd $dir
 
