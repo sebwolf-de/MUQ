@@ -60,7 +60,7 @@ fi
 
 # cd into build directory and remove all previous files
 cd "$BUILD_DIR"
-if [-d "CMakeFiles"]; then
+if [ -d "CMakeFiles" ]; then
   rm CMakeCache.txt
   rm -rf CMakeFiles
   rm -rf modules
@@ -82,14 +82,14 @@ cmake \
 -DNLOPT_EXTERNAL_SOURCE=$NLOPT_SOURCE \
 -DSTANMATH_EXTERNAL_SOURCE=$STANMATH_SOURCE \
 -DMUQ_USE_OPENMPI=OFF \
-$dir
-a
+../
+
 #######################################
 ##### BUILD MUQ
 #######################################
 make install > OutputFromMake.txt
 tail -200 OutputFromMake.txt
 
-cd $dir
+cd "$dir"
 
 exit 0
