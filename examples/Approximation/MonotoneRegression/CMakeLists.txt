@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.8)
 
-find_package(MUQ_PRIVATE REQUIRED)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR) # Only look for MUQ when building example as standalone project
+  find_package(MUQ REQUIRED)
+endif()
 
 include_directories(${MUQ_INCLUDE_DIRS})
 
