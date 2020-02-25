@@ -33,7 +33,7 @@ fi
 #######################################
 ##### Run the tests
 #######################################
-build/RunAllTests --gtest_output=xml:results/tests/TestResults.xml
+build/RunAllTests --gtest_output=xml:build/TestResults.xml
 if [ $with_python -eq 1 ]; then
   export PYTHONPATH=$PYTHONPATH:$WORKSPACE/install/lib
 fi
