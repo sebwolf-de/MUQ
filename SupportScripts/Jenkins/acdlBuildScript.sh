@@ -60,7 +60,7 @@ fi
 
 # cd into build directory and remove all previous files
 cd "$BUILD_DIR"
-if [-d "CMakeFiles"]
+if [-d "CMakeFiles"]; then
   rm CMakeCache.txt
   rm -rf CMakeFiles
   rm -rf modules
