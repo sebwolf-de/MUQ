@@ -2,7 +2,7 @@
 find_package(PkgConfig)
 
 if(NOT DEFINED MUQ_HDF5_DIR)
-	pkg_search_module(PC_HDF5 QUIET hdf5 libhdf5)
+	pkg_search_module(PC_HDF5 QUIET hdf5-serial libhdf5)
 	set(HDF5_DEFINITIONS ${PC_HDF5_CFLAGS_OTHER})
 
 
