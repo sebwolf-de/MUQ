@@ -98,6 +98,7 @@ cmake \
 ##### BUILD MUQ
 #######################################
 make install > OutputFromMake.txt
+make examples >> OutputFromMake.txt
 tail -200 OutputFromMake.txt
 
 cd "$dir"
