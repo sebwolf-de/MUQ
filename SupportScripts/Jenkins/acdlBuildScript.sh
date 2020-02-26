@@ -8,6 +8,15 @@ shopt -s nocasematch
 dir=`pwd`
 bin_dir=$(echo "$dir" | tr '[:lower:]' '[:upper:]')
 
+if echo $bin_dir| grep -q "PYTHON"; then
+  with_python=1
+  temp="${bin_dir##*PYTHON}"
+  PYTHON_VERSION="${temp:0:1}"
+else
+  with_python=0
+  PYTHON_VERSION="NA"
+fi
+
 ####################################
 ##### SET MACHINE SPECIFIC PATHS
 ####################################
@@ -81,7 +90,8 @@ cmake \
 -DNANOFLANN_EXTERNAL_SOURCE=$NANOFLANN_SOURCE \
 -DNLOPT_EXTERNAL_SOURCE=$NLOPT_SOURCE \
 -DSTANMATH_EXTERNAL_SOURCE=$STANMATH_SOURCE \
--DMUQ_USE_OPENMPI=OFF \
+-DMUQ_USE_PYTHON=$with_python \
+-DPYBIND11_PYTHON_VERSION=$PYTHON_VERSION \
 ../
 
 #######################################
