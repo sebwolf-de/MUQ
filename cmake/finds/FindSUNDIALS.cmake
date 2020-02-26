@@ -52,6 +52,17 @@ else()
                             HINTS ${MUQ_SUNDIALS_DIR}/lib/ NO_DEFAULT_PATH)
 endif()
 
+
+# We need sundials version 2.x. Since there is no reasonable way to access the installed sundials version,
+# we test for a header that fails for newer versions.
+if(EXISTS "${SUNDIALS_INCLUDE_DIR}/cvodes/cvodes_spgmr.h")
+    message (STATUS "Sundials test for ${SUNDIALS_INCLUDE_DIR}/cvodes/cvodes_spgmr.h succeeded")
+else()
+    message (STATUS "Sundials test for ${SUNDIALS_INCLUDE_DIR}/cvodes/cvodes_spgmr.h failed; We require Sundials 2.x, falling back to internal build of Sundials")
+    return()
+endif()
+
+
 set(SUNDIALS_LIBRARY ${CVODES_LIBRARY} ${IDAS_LIBRARY} ${KINSOL_LIBRARY} ${NVEC_LIBRARY} ${NVEC_PARALLEL_LIBRARY})
 set(SUNDIALS_LIBRARIES ${SUNDIALS_LIBRARY})
 
