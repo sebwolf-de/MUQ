@@ -18,10 +18,6 @@ set(${CMAKE_PROJECT_NAME}_VERSION ${${CMAKE_PROJECT_NAME}_MAJOR_VERSION}.${${CMA
 
 message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
 
-# Make the external project installation directory if it doesn't exist already
-file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/muq_external/)
-file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/muq_external/include)
-file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/muq_external/lib)
 
 ###############################################
 # Compiler configuration
