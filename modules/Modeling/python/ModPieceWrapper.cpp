@@ -6,6 +6,7 @@
 #include "MUQ/Modeling/MultiLogisticLikelihood.h"
 #include "MUQ/Modeling/PyModPiece.h"
 #include "MUQ/Modeling/ReplicateOperator.h"
+#include "MUQ/Modeling/SplitVector.h"
 #include "MUQ/Modeling/WorkGraph.h"
 
 #include <pybind11/pybind11.h>
@@ -114,4 +115,9 @@ void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
   py::class_<MultiLogisticLikelihood, ModPiece, WorkPiece, std::shared_ptr<MultiLogisticLikelihood>> mll(m, "MultiLogisticLikelihood");
   mll
     .def(py::init<unsigned int, Eigen::VectorXi>());
+
+  py::class_<SplitVector, ModPiece, WorkPiece, std::shared_ptr<SplitVector>>(m,"SplitVector")
+    .def(py::init<Eigen::VectorXi const&, Eigen::VectorXi const&, unsigned int const>())
+    .def("StartIndices", &SplitVector::StartIndices);
+
 }
