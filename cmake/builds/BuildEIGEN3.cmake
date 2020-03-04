@@ -13,7 +13,7 @@ ExternalProject_Add(
   URL ${EIGEN_EXTERNAL_SOURCE}
 	BUILD_COMMAND ""
 	CONFIGURE_COMMAND ""
-  INSTALL_COMMAND cp -r ${CMAKE_CURRENT_BINARY_DIR}/external/eigen3/src/EIGEN3/Eigen ${EIGEN3_INSTALL_DIR}/include && cp -r ${CMAKE_CURRENT_BINARY_DIR}/external/eigen3/src/EIGEN3/unsupported ${EIGEN3_INSTALL_DIR}/include
+  INSTALL_COMMAND ${CMAKE_COMMAND} -E make_directory ${EIGEN3_INSTALL_DIR}/include && cp -r ${CMAKE_CURRENT_BINARY_DIR}/external/eigen3/src/EIGEN3/Eigen ${EIGEN3_INSTALL_DIR}/include && cp -r ${CMAKE_CURRENT_BINARY_DIR}/external/eigen3/src/EIGEN3/unsupported ${EIGEN3_INSTALL_DIR}/include
 )
 
 
