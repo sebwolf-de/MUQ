@@ -33,7 +33,7 @@ class DiffusionEquation(mm.PyModPiece):
         self.numNodes = numCells+1
         self.numCells = numCells
 
-        self.xs = np.linspace(0,1,self.numNodes)
+        self.xs = np.linspace(0,5.0,self.numNodes)
         self.dx = self.xs[1]-self.xs[0]
 
     def EvaluateImpl(self, inputs):
@@ -122,54 +122,54 @@ class DiffusionEquation(mm.PyModPiece):
             self.gradient = grad
 
 
-    def ApplyHessianImpl(self, outWrt, inWrt1, inWrt2, inputs, sensitivity, vec):
-
-        condVals = inputs[0]
-        recharge = inputs[1]
-
-        # If this is the second derivative wrt recharge, return 0
-        if((inWrt1==1)&(inWrt2==1)):
-            self.hessAction = np.zeros(vec.shape)
-
-        # if it's a mixed derivative (conductivity then recharge)
-        elif((inWrt1==0)&(inWrt2==1)):
-            assert(False)
-
-        # if it's a mixed derivative (recharge then conductivity)
-        elif((inWrt1==1)&(inWrt2==0)):
-            ApplyHessianImpl(self,outWrt,inWrt2,inWrt1, inputs,sensitivity,vec)
-
-        # Both wrt conductivity
-        elif((inWrt1==0)&(inWrt2==0)):
-
-            # Solve the forward system
-            K = self.BuildStiffness(condVals)
-            rhs = self.BuildRhs(recharge)
-            sol = spla.spsolve(K,rhs)
-
-            # Solve the adjoint system
-            adjRhs = self.BuildAdjointRhs(sensitivity)
-            adjSol = spla.spsolve(K,adjRhs) # Because K is symmetric
-
-            # Solve the incremental forward system
-            incrForRhs = -self.BuildIncrementalRhs(adjSol)
-            incrForSol = spla.spsolve(K,incrForRhs)
-
-            # Solve the incremental adjoint system
-            incrAdjRhs = self.BuildIncrementalRhs(sol)
-            incrAdjSol = spla.spsolve(K,incrAdjRhs) # Because K is symmetric
-
-            # Construct the Hessian action
-            solDeriv = -sol[0:-1]/self.dx + sol[1:]/self.dx
-            adjDeriv = -adjSol[0:-1]/self.dx + adjSol[1:]/self.dx
-            incrForDeriv = -incrForSol[0:-1]/self.dx + incrForSol[1:]/self.dx
-            incrAdjDeriv = -incrAdjSol[0:-1]/self.dx + incrAdjSol[1:]/self.dx
-
-            self.hessAction = (vec*incrAdjDeriv * solDeriv - vec*incrForDeriv * adjDeriv)#*2.
-
-        else:
-            print('Have not implement Hessian wrt sensitivity yet.')
-            assert(False)
+    # def ApplyHessianImpl(self, outWrt, inWrt1, inWrt2, inputs, sensitivity, vec):
+    #
+    #     condVals = inputs[0]
+    #     recharge = inputs[1]
+    #
+    #     # If this is the second derivative wrt recharge, return 0
+    #     if((inWrt1==1)&(inWrt2==1)):
+    #         self.hessAction = np.zeros(vec.shape)
+    #
+    #     # if it's a mixed derivative (conductivity then recharge)
+    #     elif((inWrt1==0)&(inWrt2==1)):
+    #         assert(False)
+    #
+    #     # if it's a mixed derivative (recharge then conductivity)
+    #     elif((inWrt1==1)&(inWrt2==0)):
+    #         ApplyHessianImpl(self,outWrt,inWrt2,inWrt1, inputs,sensitivity,vec)
+    #
+    #     # Both wrt conductivity
+    #     elif((inWrt1==0)&(inWrt2==0)):
+    #
+    #         # Solve the forward system
+    #         K = self.BuildStiffness(condVals)
+    #         rhs = self.BuildRhs(recharge)
+    #         sol = spla.spsolve(K,rhs)
+    #
+    #         # Solve the adjoint system
+    #         adjRhs = self.BuildAdjointRhs(sensitivity)
+    #         adjSol = spla.spsolve(K,adjRhs) # Because K is symmetric
+    #
+    #         # Solve the incremental forward system
+    #         incrForRhs = -self.BuildIncrementalRhs(adjSol)
+    #         incrForSol = spla.spsolve(K,incrForRhs)
+    #
+    #         # Solve the incremental adjoint system
+    #         incrAdjRhs = self.BuildIncrementalRhs(sol)
+    #         incrAdjSol = spla.spsolve(K,incrAdjRhs) # Because K is symmetric
+    #
+    #         # Construct the Hessian action
+    #         solDeriv = -sol[0:-1]/self.dx + sol[1:]/self.dx
+    #         adjDeriv = -adjSol[0:-1]/self.dx + adjSol[1:]/self.dx
+    #         incrForDeriv = -incrForSol[0:-1]/self.dx + incrForSol[1:]/self.dx
+    #         incrAdjDeriv = -incrAdjSol[0:-1]/self.dx + incrAdjSol[1:]/self.dx
+    #
+    #         self.hessAction = (vec*incrAdjDeriv * solDeriv - vec*incrForDeriv * adjDeriv)#*2.
+    #
+    #     else:
+    #         print('Have not implement Hessian wrt sensitivity yet.')
+    #         assert(False)
 
 
 

@@ -9,6 +9,7 @@
 #include "MUQ/Modeling/SumPiece.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
 #include "MUQ/Modeling/WorkGraph.h"
+#include "MUQ/Modeling/LinearAlgebra/ZeroOperator.h"
 
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Modeling;
@@ -28,7 +29,7 @@ AverageHessian::AverageHessian(unsigned int                            numOldSam
 
 Eigen::MatrixXd AverageHessian::Apply(Eigen::Ref<const Eigen::MatrixXd> const& x)
 {
-  return (numSamps * (*oldW) * oldEigVals->asDiagonal() * (oldW->transpose() * x) + newHess->Apply(x))/(numSamps+1.0);
+  return (numSamps/(numSamps+1.0))* (*oldW) * (oldEigVals->asDiagonal() * (oldW->transpose() * x)) + newHess->Apply(x)/(numSamps+1.0);
 }
 
 Eigen::MatrixXd AverageHessian::ApplyTranspose(Eigen::Ref<const Eigen::MatrixXd> const& x)
@@ -66,6 +67,18 @@ DILIKernel::DILIKernel(boost::property_tree::ptree       const& pt,
 {
 }
 
+DILIKernel::DILIKernel(boost::property_tree::ptree       const& pt,
+                       std::shared_ptr<AbstractSamplingProblem> problem,
+                       Eigen::VectorXd                   const& genEigVals,
+                       Eigen::MatrixXd                   const& genEigVecs) : DILIKernel(pt,
+                                                                                         problem,
+                                                                                         ExtractPrior(problem, pt.get("Prior Node", "Prior")),
+                                                                                         ExtractLikelihood(problem,pt.get("Likelihood Node", "Likelihood")),
+                                                                                         genEigVals,
+                                                                                         genEigVecs)
+{
+}
+
 
 DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
                        std::shared_ptr<AbstractSamplingProblem>            problem,
@@ -78,24 +91,11 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
                                                                                              prior(priorIn),
                                                                                              forwardModel(forwardModelIn),
                                                                                              noiseDensity(noiseModelIn),
-                                                                                             hessType(pt.get("HessianType","Exact")),
-                                                                                             updateInterval(pt.get("Adapt Interval",0))
-{
-}
-
-
-DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
-                       std::shared_ptr<AbstractSamplingProblem>            problem,
-                       std::shared_ptr<muq::Modeling::GaussianBase> const& priorIn,
-                       std::shared_ptr<muq::Modeling::ModPiece>     const& likelihoodIn) : TransitionKernel(pt,problem),
-                                                                                       lisKernelOpts(pt.get_child(pt.get<std::string>("LIS Block"))),
-                                                                                       csKernelOpts(pt.get_child(pt.get<std::string>("CS Block"))),
-                                                                                       logLikelihood(likelihoodIn),
-                                                                                       prior(priorIn),
-                                                                                       forwardModel(ExtractForwardModel(likelihoodIn)),
-                                                                                       noiseDensity(ExtractNoiseModel(likelihoodIn)),
-                                                                                       hessType(pt.get("HessianType","Exact")),
-                                                                                       updateInterval(pt.get("Adapt Interval",0))
+                                                                                             hessType(pt.get("HessianType","GaussNewton")),
+                                                                                             updateInterval(pt.get("Adapt Interval",-1)),
+                                                                                             adaptStart(pt.get("Adapt Start",1)),
+                                                                                             adaptEnd(pt.get("Adapt End", -1)),
+                                                                                             initialHessSamps(pt.get("Initial Weight",100))
 {
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
@@ -105,10 +105,91 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
   }
 }
 
+DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
+                       std::shared_ptr<AbstractSamplingProblem>            problem,
+                       std::shared_ptr<muq::Modeling::GaussianBase> const& priorIn,
+                       std::shared_ptr<muq::Modeling::ModPiece>     const& noiseModelIn,
+                       std::shared_ptr<muq::Modeling::ModPiece>     const& forwardModelIn,
+                       Eigen::VectorXd                              const& genEigVals,
+                       Eigen::MatrixXd                              const& genEigVecs) : TransitionKernel(pt,problem),
+                                                                                         lisKernelOpts(pt.get_child(pt.get<std::string>("LIS Block"))),
+                                                                                         csKernelOpts(pt.get_child(pt.get<std::string>("CS Block"))),
+                                                                                         logLikelihood(CreateLikelihood(forwardModelIn,noiseModelIn)),
+                                                                                         prior(priorIn),
+                                                                                         forwardModel(forwardModelIn),
+                                                                                         noiseDensity(noiseModelIn),
+                                                                                         hessType(pt.get("HessianType","GaussNewton")),
+                                                                                         updateInterval(pt.get("Adapt Interval",-1)),
+                                                                                         adaptStart(pt.get("Adapt Start",1)),
+                                                                                         adaptEnd(pt.get("Adapt End", -1)),
+                                                                                         initialHessSamps(pt.get("Initial Weight",100))
+{
+  try{
+    std::string blockName = pt.get<std::string>("Eigensolver Block");
+    lobpcgOpts = pt.get_child(blockName);
+  }catch(boost::property_tree::ptree_bad_path){
+    // Do nothing, just leave the solver options ptree empty
+  }
+
+  SetLIS(genEigVals, genEigVecs);
+}
+
+DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
+                       std::shared_ptr<AbstractSamplingProblem>            problem,
+                       std::shared_ptr<muq::Modeling::GaussianBase> const& priorIn,
+                       std::shared_ptr<muq::Modeling::ModPiece>     const& likelihoodIn) : TransitionKernel(pt,problem),
+                                                                                           lisKernelOpts(pt.get_child(pt.get<std::string>("LIS Block"))),
+                                                                                           csKernelOpts(pt.get_child(pt.get<std::string>("CS Block"))),
+                                                                                           logLikelihood(likelihoodIn),
+                                                                                           prior(priorIn),
+                                                                                           forwardModel(ExtractForwardModel(likelihoodIn)),
+                                                                                           noiseDensity(ExtractNoiseModel(likelihoodIn)),
+                                                                                           hessType(pt.get("HessianType","GaussNewton")),
+                                                                                           updateInterval(pt.get("Adapt Interval",-1)),
+                                                                                           adaptStart(pt.get("Adapt Start",1)),
+                                                                                           adaptEnd(pt.get("Adapt End", -1)),
+                                                                                           initialHessSamps(pt.get("Initial Weight",100))
+{
+  try{
+    std::string blockName = pt.get<std::string>("Eigensolver Block");
+    lobpcgOpts = pt.get_child(blockName);
+  }catch(boost::property_tree::ptree_bad_path){
+    // Do nothing, just leave the solver options ptree empty
+  }
+}
+
+DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
+                       std::shared_ptr<AbstractSamplingProblem>            problem,
+                       std::shared_ptr<muq::Modeling::GaussianBase> const& priorIn,
+                       std::shared_ptr<muq::Modeling::ModPiece>     const& likelihoodIn,
+                       Eigen::VectorXd                              const& genEigVals,
+                       Eigen::MatrixXd                              const& genEigVecs) : TransitionKernel(pt,problem),
+                                                                                           lisKernelOpts(pt.get_child(pt.get<std::string>("LIS Block"))),
+                                                                                           csKernelOpts(pt.get_child(pt.get<std::string>("CS Block"))),
+                                                                                           logLikelihood(likelihoodIn),
+                                                                                           prior(priorIn),
+                                                                                           forwardModel(ExtractForwardModel(likelihoodIn)),
+                                                                                           noiseDensity(ExtractNoiseModel(likelihoodIn)),
+                                                                                           hessType(pt.get("HessianType","GaussNewton")),
+                                                                                           updateInterval(pt.get("Adapt Interval",-1)),
+                                                                                           adaptStart(pt.get("Adapt Start",1)),
+                                                                                           adaptEnd(pt.get("Adapt End", -1)),
+                                                                                           initialHessSamps(pt.get("Initial Weight",100))
+{
+  try{
+    std::string blockName = pt.get<std::string>("Eigensolver Block");
+    lobpcgOpts = pt.get_child(blockName);
+  }catch(boost::property_tree::ptree_bad_path){
+    // Do nothing, just leave the solver options ptree empty
+  }
+
+  SetLIS(genEigVals, genEigVecs);
+}
+
 void DILIKernel::PostStep(unsigned int const t,
                           std::vector<std::shared_ptr<SamplingState>> const& state)
 {
-  if((updateInterval>0)&&(t%updateInterval)<=state.size()){
+  if((updateInterval>0)&&((t%updateInterval)<=state.size())&&(t>=adaptStart)&&((t<adaptEnd)||(adaptEnd<0))){
     numLisUpdates++;
     UpdateLIS(numLisUpdates, state.at(state.size()-1)->state);
   }
@@ -153,10 +234,28 @@ std::vector<std::shared_ptr<SamplingState>> DILIKernel::Step(unsigned int const 
 
 void DILIKernel::PrintStatus(std::string prefix) const
 {
-  std::string newPrefix = prefix + " LIS: ";
+  std::stringstream lisStream;
+  lisStream << prefix << " LIS (dim=" << lisU->cols() << "): ";
+  std::string newPrefix = lisStream.str();
   lisKernel->PrintStatus(newPrefix);
   newPrefix = prefix + " CS: ";
   csKernel->PrintStatus(newPrefix);
+}
+
+void DILIKernel::SetLIS(Eigen::VectorXd const& eigVals, Eigen::MatrixXd const& eigVecs)
+{
+  lisU = std::make_shared<Eigen::MatrixXd>(eigVecs);
+  lisEigVals = std::make_shared<Eigen::VectorXd>(eigVals);
+
+  lisW = std::make_shared<Eigen::MatrixXd>(prior->ApplyPrecision(eigVecs));
+
+  Eigen::VectorXd deltaVec = eigVals.array()/(1.0+eigVals.array());
+  Eigen::MatrixXd subCov = eigVecs.transpose() * (*lisW);
+  subCov -= deltaVec.asDiagonal();
+
+  lisL = std::make_shared<Eigen::MatrixXd>(subCov.selfadjointView<Eigen::Lower>().llt().matrixL());
+
+  UpdateKernels();
 }
 
 
@@ -187,18 +286,7 @@ void DILIKernel::CreateLIS(std::vector<Eigen::VectorXd> const& currState)
   LOBPCG solver(lobpcgOpts);
   solver.compute(hessOp, precOp, covOp);
 
-  lisU = std::make_shared<Eigen::MatrixXd>(solver.eigenvectors());
-  lisEigVals = std::make_shared<Eigen::VectorXd>(solver.eigenvalues());
-
-  lisW = std::make_shared<Eigen::MatrixXd>(prior->ApplyPrecision(solver.eigenvectors()));
-
-  Eigen::VectorXd deltaVec = solver.eigenvalues().array()/(1.0+solver.eigenvalues().array());
-  Eigen::MatrixXd subCov = solver.eigenvectors().transpose() * (*lisW);
-  subCov -= deltaVec.asDiagonal();
-
-  lisL = std::make_shared<Eigen::MatrixXd>(subCov.selfadjointView<Eigen::Lower>().llt().matrixL());
-
-  UpdateKernels();
+  SetLIS(solver.eigenvalues(), solver.eigenvectors());
 }
 
 void DILIKernel::UpdateKernels()
@@ -223,7 +311,6 @@ void DILIKernel::UpdateKernels()
 
   auto prob = std::make_shared<SamplingProblem>(graph->CreateModPiece("Posterior"));
 
-
   lisKernelOpts.put("BlockIndex",0);
   lisKernel = TransitionKernel::Construct(lisKernelOpts,prob);
 
@@ -244,12 +331,11 @@ void DILIKernel::UpdateLIS(unsigned int                        numSamps,
     std::cerr << "\nERROR: Unrecognized Hessian type.  Options are \"Exact\" or \"GaussNewton\".\n\n";
   }
 
-  hessOp = std::make_shared<AverageHessian>(numSamps, lisU, lisW, lisEigVals, newOp);
+  hessOp = std::make_shared<AverageHessian>(numSamps+initialHessSamps, lisU, lisW, lisEigVals, newOp);
   precOp = std::make_shared<GaussianOperator>(prior, Gaussian::Precision);
   covOp = std::make_shared<GaussianOperator>(prior, Gaussian::Covariance);
 
   LOBPCG solver(lobpcgOpts);
-  solver.InitializeVectors(*lisU);
   solver.compute(hessOp, precOp, covOp);
 
   lisU = std::make_shared<Eigen::MatrixXd>(solver.eigenvectors());

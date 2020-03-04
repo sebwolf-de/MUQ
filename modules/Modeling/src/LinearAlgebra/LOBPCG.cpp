@@ -221,6 +221,14 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     eigVecs.resize(dim, numEigs);
     eigVecs = RandomGenerator::GetUniform(dim,numEigs);
     eigVals.resize(numEigs);
+
+  }else if(eigVecs.cols()>numEigs){
+    numEigs = eigVecs.cols();
+
+  }else if(eigVecs.cols()<numEigs){
+    unsigned int oldSize = eigVecs.cols();
+    eigVecs.conservativeResize(dim, numEigs);
+    eigVecs.rightCols(numEigs - oldSize) = RandomGenerator::GetUniform(dim,numEigs-oldSize);
   }
 
   // Get an estimate of matrix norms
@@ -281,7 +289,6 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
     }
 
   }
-
 
   int numToKeep;
   for(numToKeep=1; numToKeep<numEigs; ++numToKeep){
@@ -381,6 +388,8 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
 
   for(unsigned it=0; it<maxIts; ++it){
 
+    bool useP = it!=0;
+
     if(consts!=nullptr)
       consts->ApplyInPlace(X);
 
@@ -402,7 +411,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
     for(unsigned int i=0; i<residNorms.size(); ++i){
 
       // Fix a vector if we've converged or haven't improved
-      if((convCrit(i)<solverTol)||(std::abs(convCrit(i)-oldConvCrit(i))<1e-10)){
+      if((convCrit(i)<solverTol)||(std::abs(convCrit(i)-oldConvCrit(i))<1e-14)){
         isActive.at(i) = false;
       }
       numActive += int(isActive.at(i));
@@ -468,16 +477,22 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
 
     AR.leftCols(numActive) = A->Apply(resids.leftCols(numActive));
 
-    if(it!=0){
-      // Orthonormalize P
-      bOrtho.ComputeInPlace(P.leftCols(numActive),BP.leftCols(numActive));
-      AP.leftCols(numActive) = bOrtho.VBV_Chol.triangularView<Eigen::Lower>().solve(AP.leftCols(numActive).transpose()).transpose();
+    if(useP){
 
-      if(B!=nullptr){
-        BP = B->Apply(P);
+      // Orthonormalize P
+      bool success = bOrtho.ComputeInPlace(P.leftCols(numActive),BP.leftCols(numActive));
+      if(!success){
+        useP = false;
       }else{
-        BP = P;
-      }
+
+        AP.leftCols(numActive) = bOrtho.VBV_Chol.triangularView<Eigen::Lower>().solve(AP.leftCols(numActive).transpose()).transpose();
+
+        if(B!=nullptr){
+          BP = B->Apply(P);
+        }else{
+          BP = P;
+        }
+      } // else if(!success)
     }
 
     Eigen::MatrixXd XAR = X.transpose()*AR.leftCols(numActive);
@@ -496,7 +511,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
 
     Eigen::MatrixXd gramA, gramB;
 
-    if(it!=0){
+    if(useP){
       gramA.resize(blockSize+2*numActive,blockSize+2*numActive);
       gramB.resize(blockSize+2*numActive,blockSize+2*numActive);
 
@@ -564,7 +579,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> LOBPCG::ComputeBlock(std::shared_ptr
     Eigen::MatrixXd app = AR.leftCols(numActive)*eigR;
     Eigen::MatrixXd bpp = BR.leftCols(numActive)*eigR;
 
-    if(it!=0){
+    if(useP){
       Eigen::Ref<const Eigen::MatrixXd> eigP = subEigVecs.bottomRows(numActive);
 
       pp  += P.leftCols(numActive)*eigP;
@@ -603,6 +618,9 @@ LOBPCG& LOBPCG::compute(std::shared_ptr<LinearOperator> const& A,
 
 void LOBPCG::InitializeVectors(Eigen::MatrixXd const& X0)
 {
+  if(eigVecs.rows()>0)
+    assert(X0.rows()==eigVecs.rows());
+
   eigVals.resize(X0.cols());
   eigVecs = X0;
 }

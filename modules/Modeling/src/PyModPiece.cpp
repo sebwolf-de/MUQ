@@ -71,5 +71,5 @@ void PyModPiece::ApplyHessianImpl(unsigned int                 const  outputDimW
                                    Eigen::VectorXd              const& sens,
                                    Eigen::VectorXd              const& vec)
 {
-  jacobianAction = ApplyHessianByFD(outputDimWrt, inputDimWrt1, inputDimWrt2, input, sens, vec);
+  hessAction = ApplyHessianByFD(outputDimWrt, inputDimWrt1, inputDimWrt2, input, sens, vec);
 }

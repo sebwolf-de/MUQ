@@ -59,6 +59,29 @@ namespace muq {
              $$
              \bar{H} = \frac{m}{m+1}H_{old} + \frac{1}{m+1}H_{new}
              $$
+             where
+             $$
+             H_{old}u_i = \lambda_i\Gamma^{-1}u_i = \lambda_i L^{-T}L^{-1} u_i
+             $$
+             and
+             $$
+             L^T H_{old} u_i = \lambda_i L^{-1}u_i
+             $$
+             now, with $u_i$ = L v_i$, we have
+             $$
+             L^T H_{old} L v_i = \lambda_i v_i
+             $$
+             which has eigenvalue decomposition
+             $$
+             L^T H_{old} L  = V \Lambda V^T
+             $$
+             and thus
+             $$
+             H_{old} = L^{-T} L^{-1}U\Lambda U^TL^{-T} L^{-1}
+                     = \Gamma^{-1} U \Lambda U^T \Gamma^{-1}
+             $$
+
+
     */
     class AverageHessian : public muq::Modeling::LinearOperator
     {
@@ -86,19 +109,35 @@ namespace muq {
     /**
       @ingroup MCMCKernels
       @class DILIKernel
-      @brief An implementation of the Dimension Independent Sikelihood Informed subspace (DILI) MCMC sampler
-      @details <B>Configuration Parameters:</B>
+      @brief An implementation of the Dimension Independent Likelihood Informed subspace (DILI) MCMC sampler
+      @details
+
+      Cui, T., Law, K. J., & Marzouk, Y. M. (2016). Dimension-independent likelihood-informed MCMC. Journal of Computational Physics, 304, 109-137.
+
+      <B>Configuration Parameters:</B>
 
       Parameter Key | Type | Default Value | Description |
       ------------- | ------------- | ------------- | ------------- |
-      "LIS Kernel"  | String | - | A string pointing to a block of kernel/proposal options for the Likelihood informed subspace. |
-      "CS Kernel"   | String | - | A string pointing to a block of kernel/proposal options for the Complementary space.  Typically this will be a Crank-Nicolson proposal. |
+      "LIS Block"  | String | - | A string pointing to a block of kernel/proposal options for the Likelihood informed subspace. |
+      "CS Block"   | String | - | A string pointing to a block of kernel/proposal options for the Complementary space.  Typically this will be a Crank-Nicolson proposal. |
+      "HessianType" | String | GaussNewton | The type of posterior Hessian to use.  Either "Exact" or "GaussNewton"
+      "Adapt Interval" | int | -1 | How many MCMC steps to take before updating the average Hessian and the likelihood informed subspace.  If negative, the LIS will be fixed to the initial value and will not be udpated. |
+      "Adapt Start" | int | 1 | The number of MCMC steps taken before updating the LIS. |
+      "Adapt End" | int | -1 | No LIS updates will occur after this number of MCMC steps.  If negative, the LIS will continue to be updated until the end of the chain. |
+      "Initial Weight" | int | 100 | "Weight" or number of samples given to the to initial Hessian.  The weight on the previous average Hessian estimate is given by $(N+W)/(N+W+1)$, where $N$ is the number of MCMC steps taken and $W$ is this parameter. |
+      "Eigensolver Block" | String | - | A string pointing to a block of LOBPCG options for solving the generalized eigenvalue problems. |
+
      */
     class DILIKernel : public TransitionKernel {
     public:
 
       DILIKernel(boost::property_tree::ptree       const& pt,
                  std::shared_ptr<AbstractSamplingProblem> problem);
+
+      DILIKernel(boost::property_tree::ptree       const& pt,
+                 std::shared_ptr<AbstractSamplingProblem> problem,
+                 Eigen::VectorXd                   const& genEigVals,
+                 Eigen::MatrixXd                   const& genEigVecs);
 
       DILIKernel(boost::property_tree::ptree                  const& pt,
                  std::shared_ptr<AbstractSamplingProblem>            problem,
@@ -109,7 +148,23 @@ namespace muq {
       DILIKernel(boost::property_tree::ptree                  const& pt,
                  std::shared_ptr<AbstractSamplingProblem>            problem,
                  std::shared_ptr<muq::Modeling::GaussianBase> const& prior,
+                 std::shared_ptr<muq::Modeling::ModPiece>     const& noiseModel,
+                 std::shared_ptr<muq::Modeling::ModPiece>     const& forwardModelIn,
+                 Eigen::VectorXd                              const& genEigVals,
+                 Eigen::MatrixXd                              const& genEigVecs);
+
+
+      DILIKernel(boost::property_tree::ptree                  const& pt,
+                 std::shared_ptr<AbstractSamplingProblem>            problem,
+                 std::shared_ptr<muq::Modeling::GaussianBase> const& prior,
                  std::shared_ptr<muq::Modeling::ModPiece>     const& likelihood);
+
+      DILIKernel(boost::property_tree::ptree                  const& pt,
+                 std::shared_ptr<AbstractSamplingProblem>            problem,
+                 std::shared_ptr<muq::Modeling::GaussianBase> const& prior,
+                 std::shared_ptr<muq::Modeling::ModPiece>     const& likelihood,
+                 Eigen::VectorXd                              const& genEigVals,
+                 Eigen::MatrixXd                              const& genEigVecs);
 
       virtual ~DILIKernel() = default;
 
@@ -145,8 +200,14 @@ namespace muq {
       static std::shared_ptr<muq::Modeling::ModPiece> CreateLikelihood(std::shared_ptr<muq::Modeling::ModPiece> const& forwardModel,
                                                                        std::shared_ptr<muq::Modeling::ModPiece> const& noiseDensity);
 
+      Eigen::MatrixXd const& LISVecs() const{return *lisU;};
+      Eigen::VectorXd const& LISVals() const{return *lisEigVals;};
 
     protected:
+
+      /** Sets up the LIS based on the eigenvalues and eigenvectors solving the problem $Hu = \lambda \Gamma^{-1}u$
+      */
+      void SetLIS(Eigen::VectorXd const& eigVals, Eigen::MatrixXd const& eigVecs);
 
       /** Create the likelihood informed subspace for the first time. */
       void CreateLIS(std::vector<Eigen::VectorXd> const& currState);
@@ -201,7 +262,11 @@ namespace muq {
       // Options for the Generalized eigenvalue solver
       boost::property_tree::ptree lobpcgOpts;
 
-      const unsigned int updateInterval;
+      const int updateInterval;
+      const int adaptStart;
+      const int adaptEnd;
+      const int initialHessSamps;
+
       unsigned int numLisUpdates;
     };
   } // namespace SamplingAlgorithms
