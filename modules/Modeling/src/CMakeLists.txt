@@ -94,6 +94,7 @@ CreateCompileGroup(
     LinearAlgebra/GaussianOperator.cpp
     LinearAlgebra/GaussNewtonOperator.cpp
     LinearAlgebra/LOBPCG.cpp
+    LinearAlgebra/SliceOperator.cpp
     #LinearAlgebra/AnyAlgebra.cpp
     #LinearAlgebra/ScalarAlgebra.cpp
     #LinearAlgebra/EigenVectorAlgebra.cpp
