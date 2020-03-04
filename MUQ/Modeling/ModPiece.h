@@ -450,7 +450,7 @@ namespace muq{
     Eigen::MatrixXd jacobian;
     Eigen::VectorXd hessAction;
 
-    void CheckInputs(ref_vector<Eigen::VectorXd> const& input);
+    void CheckInputs(ref_vector<Eigen::VectorXd> const& input, std::string const& funcName);
 
     virtual void EvaluateImpl(ref_vector<boost::any> const& inputs) override;
 

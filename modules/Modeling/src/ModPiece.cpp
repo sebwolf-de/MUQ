@@ -20,7 +20,7 @@ std::vector<Eigen::VectorXd> const& ModPiece::Evaluate(std::vector<Eigen::Vector
 
 std::vector<Eigen::VectorXd> const& ModPiece::Evaluate(ref_vector<Eigen::VectorXd> const& input)
 {
-  CheckInputs(input);
+  CheckInputs(input,"Evaluate");
 
   numEvalCalls++;
   auto start_time = std::chrono::high_resolution_clock::now();
@@ -47,7 +47,7 @@ Eigen::VectorXd const& ModPiece::Gradient(unsigned int                const  out
                                           ref_vector<Eigen::VectorXd> const& input,
                                           Eigen::VectorXd             const& sensitivity)
 {
-  CheckInputs(input);
+  CheckInputs(input,"Gradient");
 
   numGradCalls++;
   auto start_time = std::chrono::high_resolution_clock::now();
@@ -89,7 +89,7 @@ Eigen::MatrixXd const& ModPiece::Jacobian(unsigned int                const  out
                                           unsigned int                const  inputDimWrt,
                                           ref_vector<Eigen::VectorXd> const& input)
 {
-  CheckInputs(input);
+  CheckInputs(input,"Jacobian");
 
   numJacCalls++;
   auto start_time = std::chrono::high_resolution_clock::now();
@@ -116,7 +116,7 @@ Eigen::VectorXd const& ModPiece::ApplyJacobian(unsigned int                const
                                                ref_vector<Eigen::VectorXd> const& input,
                                                Eigen::VectorXd             const& vec)
 {
-  CheckInputs(input);
+  CheckInputs(input,"ApplyJacobian");
 
   numJacActCalls++;
   auto start_time = std::chrono::high_resolution_clock::now();
@@ -162,11 +162,13 @@ void ModPiece::EvaluateImpl(ref_vector<boost::any> const& inputs){
 // }
 
 
-void ModPiece::CheckInputs(ref_vector<Eigen::VectorXd> const& input)
+void ModPiece::CheckInputs(ref_vector<Eigen::VectorXd> const& input, std::string const& funcName)
 {
   bool errorOccured = false;
 
-  std::string msg = "\nError evaluating ModPiece:\n";
+  std::string className = abi::__cxa_demangle(typeid(*this).name(), NULL, NULL, NULL);
+
+  std::string msg = "\nError evaluating " + className + "::" + funcName + ":\n";
 
   if(input.size() != inputSizes.size()){
     msg += "  - Wrong number of input arguments.  Expected " + std::to_string(inputSizes.size()) + " inputs, but " + std::to_string(input.size()) + " were given.\n";
@@ -269,13 +271,17 @@ Eigen::VectorXd ModPiece::ApplyJacobianByFD(unsigned int                const  o
 {
   numJacActFDCalls++;
 
-  const double eps = std::max(1e-8, 1e-10*vec.norm());
+  const double eps = std::max(1e-4, 1e-8*vec.norm());
 
   ref_vector<Eigen::VectorXd> newInputVec = input;
-  Eigen::VectorXd newInput = input.at(inputDimWrt).get() + eps*vec;
+  Eigen::VectorXd newInput = input.at(inputDimWrt).get() - 0.5*eps*vec;
   newInputVec.at(inputDimWrt) = std::cref(newInput);
 
-  Eigen::VectorXd f0 = Evaluate(input).at(outputDimWrt);
+  Eigen::VectorXd f0 = Evaluate(newInputVec).at(outputDimWrt);
+
+  newInput = input.at(inputDimWrt).get() + 0.5*eps*vec;
+  newInputVec.at(inputDimWrt) = std::cref(newInput);
+
   Eigen::VectorXd f  = Evaluate(newInputVec).at(outputDimWrt);
 
   return (f-f0)/eps;
@@ -325,7 +331,9 @@ void ModPiece::ApplyHessianImpl(unsigned int                const  outWrt,
                                 Eigen::VectorXd             const& sens,
                                 Eigen::VectorXd             const& vec)
 {
+  std::cout << "Just before FD..." << std::endl;
   hessAction = ApplyHessianByFD(outWrt, inWrt1, inWrt2, input, sens, vec);
+  std::cout << "After FD, hessAction = " << hessAction << std::endl;
 }
 
 Eigen::VectorXd ModPiece::ApplyHessianByFD(unsigned int                const  outWrt,
@@ -347,21 +355,29 @@ Eigen::VectorXd ModPiece::ApplyHessianByFD(unsigned int                const  ou
 {
   numHessActFDCalls++;
 
-  const double stepSize = 1e-8 / vec.norm();
-  Eigen::VectorXd grad1 = Gradient(outWrt, inWrt1, input, sens);
-  Eigen::VectorXd grad2;
+  const double stepSize = std::max(1e-4, 1e-8*vec.norm());
+
+  Eigen::VectorXd grad1, grad2;
 
   // If the Hessian is wrt to one of the inputs, not the sensitivity vector
   if(inWrt2<inputSizes.size()){
 
     ref_vector<Eigen::VectorXd> input2 = input;
-    Eigen::VectorXd x2 = input.at(inWrt2).get() + stepSize * vec;
+    Eigen::VectorXd x2 = input.at(inWrt2).get() - 0.5*stepSize * vec;
+    input2.at(inWrt2) = std::cref(x2);
+
+    grad1 = Gradient(outWrt, inWrt1, input2, sens);
+
+    x2 = input.at(inWrt2).get() + 0.5*stepSize * vec;
     input2.at(inWrt2) = std::cref(x2);
     grad2 = Gradient(outWrt, inWrt1, input2, sens);
 
   // Otherwise, we want the Jacobian of the Gradient piece wrt to the sensitivity vector
   }else{
-    Eigen::VectorXd sens2 = sens + stepSize * vec;
+    Eigen::VectorXd sens2 = sens - 0.5*stepSize * vec;
+    grad1 = Gradient(outWrt, inWrt1, input, sens2);
+
+    sens2 = sens + 0.5*stepSize * vec;
     grad2 = Gradient(outWrt, inWrt1, input, sens2);
   }
 
