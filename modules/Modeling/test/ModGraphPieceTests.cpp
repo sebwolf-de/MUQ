@@ -12,6 +12,8 @@
 #include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
 #include "MUQ/Modeling/Distributions/DensityProduct.h"
 #include "MUQ/Modeling/CwiseOperators/CwiseUnaryOperator.h"
+#include "MUQ/Modeling/SplitVector.h"
+#include "MUQ/Modeling/SumPiece.h"
 
 #include "WorkPieceTestClasses.h"
 
@@ -259,6 +261,42 @@ TEST(Modeling_ModGraphPiece, BasicTest)
   EXPECT_NEAR(jacAct(0), jacAct2(0), 5e-8);
   EXPECT_NEAR(jacAct(1), jacAct2(1), 5e-8);
 
+}
+
+TEST(Modeling_ModGraphPiece, MultiSplit)
+{
+  auto myGraph = make_shared<WorkGraph>();
+
+  // add nodes
+  myGraph->AddNode(std::make_shared<IdentityOperator>(4), "x");
+  myGraph->AddNode(std::make_shared<SplitVector>(Eigen::Vector2i{0,2}, Eigen::Vector2i{2,2}, 4), "x1,x2");
+  myGraph->AddNode(std::make_shared<ExpOperator>(2), "exp(x1)");
+  myGraph->AddNode(std::make_shared<ExpOperator>(2), "exp(x2)");
+  myGraph->AddNode(std::make_shared<CosOperator>(2), "cos(x1)");
+  myGraph->AddNode(std::make_shared<CosOperator>(2), "cos(x2)");
+  myGraph->AddNode(std::make_shared<SumPiece>(2,4), "sum");
+
+  // add connectivity
+  myGraph->AddEdge("x", 0, "x1,x2", 0);
+  myGraph->AddEdge("x1,x2", 0, "exp(x1)", 0);
+  myGraph->AddEdge("x1,x2", 0, "cos(x1)", 0);
+  myGraph->AddEdge("x1,x2", 1, "exp(x2)", 0);
+  myGraph->AddEdge("x1,x2", 1, "cos(x2)", 0);
+  myGraph->AddEdge("exp(x1)",0,"sum",0);
+  myGraph->AddEdge("cos(x1)",0,"sum",1);
+  myGraph->AddEdge("exp(x2)",0,"sum",2);
+  myGraph->AddEdge("cos(x2)",0,"sum",3);
+
+  auto graphMod = myGraph->CreateModPiece("sum");
+  auto gradPiece = graphMod->GradientGraph(0,0);
+  auto jacPiece = graphMod->JacobianGraph(0,0);
+
+  EXPECT_EQ(1, graphMod->inputSizes.size());
+  EXPECT_EQ(4, graphMod->inputSizes(0));
+  EXPECT_EQ(2, graphMod->outputSizes(0));
+
+
+  gradPiece->GetGraph()->Visualize("MulitSplitGraph.pdf");
 }
 
 

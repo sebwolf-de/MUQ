@@ -113,6 +113,7 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
     assert(piece);
 
     // outEdges stores information about where information for each output of this piece goes
+    // outEdges[node output index][edge index]
     std::vector<std::vector<std::pair<boost::graph_traits<boost::filtered_graph<Graph, DependentEdgePredicate, DependentPredicate>>::vertex_descriptor, unsigned int>>> outEdges(piece->outputSizes.size()); // Pairs are node name and input id.
     for(auto eout = out_edges(node, filtGraph); eout.first!=eout.second; ++eout.first){
       auto target = boost::target(*eout.first, filtGraph);
@@ -171,9 +172,9 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
           // Get the total number of gradient pieces that might be flowing into this sum
           unsigned int edgeCount = 0;
           for(unsigned int i = 0; i<outEdges.at(outInd).size(); ++i){
-            for(auto es=out_edges(outEdges.at(outInd).at(i).first, filtGraph); es.first!=es.second; ++es.first){
-              edgeCount++;
-            }
+            auto mod = std::dynamic_pointer_cast<ModPiece>(wgraph->graph[outEdges.at(outInd).at(i).first]->piece);
+            assert(mod);
+            edgeCount += mod->outputSizes.size();
           }
 
           // If there is more than one downstream node, we need to add up their sensitivities to this node
@@ -187,19 +188,19 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
             unsigned int edgeInd = 0;
             for(unsigned int i = 0; i<outEdges.at(outInd).size(); ++i){
               auto nextNode = filtGraph[outEdges.at(outInd).at(i).first];
+              auto nextMod = std::dynamic_pointer_cast<ModPiece>(nextNode->piece);
+              int nextNumOutputs = nextMod->outputSizes.size();
 
-              for(auto es=out_edges(outEdges.at(outInd).at(i).first, filtGraph); es.first!=es.second; ++es.first){
+              for(unsigned int nextOutInd=0; nextOutInd<nextNumOutputs; ++nextOutInd){
                 std::stringstream otherNodeName;
-                otherNodeName << nextNode->name << "_Gradient[" << filtGraph[*es.first]->outputDim << "," << outEdges.at(outInd).at(i).second << "]";
+                otherNodeName << nextNode->name << "_Gradient[" << nextOutInd << "," << outEdges.at(outInd).at(i).second << "]";
                 gradGraph.AddEdge(otherNodeName.str(),0, sumName.str(), edgeInd);
                 edgeInd++;
               }
-
-              std::stringstream gradName;
-              gradName << baseName + "_Gradient[" << outInd << "," << inDim << "]";
-              gradGraph.AddEdge(sumName.str(), 0, gradName.str(), piece->outputSizes.size());
             }
 
+            // Connect the SensitivitySum to the gradient pice
+            gradGraph.AddEdge(sumName.str(), 0, nodeName.str(), gradPiece->inputSizes.size()-1);
 
 
           }else if(outEdges.at(outInd).size()>0){ // There is only one edge flowing into the gradient
