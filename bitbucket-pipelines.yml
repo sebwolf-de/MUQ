@@ -20,7 +20,7 @@ pipelines:
           # Build muq
           - cd $BITBUCKET_CLONE_DIR
           - cd build
-          - cmake -DCMAKE_CXX_COMPILER=mpicxx -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON ..
+          - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON ..
           - make
           - make examples
           - make install
@@ -99,7 +99,7 @@ pipelines:
               # Build muq
               - cd $BITBUCKET_CLONE_DIR
               - cd build
-              - cmake -DCMAKE_CXX_COMPILER=mpicxx -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON -DPYBIND11_PYTHON_VERSION=2 ..
+              - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON -DPYBIND11_PYTHON_VERSION=2 ..
               - make
               - make examples
               - make install
