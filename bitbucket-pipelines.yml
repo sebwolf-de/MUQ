@@ -1,0 +1,130 @@
+image: debian:latest
+
+pipelines:
+  default:
+
+    - step:
+          name: clang-external-dep
+          script:
+            - apt-get update
+            - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev
+
+
+            # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
+            - cd /usr/src/gtest
+            - cmake CMakeLists.txt
+            - make
+            - cp *.a /usr/lib
+
+
+            # Build muq
+            - cd $BITBUCKET_CLONE_DIR
+            - cd build
+            - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON ..
+            - make
+            - make examples
+            - make install
+            - ./RunAllTests
+      
+      
+  custom:
+    weekly-build:
+      - parallel:
+        - step:
+            name: gcc-external-dep
+            script:
+              - apt-get update
+              - apt-get install -y cmake libgtest-dev g++ libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev
+
+
+              # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
+              - cd /usr/src/gtest
+              - cmake CMakeLists.txt
+              - make
+              - cp *.a /usr/lib
+
+
+              # Build muq
+              - cd $BITBUCKET_CLONE_DIR
+              - cd build
+              - cmake -DMUQ_USE_GTEST=ON ..
+              - make
+              - make examples
+              - make install
+              - ./RunAllTests
+
+
+        - step:
+            name: clang-internal-dep
+            script:
+              - apt-get update
+              - apt-get install -y cmake libgtest-dev clang
+
+
+              # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
+              - cd /usr/src/gtest
+              - cmake CMakeLists.txt
+              - make
+              - cp *.a /usr/lib
+
+
+              # Build muq
+              - cd $BITBUCKET_CLONE_DIR
+              - cd build
+              - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON ..
+              - make
+              - make examples
+              - make install
+              - ./RunAllTests
+
+
+
+        - step:
+              name: ubuntu-LTS
+              image: ubuntu:latest
+              script:
+                - apt-get update
+                - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev
+
+
+                # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
+                - cd /usr/src/gtest
+                - cmake CMakeLists.txt
+                - make
+                - cp *.a /usr/lib
+
+
+                # Build muq
+                - cd $BITBUCKET_CLONE_DIR
+                - cd build
+                - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON ..
+                - make
+                - make examples
+                - make install
+                - ./RunAllTests
+
+
+
+        - step:
+              name: ubuntu-latest-release
+              image: ubuntu:rolling
+              script:
+                - apt-get update
+                - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev
+
+
+                # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
+                - cd /usr/src/gtest
+                - cmake CMakeLists.txt
+                - make
+                - cp *.a /usr/lib
+
+
+                # Build muq
+                - cd $BITBUCKET_CLONE_DIR
+                - cd build
+                - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON ..
+                - make
+                - make examples
+                - make install
+                - ./RunAllTests
