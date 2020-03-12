@@ -80,6 +80,30 @@ pipelines:
 
 
         - step:
+            name: gcc-mpi
+            script:
+              - apt-get update
+              - apt-get install -y cmake libgtest-dev g++ libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev libopenmpi-dev openmpi-bin
+
+
+              # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
+              - cd /usr/src/gtest
+              - cmake CMakeLists.txt
+              - make
+              - cp *.a /usr/lib
+
+
+              # Build muq
+              - cd $BITBUCKET_CLONE_DIR
+              - cd build
+              - cmake -DCMAKE_CXX_COMPILER=mpicxx -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON ..
+              - make
+              - make examples
+              - make install
+              - ./RunAllTests
+
+
+        - step:
               name: ubuntu-LTS
               image: ubuntu:latest
               script:
