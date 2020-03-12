@@ -110,7 +110,8 @@ pipelines:
               image: ubuntu:rolling
               script:
                 - apt-get update
-                - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev
+                # We should pre-install sundials. However, its dependency petsc-dev is uninstallably broken in ubuntu 19.10 :/
+                - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev #libsundials-dev
 
 
                 # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
