@@ -1,4 +1,4 @@
-set(STANMATH_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/external/stanmath/src/STANMATH/")
+set(STANMATH_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/external/stanmath/src/STANMATH")
 
 
 include(ExternalProject)
