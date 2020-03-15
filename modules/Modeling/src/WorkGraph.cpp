@@ -637,7 +637,12 @@ std::shared_ptr<ModGraphPiece> WorkGraph::CreateModPiece(std::string const& node
 
   for( unsigned int i=0; i<inputs.size(); ++i ) { // loop over each input
     // create a constant WorkPiece to hold the input (it is empty for now) and add it to the new graph
+    assert(newGraph->graph[inputs.at(i).first]->piece);
     auto modIn = std::dynamic_pointer_cast<ModPiece>(newGraph->graph[inputs.at(i).first]->piece);
+    if(!modIn){
+      std::cerr << "\nERROR: Could not cast node \"" << newGraph->graph[inputs.at(i).first]->name << "\" to a ModPiece." << std::endl << std::endl;
+      assert(modIn);
+    }
     assert(modIn);
 
     constantPieces.at(i) = std::make_shared<ConstantVector>(Eigen::VectorXd::Zero(modIn->inputSizes(inputs.at(i).second)));

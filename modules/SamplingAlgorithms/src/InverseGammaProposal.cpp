@@ -19,16 +19,16 @@ REGISTER_MCMC_PROPOSAL(InverseGammaProposal)
 
 InverseGammaProposal::InverseGammaProposal(pt::ptree                         const& pt,
                                            std::shared_ptr<AbstractSamplingProblem> prob) : MCMCProposal(pt,prob),
-                                                                                            alpha(ExtractAlpha(prob, pt.get<std::string>("InverseGammaNode"))),
-                                                                                            beta(ExtractBeta(prob, pt.get<std::string>("InverseGammaNode"))),
-                                                                                            gaussBlock(ExtractGaussInd(prob, pt.get<std::string>("GaussianNode"))),
-                                                                                            gaussMean(ExtractMean(prob, pt.get<std::string>("GaussianNode"))) {
+                                                                                            alpha(ExtractAlpha(prob,pt.get<std::string>("InverseGammaNode"))),
+                                                                                            beta(ExtractBeta(prob,pt.get<std::string>("InverseGammaNode"))),
+                                                                                            gaussBlock(ExtractGaussInd(prob,pt.get<std::string>("GaussianNode"))),
+                                                                                            gaussMean(ExtractMean(prob,pt.get<std::string>("GaussianNode"))) {
   unsigned int problemDim = prob->blockSizes(blockInd);
   if(problemDim != 1)
     throw muq::WrongSizeError("The InverseGammaProposal is only defined for a block of size 1.");
 }
 
-std::shared_ptr<SamplingState> InverseGammaProposal::Sample(std::shared_ptr<SamplingState> currentState) {
+std::shared_ptr<SamplingState> InverseGammaProposal::Sample(std::shared_ptr<SamplingState> const& currentState) {
 
 
   // the mean of the proposal is the current point
@@ -43,8 +43,8 @@ std::shared_ptr<SamplingState> InverseGammaProposal::Sample(std::shared_ptr<Samp
   return std::make_shared<SamplingState>(props, 1.0);
 }
 
-double InverseGammaProposal::LogDensity(std::shared_ptr<SamplingState> currState,
-                                        std::shared_ptr<SamplingState> propState) {
+double InverseGammaProposal::LogDensity(std::shared_ptr<SamplingState> const& currState,
+                                        std::shared_ptr<SamplingState> const& propState) {
 
   Eigen::VectorXd const& gaussState = currState->state.at(gaussBlock);
   Eigen::VectorXd const& sigmaState = propState->state.at(blockInd);

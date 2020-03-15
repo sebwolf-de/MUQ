@@ -30,6 +30,8 @@ CreateCompileGroup(
     PyModPiece.cpp
 
     ModPiece.cpp
+    GradientPiece.cpp
+    JacobianPiece.cpp
     ModGraphPiece.cpp
     WorkGraphPiece.cpp
     LinearSDE.cpp
@@ -46,6 +48,7 @@ CreateCompileGroup(
     MultiLogisticLikelihood.cpp
 
     ReplicateOperator.cpp
+    SumPiece.cpp
 
     LinearSDE.cpp
 
@@ -87,7 +90,11 @@ CreateCompileGroup(
     LinearAlgebra/DiagonalOperator.cpp
     LinearAlgebra/ProductOperator.cpp
     LinearAlgebra/AffineOperator.cpp
-    
+    LinearAlgebra/HessianOperator.cpp
+    LinearAlgebra/GaussianOperator.cpp
+    LinearAlgebra/GaussNewtonOperator.cpp
+    LinearAlgebra/LOBPCG.cpp
+    LinearAlgebra/SliceOperator.cpp
     #LinearAlgebra/AnyAlgebra.cpp
     #LinearAlgebra/ScalarAlgebra.cpp
     #LinearAlgebra/EigenVectorAlgebra.cpp

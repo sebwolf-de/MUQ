@@ -24,11 +24,10 @@ namespace muq {
       virtual ~SamplingProblem() = default;
 
 
-      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> const& state, AbstractSamplingProblem::SampleType type) override;
+      virtual double LogDensity(std::shared_ptr<SamplingState> const& state) override;
 
       virtual Eigen::VectorXd GradLogDensity(std::shared_ptr<SamplingState> const& state,
-                                             unsigned                       blockWrt);
-
+                                             unsigned                       const  blockWrt) override;
 
       std::shared_ptr<muq::Modeling::ModPiece> GetDistribution(){return target;};
 
