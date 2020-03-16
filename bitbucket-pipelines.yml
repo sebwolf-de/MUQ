@@ -61,7 +61,7 @@ pipelines:
             name: clang-internal-dep
             script:
               - apt-get update
-              - apt-get install -y cmake libgtest-dev clang python-dev pybind11-dev
+              - apt-get install -y cmake libgtest-dev clang python-dev
 
 
               # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
