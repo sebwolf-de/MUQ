@@ -21,7 +21,7 @@ else(MUQ_USE_MPI)
 endif(MUQ_USE_MPI)
 
 set(CMAKE_CXX_FLAGS_DEBUG  "-O0") #-O0 works better for memcheck
-set(CMAKE_CXX_FLAGS_RELEASE  "-O3") #full optimization with debug symbols for profiling
+set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -msse4 -mavx") #full optimization with debug symbols for profiling
 
 set(CMAKE_CXX_FLAGS "-g")
 

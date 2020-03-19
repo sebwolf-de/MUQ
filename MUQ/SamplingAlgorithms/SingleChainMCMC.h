@@ -77,7 +77,9 @@ namespace muq{
 
     protected:
 
-      std::shared_ptr<SamplingState> SaveSamples(std::vector<std::shared_ptr<SamplingState> > const& newStates, std::shared_ptr<SamplingState>& lastSavedState, unsigned int& sampNum) const;
+      std::shared_ptr<SamplingState> SaveSamples(std::vector<std::shared_ptr<SamplingState> > const& newStates,
+                                                 std::shared_ptr<SamplingState>                    & lastSavedState,
+                                                 unsigned int                                      & sampNum) const;
 
       bool ShouldSave(unsigned int const sampNum) const;
 
@@ -116,6 +118,7 @@ namespace muq{
                  std::vector<std::shared_ptr<TransitionKernel>> const& kernelsIn);
 
       void Setup(boost::property_tree::ptree pt, std::shared_ptr<AbstractSamplingProblem> const& problem);
+
     }; // class SingleChainMCMC
   } // namespace SamplingAlgorithms
 } // namespace muq

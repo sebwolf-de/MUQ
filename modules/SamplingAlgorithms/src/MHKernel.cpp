@@ -13,8 +13,7 @@ using namespace muq::SamplingAlgorithms;
 
 REGISTER_TRANSITION_KERNEL(MHKernel)
 
-MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : TransitionKernel(pt, problem),
-                                                                                            reeval(pt.get<bool>("ReevaluateAcceptedDensity", false))
+MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : TransitionKernel(pt, problem)
 {
 
   // Extract the proposal parts from the ptree
@@ -31,15 +30,8 @@ MHKernel::MHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem>
 MHKernel::MHKernel(pt::ptree const& pt,
                    std::shared_ptr<AbstractSamplingProblem> problem,
                    std::shared_ptr<MCMCProposal> proposalIn) : TransitionKernel(pt, problem),
-                                                               proposal(proposalIn),
-                                                               reeval(pt.get<bool>("ReevaluateAcceptedDensity", false)) {}
+                                                               proposal(proposalIn) {}
 
-#if MUQ_HAS_PARCER
-void MHKernel::SetCommunicator(std::shared_ptr<parcer::Communicator> newcomm) {
-  comm = newcomm;
-  proposal->SetCommunicator(newcomm);
-}
-#endif
 
 void MHKernel::PostStep(unsigned int const t, std::vector<std::shared_ptr<SamplingState>> const& state){
   proposal->Adapt(t,state);
@@ -52,6 +44,11 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   // propose a new point
   std::shared_ptr<SamplingState> prop = proposal->Sample(prevState);
 
+  // The following metadata is needed by the expensive sampling problem
+  if(prevState->HasMeta("iteration"))
+    prop->meta["iteration"] = prevState->meta["iteration"];
+  prop->meta["IsProposal"] = true;
+
   // compute acceptance probability
   double propTarget;
   double currentTarget;
@@ -59,14 +56,14 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   if( prevState->HasMeta("LogTarget") && !reeval ){
     currentTarget = AnyCast( prevState->meta["LogTarget"]);
   }else{
-    currentTarget = problem->LogDensity(t, prevState, AbstractSamplingProblem::SampleType::Accepted);
+    currentTarget = problem->LogDensity(prevState);
     if (problem->numBlocksQOI > 0) {
       prevState->meta["QOI"] = problem->QOI();
     }
     prevState->meta["LogTarget"] = currentTarget;
   }
 
-  propTarget = problem->LogDensity(t, prop, AbstractSamplingProblem::SampleType::Proposed);
+  propTarget = problem->LogDensity(prop);
   prop->meta["LogTarget"] = propTarget;
 
   // Aceptance probability
@@ -81,6 +78,8 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
       prop->meta["QOI"] = problem->QOI();
     }
     numAccepts++;
+
+    prop->meta["IsProposal"] = false;
     return std::vector<std::shared_ptr<SamplingState>>(1, prop);
   } else {
     return std::vector<std::shared_ptr<SamplingState>>(1, prevState);

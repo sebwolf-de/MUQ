@@ -1,14 +1,16 @@
 cmake_minimum_required (VERSION 2.8)
 
-find_package(MUQ_PRIVATE REQUIRED)
+project(MultiindexGaussian)
 
-include_directories(${MUQ_INCLUDE_DIRS})
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR) # Only look for MUQ when building example as standalone project
+  find_package(MUQ REQUIRED)
 
-set(CMAKE_CXX_FLAGS ${MUQ_CXX_FLAGS})
-set(CMAKE_CXX_COMPILER ${MUQ_CXX_COMPILER})
+  include_directories(${MUQ_INCLUDE_DIRS})
 
-message("${MUQ_INCLUDE_DIRS}")
-message("${MUQ_LIBRARIES}")
+  set(CMAKE_CXX_FLAGS ${MUQ_CXX_FLAGS})
+  set(CMAKE_CXX_COMPILER ${MUQ_CXX_COMPILER})
+endif()
+
 
 add_executable(MultiindexGaussianSampling MultiindexGaussianSampling.cpp)
 target_link_libraries(MultiindexGaussianSampling ${MUQ_LIBRARIES} ${MUQ_LINK_LIBRARIES})
