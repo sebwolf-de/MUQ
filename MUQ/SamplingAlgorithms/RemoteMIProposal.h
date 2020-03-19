@@ -29,7 +29,7 @@ namespace muq {
 			{
 			}
 
-			std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> currentState) {
+			std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> const& currentState) {
 
 				int remoteRank = phonebookClient->Query(remoteIndex);
 
@@ -43,8 +43,8 @@ namespace muq {
 				return proposal;
 			}
 
-			double LogDensity(std::shared_ptr<SamplingState> currState,
-			                  std::shared_ptr<SamplingState> propState) {
+			double LogDensity(std::shared_ptr<SamplingState> const& currState,
+                        std::shared_ptr<SamplingState> const& propState) {
 				return 0;
 			}
 

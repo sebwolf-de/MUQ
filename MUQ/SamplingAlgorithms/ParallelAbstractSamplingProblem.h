@@ -28,7 +28,7 @@ namespace muq {
 
       virtual ~ParallelAbstractSamplingProblem() = default;
 
-      virtual double LogDensity(unsigned int const t, std::shared_ptr<SamplingState> const& state, AbstractSamplingProblem::SampleType type) override {
+      virtual double LogDensity(std::shared_ptr<SamplingState> const& state) override {
 
         if (comm->GetRank() == 0) {
           for (int dest = 1; dest < comm->GetSize(); dest++) {
@@ -38,7 +38,7 @@ namespace muq {
           }
         }
 
-        return abstractSamplingProblem->LogDensity(t, state, type);
+        return abstractSamplingProblem->LogDensity(state);
       }
 
       virtual std::shared_ptr<SamplingState> QOI() override {

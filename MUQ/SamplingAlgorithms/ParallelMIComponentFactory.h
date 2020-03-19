@@ -45,7 +45,7 @@ namespace muq {
             else if (command == ControlFlag::LOGDENSITY) {
               int id = comm->Recv<int>(0, WorkgroupTag);
               auto state = std::make_shared<SamplingState>(comm->Recv<Eigen::VectorXd>(0, WorkgroupTag));
-              samplingProblems[id]->LogDensity(0.0, state, AbstractSamplingProblem::SampleType::Proposed); // TODO: Correct arguments!
+              samplingProblems[id]->LogDensity(state);
             }
             else if (command == ControlFlag::TEST) {
               int id = comm->Recv<int>(0, WorkgroupTag);
