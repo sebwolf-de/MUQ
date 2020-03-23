@@ -11,6 +11,8 @@
 #include <sundials/sundials_math.h>  // contains the macros ABS, SQR, and EXP
 #include <sundials/sundials_direct.h>
 
+#include <math.h>
+
 #if MUQ_HAS_PARCER==1
 #include <nvector/nvector_parallel.h>
 #include <parcer/Eigen.h>
