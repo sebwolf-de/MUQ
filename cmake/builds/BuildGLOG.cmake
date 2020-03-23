@@ -6,7 +6,7 @@ if(DEFINED GLOG_EXTERNAL_SOURCE)
   	  GLOG
                     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/glog
                     URL ${GLOG_EXTERNAL_SOURCE}
-                    CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/external/glog/src/GLOG/configure CC=${CMAKE_C_COMPILER} CXX=${MUQ_CXX_COMPILER} CXXFLAGS=${CMAKE_CXX_FLAGS} --prefix=${GLOG_INSTALL_DIR}
+                    CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/external/glog/src/GLOG/configure CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CXXFLAGS=${CMAKE_CXX_FLAGS} --prefix=${GLOG_INSTALL_DIR}
                     BUILD_COMMAND make
                     BUILD_IN_SOURCE 1
                     INSTALL_COMMAND make install
@@ -16,7 +16,7 @@ else()
   	  GLOG
                     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/glog
                     SVN_REPOSITORY http://google-glog.googlecode.com/svn/trunk/
-                    CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/external/glog/src/GLOG/configure CC=${CMAKE_C_COMPILER} CXX=${MUQ_CXX_COMPILER} CXXFLAGS=${CMAKE_CXX_FLAGS} --prefix=${GLOG_INSTALL_DIR}
+                    CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/external/glog/src/GLOG/configure CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CXXFLAGS=${CMAKE_CXX_FLAGS} --prefix=${GLOG_INSTALL_DIR}
                     BUILD_COMMAND make
                     BUILD_IN_SOURCE 1
                     INSTALL_COMMAND make install
