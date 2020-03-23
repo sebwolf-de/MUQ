@@ -99,7 +99,7 @@ void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
     .def("ApplyHessian", (Eigen::VectorXd (ModPiece::*)(unsigned int, unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&, Eigen::VectorXd const&)) &ModPiece::ApplyHessian)
     .def("ApplyHessianByFD", (Eigen::VectorXd (ModPiece::*)(unsigned int, unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&, Eigen::VectorXd const&)) &ModPiece::ApplyHessianByFD);
 
-  py::class_<PyModPiece, PyModPieceTramp, ModPiece, std::shared_ptr<PyModPiece>> pymp(m, "PyModPiece");
+  py::class_<PyModPiece, PyModPieceTramp, ModPiece, WorkPiece, std::shared_ptr<PyModPiece> > pymp(m, "PyModPiece");
   pymp
     .def(py::init<Eigen::VectorXi const&, Eigen::VectorXi const&>())
     .def("EvaluateImpl", (void (PyModPiece::*)(std::vector<Eigen::VectorXd> const&)) &Publicist::EvaluateImpl)

@@ -482,9 +482,22 @@ std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) c
     // get the output values for this node
     const std::vector<boost::any>& outputs = GetConstantOutputs(nameOut);
 
+    // check to see if this could be a ModPiece
+    bool isModPiece = true;
+    for( const auto& out : outputs ) {
+      if( typeid(Eigen::VectorXd)!=out.type() ) {
+        isModPiece = false;
+        break;
+      }
+    }
+
     // create a ConstantPiece node for this input
     auto nextV = boost::add_vertex(newGraph->graph);
-    newGraph->graph[nextV] = std::make_shared<WorkGraphNode>(std::make_shared<ConstantPiece>(outputs), graph[*oldV]->name+"_fixed");
+    if( isModPiece ) {
+      newGraph->graph[nextV] = std::make_shared<WorkGraphNode>(std::make_shared<ConstantVector>(outputs), graph[*oldV]->name+"_fixed");
+    } else {
+      newGraph->graph[nextV] = std::make_shared<WorkGraphNode>(std::make_shared<ConstantPiece>(outputs), graph[*oldV]->name+"_fixed");
+    }
 
     // return a graph with only one (constant node)
     return newGraph;
@@ -661,8 +674,16 @@ std::shared_ptr<ModGraphPiece> WorkGraph::CreateModPiece(std::string const& node
       assert(outNode != vertices(newGraph->graph).second);
   }
 
-  //return std::make_shared<WorkGraphPiece>(newGraph->graph, constantPieces, inputName, inTypes, newGraph->graph[*outNode]->piece);
-  return std::make_shared<ModGraphPiece>(newGraph, constantPieces, inputNames, std::dynamic_pointer_cast<ModPiece>(newGraph->graph[*outNode]->piece));
+  assert(newGraph->graph[*outNode]->piece);
+
+  // check the output ModPiece
+  auto outmod = std::dynamic_pointer_cast<ModPiece>(newGraph->graph[*outNode]->piece);
+  if( !outmod ) {
+    std::cerr << std::endl << "ERROR: Cannot cast output node " <<  node << " into a ModPiece" << std::endl << std::endl;
+    assert(outmod);
+  }
+
+  return std::make_shared<ModGraphPiece>(newGraph, constantPieces, inputNames, outmod);
 }
 
 /** Print the nodes and edges of this graph to std::cout. */
