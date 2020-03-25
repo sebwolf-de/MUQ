@@ -24,13 +24,13 @@ protected:
       weights /= weights.sum();
 
       for(int i=0; i<numSamps; ++i) {
-	auto state = std::make_shared<SamplingState>(Eigen::VectorXd(samps.col(i)), weights(i));
-	state->meta["id"] = i;
-	state->meta["x norm"] = samps.col(i).norm();
-	state->meta["vec2"] = (Eigen::Vector2d)(i*Eigen::Vector2d::Ones());
-	state->meta["vec3"] = (Eigen::Vector3d)(i*Eigen::Vector3d::Ones());
-	state->meta["vec4"] = (Eigen::Vector4d)(i*Eigen::Vector4d::Ones());
-	state->meta["vecX"] = (Eigen::VectorXd)(i*Eigen::VectorXd::Ones(5));
+      	auto state = std::make_shared<SamplingState>(Eigen::VectorXd(samps.col(i)), weights(i));
+      	state->meta["id"] = i;
+      	state->meta["x norm"] = samps.col(i).norm();
+      	state->meta["vec2"] = (Eigen::Vector2d)(i*Eigen::Vector2d::Ones());
+      	state->meta["vec3"] = (Eigen::Vector3d)(i*Eigen::Vector3d::Ones());
+      	state->meta["vec4"] = (Eigen::VectorXd)(i*Eigen::VectorXd::Ones(4));
+      	state->meta["vecX"] = (Eigen::VectorXd)(i*Eigen::VectorXd::Ones(5));
 
         collection.Add(state);
       }
