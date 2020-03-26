@@ -181,7 +181,7 @@ TEST(MCMC, DILIKernel_ManualConstruction) {
 
     // Estimator variance
     double estVar = trueCov(i,i)/ess(i);
-    EXPECT_NEAR(trueMean(i), sampMean(i), 3.0*std::sqrt(estVar));
+    EXPECT_NEAR(trueMean(i), sampMean(i), 4.0*std::sqrt(estVar));
   }
 }
 
