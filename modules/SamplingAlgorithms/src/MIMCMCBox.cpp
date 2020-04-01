@@ -9,6 +9,7 @@ namespace muq {
     {
       pt::ptree ptChains;
       ptChains.put("NumSamples", 1e4); // number of MCMC steps
+      ptChains.put("PrintLevel", 0);
       pt::ptree ptBlockID;
       ptBlockID.put("BlockIndex",0);
 
@@ -97,7 +98,8 @@ namespace muq {
       for (int i = 0; i < boxIndices->Size(); i++) {
         std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
         auto chain = boxChains[boxIndices->MultiToIndex(boxIndex)];
-        chain->Sample();
+        chain->AddNumSamps(1);
+        chain->Run();
       }
     }
 
