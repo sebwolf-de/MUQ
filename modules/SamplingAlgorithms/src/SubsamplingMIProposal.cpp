@@ -11,7 +11,8 @@ namespace muq {
 
       sampleID += subsampling;
       while (coarseChain->GetSamples()->size() <= sampleID) {
-        coarseChain->Sample();
+        coarseChain->AddNumSamps(1);
+        coarseChain->Run();
       }
 
       return coarseChain->GetSamples()->at(sampleID);

@@ -65,8 +65,6 @@ namespace muq{
 
       virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
 
-      virtual void Sample();
-
       virtual double TotalTime() { return totalTime; }
 
       /** When the Run method is called, the Sample() method is called until the
@@ -102,6 +100,8 @@ namespace muq{
       virtual unsigned int NumSamps() const{return numSamps;};
 
     protected:
+
+      virtual void Sample();
 
       std::shared_ptr<SamplingState> SaveSamples(std::vector<std::shared_ptr<SamplingState> > const& newStates,
                                                  std::shared_ptr<SamplingState>                    & lastSavedState,
