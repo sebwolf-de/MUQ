@@ -25,8 +25,7 @@ ModGraphPiece::ModGraphPiece(std::shared_ptr<WorkGraph>                         
                                                                                                  wgraph(graph),
                                                                                                  outputID(outputPieceIn->ID()),
                                                                                                  outputPiece(outputPieceIn),
-                                                                                                 constantPieces(constantPiecesIn) {
-
+                                                                                                 constantPieces(constantPiecesIn)  {                                           
   // build the run order
   assert(graph);
   boost::topological_sort(wgraph->graph, std::front_inserter(runOrder));
