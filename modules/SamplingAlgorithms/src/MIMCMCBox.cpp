@@ -8,7 +8,7 @@ namespace muq {
     boxHighestIndex(boxHighestIndex)
     {
       pt::ptree ptChains;
-      ptChains.put("NumSamples", 1e4); // number of MCMC steps
+      ptChains.put("NumSamples", 0); // number of MCMC steps
       ptChains.put("PrintLevel", 0);
       pt::ptree ptBlockID;
       ptBlockID.put("BlockIndex",0);
