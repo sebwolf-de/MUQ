@@ -47,9 +47,10 @@ namespace muq {
 
       Eigen::VectorXd MeanQOI();
 
+      Eigen::VectorXd MeanParam();
+
       void Draw(bool drawSamples = true);
 
-    protected:
       virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
 
     private:

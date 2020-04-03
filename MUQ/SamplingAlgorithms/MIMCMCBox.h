@@ -32,6 +32,8 @@ namespace muq {
 
       void Sample();
 
+      Eigen::VectorXd MeanParam();
+
       Eigen::VectorXd MeanQOI();
 
       void DrawChain(std::shared_ptr<SingleChainMCMC> chain, std::string chainid, std::ofstream& graphfile) const;

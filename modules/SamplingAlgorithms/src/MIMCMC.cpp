@@ -50,6 +50,19 @@ namespace muq {
       return MImean;
     }
 
+    Eigen::VectorXd MIMCMC::MeanParam() {
+      Eigen::VectorXd MImean(boxes[0]->GetFinestProblem()->blockSizes.sum());
+      MImean.setZero();
+
+      for (auto box : boxes) {
+        Eigen::VectorXd sampMean = box->MeanParam();
+
+        MImean += sampMean;
+      }
+
+      return MImean;
+    }
+
     void MIMCMC::Draw(bool drawSamples) {
       std::ofstream graphfile;
       graphfile.open ("graph");
