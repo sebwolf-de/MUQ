@@ -120,10 +120,9 @@ void SingleChainMCMC::Setup(pt::ptree pt, std::shared_ptr<AbstractSamplingProble
   Setup(pt, kernelVec);
 }
 
-void SingleChainMCMC::PrintStatus(std::string prefix) {
-  PrintStatus(prefix, numSamps+1);
+void SingleChainMCMC::PrintStatus(std::string prefix) const {
+  PrintStatus(prefix, numSamps);
 }
-
 
 void SingleChainMCMC::PrintStatus(std::string prefix, unsigned int currInd) const
 {

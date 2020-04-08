@@ -4,7 +4,7 @@ project(MultilevelGaussian)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR) # Only look for MUQ when building example as standalone project
   find_package(MUQ REQUIRED)
-
+  message("Found MUQ at ${MUQ_INCLUDE_DIRS}")
   include_directories(${MUQ_INCLUDE_DIRS})
 
   set(CMAKE_CXX_FLAGS ${MUQ_CXX_FLAGS})

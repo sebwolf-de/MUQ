@@ -35,7 +35,9 @@ void PythonBindings::MCMCWrapper(py::module &m) {
     .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> problem) {return new SingleChainMCMC(ConvertDictToPtree(d), problem);}))
     .def(py::init( [](py::dict d, std::vector<std::shared_ptr<TransitionKernel>> kernels) {return new SingleChainMCMC(ConvertDictToPtree(d), kernels);}))
     .def("Kernels", &SingleChainMCMC::Kernels)
-    .def("RunImpl", &SingleChainMCMC::RunImpl);
+    .def("RunImpl", &SingleChainMCMC::RunImpl)
+    .def("AddNumSamps", &SingleChainMCMC::AddNumSamps)
+    .def("NumSamps", &SingleChainMCMC::NumSamps);
 
   py::class_<MCMCFactory, std::shared_ptr<MCMCFactory>> fact(m, "MCMCFactory");
   fact

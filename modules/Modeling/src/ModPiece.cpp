@@ -331,9 +331,9 @@ void ModPiece::ApplyHessianImpl(unsigned int                const  outWrt,
                                 Eigen::VectorXd             const& sens,
                                 Eigen::VectorXd             const& vec)
 {
-  std::cout << "Just before FD..." << std::endl;
+  //std::cout << "Just before FD..." << std::endl;
   hessAction = ApplyHessianByFD(outWrt, inWrt1, inWrt2, input, sens, vec);
-  std::cout << "After FD, hessAction = " << hessAction << std::endl;
+  //std::cout << "After FD, hessAction = " << hessAction << std::endl;
 }
 
 Eigen::VectorXd ModPiece::ApplyHessianByFD(unsigned int                const  outWrt,

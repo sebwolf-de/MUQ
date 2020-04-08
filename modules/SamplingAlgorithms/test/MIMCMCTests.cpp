@@ -89,7 +89,7 @@ public:
     pt::ptree ptProposal;
     ptProposal.put("BlockIndex",0);
     int subsampling = 5;
-    ptProposal.put("subsampling", subsampling);
+    ptProposal.put("Subsampling", subsampling);
     return std::make_shared<SubsamplingMIProposal>(ptProposal, coarseProblem, coarseChain);
   }
 

@@ -45,8 +45,8 @@ public:
   }
 
   virtual std::shared_ptr<MCMCProposal> Proposal (std::shared_ptr<MultiIndex> const& index, std::shared_ptr<AbstractSamplingProblem> const& samplingProblem) override {
-    pt::ptree pt_prop;
-    pt_prop.put("BlockIndex",0);
+    pt::ptree pt;
+    pt.put("BlockIndex",0);
 
     Eigen::VectorXd mu(2);
     mu << 1.0, 2.0;
@@ -57,22 +57,22 @@ public:
 
     auto prior = std::make_shared<Gaussian>(mu, cov);
 
-    return std::make_shared<CrankNicolsonProposal>(pt_prop, samplingProblem, prior);
+    return std::make_shared<CrankNicolsonProposal>(pt, samplingProblem, prior);
   }
 
   virtual std::shared_ptr<MultiIndex> FinestIndex() override {
     auto index = std::make_shared<MultiIndex>(1);
-    index->SetValue(0, 1);
+    index->SetValue(0, 3);
     return index;
   }
 
   virtual std::shared_ptr<MCMCProposal> CoarseProposal (std::shared_ptr<MultiIndex> const& index,
                                                         std::shared_ptr<AbstractSamplingProblem> const& coarseProblem,
-                                                        std::shared_ptr<SingleChainMCMC> const& coarseChain) override {
+                                                           std::shared_ptr<SingleChainMCMC> const& coarseChain) override {
     pt::ptree ptProposal;
     ptProposal.put("BlockIndex",0);
-    //int subsampling = 5;
-    ptProposal.put("Subsampling", pt.get<int>("MLMCMC.Subsampling"));
+    int subsampling = 5;
+    ptProposal.put("subsampling", subsampling);
     return std::make_shared<SubsamplingMIProposal>(ptProposal, coarseProblem, coarseChain);
   }
 
@@ -83,7 +83,7 @@ public:
     cov << 0.7, 0.6,
            0.6, 1.0;
 
-    /*if (index->GetValue(0) == 0) {
+    if (index->GetValue(0) == 0) {
       mu *= 0.8;
       cov *= 2.0;
     } else if (index->GetValue(0) == 1) {
@@ -93,12 +93,6 @@ public:
       mu *= 0.99;
       cov *= 1.1;
     } else if (index->GetValue(0) == 3) {
-      mu *= 1.0;
-      cov *= 1.0;*/
-    if (index->GetValue(0) == 0) {
-      mu *= 0.95;
-      cov *= 1.5;
-    } else if (index->GetValue(0) == 1) {
       mu *= 1.0;
       cov *= 1.0;
     } else {
@@ -124,4 +118,4 @@ private:
   pt::ptree pt;
 };
 
- 
+
