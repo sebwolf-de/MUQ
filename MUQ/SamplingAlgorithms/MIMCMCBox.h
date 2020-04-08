@@ -44,6 +44,8 @@ namespace muq {
 
       std::shared_ptr<AbstractSamplingProblem> GetFinestProblem();
 
+      std::shared_ptr<MultiIndex> getBoxHighestIndex();
+
     private:
 
       // Creates a path of multiindices back to zero, preferring a route along the diagonal

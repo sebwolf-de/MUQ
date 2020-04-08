@@ -93,6 +93,9 @@ namespace muq {
       return finestProblem;
     }
 
+    std::shared_ptr<MultiIndex> MIMCMCBox::getBoxHighestIndex() {
+      return boxHighestIndex;
+    }
 
     void MIMCMCBox::Sample() {
       for (int i = 0; i < boxIndices->Size(); i++) {

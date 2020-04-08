@@ -151,8 +151,15 @@ TEST(MIMCMCTest, MIMCMC) {
   auto componentFactory = std::make_shared<MyMIComponentFactory>();
 
   pt::ptree pt;
-  pt.put("NumInitialSamples", 5e4); // number of initial samples for greedy MLMCMC
-  pt.put("GreedyTargetVariance", 0.05); // estimator variance to be achieved by greedy algorithm
+  pt.put("NumSamples_0_0", 1e3);
+  pt.put("NumSamples_0_1", 1e3);
+  pt.put("NumSamples_0_2", 1e3);
+  pt.put("NumSamples_1_0", 1e3);
+  pt.put("NumSamples_1_1", 1e3);
+  pt.put("NumSamples_1_2", 1e3);
+  pt.put("NumSamples_2_0", 1e3);
+  pt.put("NumSamples_2_1", 1e3);
+  pt.put("NumSamples_2_2", 1e3);
 
   MIMCMC mimcmc (pt, componentFactory);
   mimcmc.Run(Eigen::Vector2d(1.0, 2.0));

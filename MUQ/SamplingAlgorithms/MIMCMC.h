@@ -54,11 +54,12 @@ namespace muq {
       virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
 
     private:
+      pt::ptree pt;
       std::shared_ptr<MultiIndexSet> gridIndices;
       std::shared_ptr<MIComponentFactory> componentFactory;
-      const int samples;
       std::vector<std::shared_ptr<MIMCMCBox>> boxes;
 
+      std::string multiindexToConfigString (std::shared_ptr<MultiIndex> index);
     };
 
   }

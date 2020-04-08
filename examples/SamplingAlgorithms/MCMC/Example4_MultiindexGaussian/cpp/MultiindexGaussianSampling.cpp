@@ -122,9 +122,9 @@ public:
       assert (false);
     }
     if (index->Max() == 0) {
-      cov *= 2.0;
-    } else if (index->Max() == 1) {
       cov *= 1.5;
+    } else if (index->Max() == 1) {
+      cov *= 1.2;
     } else if (index->Max() == 2) {
       cov *= 1.0;
     } else {
@@ -154,9 +154,18 @@ int main(){
 
   pt::ptree pt;
 
-  pt.put("NumSamples", 1e4); // number of samples for single level
-  pt.put("NumInitialSamples", 1e2); // number of initial samples for greedy MLMCMC
-  pt.put("GreedyTargetVariance", 0.05); // estimator variance to be achieved by greedy algorithm
+  pt.put("NumSamples", 1e4); // number of samples for single level MCMC
+  pt.put("NumSamples_0_0", 1e5);
+  pt.put("NumSamples_0_1", 1e5);
+  pt.put("NumSamples_0_2", 1e4);
+  pt.put("NumSamples_1_0", 1e5);
+  pt.put("NumSamples_1_1", 1e4);
+  pt.put("NumSamples_1_2", 1e3);
+  pt.put("NumSamples_2_0", 1e4);
+  pt.put("NumSamples_2_1", 1e3);
+  pt.put("NumSamples_2_2", 1e3);
+
+
 
   std::cout << std::endl << "*************** multiindex chain" << std::endl << std::endl;
 

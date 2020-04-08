@@ -4,9 +4,9 @@ namespace muq {
   namespace SamplingAlgorithms {
 
     MIMCMC::MIMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory)
-    : SamplingAlgorithm(std::shared_ptr<SampleCollection>(), std::shared_ptr<SampleCollection>()),
-      componentFactory(componentFactory),
-      samples(pt.get("NumSamples",1000))
+    : pt(pt),
+      SamplingAlgorithm(std::shared_ptr<SampleCollection>(), std::shared_ptr<SampleCollection>()),
+      componentFactory(componentFactory)
     {
       gridIndices = MultiIndexFactory::CreateFullTensor(componentFactory->FinestIndex()->GetVector());
 
@@ -28,7 +28,8 @@ namespace muq {
     std::shared_ptr<SampleCollection> MIMCMC::RunImpl(std::vector<Eigen::VectorXd> const& x0) {
       for (auto box : boxes) {
         assert(box);
-        for (int samp = 0; samp < samples; samp++) {
+        int numSamples = pt.get<int>("NumSamples" + multiindexToConfigString(box->getBoxHighestIndex()));
+        for (int samp = 0; samp < numSamples; samp++) {
           box->Sample();
         }
       }
@@ -61,6 +62,14 @@ namespace muq {
       }
 
       return MImean;
+    }
+
+    std::string MIMCMC::multiindexToConfigString (std::shared_ptr<MultiIndex> index) {
+      std::stringstream strs;
+      for (int i = 0; i < index->GetLength(); i++) {
+        strs << "_" << index->GetValue(i);
+      }
+      return strs.str();
     }
 
     void MIMCMC::Draw(bool drawSamples) {

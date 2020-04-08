@@ -55,20 +55,18 @@ private:
 class PythonMIComponentFactory : public MIComponentFactory {
 public:
   PythonMIComponentFactory(pt::ptree pt, Eigen::VectorXd startingPoint, std::vector<std::shared_ptr<AbstractSamplingProblem>> const& pySamplingProblems)
-   : pt(pt), startingPoint(startingPoint), pySamplingProblems(pySamplingProblems) {}
+   : pt(pt), startingPoint(startingPoint), problemIndices(MultiIndexFactory::CreateFullTensor(1,pySamplingProblems.size() - 1)), pySamplingProblems(pySamplingProblems) {}
 
-  /*PythonMIComponentFactory(pt::ptree pt, Eigen::VectorXd startingPoint, py::array_t<std::shared_ptr<AbstractSamplingProblem>> const& pySamplingProblems)
-   : pt(pt), startingPoint(startingPoint) {
-     auto buf_problems = pySamplingProblems.request();
-  }*/
-
+  PythonMIComponentFactory(pt::ptree pt, Eigen::VectorXd startingPoint, std::shared_ptr<MultiIndexSet> const& problemIndices, std::vector<std::shared_ptr<AbstractSamplingProblem>> const& pySamplingProblems)
+   : pt(pt), startingPoint(startingPoint), pySamplingProblems(pySamplingProblems)
+  {
+    this->problemIndices = problemIndices;
+  }
 
   virtual std::shared_ptr<MCMCProposal> Proposal (std::shared_ptr<MultiIndex> const& index, std::shared_ptr<AbstractSamplingProblem> const& samplingProblem) override {
 
-
     boost::property_tree::ptree subTree = pt.get_child("Proposal");
     subTree.put("BlockIndex",0);
-    //subTree.put("BlockIndex", blockInd);
 
     // Construct the proposal
     std::shared_ptr<MCMCProposal> proposal = MCMCProposal::Construct(subTree, samplingProblem);
@@ -77,10 +75,7 @@ public:
   }
 
   virtual std::shared_ptr<MultiIndex> FinestIndex() override {
-    auto index = std::make_shared<MultiIndex>(1);
-    index->SetValue(0, pySamplingProblems.size() - 1);
-    //index->SetValue(1, 2);
-    return index;
+    return std::make_shared<MultiIndex>(problemIndices->GetMaxOrders());
   }
 
   virtual std::shared_ptr<MCMCProposal> CoarseProposal (std::shared_ptr<MultiIndex> const& index,
@@ -93,7 +88,13 @@ public:
   }
 
   virtual std::shared_ptr<AbstractSamplingProblem> SamplingProblem (std::shared_ptr<MultiIndex> const& index) override {
-    return pySamplingProblems[index->GetValue(0)];
+    for (int i = 0; i < problemIndices->Size(); i++) {
+      if (*(problemIndices->at(i)) == *index) {
+        return pySamplingProblems[i];
+      }
+    }
+    std::cout << "Undefined problem! " << *index << std::endl;
+    return nullptr;
   }
 
   virtual std::shared_ptr<MIInterpolation> Interpolation (std::shared_ptr<MultiIndex> const& index) override {
@@ -106,6 +107,7 @@ public:
 private:
   pt::ptree pt;
   Eigen::VectorXd startingPoint;
+  std::shared_ptr<MultiIndexSet> problemIndices;
   std::vector<std::shared_ptr<AbstractSamplingProblem>> pySamplingProblems;
 };
 
@@ -129,8 +131,7 @@ void PythonBindings::MCMCWrapper(py::module &m) {
   py::class_<MIMCMC, SamplingAlgorithm, std::shared_ptr<MIMCMC>> multiindexMCMC(m, "MIMCMC");
   multiindexMCMC
     .def(py::init( [](py::dict d, Eigen::VectorXd startingPoint, std::vector<std::shared_ptr<AbstractSamplingProblem>> problems) {return new MIMCMC(ConvertDictToPtree(d), std::make_shared<PythonMIComponentFactory>(ConvertDictToPtree(d), startingPoint, problems)); }))
-    //.def(py::init( [](py::dict d, Eigen::VectorXd startingPoint, py::array_t<std::shared_ptr<AbstractSamplingProblem>> problems) {return new MIMCMC(ConvertDictToPtree(d), std::make_shared<PythonMIComponentFactory>(ConvertDictToPtree(d), startingPoint, problems)); }))
-
+    .def(py::init( [](py::dict d, Eigen::VectorXd startingPoint, std::shared_ptr<MultiIndexSet> problem_indices, std::vector<std::shared_ptr<AbstractSamplingProblem>> problems) {return new MIMCMC(ConvertDictToPtree(d), std::make_shared<PythonMIComponentFactory>(ConvertDictToPtree(d), startingPoint, problem_indices, problems)); }))
     .def("RunImpl", &MIMCMC::RunImpl)
     .def("MeanParam", &MIMCMC::MeanParam);
 

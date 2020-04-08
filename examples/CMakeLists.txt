@@ -4,7 +4,7 @@ add_subdirectory(Approximation/MonotoneRegression)
 add_subdirectory(SamplingAlgorithms/MCMC/Example1_Gaussian/cpp)
 add_subdirectory(SamplingAlgorithms/MCMC/Example2_GaussianInverseGamma)
 add_subdirectory(SamplingAlgorithms/MCMC/Example3_MultilevelGaussian/cpp)
-add_subdirectory(SamplingAlgorithms/MCMC/Example4_MultiindexGaussian)
+add_subdirectory(SamplingAlgorithms/MCMC/Example4_MultiindexGaussian/cpp)
 
 add_subdirectory(Utilities/HDF5/BlockOperations)
 add_subdirectory(Utilities/HDF5/SimpleReadWrite)
