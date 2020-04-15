@@ -128,12 +128,24 @@ void PythonBindings::MCMCWrapper(py::module &m) {
     .def("AddNumSamps", &SingleChainMCMC::AddNumSamps)
     .def("NumSamps", &SingleChainMCMC::NumSamps);
 
+  py::class_<MIMCMCBox, std::shared_ptr<MIMCMCBox>> multiindexMCMCBox(m, "MIMCMCBox");
+  multiindexMCMCBox
+    .def("MeanParam", &MIMCMCBox::MeanParam)
+    .def("MeanQOI", &MIMCMCBox::MeanQOI)
+    .def("FinestChain", &MIMCMCBox::FinestChain)
+    .def("GetChain", &MIMCMCBox::GetChain)
+    .def("GetBoxIndices", &MIMCMCBox::GetBoxIndices)
+    .def("getBoxHighestIndex", &MIMCMCBox::getBoxHighestIndex);
+
+
   py::class_<MIMCMC, SamplingAlgorithm, std::shared_ptr<MIMCMC>> multiindexMCMC(m, "MIMCMC");
   multiindexMCMC
     .def(py::init( [](py::dict d, Eigen::VectorXd startingPoint, std::vector<std::shared_ptr<AbstractSamplingProblem>> problems) {return new MIMCMC(ConvertDictToPtree(d), std::make_shared<PythonMIComponentFactory>(ConvertDictToPtree(d), startingPoint, problems)); }))
     .def(py::init( [](py::dict d, Eigen::VectorXd startingPoint, std::shared_ptr<MultiIndexSet> problem_indices, std::vector<std::shared_ptr<AbstractSamplingProblem>> problems) {return new MIMCMC(ConvertDictToPtree(d), std::make_shared<PythonMIComponentFactory>(ConvertDictToPtree(d), startingPoint, problem_indices, problems)); }))
     .def("RunImpl", &MIMCMC::RunImpl)
-    .def("MeanParam", &MIMCMC::MeanParam);
+    .def("MeanParam", &MIMCMC::MeanParam)
+    .def("GetIndices", &MIMCMC::GetIndices)
+    .def("GetMIMCMCBox", &MIMCMC::GetMIMCMCBox);
 
   py::class_<MCMCFactory, std::shared_ptr<MCMCFactory>> fact(m, "MCMCFactory");
   fact

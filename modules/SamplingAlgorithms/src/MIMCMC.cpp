@@ -64,6 +64,19 @@ namespace muq {
       return MImean;
     }
 
+    std::shared_ptr<MIMCMCBox> MIMCMC::GetMIMCMCBox(std::shared_ptr<MultiIndex> index) {
+      for (auto box : boxes) {
+        if (box->getBoxHighestIndex() == index)
+          return box;
+      }
+      return nullptr;
+    }
+
+    std::shared_ptr<MultiIndexSet> MIMCMC::GetIndices() {
+      return gridIndices;
+    }
+
+
     std::string MIMCMC::multiindexToConfigString (std::shared_ptr<MultiIndex> index) {
       std::stringstream strs;
       for (int i = 0; i < index->GetLength(); i++) {

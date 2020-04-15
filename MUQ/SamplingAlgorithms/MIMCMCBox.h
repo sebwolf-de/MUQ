@@ -42,6 +42,10 @@ namespace muq {
 
       std::shared_ptr<SingleChainMCMC> FinestChain();
 
+      std::shared_ptr<SingleChainMCMC> GetChain(std::shared_ptr<MultiIndex> index);
+
+      std::shared_ptr<MultiIndexSet> GetBoxIndices();
+
       std::shared_ptr<AbstractSamplingProblem> GetFinestProblem();
 
       std::shared_ptr<MultiIndex> getBoxHighestIndex();

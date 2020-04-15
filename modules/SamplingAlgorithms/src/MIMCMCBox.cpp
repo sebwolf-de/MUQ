@@ -233,6 +233,14 @@ namespace muq {
       return boxChains[boxIndices->MultiToIndex(boxSize)];
     }
 
+    std::shared_ptr<MultiIndexSet> MIMCMCBox::GetBoxIndices() {
+      return boxIndices;
+    }
+
+    std::shared_ptr<SingleChainMCMC> MIMCMCBox::GetChain(std::shared_ptr<MultiIndex> boxIndex) {
+      return boxChains[boxIndices->MultiToIndex(boxIndex)];
+    }
+
     std::shared_ptr<MultiIndexSet> MIMCMCBox::CreateRootPath(std::shared_ptr<MultiIndex> index) {
 
       // create an empy multiindex set
