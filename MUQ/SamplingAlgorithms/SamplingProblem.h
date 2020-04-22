@@ -21,6 +21,13 @@ namespace muq {
        */
       SamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& targetIn);
 
+      /**
+	     @param[in] target The target distribution
+	     @param[in] qoi Quantity of interest associated with model
+       */
+      SamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& targetIn,
+                      std::shared_ptr<muq::Modeling::ModPiece> const& qoiIn);
+
       virtual ~SamplingProblem() = default;
 
 
@@ -31,16 +38,21 @@ namespace muq {
 
       std::shared_ptr<muq::Modeling::ModPiece> GetDistribution(){return target;};
 
+      virtual std::shared_ptr<SamplingState> QOI() override;
+
     protected:
 
       /// The target distribution (the prior in the inference case)
       std::shared_ptr<muq::Modeling::ModPiece> target;
+
+      std::shared_ptr<muq::Modeling::ModPiece> qoi;
 
     private:
 
       static unsigned GetNumBlocks(std::shared_ptr<muq::Modeling::ModPiece> const& target);
       static std::vector<int> GetBlockSizes(std::shared_ptr<muq::Modeling::ModPiece> const& target);
 
+      std::shared_ptr<SamplingState> lastState;
     };
   } // namespace SamplingAlgorithms
 } // namespace muq

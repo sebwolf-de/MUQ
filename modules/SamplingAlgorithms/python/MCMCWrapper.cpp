@@ -117,7 +117,8 @@ void PythonBindings::MCMCWrapper(py::module &m) {
   sampAlg
     .def("Run", (std::shared_ptr<SampleCollection>  (SamplingAlgorithm::*)(std::vector<Eigen::VectorXd> const&)) &SamplingAlgorithm::Run,
                  py::call_guard<py::scoped_ostream_redirect,py::scoped_estream_redirect>())
-    .def("GetSamples", &SamplingAlgorithm::GetSamples);
+    .def("GetSamples", &SamplingAlgorithm::GetSamples)
+    .def("GetQOIs", &SamplingAlgorithm::GetQOIs);
 
   py::class_<SingleChainMCMC, SamplingAlgorithm, std::shared_ptr<SingleChainMCMC>> singleMCMC(m, "SingleChainMCMC");
   singleMCMC
@@ -144,6 +145,7 @@ void PythonBindings::MCMCWrapper(py::module &m) {
     .def(py::init( [](py::dict d, Eigen::VectorXd startingPoint, std::shared_ptr<MultiIndexSet> problem_indices, std::vector<std::shared_ptr<AbstractSamplingProblem>> problems) {return new MIMCMC(ConvertDictToPtree(d), std::make_shared<PythonMIComponentFactory>(ConvertDictToPtree(d), startingPoint, problem_indices, problems)); }))
     .def("RunImpl", &MIMCMC::RunImpl)
     .def("MeanParam", &MIMCMC::MeanParam)
+    .def("MeanQOI", &MIMCMC::MeanQOI)
     .def("GetIndices", &MIMCMC::GetIndices)
     .def("GetMIMCMCBox", &MIMCMC::GetMIMCMCBox);
 
