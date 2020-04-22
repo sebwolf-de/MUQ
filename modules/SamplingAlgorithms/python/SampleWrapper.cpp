@@ -3,6 +3,8 @@
 #include "MUQ/SamplingAlgorithms/SampleCollection.h"
 #include "MUQ/SamplingAlgorithms/SamplingState.h"
 
+#include "MUQ/Utilities/AnyHelpers.h"
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
@@ -57,5 +59,13 @@ void PythonBindings::SampleWrapper(py::module &m)
     .def_readonly("weight", &SamplingState::weight)
     .def_readonly("state", &SamplingState::state)
     .def("HasMeta", &SamplingState::HasMeta)
+    .def("GetMeta", [](std::shared_ptr<SamplingState> self, std::string const& metaKey)
+                                  -> boost::any& {
+                                     return self->meta[metaKey];
+                                  })
+    .def("GetMetaSamplingState", [](std::shared_ptr<SamplingState> self, std::string const& metaKey)
+                                  -> std::shared_ptr<SamplingState> {
+                                     return muq::Utilities::AnyCast(self->meta[metaKey]);
+                                  })
     .def("TotalDim", &SamplingState::TotalDim);
 }
