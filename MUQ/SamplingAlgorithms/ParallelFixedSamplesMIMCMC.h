@@ -52,7 +52,7 @@ namespace muq {
 
         models_remaining--;
         ranks_remaining -= assignment.numGroups * assignment.numWorkersPerGroup;
-  
+
         return assignment;
       }
     private:
@@ -73,7 +73,6 @@ namespace muq {
          componentFactory(componentFactory),
          phonebookClient(std::make_shared<PhonebookClient>(comm, phonebookRank)),
          workerClient(comm, phonebookClient, rootRank) {
-
 
         spdlog::debug("Rank: {}", comm->GetRank());
 
@@ -260,16 +259,37 @@ namespace muq {
         spdlog::debug("Sampling completed");
       }
 
+      void WriteToFile(std::string filename) {
+        if (comm->GetRank() != rootRank) {
+          return;
+        }
+        for (CollectorClient& client : collectorClients) {
+          client.WriteToFile(filename);
+        }
+      }
+
 
     protected:
       virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) {
 
-        RequestSamplesAll(pt.get<int>("MCMC.NumSamples"));
-        RunSamples();
+        for (CollectorClient& client : collectorClients) {
+          int numSamples = pt.get<int>("NumSamples" + multiindexToConfigString(client.GetModelIndex()));
+          client.CollectSamples(numSamples);
+        }
 
+        RunSamples();
         return nullptr;
       }
+
     private:
+
+      std::string multiindexToConfigString (std::shared_ptr<MultiIndex> index) {
+        std::stringstream strs;
+        for (int i = 0; i < index->GetLength(); i++) {
+          strs << "_" << index->GetValue(i);
+        }
+        return strs.str();
+      }
 
       const int rootRank = 0;
       const int phonebookRank = 1;

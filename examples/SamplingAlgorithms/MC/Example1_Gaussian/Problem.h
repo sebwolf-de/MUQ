@@ -1,5 +1,7 @@
 #include "MUQ/SamplingAlgorithms/ParallelizableMIComponentFactory.h"
 
+#include "MCSampleProposal.h"
+
 class MySamplingProblem : public AbstractSamplingProblem {
 public:
   MySamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> targetIn)
@@ -16,7 +18,7 @@ public:
 
   virtual std::shared_ptr<SamplingState> QOI() override {
     assert (lastState != nullptr);
-    return std::make_shared<SamplingState>(lastState->state, 1.0);
+    return std::make_shared<SamplingState>(lastState->state[0] * 2, 1.0);
   }
 
 private:
@@ -30,7 +32,7 @@ private:
 class MyInterpolation : public MIInterpolation {
 public:
   std::shared_ptr<SamplingState> Interpolate (std::shared_ptr<SamplingState> const& coarseProposal, std::shared_ptr<SamplingState> const& fineProposal) {
-    return std::make_shared<SamplingState>(coarseProposal->state);
+    return std::make_shared<SamplingState>(fineProposal->state);
   }
 };
 
@@ -40,24 +42,44 @@ public:
    : pt(pt)
   { }
 
+  virtual bool IsInverseProblem() override {
+    return false;
+  }
+
   void SetComm(std::shared_ptr<parcer::Communicator> const& comm) override {
 
   }
 
   virtual std::shared_ptr<MCMCProposal> Proposal (std::shared_ptr<MultiIndex> const& index, std::shared_ptr<AbstractSamplingProblem> const& samplingProblem) override {
-    pt::ptree pt;
-    pt.put("BlockIndex",0);
-
     Eigen::VectorXd mu(2);
     mu << 1.0, 2.0;
+
     Eigen::MatrixXd cov(2,2);
-    cov << 0.7, 0.6,
-    0.6, 1.0;
-    cov *= 20.0;
+    cov << 1.0, 0.8,
+          0.8, 1.5;
 
-    auto prior = std::make_shared<Gaussian>(mu, cov);
+    if (index->GetValue(0) == 0) {
+      mu *= 0.8;
+      cov *= 2.0;
+    } else if (index->GetValue(0) == 1) {
+      mu *= 0.9;
+      cov *= 1.5;
+    } else if (index->GetValue(0) == 2) {
+      mu *= 0.99;
+      cov *= 1.1;
+    } else if (index->GetValue(0) == 3) {
+      mu *= 1.0;
+      cov *= 1.0;
+    } else {
+      std::cerr << "Sampling problem not defined!" << std::endl;
+      assert (false);
+    }
 
-    return std::make_shared<CrankNicolsonProposal>(pt, samplingProblem, prior);
+
+
+    auto proposalDensity = std::make_shared<Gaussian>(mu, cov);
+
+    return std::make_shared<MCSampleProposal>(pt, samplingProblem, proposalDensity);
   }
 
   virtual std::shared_ptr<MultiIndex> FinestIndex() override {
@@ -68,12 +90,16 @@ public:
 
   virtual std::shared_ptr<MCMCProposal> CoarseProposal (std::shared_ptr<MultiIndex> const& index,
                                                         std::shared_ptr<AbstractSamplingProblem> const& coarseProblem,
-                                                           std::shared_ptr<SingleChainMCMC> const& coarseChain) override {
-    pt::ptree ptProposal;
-    ptProposal.put("BlockIndex",0);
-    int subsampling = 5;
-    ptProposal.put("Subsampling", subsampling);
-    return std::make_shared<SubsamplingMIProposal>(ptProposal, coarseProblem, coarseChain);
+                                                        std::shared_ptr<SingleChainMCMC> const& coarseChain) override {
+    Eigen::VectorXd mu(2);
+    mu << 0.0, 0.0;
+
+    Eigen::MatrixXd cov_prop(2,2);
+    cov_prop << 1.0, 0.8,
+          0.8, 1.5;
+    auto proposalDensity = std::make_shared<Gaussian>(mu, cov_prop);
+
+    return std::make_shared<MCSampleProposal>(pt, coarseProblem, proposalDensity);
   }
 
   virtual std::shared_ptr<AbstractSamplingProblem> SamplingProblem (std::shared_ptr<MultiIndex> const& index) override {

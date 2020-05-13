@@ -113,7 +113,7 @@ void MIKernel::PrintStatus(const std::string prefix) const
 {
   std::stringstream msg;
   msg << std::setprecision(2);
-  msg << prefix << "Acceptance Rate = "  << 100.0*double(numAccepts)/double(numCalls) << "%";
+  msg << prefix << "MIKernel acceptance Rate = "  << 100.0*double(numAccepts)/double(numCalls) << "%";
 
   std::cout << msg.str() << std::endl;
 }

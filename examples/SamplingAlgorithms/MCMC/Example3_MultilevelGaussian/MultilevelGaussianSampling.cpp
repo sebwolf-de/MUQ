@@ -37,7 +37,7 @@ int main(){
   auto componentFactory = std::make_shared<MyMIComponentFactory>(pt);
 
 
-  std::cout << std::endl << "*************** greedy multillevel chain" << std::endl << std::endl;
+  std::cout << std::endl << "*************** greedy multilevel chain" << std::endl << std::endl;
 
   GreedyMLMCMC greedymlmcmc (pt, componentFactory);
   greedymlmcmc.Run();

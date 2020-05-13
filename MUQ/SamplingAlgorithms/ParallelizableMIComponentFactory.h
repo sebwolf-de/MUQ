@@ -3,6 +3,8 @@
 
 #if MUQ_HAS_MPI
 
+#include "MUQ/SamplingAlgorithms/MIComponentFactory.h"
+
 #if !MUQ_HAS_PARCER
 #error
 #endif

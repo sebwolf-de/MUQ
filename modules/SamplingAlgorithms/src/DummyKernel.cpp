@@ -31,6 +31,11 @@ std::vector<std::shared_ptr<SamplingState>> DummyKernel::Step(unsigned int const
   numCalls++;
 
   std::shared_ptr<SamplingState> prop = proposal->Sample(prevState);
+  // Let's retrieve density and QOI as usual, but just not do anything with it
+  problem->LogDensity(prop);
+  if (problem->numBlocksQOI > 0) {
+    prop->meta["QOI"] = problem->QOI();
+  }
   return std::vector<std::shared_ptr<SamplingState>>(1, prop);
 }
 

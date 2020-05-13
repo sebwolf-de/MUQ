@@ -16,6 +16,7 @@
 #include "MUQ/SamplingAlgorithms/ParallelizableMIComponentFactory.h"
 #include "MUQ/SamplingAlgorithms/ParallelMIComponentFactory.h"
 #include "MUQ/SamplingAlgorithms/ParallelMIMCMCBox.h"
+#include "MUQ/Utilities/AnyHelpers.h"
 #include "MUQ/Utilities/Cereal/MultiIndexSerializer.h"
 
 namespace muq {
@@ -60,6 +61,14 @@ namespace muq {
         computingMeans = true;
         for (int dest : subgroup) {
           comm->Send(ControlFlag::MEANS, dest, ControlTag);
+        }
+      }
+
+      void WriteToFile(std::string filename) {
+        for (int dest : subgroup) {
+          comm->Send(ControlFlag::WRITE_TO_FILE, dest, ControlTag);
+          comm->Send(filename, dest, ControlTag);
+          bool sync = comm->Recv<bool>(dest, ControlTag);
         }
       }
 
@@ -216,7 +225,7 @@ namespace muq {
               // Burn in coarsest chains
               if (samplingProblemIndex->Max() == 0) {
                 spdlog::debug("Rank {} burning in", comm->GetRank());
-                for (int i = 0; i < pt.get<int>("MCMC.burnin"); i++)
+                for (int i = 0; i < pt.get<int>("MCMC.BurnIn"); i++)
                   box->Sample();
                 spdlog::debug("Rank {} burned in", comm->GetRank());
               }
@@ -248,7 +257,7 @@ namespace muq {
                     std::shared_ptr<SamplingState> qoi = AnyCast(latestSample->meta["QOI"]);
                     comm->Send<Eigen::VectorXd>(qoi->state[0], status.MPI_SOURCE, ControlTag);
                   } else {
-                    std::cerr << "No QOI!" << std::endl;
+                    std::cerr << "No QOI!" << sampleCollection->size() << std::endl;
                     exit(47);
                   }
 
@@ -269,7 +278,7 @@ namespace muq {
                       std::shared_ptr<SamplingState> qoi = AnyCast(latestSample->meta["QOI"]);
                       comm->Send<Eigen::VectorXd>(qoi->state[0], status.MPI_SOURCE, ControlTag);
                     } else {
-                      std::cerr << "No QOI!" << std::endl;
+                      std::cerr << "No QOI!" << sampleCollection->size() << std::endl;
                       exit(47);
                     }
                   }
@@ -369,6 +378,11 @@ namespace muq {
                     qoiMean++;
                   }
                 }
+              } else if (command == ControlFlag::WRITE_TO_FILE) {
+                std::string filename = comm->Recv<std::string>(status.MPI_SOURCE, ControlTag);
+                sampleCollections[0]->WriteToFile(filename, "/Collector_model" + boxHighestIndex->ToString() + "_samples_rank_" + std::to_string(subcomm->GetRank()));
+                qoiCollections[0]->WriteToFile(filename, "/Collector_model" + boxHighestIndex->ToString() + "_qois_rank_" + std::to_string(subcomm->GetRank()));
+                comm->Send(true, status.MPI_SOURCE, ControlTag);
               } else {
                 std::cerr << "Unexpected command!" << std::endl;
                 exit(43);

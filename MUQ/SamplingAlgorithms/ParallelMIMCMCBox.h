@@ -8,7 +8,15 @@
 #endif
 
 #include <parcer/Communicator.h>
+#include <boost/property_tree/ptree.hpp>
 
+#include "MUQ/SamplingAlgorithms/Phonebook.h"
+#include "MUQ/SamplingAlgorithms/RemoteMIProposal.h"
+#include "MUQ/SamplingAlgorithms/MIKernel.h"
+#include "MUQ/Utilities/MultiIndices/MultiIndexFactory.h"
+
+namespace pt = boost::property_tree;
+using namespace muq::Utilities;
 
 namespace muq {
   namespace SamplingAlgorithms {
@@ -21,7 +29,10 @@ namespace muq {
          boxHighestIndex(boxHighestIndex)
       {
         pt::ptree ptChains;
-        ptChains.put("NumSamples", 1e4); // number of MCMC steps expected, so we'll pass it in
+        ptChains.put("NumSamples", 0); // number of MCMC steps expected, so we'll pass it in
+        ptChains.put("burnin", 0);
+        ptChains.put("PrintLevel", 0);
+        ptChains.put("BlockIndex",0);
         pt::ptree ptBlockID;
         ptBlockID.put("BlockIndex",0);
 
@@ -47,7 +58,10 @@ namespace muq {
               auto proposal_coarse = componentFactory->Proposal(boxLowestIndex, coarse_problem);
 
               std::vector<std::shared_ptr<TransitionKernel>> coarse_kernels(1);
-              coarse_kernels[0] = std::make_shared<MHKernel>(ptBlockID,coarse_problem,proposal_coarse);
+              if (componentFactory->IsInverseProblem())
+                coarse_kernels[0] = std::make_shared<MHKernel>(ptBlockID,coarse_problem,proposal_coarse);
+              else
+                coarse_kernels[0] = std::make_shared<DummyKernel>(ptBlockID, coarse_problem, proposal_coarse);
 
               Eigen::VectorXd startPtCoarse = componentFactory->StartingPoint(boxLowestIndex);
 
@@ -59,32 +73,28 @@ namespace muq {
               std::shared_ptr<MultiIndex> remoteIndex = MultiIndex::Copy(boxLowestIndex);
               int maxCoeffId;
               int maxEntry = remoteIndex->GetVector().maxCoeff(&maxCoeffId);
-              if (maxEntry <= 0) {
-                std::cerr << "whoopsie" << std::endl;
-                exit(45);
-              }
+              assert (maxEntry > 0);
 
               remoteIndex->SetValue(maxCoeffId, maxEntry - 1);
 
-              pt::ptree pt;
-              pt.put("BlockIndex",0);
-              pt.put("NumSamples",1);
-
               coarse_problem = componentFactory->SamplingProblem(remoteIndex); // TODO: Try to avoid this
 
-              auto coarse_proposal = std::make_shared<RemoteMIProposal>(pt, coarse_problem, global_comm, remoteIndex, phonebookClient);
+              auto coarse_proposal = std::make_shared<RemoteMIProposal>(ptBlockID, coarse_problem, global_comm, remoteIndex, phonebookClient);
               auto startingPoint = componentFactory->StartingPoint(boxLowestIndex);
               auto problem = componentFactory->SamplingProblem(boxLowestIndex);
               auto proposal = componentFactory->Proposal(boxLowestIndex, problem);
               auto proposalInterpolation = componentFactory->Interpolation(boxLowestIndex);
 
               std::vector<std::shared_ptr<TransitionKernel>> kernels(1);
-              kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,nullptr);
+              if (componentFactory->IsInverseProblem())
+                kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,nullptr);
+              else
+                kernels[0] = std::make_shared<DummyKernel>(ptBlockID, problem, proposal);
 
               auto startingState = std::make_shared<SamplingState>(startingPoint);
               startingState->meta["coarseSample"] = std::make_shared<SamplingState>(componentFactory->StartingPoint(remoteIndex));
 
-              coarse_chain = std::make_shared<SingleChainMCMC>(pt,kernels);
+              coarse_chain = std::make_shared<SingleChainMCMC>(ptChains,kernels);
               coarse_chain->SetState(startingState);
 
               boxChains[boxIndices->MultiToIndex(boxIndex)] = coarse_chain;
@@ -102,11 +112,10 @@ namespace muq {
             auto startingPoint = componentFactory->StartingPoint(index);
 
             std::vector<std::shared_ptr<TransitionKernel>> kernels(1);
-            kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
-            //kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
-
-            //auto startingState = std::make_shared<SamplingState>(startingPoint);
-            //startingState->meta["coarseSample"] = std::make_shared<SamplingState>(componentFactory->StartingPoint(index));
+            if (componentFactory->IsInverseProblem())
+              kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
+            else
+              kernels[0] = std::make_shared<DummyKernel>(ptBlockID, problem, proposal);
 
             auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels);
             chain->SetState(startingPoint);
@@ -130,12 +139,10 @@ namespace muq {
       }
 
       std::shared_ptr<SingleChainMCMC> GetChain(int index) {
-        //std::shared_ptr<MultiIndex> boxSize = std::make_shared<MultiIndex>(*boxHighestIndex - *boxLowestIndex);
         return boxChains[index];
       }
 
       int NumChains() {
-        //std::shared_ptr<MultiIndex> boxSize = std::make_shared<MultiIndex>(*boxHighestIndex - *boxLowestIndex);
         return boxIndices->Size();
       }
 
@@ -143,7 +150,8 @@ namespace muq {
         for (uint i = 0; i < boxIndices->Size(); i++) {
           std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
           auto chain = boxChains[boxIndices->MultiToIndex(boxIndex)];
-          chain->Sample();
+          chain->AddNumSamps(1);
+          chain->Run();
         }
       }
 

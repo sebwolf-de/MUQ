@@ -19,7 +19,7 @@ namespace muq {
 
     std::shared_ptr<MIMCMCBox> MIMCMC::GetBox(std::shared_ptr<MultiIndex> index) {
       for (std::shared_ptr<MIMCMCBox> box : boxes) {
-        if (box->GetHighestIndex() == index)
+        if (*(box->GetHighestIndex()) == *index)
           return box;
       }
       return nullptr;

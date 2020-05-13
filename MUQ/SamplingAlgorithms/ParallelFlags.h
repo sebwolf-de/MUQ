@@ -29,8 +29,10 @@ namespace muq {
 
       SAMPLE_BOX_DONE,
 
+      // Collector
       MEANS,
       MEANS_DONE,
+      WRITE_TO_FILE,
 
       // Workgroup phonebook
       GET_WORKGROUP,

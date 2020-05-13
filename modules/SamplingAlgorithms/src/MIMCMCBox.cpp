@@ -1,4 +1,5 @@
 #include "MUQ/SamplingAlgorithms/MIMCMCBox.h"
+#include "MUQ/SamplingAlgorithms/DummyKernel.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
@@ -8,7 +9,7 @@ namespace muq {
     boxHighestIndex(boxHighestIndex)
     {
       pt::ptree ptChains;
-      ptChains.put("NumSamples", 1e4); // number of MCMC steps
+      ptChains.put("NumSamples", 0); // number of MCMC steps
       ptChains.put("PrintLevel", 0);
       pt::ptree ptBlockID;
       ptBlockID.put("BlockIndex",0);
@@ -43,7 +44,10 @@ namespace muq {
         auto startingPoint = componentFactory->StartingPoint(index);
 
         std::vector<std::shared_ptr<TransitionKernel>> kernels(1);
-        kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
+        if (componentFactory->IsInverseProblem())
+          kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
+        else
+          kernels[0] = std::make_shared<DummyKernel>(ptBlockID, problem, proposal);
 
         auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels);
         chain->SetState(startingPoint);
@@ -77,7 +81,10 @@ namespace muq {
         auto startingPoint = componentFactory->StartingPoint(index);
 
         std::vector<std::shared_ptr<TransitionKernel>> kernels(1);
-        kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
+        if (componentFactory->IsInverseProblem())
+          kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
+        else
+          kernels[0] = std::make_shared<DummyKernel>(ptBlockID, problem, proposal);
 
         auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels);
         chain->SetState(startingPoint);

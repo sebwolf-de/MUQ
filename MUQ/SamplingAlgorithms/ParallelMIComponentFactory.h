@@ -67,6 +67,9 @@ namespace muq {
           //std::cout << "Worker " << global_comm->GetRank() << " idle time:\t" << timer_idle.elapsed() << " of:\t" << timer_full.elapsed() << std::endl;
         }
       }
+      virtual bool IsInverseProblem() override {
+        return componentFactory->IsInverseProblem();
+      }
 
       void finalize() {
         if (comm->GetRank() != 0)
