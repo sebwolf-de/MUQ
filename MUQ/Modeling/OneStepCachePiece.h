@@ -8,7 +8,7 @@ namespace muq{
   namespace Modeling{
     class OneStepCachePiece : public ModPiece {
     public:
-      OneStepCachePiece(std::shared_ptr<ModPiece> baseModPiece);
+      OneStepCachePiece(std::shared_ptr<ModPiece> baseModPiece, const double& prec = Eigen::NumTraits<double>::dummy_precision());
 
       virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& input) override;
 
@@ -20,7 +20,9 @@ namespace muq{
       bool firstEvaluation = true;
       std::vector<Eigen::VectorXd> lastInput;
       std::vector<Eigen::VectorXd> lastOutputs;
+
       std::shared_ptr<ModPiece> baseModPiece;
+      const double& prec;
     };
   }
 }

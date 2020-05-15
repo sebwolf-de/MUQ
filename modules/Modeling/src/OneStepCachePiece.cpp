@@ -2,9 +2,10 @@
 
 using namespace muq::Modeling;
 
-OneStepCachePiece::OneStepCachePiece(std::shared_ptr<ModPiece> baseModPiece)
+OneStepCachePiece::OneStepCachePiece(std::shared_ptr<ModPiece> baseModPiece, const double& prec)
   : ModPiece(baseModPiece->inputSizes, baseModPiece->outputSizes),
-    baseModPiece(baseModPiece)
+    baseModPiece(baseModPiece),
+    prec(prec)
 {}
 
 void OneStepCachePiece::EvaluateImpl(ref_vector<Eigen::VectorXd> const& input) {
@@ -18,7 +19,7 @@ void OneStepCachePiece::EvaluateImpl(ref_vector<Eigen::VectorXd> const& input) {
     lastInput.resize(input.size());
   } else {
     for (int i = 0; i < input.size(); i++) {
-      if (input[i].get() != lastInput[i]) {
+      if (!input[i].get().isApprox(lastInput[i], prec)) {
         cacheHit = false;
         break;
       }
