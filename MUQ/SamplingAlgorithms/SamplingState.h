@@ -4,6 +4,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 #include <Eigen/Core>
 #include <boost/any.hpp>

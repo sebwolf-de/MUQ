@@ -162,6 +162,7 @@ bool MultiIndex::operator!=(const MultiIndex &b) const{
       return true;
     if(it->second != bit->second)
       return true;
+    bit++;
   }
 
   return false;
