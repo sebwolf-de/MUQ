@@ -12,6 +12,7 @@
 
 #include "MUQ/SamplingAlgorithms/Phonebook.h"
 #include "MUQ/SamplingAlgorithms/RemoteMIProposal.h"
+#include "MUQ/SamplingAlgorithms/DummyKernel.h"
 #include "MUQ/SamplingAlgorithms/MIKernel.h"
 #include "MUQ/Utilities/MultiIndices/MultiIndexFactory.h"
 
