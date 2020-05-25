@@ -33,8 +33,10 @@ int main(int argc, char **argv){
   MPI_Init(&argc, &argv);
 
   pt::ptree pt;
-  pt.put("MCMC.NumSamples", 1e3); // number of samples for single level
-  pt.put("MCMC.burnin", 1e1); // number of samples for single level
+  pt.put("NumSamples_0", 1e3);
+  pt.put("NumSamples_1", 5e2);
+  pt.put("NumSamples_2", 1e2);
+  pt.put("MCMC.burnin", 1e1);
   pt.put("MLMCMC.Subsampling", 5);
 
   auto comm = std::make_shared<parcer::Communicator>();

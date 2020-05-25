@@ -31,8 +31,11 @@ int main(int argc, char **argv){
   MPI_Init(&argc, &argv);
 
   pt::ptree pt;
-  pt.put("MCMC.NumSamples", 1e3); // number of samples for single level
-  pt.put("MCMC.burnin", 100); // number of samples for single level
+  pt.put("NumSamples_0", 1e3);
+  pt.put("NumSamples_1", 5e2);
+  pt.put("NumSamples_2", 1e2);
+  pt.put("NumSamples_3", 1e2);
+  pt.put("MCMC.BurnIn", 100);
   pt.put("MLMCMC.Subsampling", 1000);
 
   auto comm = std::make_shared<parcer::Communicator>();
@@ -44,15 +47,7 @@ int main(int argc, char **argv){
     auto componentFactory = std::make_shared<MyMIComponentFactory>(pt);
     StaticLoadBalancingMIMCMC parallelMIMCMC (pt, componentFactory);
 
-    //parallelMIMCMC.Run();
     if (comm->GetRank() == 0) {
-      /*for (int i = 0; i < 10; i++) {
-        parallelMIMCMC.RequestSamplesAll(1000);
-        parallelMIMCMC.RunSamples();
-
-        Eigen::VectorXd meanQOI = parallelMIMCMC.MeanQOI();
-        std::cout << "mean QOI: " << meanQOI.transpose() << std::endl;
-      }*/
       parallelMIMCMC.Run();
       Eigen::VectorXd meanQOI = parallelMIMCMC.MeanQOI();
       std::cout << "mean QOI: " << meanQOI.transpose() << std::endl;
