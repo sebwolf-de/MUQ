@@ -49,17 +49,24 @@ namespace muq {
 
       std::shared_ptr<MIMCMCBox> GetBox(std::shared_ptr<MultiIndex> index);
 
+      Eigen::VectorXd MeanParam();
+
       void Draw(bool drawSamples = true);
+
+      std::shared_ptr<MIMCMCBox> GetMIMCMCBox(std::shared_ptr<MultiIndex> index);
+
+      std::shared_ptr<MultiIndexSet> GetIndices();
 
     protected:
       virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
 
     private:
+      pt::ptree pt;
       std::shared_ptr<MultiIndexSet> gridIndices;
       std::shared_ptr<MIComponentFactory> componentFactory;
-      const int samples;
       std::vector<std::shared_ptr<MIMCMCBox>> boxes;
 
+      std::string multiindexToConfigString (std::shared_ptr<MultiIndex> index);
     };
 
   }

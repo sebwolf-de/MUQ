@@ -33,6 +33,8 @@ namespace muq {
 
       void Sample();
 
+      Eigen::VectorXd MeanParam();
+
       Eigen::VectorXd MeanQOI();
 
       void DrawChain(std::shared_ptr<SingleChainMCMC> chain, std::string chainid, std::ofstream& graphfile) const;
@@ -40,6 +42,10 @@ namespace muq {
       void Draw(std::ofstream& graphfile, bool drawSamples = true) const;
 
       std::shared_ptr<SingleChainMCMC> FinestChain();
+
+      std::shared_ptr<SingleChainMCMC> GetChain(std::shared_ptr<MultiIndex> index);
+
+      std::shared_ptr<MultiIndexSet> GetBoxIndices();
 
       std::shared_ptr<AbstractSamplingProblem> GetFinestProblem();
 

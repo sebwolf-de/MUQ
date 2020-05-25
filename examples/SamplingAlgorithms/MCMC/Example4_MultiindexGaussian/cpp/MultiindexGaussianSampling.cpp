@@ -122,9 +122,9 @@ public:
       assert (false);
     }
     if (index->Max() == 0) {
-      cov *= 2.0;
-    } else if (index->Max() == 1) {
       cov *= 1.5;
+    } else if (index->Max() == 1) {
+      cov *= 1.2;
     } else if (index->Max() == 2) {
       cov *= 1.0;
     } else {
@@ -153,7 +153,16 @@ int main(){
 
   pt::ptree pt;
 
-  pt.put("NumSamples", 1e3); // number of samples for single level
+  pt.put("NumSamples", 1e4); // number of samples for single level MCMC
+  pt.put("NumSamples_0_0", 1e5);
+  pt.put("NumSamples_0_1", 1e5);
+  pt.put("NumSamples_0_2", 1e4);
+  pt.put("NumSamples_1_0", 1e5);
+  pt.put("NumSamples_1_1", 1e4);
+  pt.put("NumSamples_1_2", 1e3);
+  pt.put("NumSamples_2_0", 1e4);
+  pt.put("NumSamples_2_1", 1e3);
+  pt.put("NumSamples_2_2", 1e3);
   pt.put("MLMCMC.Subsampling", 5);
 
   auto componentFactory = std::make_shared<MyMIComponentFactory>(pt);

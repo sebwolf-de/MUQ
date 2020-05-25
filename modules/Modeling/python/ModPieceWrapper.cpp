@@ -4,6 +4,7 @@
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
 #include "MUQ/Modeling/MultiLogisticLikelihood.h"
+#include "MUQ/Modeling/OneStepCachePiece.h"
 #include "MUQ/Modeling/PyModPiece.h"
 #include "MUQ/Modeling/ReplicateOperator.h"
 #include "MUQ/Modeling/SplitVector.h"
@@ -113,6 +114,10 @@ void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
     .def("ApplyHessianImpl", (void (PyModPiece::*)(unsigned int const, unsigned int const, unsigned int const, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&, Eigen::VectorXd const&)) &Publicist::ApplyHessianImpl)
     .def_readwrite("hessAction", &Publicist::hessAction);
 
+  py::class_<OneStepCachePiece, ModPiece, WorkPiece, std::shared_ptr<OneStepCachePiece>> ocp(m, "OneStepCachePiece");
+  ocp
+    .def(py::init<std::shared_ptr<ModPiece>>())
+    .def("HitRatio", &OneStepCachePiece::HitRatio);
 
   py::class_<ConstantVector, ModPiece, WorkPiece, std::shared_ptr<ConstantVector>> cv(m, "ConstantVector");
   cv

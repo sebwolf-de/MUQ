@@ -36,6 +36,8 @@ CreateCompileGroup(
     WorkGraphPiece.cpp
     LinearSDE.cpp
 
+    OneStepCachePiece.cpp
+
     ConstantPiece.cpp
     ConstantVector.cpp
     IdentityPiece.cpp

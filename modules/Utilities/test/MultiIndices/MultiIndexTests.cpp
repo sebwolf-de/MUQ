@@ -60,6 +60,36 @@ TEST(Utilities_MultiIndices, InitializerListConstructor)
   EXPECT_EQ(9,multi.Sum());
 }
 
+TEST(Utilities_MultiIndices, Equality)
+{
+  {
+    MultiIndex a{1,5,3,0};
+    MultiIndex b{1,5,3,0};
+    EXPECT_EQ(true,a == b);
+    EXPECT_EQ(true,b == a);
+    EXPECT_EQ(false,a != b);
+    EXPECT_EQ(false,b != a);
+  }
+  {
+    MultiIndex a{1,5,3,0};
+    MultiIndex b{1,5,3,0,0};
+    EXPECT_EQ(false,a == b);
+    EXPECT_EQ(false,b == a);
+  }
+  { // Vary one entry
+    MultiIndex a{1,5,3,0};
+    MultiIndex b{1,5,3,1};
+    EXPECT_EQ(false,a == b);
+    EXPECT_EQ(false,b == a);
+  }
+  { // Vary one entry, keep total sum
+    MultiIndex a{1,5,3,0};
+    MultiIndex b{1,5,2,1};
+    EXPECT_EQ(false,a == b);
+    EXPECT_EQ(false,b == a);
+  }
+}
+
 TEST(Utilities_MultiIndices, SetValue)
 {
 
