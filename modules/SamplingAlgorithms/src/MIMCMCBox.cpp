@@ -245,7 +245,10 @@ namespace muq {
     }
 
     std::shared_ptr<SingleChainMCMC> MIMCMCBox::GetChain(std::shared_ptr<MultiIndex> boxIndex) {
-      return boxChains[boxIndices->MultiToIndex(boxIndex)];
+      int index = boxIndices->MultiToIndex(boxIndex);
+      if (index < 0)
+        return nullptr;
+      return boxChains[index];
     }
 
     std::shared_ptr<MultiIndexSet> MIMCMCBox::CreateRootPath(std::shared_ptr<MultiIndex> index) {
