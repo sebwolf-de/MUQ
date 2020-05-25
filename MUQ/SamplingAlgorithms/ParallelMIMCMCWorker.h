@@ -220,7 +220,7 @@ namespace muq {
               auto finestProblem = parallelComponentFactory->SamplingProblem(parallelComponentFactory->FinestIndex());
 
               spdlog::trace("Setting up ParallelMIMCMCBox");
-              auto box = std::make_shared<ParallelMIMCMCBox>(parallelComponentFactory, samplingProblemIndex, comm, phonebookClient);
+              auto box = std::make_shared<ParallelMIMCMCBox>(pt, parallelComponentFactory, samplingProblemIndex, comm, phonebookClient);
 
               // Burn in coarsest chains
               if (samplingProblemIndex->Max() == 0) {

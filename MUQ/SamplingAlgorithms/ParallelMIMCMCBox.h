@@ -25,7 +25,7 @@ namespace muq {
     class ParallelMIMCMCBox {
     public:
 
-        ParallelMIMCMCBox(std::shared_ptr<MIComponentFactory> componentFactory, std::shared_ptr<MultiIndex> boxHighestIndex, std::shared_ptr<parcer::Communicator> global_comm, std::shared_ptr<PhonebookClient> phonebookClient)
+      ParallelMIMCMCBox(boost::property_tree::ptree const& pt, std::shared_ptr<MIComponentFactory> componentFactory, std::shared_ptr<MultiIndex> boxHighestIndex, std::shared_ptr<parcer::Communicator> global_comm, std::shared_ptr<PhonebookClient> phonebookClient)
        : componentFactory(componentFactory),
          boxHighestIndex(boxHighestIndex)
       {
@@ -54,7 +54,7 @@ namespace muq {
           std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
 
           if (boxIndex->Max() == 0) { // We're the root node of the MI box
-            if (boxLowestIndex->Max() == 0) { // and also the absolute root node, so run the coarsest chain by ourselves
+            if (boxLowestIndex->Max() == 0) { // and also the absolute root node, so run the globally coarsest chain by ourselves
               coarse_problem = componentFactory->SamplingProblem(boxLowestIndex);
               auto proposal_coarse = componentFactory->Proposal(boxLowestIndex, coarse_problem);
 
@@ -66,9 +66,19 @@ namespace muq {
 
               Eigen::VectorXd startPtCoarse = componentFactory->StartingPoint(boxLowestIndex);
 
-              coarse_chain = std::make_shared<SingleChainMCMC>(ptChains,coarse_kernels);
+              pt::ptree ptCoarsestChain;
+              ptCoarsestChain.put("NumSamples", 0); // number of MCMC steps expected, so we'll pass it in
+              ptCoarsestChain.put("BurnIn", pt.get<int>("MCMC.BurnIn")); // Pass BurnIn length into coarsest chain of box
+
+              coarse_chain = std::make_shared<SingleChainMCMC>(ptCoarsestChain,coarse_kernels);
               coarse_chain->SetState(startPtCoarse);
               boxChains[boxIndices->MultiToIndex(boxIndex)] = coarse_chain;
+
+              spdlog::debug("Rank {} burning in", global_comm->GetRank());
+              coarse_chain->AddNumSamps(pt.get<int>("MCMC.BurnIn"));
+              coarse_chain->Run();
+              spdlog::debug("Rank {} burned in", global_comm->GetRank());
+
 
             } else { // or we have to request proposals from the next coarser chain
               std::shared_ptr<MultiIndex> remoteIndex = MultiIndex::Copy(boxLowestIndex);
