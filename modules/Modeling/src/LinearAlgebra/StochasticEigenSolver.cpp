@@ -54,6 +54,7 @@ StochasticEigenSolver& StochasticEigenSolver::compute(std::shared_ptr<LinearOper
       Y =  A->Apply(randMat);
     }
 
+    int it=0;
     while(!hasConverged){
 
       Eigen::MatrixXd Q,R;
@@ -63,16 +64,15 @@ StochasticEigenSolver& StochasticEigenSolver::compute(std::shared_ptr<LinearOper
 
       Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigSolver(T);
       eigVals = eigSolver.eigenvalues();
-      eigVecs = eigSolver.eigenvectors();
 
       auto swaps = GetSortSwaps(eigVals);
       SortVec(swaps,eigVals);
-      SortCols(swaps, eigVecs);
 
       // Check for convergence
       double smallestVal = eigVals(eigVals.size()-1);
       double largestVal = eigVals(0);
 
+      // Convergence because smallestVal is less than absolute tolerance
       if(smallestVal<eigAbsTol){
         if(verbosity>0){
           std::cout << "Converged: Minimum eigenvalue (" << smallestVal << ") satisfies absolute tolerance (" << eigAbsTol << ")." << std::endl;
@@ -80,6 +80,7 @@ StochasticEigenSolver& StochasticEigenSolver::compute(std::shared_ptr<LinearOper
         hasConverged = true;
       }
 
+      // Convergence because smallestVal is less than relative tolerance
       if(smallestVal<eigRelTol*largestVal){
         if(verbosity>0){
           std::cout << "Converged: Minimum eigenvalue (" << smallestVal << ") satisfies relative tolerance (" << eigRelTol*largestVal << ")." << std::endl;
@@ -87,12 +88,27 @@ StochasticEigenSolver& StochasticEigenSolver::compute(std::shared_ptr<LinearOper
         hasConverged = true;
       }
 
+      // Convergence because all eigenvalues of operator have been found
+      if(Q.cols()<Y.cols()){
+        if(verbosity>0){
+          std::cout << "Converged: All nonzero eigenvalues have been found (likely) or samples are degenerate (unlikely)." << std::endl;
+        }
+        hasConverged = true;
+      }
+
+      // Converge because the maximum number of eigenvalues has been found
       if(eigVals.size()>=numEigs){
         if(verbosity>0){
           std::cout << "Converged: Reached maximum number of eigenvalues." << std::endl;
         }
         hasConverged = true;
       }
+
+      if(verbosity>1){
+        std::cout << "After iteration " << it << ", " << eigVals.size() << " eigenvalues in [" << smallestVal << "," << largestVal << "]" << std::endl;
+        std::cout << "  Y.shape = " << Y.rows() << " x " << Y.cols() << std::endl;
+      }
+      it++;
 
       // If we haven't found enough eigenvalues yet, add to the random matrix
       if(!hasConverged){
@@ -106,6 +122,12 @@ StochasticEigenSolver& StochasticEigenSolver::compute(std::shared_ptr<LinearOper
         }else{
           Y.rightCols(blockSize) =  A->Apply(randMat.rightCols(blockSize));
         }
+      }
+
+      // If we've converged, set the eigenvectors
+      if(hasConverged){
+        eigVecs = Q*eigSolver.eigenvectors();
+        SortCols(swaps, eigVecs);
       }
 
     }

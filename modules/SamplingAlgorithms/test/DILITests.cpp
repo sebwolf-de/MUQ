@@ -130,14 +130,14 @@ TEST(MCMC, DILIKernel_ManualConstruction) {
   pt.put("HessianType","Exact");
   pt.put("Adapt Interval", 1000);
 
-  pt.put("Eigensolver Block", "LOBPCG");
-  pt.put("LOBPCG.NumEigs",15); // Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
-  pt.put("LOBPCG.RelativeTolerance", 1e-3); // Fraction of the largest eigenvalue used as stopping criteria on how many eigenvalues to compute
-  pt.put("LOBPCG.AbsoluteTolerance",0.0); // Minimum allowed eigenvalue
-  pt.put("LOBPCG.BlockSize",20);
-  pt.put("LOBPCG.MaxIts",200);
-  pt.put("LOBPCG.Verbosity",0);
-  pt.put("LOBPCG.SolverTolerance",1e-6);
+  pt.put("Eigensolver Block", "EigOpts");
+  pt.put("EigOpts.NumEigs",15); // Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
+  pt.put("EigOpts.RelativeTolerance", 1e-3); // Fraction of the largest eigenvalue used as stopping criteria on how many eigenvalues to compute
+  pt.put("EigOpts.AbsoluteTolerance",0.0); // Minimum allowed eigenvalue
+  pt.put("EigOpts.ExpectedRank", 5);
+  pt.put("EigOpts.OversamplingFactor", 2);
+  //pt.put("EigOpts.BlockSize",20);
+  //pt.put("EigOpts.Verbosity",0);
 
   pt.put("LIS Block", "LIS");
   pt.put("LIS.Method", "MHKernel");
@@ -229,14 +229,12 @@ TEST(MCMC, DILIKernel_AutomaticConstruction) {
   pt.put("Prior Node", "Prior");
   pt.put("Likelihood Node", "Likelihood");
 
-  pt.put("Eigensolver Block", "LOBPCG");
-  pt.put("LOBPCG.NumEigs",15); // Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
-  pt.put("LOBPCG.RelativeTolerance", 1e-3); // Fraction of the largest eigenvalue used as stopping criteria on how many eigenvalues to compute
-  pt.put("LOBPCG.AbsoluteTolerance",0.0); // Minimum allowed eigenvalue
-  pt.put("LOBPCG.BlockSize",20);
-  pt.put("LOBPCG.MaxIts",200);
-  pt.put("LOBPCG.Verbosity",0);
-  pt.put("LOBPCG.SolverTolerance",1e-6);
+  pt.put("Eigensolver Block", "EigOpts");
+  pt.put("EigOpts.NumEigs",15); // Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
+  pt.put("EigOpts.RelativeTolerance", 1e-3); // Fraction of the largest eigenvalue used as stopping criteria on how many eigenvalues to compute
+  pt.put("EigOpts.AbsoluteTolerance",0.0); // Minimum allowed eigenvalue
+  pt.put("EigOpts.ExpectedRank", 5);
+  pt.put("EigOpts.OversamplingFactor", 2);
 
   pt.put("LIS Block", "LIS");
   pt.put("LIS.Method", "MHKernel");
@@ -323,14 +321,12 @@ TEST(MCMC, DILIKernel_AutomaticGaussNewton) {
   pt.put("Prior Node", "Prior");
   pt.put("Likelihood Node", "Likelihood");
 
-  pt.put("Eigensolver Block", "LOBPCG");
-  pt.put("LOBPCG.NumEigs",15); // Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
-  pt.put("LOBPCG.RelativeTolerance", 1e-3); // Fraction of the largest eigenvalue used as stopping criteria on how many eigenvalues to compute
-  pt.put("LOBPCG.AbsoluteTolerance",0.0); // Minimum allowed eigenvalue
-  pt.put("LOBPCG.BlockSize",20);
-  pt.put("LOBPCG.MaxIts",200);
-  pt.put("LOBPCG.Verbosity",0);
-  pt.put("LOBPCG.SolverTolerance",1e-6);
+  pt.put("Eigensolver Block", "EigOpts");
+  pt.put("EigOpts.NumEigs",15); // Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
+  pt.put("EigOpts.RelativeTolerance", 1e-3); // Fraction of the largest eigenvalue used as stopping criteria on how many eigenvalues to compute
+  pt.put("EigOpts.AbsoluteTolerance",0.0); // Minimum allowed eigenvalue
+  pt.put("EigOpts.ExpectedRank", 5);
+  pt.put("EigOpts.OversamplingFactor", 2);
 
   pt.put("LIS Block", "LIS");
   pt.put("LIS.Method", "MHKernel");
@@ -416,14 +412,12 @@ TEST(MCMC, DILIKernel_LogNormal) {
   pt.put("HessianType","Exact");
   pt.put("Adapt Interval", 1000);
 
-  pt.put("Eigensolver Block", "LOBPCG");
-  pt.put("LOBPCG.NumEigs",15); // Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
-  pt.put("LOBPCG.RelativeTolerance", 1e-3); // Fraction of the largest eigenvalue used as stopping criteria on how many eigenvalues to compute
-  pt.put("LOBPCG.AbsoluteTolerance",0.0); // Minimum allowed eigenvalue
-  pt.put("LOBPCG.BlockSize",20);
-  pt.put("LOBPCG.MaxIts",200);
-  pt.put("LOBPCG.Verbosity",0);
-  pt.put("LOBPCG.SolverTolerance",1e-6);
+  pt.put("Eigensolver Block", "EigOpts");
+  pt.put("EigOpts.NumEigs",15); // Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
+  pt.put("EigOpts.RelativeTolerance", 1e-3); // Fraction of the largest eigenvalue used as stopping criteria on how many eigenvalues to compute
+  pt.put("EigOpts.AbsoluteTolerance",0.0); // Minimum allowed eigenvalue
+  pt.put("EigOpts.ExpectedRank", 5);
+  pt.put("EigOpts.OversamplingFactor", 2);
 
   pt.put("LIS Block", "LIS");
   pt.put("LIS.Method", "MHKernel");
