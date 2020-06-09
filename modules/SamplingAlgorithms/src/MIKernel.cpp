@@ -84,10 +84,8 @@ std::vector<std::shared_ptr<SamplingState>> MIKernel::Step(unsigned int const t,
   // Aceptance probability
   const double forwardPropDens = proposal->LogDensity(prevState, fineProp);
   const double backPropDens = proposal->LogDensity(fineProp, prevState);
-  const double forwardPropDensCoarse = coarse_proposal->LogDensity(coarsePrevState, coarseProp);
-  const double backPropDensCoarse = coarse_proposal->LogDensity(coarseProp, coarsePrevState);
-  const double alpha = std::exp(propTarget + backPropDens - forwardPropDens - currentTarget
-                              -(propTargetCoarse + backPropDensCoarse - forwardPropDensCoarse - currentTargetCoarse));
+  const double alpha = std::exp(propTarget    + currentTargetCoarse + backPropDens
+                              -(currentTarget + propTargetCoarse    + forwardPropDens));
 
   // accept/reject
   numCalls++;
