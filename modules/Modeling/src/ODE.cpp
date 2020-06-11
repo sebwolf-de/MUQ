@@ -32,15 +32,20 @@ ODE::~ODE() {}
 Eigen::VectorXi ODE::InputSizes(std::shared_ptr<ModPiece> const& rhs, pt::ptree pt) {
   // is the system autonomous
   const bool autonomous = pt.get<bool>("Autonomous", true);
+  std::cout << "Autonomous = " << autonomous << std::endl;
 
   // number of inputs for the RHS plus the time vector but not including current time if the system is aunomous
-  Eigen::VectorXi inSizes(rhs->numInputs+(autonomous? 1 : 0));
+  Eigen::VectorXi inSizes(rhs->numInputs+(autonomous?1:0));
 
   // same as rhs
-  inSizes.head(rhs->numInputs) = rhs->inputSizes;
+  if(autonomous){
+    inSizes.head(rhs->numInputs) = rhs->inputSizes;
+  }else{
+    inSizes.head(rhs->numInputs-1) = rhs->inputSizes.tail(rhs->numInputs-1);
+  }
 
   // number of times
-  inSizes(rhs->numInputs) = pt.get<unsigned int>("NumObservations");
+  inSizes(inSizes.size()-1) = pt.get<unsigned int>("NumObservations");
   return inSizes;
 }
 
@@ -60,11 +65,12 @@ Eigen::VectorXi ODE::OutputSizes(std::shared_ptr<ModPiece> const& rhs, pt::ptree
 
 
 void ODE::Integrate(ref_vector<Eigen::VectorXd> const& inputs, int const wrtIn, N_Vector const& vec, DerivativeMode const& mode) {
-  // the number of inputs must be greater than the number of inputs required by the rhs
-  assert(inputs.size()>rhs->numInputs-(autonomous? 0 : 1));
+
+  // the number of inputs must match the number of inputs required by the rhs
+  assert(inputs.size()==rhs->numInputs+(autonomous? 1 : 0));
 
   // get the state size
-  const unsigned int stateSize = autonomous? inputSizes(0) : inputSizes(1);
+  const unsigned int stateSize = inputSizes(0);
 
   // create the state vector
 #if MUQ_HAS_PARCER==1
@@ -123,7 +129,7 @@ void ODE::ForwardIntegration(void *cvode_mem, N_Vector& state, Eigen::VectorXd c
   outputs[0] = Eigen::VectorXd::Constant(outputSizes(0), std::numeric_limits<double>::quiet_NaN());
 
   // get the state size
-  const unsigned int stateSize = autonomous? inputSizes(0) : inputSizes(1);
+  const unsigned int stateSize = inputSizes(0);//autonomous? inputSizes(0) : inputSizes(1);
 
   // start the clock at t=0
   double tcurrent = 0.0;
