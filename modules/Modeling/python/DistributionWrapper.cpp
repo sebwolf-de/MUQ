@@ -187,6 +187,7 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
     py::class_<InverseGamma, Distribution, std::shared_ptr<InverseGamma>> ig(m, "InverseGamma");
     ig
       .def(py::init<double,double>())
+      .def(py::init<Eigen::VectorXd const&,Eigen::VectorXd const&>())
       .def_readonly("alpha", &InverseGamma::alpha)
       .def_readonly("beta", &InverseGamma::beta);
 }

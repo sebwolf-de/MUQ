@@ -173,11 +173,12 @@ void Gaussian::SetCovariance(Eigen::MatrixXd const& newCov) {
 
   assert(newCov.rows() == mean.rows());
 
-  if(newCov.cols()>1)
-    assert(newCov.cols() == mean.rows());
-
   covPrec = newCov;
-  sqrtCovPrec = covPrec.selfadjointView<Eigen::Lower>().llt();
+
+  if(newCov.cols()>1){
+    assert(newCov.cols() == mean.rows());
+    sqrtCovPrec = covPrec.selfadjointView<Eigen::Lower>().llt();
+  }
 
   // recompute the scaling constant
   ComputeNormalization();
