@@ -119,7 +119,7 @@ pipelines:
                 - cd /usr/src/gtest
                 - cmake CMakeLists.txt
                 - make
-                - cp *.a /usr/lib
+                - cp lib/*.a /usr/lib
 
 
                 # Build muq
@@ -146,7 +146,7 @@ pipelines:
                 - cd /usr/src/gtest
                 - cmake CMakeLists.txt
                 - make
-                - cp *.a /usr/lib
+                - cp lib/*.a /usr/lib
 
 
                 # Build muq
