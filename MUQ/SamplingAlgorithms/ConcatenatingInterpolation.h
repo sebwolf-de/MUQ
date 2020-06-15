@@ -2,13 +2,14 @@
 #define CONCATENATINGINTERPOLATION_H_
 
 #include "MUQ/SamplingAlgorithms/MIInterpolation.h"
+#include "MUQ/Utilities/MultiIndices/MultiIndex.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
 
     class ConcatenatingInterpolation : public MIInterpolation {
     public:
-      ConcatenatingInterpolation(std::shared_ptr<MultiIndex> const& index) : index(index) {
+      ConcatenatingInterpolation(std::shared_ptr<muq::Utilities::MultiIndex> const& index) : index(index) {
     	}
 
     	virtual std::shared_ptr<SamplingState> Interpolate (std::shared_ptr<SamplingState> const& coarseProposal, std::shared_ptr<SamplingState> const& fineProposal) override {
@@ -21,7 +22,7 @@ namespace muq {
     	}
 
     private:
-    	std::shared_ptr<MultiIndex> index;
+      std::shared_ptr<muq::Utilities::MultiIndex> index;
     };
 
   }
