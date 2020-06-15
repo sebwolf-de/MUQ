@@ -192,6 +192,7 @@ namespace muq {
 
       void Finalize() {
         if (comm->GetRank() == rootRank) {
+          phonebookClient->SchedulingStop();
           std::cout << "Starting unassign sequence" << std::endl;
           for (CollectorClient& client : collectorClients) {
             client.Unassign();
@@ -208,6 +209,7 @@ namespace muq {
         if (comm->GetRank() != rootRank) {
           return;
         }
+        // TODO: Divide work between workers
         for (CollectorClient& client : collectorClients) {
           client.GetModelIndex();
           if (client.GetModelIndex() == index) {
@@ -222,11 +224,13 @@ namespace muq {
         if (comm->GetRank() != rootRank) {
           return;
         }
+        // TODO: Get indices from collectors, then request samples for each index
         for (CollectorClient& client : collectorClients) {
           client.CollectSamples(numSamples);
         }
       }
 
+      //bool did_reassign = false;
       void RunSamples() {
         if (comm->GetRank() != rootRank) {
           return;
@@ -239,15 +243,44 @@ namespace muq {
           ControlFlag command = comm->Recv<ControlFlag>(MPI_ANY_SOURCE, ControlTag, &status);
           //timer_idle.stop();
 
+          bool command_handled = false;
           for (CollectorClient& client : collectorClients) {
-            if (client.Receive(command, status))
+            if (client.Receive(command, status)) {
+              command_handled = true;
               break;
+            }
           }
 
-          /*if (!command_handled) {
-           *    s td::cerr << "Unexpected command!" << std::*endl;
-           *    exit(43);
-        }*/
+          if (!command_handled) {
+            if (command == ControlFlag::SCHEDULING_NEEDED) {
+              spdlog::debug("SCHEDULING_NEEDED entered!");
+              // TODO: Phonebook client receive analog zu CollectorClient statt manuellem Empangen!
+              auto idle_index = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(status.MPI_SOURCE, ControlTag));
+              int rescheduleRank = comm->Recv<int>(status.MPI_SOURCE, ControlTag);
+              auto busy_index = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(status.MPI_SOURCE, ControlTag));
+
+              //if (!did_reassign) {
+              spdlog::debug("SCHEDULING_NEEDED Unassigning {}!", rescheduleRank);
+              workerClient.UnassignGroup(idle_index, rescheduleRank);
+              // TODO: Unterstütze Gruppen von workers!!
+
+              std::vector<int> subgroup(0);
+              subgroup.push_back(rescheduleRank);
+              workerClient.assignGroup(subgroup, busy_index);
+
+              phonebookClient->SchedulingDone();
+              spdlog::debug("SCHEDULING_NEEDED left!");
+              //did_reassign=true;
+              //}
+              command_handled = true;
+            }
+          }
+
+
+          if (!command_handled) {
+            std::cerr << "Unexpected command!" << std::endl;
+            exit(43);
+          }
 
           bool isSampling = false;
           for (CollectorClient& client : collectorClients) {

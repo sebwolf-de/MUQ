@@ -76,10 +76,12 @@ namespace muq {
               coarse_chain->SetState(startPtCoarse);
               boxChains[boxIndices->MultiToIndex(boxIndex)] = coarse_chain;
 
+              tracer->enterRegion(TracerRegions::BurnIn);
               spdlog::debug("Rank {} burning in", global_comm->GetRank());
               coarse_chain->AddNumSamps(pt.get<int>("MCMC.BurnIn"));
               coarse_chain->Run();
               spdlog::debug("Rank {} burned in", global_comm->GetRank());
+              tracer->leaveRegion(TracerRegions::BurnIn);
 
 
             } else { // or we have to request proposals from the next coarser chain

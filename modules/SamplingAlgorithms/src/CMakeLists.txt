@@ -65,6 +65,7 @@ CreateCompileGroup(
     GreedyMLMCMC.cpp
     MIMCMC.cpp
     MIMCMCBox.cpp
+    Phonebook.cpp
     SLMCMC.cpp
     SubsamplingMIProposal.cpp
     GMHKernel.cpp

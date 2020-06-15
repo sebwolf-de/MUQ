@@ -115,6 +115,21 @@ else()
     set(MUQ_USE_DOLFIN OFF)
 endif()
 
+
+
+####################################
+##### Look for OTF2 library   ######
+####################################
+
+find_package(OTF2)
+if(OTF2_FOUND)
+    LIST(APPEND MUQ_LINK_LIBS ${OTF2_LIBRARY})
+    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${OTF2_INCLUDE_DIR})
+    include_directories(${OTF2_INCLUDE_DIR})
+endif()
+set(MUQ_HAS_OTF2 ${OTF2_FOUND})
+
+
 ########################################
 ##### REMOVE DUPLICATE INCLUDES   ######
 ########################################

@@ -7,7 +7,9 @@
 #error
 #endif
 
+#include <chrono>
 #include <list>
+#include <thread>
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/ostr.h"
 #include "MUQ/SamplingAlgorithms/MarkovChain.h"
@@ -164,8 +166,9 @@ namespace muq {
       }
 
       void UnassignGroup (std::shared_ptr<MultiIndex> modelIndex, int groupRootRank) {
-        spdlog::trace("Sending unassign to {}", groupRootRank);
+        spdlog::trace("UnRegister {}", groupRootRank);
         phonebookClient->UnRegister(modelIndex, groupRootRank);
+        spdlog::trace("Sending unassign to {}", groupRootRank);
         comm->Ssend(ControlFlag::UNASSIGN, groupRootRank, ControlTag);
       }
 
@@ -224,8 +227,10 @@ namespace muq {
 
               spdlog::debug("Rank {} begins sampling", comm->GetRank());
               const int subsampling = pt.get<int>("MLMCMC.Subsampling");
+              tracer->enterRegion(TracerRegions::Sampling);
               for (int i = 0; i < 2 + subsampling; i++) // TODO: Really subsampling on every level? Maybe subsample when requesting samples?
                 box->Sample();
+              tracer->leaveRegion(TracerRegions::Sampling);
               phonebookClient->SetWorkerReady(samplingProblemIndex, comm->GetRank());
               spdlog::trace("Awaiting instructions");
 
@@ -256,8 +261,10 @@ namespace muq {
 
 
                   spdlog::trace("Sampling");
+                  tracer->enterRegion(TracerRegions::Sampling);
                   for (int i = 0; i < 1 + subsampling; i++) // TODO: Really subsampling on every level? Maybe subsample when requesting samples?
                     box->Sample();
+                  tracer->leaveRegion(TracerRegions::Sampling);
                   phonebookClient->SetWorkerReady(samplingProblemIndex, comm->GetRank());
                 } else if (command == ControlFlag::SAMPLE_BOX) {
                   spdlog::trace("Send box from {} to rank {}", comm->GetRank(), status.MPI_SOURCE);
@@ -276,8 +283,10 @@ namespace muq {
                     }
                   }
 
+                  tracer->enterRegion(TracerRegions::Sampling);
                   for (int i = 0; i < 5; i++)
                     box->Sample();
+                  tracer->leaveRegion(TracerRegions::Sampling);
                   phonebookClient->SetWorkerReady(samplingProblemIndex, comm->GetRank());
                 } else {
                   std::cerr << "Unexpected command!" << std::endl;
@@ -329,9 +338,10 @@ namespace muq {
               //timer_idle.start();
               command = comm->Recv<ControlFlag>(MPI_ANY_SOURCE, ControlTag, &status);
               //timer_idle.stop();
-              if (command == ControlFlag::UNASSIGN) {
+              if (command == ControlFlag::UNASSIGN)
                 break;
-              } else if (command == ControlFlag::SAMPLE_BOX) {
+              tracer->enterRegion(TracerRegions::CollectorBusy);
+              if (command == ControlFlag::SAMPLE_BOX) {
 
                 int numSamples = comm->Recv<int>(0, ControlTag);
                 spdlog::debug("Collecting {} samples for box {}", numSamples, *boxHighestIndex);
@@ -342,7 +352,7 @@ namespace muq {
                   spdlog::trace("Requesting sample box for model {}", *boxHighestIndex);
                   if (i % (numSamples / 10) == 0)
                     spdlog::debug("Collected {} out of {} samples for model {}", i, numSamples, *boxHighestIndex);
-                  int remoteRank = phonebookClient->Query(boxHighestIndex);
+                  int remoteRank = phonebookClient->Query(boxHighestIndex, false);
                   comm->Send(ControlFlag::SAMPLE_BOX, remoteRank, ControlTag); // TODO: Receive sample in one piece?
                   for (uint i = 0; i < boxIndices->Size(); i++) {
                     //std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
@@ -383,6 +393,7 @@ namespace muq {
                 std::cerr << "Unexpected command!" << std::endl;
                 exit(43);
               }
+              tracer->leaveRegion(TracerRegions::CollectorBusy);
 
             }
             //std::cout << "Collector " << comm->GetRank() << " idle time:\t" << timer_idle.elapsed() << " of:\t" << timer_full.elapsed() << std::endl;

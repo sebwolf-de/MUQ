@@ -40,8 +40,12 @@ namespace muq {
       GET_WORKGROUPS,
       UNSET_WORKGROUP,
       GET_LARGEST_INDEX,
-      SET_WORKER_READY
+      SET_WORKER_READY,
+      SCHEDULING_NEEDED,
+      SCHEDULING_DONE,
+      SCHEDULING_STOP,
 
+      HANDSHAKE
     };
 
   }

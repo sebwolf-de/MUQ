@@ -27,6 +27,7 @@ using namespace muq::Utilities;
 
 
 int main(int argc, char **argv){
+  spdlog::set_level(spdlog::level::debug);
 
   MPI_Init(&argc, &argv);
 

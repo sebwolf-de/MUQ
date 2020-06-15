@@ -31,7 +31,7 @@ namespace muq {
 
 			std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> const& currentState) {
 
-				int remoteRank = phonebookClient->Query(remoteIndex);
+				int remoteRank = phonebookClient->Query(remoteIndex, true);
 
 				comm->Send(ControlFlag::SAMPLE, remoteRank, ControlTag);
 				Eigen::VectorXd remoteState = comm->Recv<Eigen::VectorXd>(remoteRank, ControlTag);
