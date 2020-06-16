@@ -18,10 +18,51 @@ std::vector<Eigen::VectorXd> const& ModPiece::Evaluate(std::vector<Eigen::Vector
   return Evaluate(ToRefVector(input));
 }
 
+bool ModPiece::ExistsInCache(ref_vector<Eigen::VectorXd> const& input) const
+{
+  // Check to see if the input is the same as what's cached
+  if(input.size()!=cacheInput.size()){
+    return false;
+  }
+
+  // Check the size of each input vector
+  for(int i=0; i<input.size(); ++i){
+    if(input.at(i).get().size()!=cacheInput.at(i).size()){
+      return false;
+    }
+  }
+
+  // Check the contents of each input vector
+  for(int i=0; i<input.size(); ++i){
+    Eigen::VectorXd const& inVec = input.at(i).get();
+    for(int j=0; j<cacheInput[i].size(); ++j){
+      if(std::abs(inVec(j)-cacheInput[i](j))>std::numeric_limits<double>::epsilon()){
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 std::vector<Eigen::VectorXd> const& ModPiece::Evaluate(ref_vector<Eigen::VectorXd> const& input)
 {
   CheckInputs(input,"Evaluate");
 
+  // If we're using the one-step cache, check to see if the inputs are the same as the previous evaluation
+  if(cacheEnabled){
+    if(ExistsInCache(input)){
+      return outputs;
+      
+    }else{
+      // Copy the contents
+      cacheInput.resize(input.size());
+      for(int i=0; i<input.size(); ++i)
+        cacheInput.at(i) = input.at(i);
+    }
+  }
+
+  // Otherwise, evaluate the model
   numEvalCalls++;
   auto start_time = std::chrono::high_resolution_clock::now();
 
