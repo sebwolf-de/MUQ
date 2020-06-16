@@ -222,17 +222,9 @@ namespace muq {
               spdlog::trace("Setting up ParallelMIMCMCBox");
               auto box = std::make_shared<ParallelMIMCMCBox>(pt, parallelComponentFactory, samplingProblemIndex, comm, phonebookClient);
 
-              // Burn in coarsest chains
-              if (samplingProblemIndex->Max() == 0) {
-                spdlog::debug("Rank {} burning in", comm->GetRank());
-                for (int i = 0; i < pt.get<int>("MCMC.BurnIn"); i++)
-                  box->Sample();
-                spdlog::debug("Rank {} burned in", comm->GetRank());
-              }
-
               spdlog::debug("Rank {} begins sampling", comm->GetRank());
               const int subsampling = pt.get<int>("MLMCMC.Subsampling");
-              for (int i = 0; i < 1 + subsampling; i++) // TODO: Really subsampling on every level? Maybe subsample when requesting samples?
+              for (int i = 0; i < 2 + subsampling; i++) // TODO: Really subsampling on every level? Maybe subsample when requesting samples?
                 box->Sample();
               phonebookClient->SetWorkerReady(samplingProblemIndex, comm->GetRank());
               spdlog::trace("Awaiting instructions");

@@ -40,8 +40,9 @@ int main(int argc, char **argv){
 
   auto comm = std::make_shared<parcer::Communicator>();
 
-  for (int subsampling : {0, 5, 10, 25, 100, 1000}) {
-    std::cout << "Running with subsampling " << subsampling << std::endl;
+  for (int subsampling : {0, 5, 10, 25, 100}) {
+    if (comm->GetRank() == 0)
+      std::cout << "Running with subsampling " << subsampling << std::endl;
     pt.put("MLMCMC.Subsampling", subsampling);
 
     auto componentFactory = std::make_shared<MyMIComponentFactory>(pt);

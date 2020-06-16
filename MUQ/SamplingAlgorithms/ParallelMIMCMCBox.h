@@ -31,7 +31,7 @@ namespace muq {
       {
         pt::ptree ptChains;
         ptChains.put("NumSamples", 0); // number of MCMC steps expected, so we'll pass it in
-        ptChains.put("burnin", 0);
+        ptChains.put("BurnIn", 0);
         ptChains.put("PrintLevel", 0);
         ptChains.put("BlockIndex",0);
         pt::ptree ptBlockID;
@@ -67,6 +67,7 @@ namespace muq {
               Eigen::VectorXd startPtCoarse = componentFactory->StartingPoint(boxLowestIndex);
 
               pt::ptree ptCoarsestChain;
+              ptCoarsestChain.put("PrintLevel", 0);
               ptCoarsestChain.put("NumSamples", 0); // number of MCMC steps expected, so we'll pass it in
               ptCoarsestChain.put("BurnIn", pt.get<int>("MCMC.BurnIn")); // Pass BurnIn length into coarsest chain of box
 

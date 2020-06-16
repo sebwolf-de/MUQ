@@ -54,7 +54,7 @@ std::vector<std::shared_ptr<SamplingState>> MIKernel::Step(unsigned int const t,
   double propTargetCoarse;
   double currentTargetCoarse;
 
-  if(prevState->HasMeta("LogTarget")){
+  if(prevState->HasMeta("LogTarget") && (prevState->HasMeta("QOI") || problem->numBlocksQOI == 0)){
     currentTarget = AnyCast(prevState->meta["LogTarget"]);
   }else{
     currentTarget = problem->LogDensity(prevState);
@@ -64,11 +64,14 @@ std::vector<std::shared_ptr<SamplingState>> MIKernel::Step(unsigned int const t,
     }
   }
 
-  if(coarsePrevState->HasMeta("LogTarget")){
+  if(coarsePrevState->HasMeta("LogTarget") && (coarsePrevState->HasMeta("QOI") || coarse_problem->numBlocksQOI == 0)){
     currentTargetCoarse = AnyCast(coarsePrevState->meta["LogTarget"]);
   }else{
     currentTargetCoarse = coarse_problem->LogDensity(coarsePrevState);
     coarsePrevState->meta["LogTarget"] = currentTargetCoarse;
+    if (coarse_problem->numBlocksQOI > 0) {
+      coarsePrevState->meta["QOI"] = coarse_problem->QOI();
+    }
   }
 
   propTarget = problem->LogDensity(fineProp);

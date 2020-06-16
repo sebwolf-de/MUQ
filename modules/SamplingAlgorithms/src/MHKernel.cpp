@@ -53,7 +53,7 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   double propTarget;
   double currentTarget;
 
-  if( prevState->HasMeta("LogTarget") && !reeval ){
+  if( prevState->HasMeta("LogTarget") && (prevState->HasMeta("QOI") || problem->numBlocksQOI == 0) && !reeval ){
     currentTarget = AnyCast( prevState->meta["LogTarget"]);
   }else{
     currentTarget = problem->LogDensity(prevState);
