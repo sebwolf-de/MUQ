@@ -245,6 +245,7 @@ namespace muq {
                   auto latestSample = sampleCollection->at(sampleCollection->size()-1);
                   // TODO: Send "full" sample via parcer?
                   comm->Send<Eigen::VectorXd>(latestSample->state[0], status.MPI_SOURCE, ControlTag);
+                  comm->Send<double>(AnyCast(latestSample->meta["LogTarget"]), status.MPI_SOURCE, ControlTag);
                   if (latestSample->HasMeta("QOI")) {
                     std::shared_ptr<SamplingState> qoi = AnyCast(latestSample->meta["QOI"]);
                     comm->Send<Eigen::VectorXd>(qoi->state[0], status.MPI_SOURCE, ControlTag);

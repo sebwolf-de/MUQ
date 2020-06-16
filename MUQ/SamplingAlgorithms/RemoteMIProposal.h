@@ -35,10 +35,12 @@ namespace muq {
 
 				comm->Send(ControlFlag::SAMPLE, remoteRank, ControlTag);
 				Eigen::VectorXd remoteState = comm->Recv<Eigen::VectorXd>(remoteRank, ControlTag);
+				double remoteLogTarget = comm->Recv<double>(remoteRank, ControlTag);
 				Eigen::VectorXd remoteQOI = comm->Recv<Eigen::VectorXd>(remoteRank, ControlTag);
 
 				auto proposal = std::make_shared<SamplingState>(remoteState); // TODO: Support non-QOI samples!!
 				proposal->meta["QOI"] = std::make_shared<SamplingState>(remoteQOI);
+				proposal->meta["LogTarget"] = remoteLogTarget;
 
 				return proposal;
 			}

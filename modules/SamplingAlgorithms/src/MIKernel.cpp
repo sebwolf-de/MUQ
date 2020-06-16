@@ -75,12 +75,9 @@ std::vector<std::shared_ptr<SamplingState>> MIKernel::Step(unsigned int const t,
   }
 
   propTarget = problem->LogDensity(fineProp);
-  if(coarseProp->HasMeta("LogTarget")){
-    propTargetCoarse = AnyCast(coarseProp->meta["LogTarget"]);
-  }else{
-    propTargetCoarse = coarse_problem->LogDensity(coarseProp);
-    coarseProp->meta["LogTarget"] = propTargetCoarse;
-  }
+  assert(coarseProp->HasMeta("LogTarget"));
+  propTargetCoarse = AnyCast(coarseProp->meta["LogTarget"]);
+
   fineProp->meta["LogTarget"] = propTarget;
   fineProp->meta["coarseSample"] = coarseProp; // Hook up fine sample to coarse one
 
