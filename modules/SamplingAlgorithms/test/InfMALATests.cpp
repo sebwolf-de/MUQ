@@ -21,7 +21,7 @@ using namespace muq::Utilities;
 
 TEST(MCMC, InfMALA) {
 
-  const unsigned int N = 5e5;
+  const unsigned int N = 5e4;
 
   // parameters for the sampler
   pt::ptree pt;
@@ -97,12 +97,14 @@ TEST(MCMC, InfMALA) {
   EXPECT_NEAR(postMean(0), sampMean(0), 1e-2);
   EXPECT_NEAR(postMean(1), sampMean(1), 1e-2);
 
+  EXPECT_GE(N, dens->GetNumCalls("Evaluate"));
+  EXPECT_GE(N, dens->GetNumCalls("Gradient"));
 }
 
 
 TEST(MCMC, InfMALAInGibbs) {
 
-  const unsigned int N = 1e5;
+  const unsigned int N = 1e3;
 
   // parameters for the sampler
   pt::ptree pt;
