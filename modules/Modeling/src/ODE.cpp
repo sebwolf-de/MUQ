@@ -366,13 +366,20 @@ void ODE::BackwardIntegration(ref_vector<Eigen::VectorXd> const& inputs, unsigne
   nvGradMap = Eigen::VectorXd::Zero(paramSize);
 
   // create a data structure to pass around in Sundials
-#if MUQ_HAS_PARCER==1
-  auto data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(), inputs.begin()+rhs->numInputs), autonomous, wrtIn, comm);
-#else
-  auto data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(),  inputs.begin()+rhs->numInputs), autonomous, wrtIn);
-#endif
+  std::shared_ptr<ODEData> data;
   if( !autonomous ) {
+    #if MUQ_HAS_PARCER==1
+      data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(), inputs.begin()+rhs->numInputs-1), autonomous, wrtIn, comm);
+    #else
+      data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(),  inputs.begin()+rhs->numInputs-1), autonomous, wrtIn);
+    #endif
     data->inputs.insert(data->inputs.begin(), Eigen::VectorXd::Zero(1));
+  }else{
+    #if MUQ_HAS_PARCER==1
+      data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(), inputs.begin()+rhs->numInputs), autonomous, wrtIn, comm);
+    #else
+      data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(),  inputs.begin()+rhs->numInputs), autonomous, wrtIn);
+    #endif
   }
 
   // set solver to null
