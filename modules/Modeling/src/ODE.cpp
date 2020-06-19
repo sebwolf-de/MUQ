@@ -32,7 +32,6 @@ ODE::~ODE() {}
 Eigen::VectorXi ODE::InputSizes(std::shared_ptr<ModPiece> const& rhs, pt::ptree pt) {
   // is the system autonomous
   const bool autonomous = pt.get<bool>("Autonomous", true);
-  std::cout << "Autonomous = " << autonomous << std::endl;
 
   // number of inputs for the RHS plus the time vector but not including current time if the system is aunomous
   Eigen::VectorXi inSizes(rhs->numInputs+(autonomous?1:0));

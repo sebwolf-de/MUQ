@@ -25,7 +25,8 @@ ModGraphPiece::ModGraphPiece(std::shared_ptr<WorkGraph>                         
                                                                                                  wgraph(graph),
                                                                                                  outputID(outputPieceIn->ID()),
                                                                                                  outputPiece(outputPieceIn),
-                                                                                                 constantPieces(constantPiecesIn)  {                                           
+                                                                                                 constantPieces(constantPiecesIn)  {
+
   // build the run order
   assert(graph);
   boost::topological_sort(wgraph->graph, std::front_inserter(runOrder));
@@ -75,8 +76,12 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
   auto& filtGraph = *filtered_graphs[inputDimWrt];
 
   std::vector<std::string> inputNames(constantPieces.size()+1);
+  std::vector<boost::graph_traits<Graph>::vertex_descriptor> inputNodes(constantPieces.size());
+
   std::string outputName = filtGraph[adjointRunOrders[inputDimWrt][0]]->name;
   inputNames.at(constantPieces.size()) = outputName + "_Sensitivity";
+
+  bool needsFinalSum = false;
 
   // Add the forward model
   for(auto node = runOrder.begin(); node != runOrder.end()-1; ++node){
@@ -88,7 +93,7 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
       assert(pieceMod);
       gradGraph.AddNode(std::make_shared<IdentityOperator>(pieceMod->outputSizes(0)), wgraph->graph[*node]->name);
       inputNames.at(placeholderInd) = wgraph->graph[*node]->name;
-
+      inputNodes.at(placeholderInd) = *node;
     }else{
       gradGraph.AddNode(piece, wgraph->graph[*node]->name);
 
@@ -108,6 +113,7 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
   // Add the adjoint components
   for(auto node : adjointRunOrders[inputDimWrt]){
     std::string baseName = wgraph->graph[node]->name;
+
     auto piece = std::dynamic_pointer_cast<ModPiece>(filtGraph[node]->piece);
     assert(piece);
 
@@ -118,6 +124,31 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
       auto target = boost::target(*eout.first, filtGraph);
       outEdges.at( filtGraph[*eout.first]->outputDim ).push_back(std::make_pair(target, filtGraph[*eout.first]->inputDim ));
     }
+
+    // Figure out if the output of the node is used by more than one downstream node, which means we'll have to add up the gradients wrt this nodes output
+    std::vector<unsigned int> edgeCounts(outEdges.size());
+    for(unsigned int outInd=0; outInd<outEdges.size(); ++outInd){
+
+      // Get the total number of gradient pieces that might be flowing into this sum
+      edgeCounts[outInd] = 0;
+      for(unsigned int i = 0; i<outEdges.at(outInd).size(); ++i){
+        auto mod = std::dynamic_pointer_cast<ModPiece>(wgraph->graph[outEdges.at(outInd).at(i).first]->piece);
+        assert(mod);
+        edgeCounts[outInd] += mod->outputSizes.size();
+      }
+
+      // If there is more than one downstream node, we need to add up their sensitivities to this node
+      if(edgeCounts[outInd]>1){
+
+        std::stringstream sumName;
+        sumName << baseName << "[" << outInd << "]_SensitivitySum";
+        gradGraph.AddNode(std::make_shared<SumPiece>(piece->outputSizes(outInd), edgeCounts[outInd]), sumName.str());
+
+        if(baseName==inputNames.at(inputDimWrt)){
+          needsFinalSum = true;
+        }
+      }
+    } // end of ouput index loop for counting edges
 
     // for each combination of incominging and outgoing edges for the forward node in the filtered graph, add a Gradient piece.
     for( auto e =in_edges(node, filtGraph); e.first!=e.second; ++e.first ) {
@@ -168,20 +199,10 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
              all outputs using a SumPiece.  This loop creates the SumPieces
           */
 
-          // Get the total number of gradient pieces that might be flowing into this sum
-          unsigned int edgeCount = 0;
-          for(unsigned int i = 0; i<outEdges.at(outInd).size(); ++i){
-            auto mod = std::dynamic_pointer_cast<ModPiece>(wgraph->graph[outEdges.at(outInd).at(i).first]->piece);
-            assert(mod);
-            edgeCount += mod->outputSizes.size();
-          }
-
           // If there is more than one downstream node, we need to add up their sensitivities to this node
-          if(edgeCount>1){
-
+          if(edgeCounts[outInd]>1){
             std::stringstream sumName;
             sumName << baseName << "[" << outInd << "]_SensitivitySum";
-            gradGraph.AddNode(std::make_shared<SumPiece>(piece->outputSizes(outInd), edgeCount), sumName.str());
 
             // Add edges for the gradient pieces that flow into the sum
             unsigned int edgeInd = 0;
@@ -222,17 +243,41 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
 
         } // end of outgoing edge loop
       }
-    } // end of incoming edge loop
+    } // end of incoming edge
+
   } // end of adjoint run order loop
 
-  // At this point, there should only be one node with an unconnected output.
+  // Add any necessary edges for the final gradient
   std::string outNodeName;
-  for(auto vs = boost::vertices(gradGraph.graph); vs.first!=vs.second; ++vs.first){
-    auto pieceMod =  std::dynamic_pointer_cast<ModPiece>(gradGraph.graph[*vs.first]->piece);
-    if(pieceMod){
-      if(out_degree(*vs.first, gradGraph.graph) <pieceMod->outputSizes.size()){
-        outNodeName = gradGraph.graph[*vs.first]->name;
-        break;
+  if(needsFinalSum){
+
+    outNodeName = inputNames.at(inputDimWrt) + "[0]_SensitivitySum";
+
+    for( auto eout=out_edges(inputNodes.at(inputDimWrt), filtGraph); eout.first!=eout.second; ++eout.first )
+    {
+      auto target = boost::target(*eout.first,filtGraph);
+      auto targetPiece = std::dynamic_pointer_cast<ModPiece>(wgraph->graph[target]->piece);
+      if(targetPiece){
+        // Loop over all the output edges
+        for(unsigned int otherOutInd=0; otherOutInd<targetPiece->outputSizes.size(); ++otherOutInd){
+          std::stringstream otherName;
+          otherName << wgraph->graph[target]->name << "_Gradient[" << otherOutInd << "," << wgraph->graph[*eout.first]->inputDim << "]";
+          gradGraph.AddEdge(otherName.str(), 0, outNodeName, otherOutInd);
+        }
+      }
+
+    }
+
+  }else{
+
+    // At this point, there should only be one node with an unconnected output.
+    for(auto vs = boost::vertices(gradGraph.graph); vs.first!=vs.second; ++vs.first){
+      auto pieceMod =  std::dynamic_pointer_cast<ModPiece>(gradGraph.graph[*vs.first]->piece);
+      if(pieceMod){
+        if(out_degree(*vs.first, gradGraph.graph) <pieceMod->outputSizes.size()){
+          outNodeName = gradGraph.graph[*vs.first]->name;
+          break;
+        }
       }
     }
   }
@@ -492,8 +537,9 @@ void ModGraphPiece::GradientImpl(unsigned int                const  outputDimWrt
   // Check to see if this input-output pair has been computed before.  If so, we don't need to recomptue the gradient graph
   std::pair<unsigned int, unsigned int> indexPair = std::make_pair(outputDimWrt, inputDimWrt);
   auto iter = gradientPieces.find(indexPair);
-  if(iter==gradientPieces.end())
+  if(iter==gradientPieces.end()){
     gradientPieces[indexPair] = GradientGraph(outputDimWrt,inputDimWrt);
+  }
 
   // Evaluate the gradient
   gradient = gradientPieces[indexPair]->Evaluate(newInputs).at(0);

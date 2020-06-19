@@ -53,7 +53,7 @@ std::vector<Eigen::VectorXd> const& ModPiece::Evaluate(ref_vector<Eigen::VectorX
   if(cacheEnabled){
     if(ExistsInCache(input)){
       return outputs;
-      
+
     }else{
       // Copy the contents
       cacheInput.resize(input.size());

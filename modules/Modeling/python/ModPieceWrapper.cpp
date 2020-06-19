@@ -134,7 +134,9 @@ void muq::Modeling::PythonBindings::ModPieceWrapper(py::module &m)
   py::class_<ModGraphPiece, ModPiece, WorkPiece, std::shared_ptr<ModGraphPiece>> mgp(m, "ModGraphPiece");
   mgp
     .def("GetGraph", &ModGraphPiece::GetGraph)
-    .def("GetConstantPieces", &ModGraphPiece::GetConstantPieces);
+    .def("GetConstantPieces", &ModGraphPiece::GetConstantPieces)
+    .def("GradientGraph", &ModGraphPiece::GradientGraph)
+    .def("JacobianGraph", &ModGraphPiece::JacobianGraph);
 
   py::class_<MultiLogisticLikelihood, ModPiece, WorkPiece, std::shared_ptr<MultiLogisticLikelihood>> mll(m, "MultiLogisticLikelihood");
   mll
