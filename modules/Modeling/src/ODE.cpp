@@ -402,7 +402,9 @@ void ODE::BackwardIntegration(ref_vector<Eigen::VectorXd> const& inputs, unsigne
   for( unsigned int t=0; t<outputTimes.size(); ++t ) {
     if( std::fabs(outputTimes(t)-tcurrent)>1.0e-14 ) {
       int flag = CVodeF(cvode_mem, outputTimes(t), state, &tcurrent, CV_NORMAL, &numCheckpts);
-      assert(CheckFlag(&flag, "CVodeF", 1));
+      if(!(CheckFlag(&flag, "CVodeF", 1))){
+          throw std::runtime_error("CVODE Forward integration failed just before adjoint integration.");
+      }
     }
   }
 
@@ -410,7 +412,10 @@ void ODE::BackwardIntegration(ref_vector<Eigen::VectorXd> const& inputs, unsigne
     if( std::fabs(outputTimes(t)-tcurrent)>1.0e-14 ) {
       // integrate the adjoint variable back in time
       int flag = CVodeB(cvode_mem, outputTimes(t), CV_NORMAL);
-      assert(CheckFlag(&flag, "CVodeB", 1));
+      //assert(CheckFlag(&flag, "CVodeB", 1));
+      if(!(CheckFlag(&flag, "CVodeB", 1))){
+          throw std::runtime_error("CVODE Backward integration failed.");
+      }
 
       // get the adjoint variable
       flag = CVodeGetB(cvode_mem, indexB, &tcurrent, lambda);
