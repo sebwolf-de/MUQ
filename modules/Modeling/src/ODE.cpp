@@ -138,7 +138,9 @@ void ODE::ForwardIntegration(void *cvode_mem, N_Vector& state, Eigen::VectorXd c
     // if we have to move forward --- i.e., not at the initial time or another output does not need the current time
     if( std::fabs(outputTimes(t)-tcurrent)>1.0e-14 ) { // we have to move forward in time
       int flag = CVode(cvode_mem, outputTimes(t), state, &tcurrent, CV_NORMAL);
-      assert(CheckFlag(&flag, "CVode", 1));
+      if(!CheckFlag(&flag, "CVode", 1)){
+        throw std::runtime_error("CVODE Integration Failed.");
+      }
     }
 
 #if MUQ_HAS_PARCER==1

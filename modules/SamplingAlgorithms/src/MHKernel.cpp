@@ -63,7 +63,12 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
     prevState->meta["LogTarget"] = currentTarget;
   }
 
-  propTarget = problem->LogDensity(prop);
+  try{
+    propTarget = problem->LogDensity(prop);
+  }catch(std::runtime_error &e){
+    propTarget = -1e20;
+  }
+
   prop->meta["LogTarget"] = propTarget;
 
   // Aceptance probability

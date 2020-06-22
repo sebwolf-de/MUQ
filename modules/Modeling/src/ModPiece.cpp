@@ -312,15 +312,14 @@ Eigen::VectorXd ModPiece::ApplyJacobianByFD(unsigned int                const  o
 {
   numJacActFDCalls++;
 
-  const double eps = std::max(1e-4, 1e-8*vec.norm());
+  const double eps = 1e-4;
 
   ref_vector<Eigen::VectorXd> newInputVec = input;
-  Eigen::VectorXd newInput = input.at(inputDimWrt).get() - 0.5*eps*vec;
+  Eigen::VectorXd newInput = input.at(inputDimWrt).get() - 0.5*eps*vec/vec.norm();
   newInputVec.at(inputDimWrt) = std::cref(newInput);
-
   Eigen::VectorXd f0 = Evaluate(newInputVec).at(outputDimWrt);
 
-  newInput = input.at(inputDimWrt).get() + 0.5*eps*vec;
+  newInput = input.at(inputDimWrt).get() + 0.5*eps*vec/vec.norm();
   newInputVec.at(inputDimWrt) = std::cref(newInput);
 
   Eigen::VectorXd f  = Evaluate(newInputVec).at(outputDimWrt);

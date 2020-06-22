@@ -84,8 +84,13 @@ double MALAProposal::LogDensity(std::shared_ptr<SamplingState> const& currState,
   std::stringstream blockId;
   blockId << "_" << blockInd;
 
-  if(!currState->HasMeta("GradLogDensity" + blockId.str()))
-    currState->meta["GradLogDensity" + blockId.str()] = prob->GradLogDensity(currState, blockInd);
+  if(!currState->HasMeta("GradLogDensity" + blockId.str())){
+    try{
+      currState->meta["GradLogDensity" + blockId.str()] = prob->GradLogDensity(currState, blockInd);
+    }catch(std::runtime_error &e){
+      currState->meta["GradLogDensity" + blockId.str()] = Eigen::VectorXd::Zero(currState->state.at(blockInd).size()).eval();
+    }
+  }
 
   grad = AnyCast( currState->meta["GradLogDensity" + blockId.str()] );
 
