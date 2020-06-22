@@ -65,8 +65,11 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
 
   try{
     propTarget = problem->LogDensity(prop);
+
   }catch(std::runtime_error &e){
-    propTarget = -1e20;
+
+    // If we couldn't compute the log density, reject the proposal
+    return std::vector<std::shared_ptr<SamplingState>>(1, prevState);
   }
 
   prop->meta["LogTarget"] = propTarget;
