@@ -55,6 +55,7 @@ CreateCompileGroup(
 
     TransitionKernel.cpp
     DummyKernel.cpp
+    MIDummyKernel.cpp
     #MCKernel.cpp
     #ISKernel.cpp
     MHKernel.cpp

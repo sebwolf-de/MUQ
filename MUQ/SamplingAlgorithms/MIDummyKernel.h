@@ -1,27 +1,29 @@
-#ifndef DUMMYKERNEL_H_
-#define DUMMYKERNEL_H_
+#ifndef MIDUMMYKERNEL_H_
+#define MIDUMMYKERNEL_H_
 
 #include "MUQ/SamplingAlgorithms/TransitionKernel.h"
-
 #include "MUQ/SamplingAlgorithms/MCMCProposal.h"
-
+#include "MUQ/SamplingAlgorithms/MIInterpolation.h"
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
 
-    /** @brief MCMC kernel for Multiindex methods.
+    /** @brief Dummy kernel for Multiindex MC methods
         @details This kernel combines a coarse proposal from a coarse chain
-        with a fine one, as needed for MIMCMC.
+        with a fine one, as needed for MIMC.
      */
-    class DummyKernel : public TransitionKernel {
+    class MIDummyKernel : public TransitionKernel {
     public:
 
-      DummyKernel(boost::property_tree::ptree const& pt,
-                  std::shared_ptr<AbstractSamplingProblem> problem,
-                  std::shared_ptr<MCMCProposal> proposal);
+      MIDummyKernel(boost::property_tree::ptree const& pt,
+                    std::shared_ptr<AbstractSamplingProblem> problem,
+                    std::shared_ptr<MCMCProposal> proposal,
+                    std::shared_ptr<MCMCProposal> coarse_proposal,
+                    std::shared_ptr<MIInterpolation> proposalInterpolation,
+                    std::shared_ptr<SingleChainMCMC> coarse_chain);
 
-      ~DummyKernel();
+      ~MIDummyKernel();
 
       virtual std::shared_ptr<MCMCProposal> Proposal(){return proposal;};
 
@@ -33,6 +35,9 @@ namespace muq {
 
     protected:
       std::shared_ptr<MCMCProposal> proposal;
+      std::shared_ptr<MCMCProposal> coarse_proposal;
+      std::shared_ptr<MIInterpolation> proposalInterpolation;
+      std::shared_ptr<SingleChainMCMC> coarse_chain;
 
       unsigned int numCalls = 0;
     };

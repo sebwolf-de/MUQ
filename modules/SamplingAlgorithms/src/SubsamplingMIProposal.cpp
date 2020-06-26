@@ -9,7 +9,7 @@ namespace muq {
 
     std::shared_ptr<SamplingState> SubsamplingMIProposal::Sample(std::shared_ptr<SamplingState> const& currentState) {
 
-      sampleID += subsampling;
+      sampleID += subsampling+1;
       while (coarseChain->GetSamples()->size() <= sampleID) {
         coarseChain->AddNumSamps(1);
         coarseChain->Run();

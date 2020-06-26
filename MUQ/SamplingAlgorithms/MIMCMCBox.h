@@ -51,6 +51,8 @@ namespace muq {
 
       std::shared_ptr<MultiIndex> GetHighestIndex();
 
+      void WriteToFile(std::string filename);
+
     private:
 
       // Creates a path of multiindices back to zero, preferring a route along the diagonal

@@ -59,6 +59,8 @@ namespace muq {
 
       virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
 
+      void WriteToFile(std::string filename);
+
     private:
       pt::ptree pt;
       std::shared_ptr<MultiIndexSet> gridIndices;

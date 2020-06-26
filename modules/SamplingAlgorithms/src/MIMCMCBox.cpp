@@ -1,5 +1,6 @@
 #include "MUQ/SamplingAlgorithms/MIMCMCBox.h"
 #include "MUQ/SamplingAlgorithms/DummyKernel.h"
+#include "MUQ/SamplingAlgorithms/MIDummyKernel.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
@@ -21,7 +22,10 @@ namespace muq {
       auto proposal_coarse = componentFactory->Proposal(rootIndex, coarse_problem);
 
       std::vector<std::shared_ptr<TransitionKernel>> coarse_kernels(1);
-      coarse_kernels[0] = std::make_shared<MHKernel>(ptBlockID,coarse_problem,proposal_coarse);
+      if (componentFactory->IsInverseProblem())
+        coarse_kernels[0] = std::make_shared<MHKernel>(ptBlockID,coarse_problem,proposal_coarse);
+      else
+        coarse_kernels[0] = std::make_shared<DummyKernel>(ptBlockID, coarse_problem, proposal_coarse);
 
       Eigen::VectorXd startPtCoarse = componentFactory->StartingPoint(rootIndex);
       auto coarse_chain = std::make_shared<SingleChainMCMC>(ptChains,coarse_kernels);
@@ -47,7 +51,7 @@ namespace muq {
         if (componentFactory->IsInverseProblem())
           kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
         else
-          kernels[0] = std::make_shared<DummyKernel>(ptBlockID, problem, proposal);
+          kernels[0] = std::make_shared<MIDummyKernel>(ptBlockID, problem, proposal, coarse_proposal, proposalInterpolation, coarse_chain);
 
         auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels);
         chain->SetState(startingPoint);
@@ -84,7 +88,7 @@ namespace muq {
         if (componentFactory->IsInverseProblem())
           kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
         else
-          kernels[0] = std::make_shared<DummyKernel>(ptBlockID, problem, proposal);
+          kernels[0] = std::make_shared<MIDummyKernel>(ptBlockID, problem, proposal, coarse_proposal, proposalInterpolation, coarse_chain);
 
         auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels);
         chain->SetState(startingPoint);
@@ -110,6 +114,15 @@ namespace muq {
         auto chain = boxChains[boxIndices->MultiToIndex(boxIndex)];
         chain->AddNumSamps(1);
         chain->Run();
+      }
+    }
+
+    void MIMCMCBox::WriteToFile(std::string filename) {
+      for (int i = 0; i < boxIndices->Size(); i++) {
+        std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
+        auto chain = boxChains[boxIndices->MultiToIndex(boxIndex)];
+        chain->GetSamples()->WriteToFile(filename, "/model_" + boxHighestIndex->ToString() + "_subchain_" + boxIndex->ToString() + "_samples");
+        chain->GetQOIs()->WriteToFile(filename, "/model_" + boxHighestIndex->ToString() + "_subchain_" + boxIndex->ToString() + "_qois");
       }
     }
 

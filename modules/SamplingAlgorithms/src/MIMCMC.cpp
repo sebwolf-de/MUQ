@@ -79,6 +79,13 @@ namespace muq {
       return nullptr;
     }
 
+    void MIMCMC::WriteToFile(std::string filename) {
+      for (auto box : boxes) {
+        box->WriteToFile(filename);
+      }
+    }
+
+
     std::shared_ptr<MultiIndexSet> MIMCMC::GetIndices() {
       return gridIndices;
     }

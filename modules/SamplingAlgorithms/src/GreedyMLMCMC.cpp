@@ -100,6 +100,11 @@ namespace muq {
       return boxes[index];
     }
 
+    void GreedyMLMCMC::WriteToFile(std::string filename) {
+      for (auto box : boxes) {
+        box->WriteToFile(filename);
+      }
+    }
 
     Eigen::VectorXd GreedyMLMCMC::MeanQOI() {
       // Compute full QOI estimate

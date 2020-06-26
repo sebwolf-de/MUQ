@@ -13,6 +13,7 @@
 #include "MUQ/SamplingAlgorithms/Phonebook.h"
 #include "MUQ/SamplingAlgorithms/RemoteMIProposal.h"
 #include "MUQ/SamplingAlgorithms/DummyKernel.h"
+#include "MUQ/SamplingAlgorithms/MIDummyKernel.h"
 #include "MUQ/SamplingAlgorithms/MIKernel.h"
 #include "MUQ/Utilities/MultiIndices/MultiIndexFactory.h"
 
@@ -101,7 +102,7 @@ namespace muq {
               if (componentFactory->IsInverseProblem())
                 kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,nullptr);
               else
-                kernels[0] = std::make_shared<DummyKernel>(ptBlockID, problem, proposal);
+                kernels[0] = std::make_shared<MIDummyKernel>(ptBlockID, problem, proposal, coarse_proposal, proposalInterpolation, coarse_chain);
 
               auto startingState = std::make_shared<SamplingState>(startingPoint);
               startingState->meta["coarseSample"] = std::make_shared<SamplingState>(componentFactory->StartingPoint(remoteIndex));
@@ -127,7 +128,7 @@ namespace muq {
             if (componentFactory->IsInverseProblem())
               kernels[0] = std::make_shared<MIKernel>(ptBlockID,problem,coarse_problem,proposal,coarse_proposal,proposalInterpolation,coarse_chain);
             else
-              kernels[0] = std::make_shared<DummyKernel>(ptBlockID, problem, proposal);
+              kernels[0] = std::make_shared<MIDummyKernel>(ptBlockID, problem, proposal, coarse_proposal, proposalInterpolation, coarse_chain);
 
             auto chain = std::make_shared<SingleChainMCMC>(ptChains,kernels);
             chain->SetState(startingPoint);

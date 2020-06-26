@@ -31,6 +31,8 @@ namespace muq {
 
       std::shared_ptr<MIMCMCBox> GetBox(int index);
 
+      void WriteToFile(std::string filename);
+
     protected:
       virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
 

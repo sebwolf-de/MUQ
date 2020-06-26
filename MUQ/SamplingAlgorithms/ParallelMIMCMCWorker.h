@@ -373,8 +373,11 @@ namespace muq {
                 }
               } else if (command == ControlFlag::WRITE_TO_FILE) {
                 std::string filename = comm->Recv<std::string>(status.MPI_SOURCE, ControlTag);
-                sampleCollections[0]->WriteToFile(filename, "/Collector_model" + boxHighestIndex->ToString() + "_samples_rank_" + std::to_string(subcomm->GetRank()));
-                qoiCollections[0]->WriteToFile(filename, "/Collector_model" + boxHighestIndex->ToString() + "_qois_rank_" + std::to_string(subcomm->GetRank()));
+                for (uint i = 0; i < boxIndices->Size(); i++) {
+                  std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
+                  sampleCollections[i]->WriteToFile(filename, "/Collector_model" + boxHighestIndex->ToString() + "_subchain_" + boxIndex->ToString() + "_samples_rank_" + std::to_string(subcomm->GetRank()));
+                  qoiCollections[i]->WriteToFile(filename, "/Collector_model" + boxHighestIndex->ToString() + "_subchain_" + boxIndex->ToString() + "_qois_rank_" + std::to_string(subcomm->GetRank()));
+                }
                 comm->Send(true, status.MPI_SOURCE, ControlTag);
               } else {
                 std::cerr << "Unexpected command!" << std::endl;
