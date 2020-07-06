@@ -25,6 +25,7 @@ pipelines:
           - make examples
           - make install
           - ./RunAllTests
+          - ./RunAllParallelTests
 
 
 
@@ -61,7 +62,7 @@ pipelines:
             name: clang-internal-dep
             script:
               - apt-get update
-              - apt-get install -y cmake libgtest-dev clang python-dev
+              - apt-get install -y cmake openmpi-bin libopenmpi-dev libgtest-dev clang python-dev
 
 
               # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
@@ -74,11 +75,12 @@ pipelines:
               # Build muq
               - cd $BITBUCKET_CLONE_DIR
               - cd build
-              - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON -DMUQ_USE_PYTHON=ON ..
+              - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON ..
               - make
               - make examples
               - make install
               - ./RunAllTests
+              - ./RunAllParallelTests
 
 
 
@@ -104,6 +106,7 @@ pipelines:
               - make examples
               - make install
               - ./RunAllTests
+              - ./RunAllParallelTests
 
 
 
