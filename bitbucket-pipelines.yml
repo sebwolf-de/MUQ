@@ -59,7 +59,7 @@ pipelines:
 
 
         - step:
-            name: clang-internal-dep
+            name: clang-internal-dep-mpi
             script:
               - apt-get update
               - apt-get install -y cmake openmpi-bin libopenmpi-dev libgtest-dev clang python-dev
@@ -71,6 +71,7 @@ pipelines:
               - make
               - cp *.a /usr/lib
 
+              - export OMPI_CXX=clang++ # Need this to make sure openmpi actually uses clang
 
               # Build muq
               - cd $BITBUCKET_CLONE_DIR
