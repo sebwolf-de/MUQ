@@ -164,7 +164,7 @@ pipelines:
               image: debian:unstable
               script:
                 - apt-get update
-                - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev
+                - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python3-dev pybind11-dev
 
 
                 # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
