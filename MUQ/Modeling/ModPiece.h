@@ -416,7 +416,9 @@ namespace muq{
                                             Eigen::VectorXd             const& sens,
                                             Eigen::VectorXd             const& vec);
 
-    /** The ModPiece class has support for caching one evaluation.  This can be
+    /** The ModPiece class has support for caching one evaluation.  If more
+        extensive caching is needed, the muq::Modeling::FlannCache class
+        can be used.  The one step caching in the ModPiece class can be
         useful when subsequent calls to the ModPiece might have the exact same
         inputs.   If enabled, both the input and output of EvaluateImpl calls
         will be stored.  If the next call to Evaluate has the same input, then
@@ -446,7 +448,7 @@ namespace muq{
     bool cacheEnabled = false;
     std::vector<Eigen::VectorXd> cacheInput;
 
-    /** Checks to ssee if the input matches the value stored in the one-step cache. */
+    /** Checks to see if the input matches the value stored in the one-step cache. */
     bool ExistsInCache(ref_vector<Eigen::VectorXd> const& input) const;
 
     // The following variables keep track of how many times the Implemented functions, i.e. EvaluateImpl, GradientImpl,
