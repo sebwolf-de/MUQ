@@ -158,10 +158,10 @@ pipelines:
 
 
 
-        # Run Debian testing channel to catch package changes early
+        # Run Debian unstable channel to catch package changes early
         - step:
-              name: debian-testing
-              image: debian:testing
+              name: debian-unstable
+              image: debian:unstable
               script:
                 - apt-get update
                 - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev
