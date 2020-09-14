@@ -127,7 +127,8 @@ void PythonBindings::MCMCWrapper(py::module &m) {
     .def("Kernels", &SingleChainMCMC::Kernels)
     .def("RunImpl", &SingleChainMCMC::RunImpl)
     .def("AddNumSamps", &SingleChainMCMC::AddNumSamps)
-    .def("NumSamps", &SingleChainMCMC::NumSamps);
+    .def("NumSamps", &SingleChainMCMC::NumSamps)
+    .def("TotalTime", &SingleChainMCMC::TotalTime);
 
   py::class_<MIMCMCBox, std::shared_ptr<MIMCMCBox>> multiindexMCMCBox(m, "MIMCMCBox");
   multiindexMCMCBox

@@ -50,10 +50,10 @@ namespace muq {
     protected:
 
       /// The prior value of alpha
-      const double alpha;
+      const Eigen::VectorXd alpha;
 
       /// The prior value of beta
-      const double beta;
+      const Eigen::VectorXd beta;
 
       /// The index of the Gaussian block
       const unsigned int gaussBlock;
@@ -70,8 +70,8 @@ namespace muq {
       static Eigen::VectorXd ExtractMean(std::shared_ptr<AbstractSamplingProblem> prob, std::string const& gaussNode);
 
       static std::shared_ptr<muq::Modeling::InverseGamma> ExtractInverseGamma(std::shared_ptr<AbstractSamplingProblem> prob, std::string const& igNode);
-      static double ExtractAlpha(std::shared_ptr<AbstractSamplingProblem> prob, std::string const& igNode);
-      static double ExtractBeta(std::shared_ptr<AbstractSamplingProblem> prob, std::string const& igNode);
+      static Eigen::VectorXd ExtractAlpha(std::shared_ptr<AbstractSamplingProblem> prob, std::string const& igNode);
+      static Eigen::VectorXd ExtractBeta(std::shared_ptr<AbstractSamplingProblem> prob, std::string const& igNode);
       static unsigned int ExtractGaussInd(std::shared_ptr<AbstractSamplingProblem> prob, std::string const& gaussNode);
     };
 

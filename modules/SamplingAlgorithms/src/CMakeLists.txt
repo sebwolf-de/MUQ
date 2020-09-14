@@ -77,6 +77,7 @@ CreateCompileGroup(
     MHProposal.cpp
     AMProposal.cpp
     MALAProposal.cpp
+    InfMALAProposal.cpp
     MixtureProposal.cpp
     ParallelAMProposal.cpp
     InverseGammaProposal.cpp

@@ -34,13 +34,17 @@ Eigen::VectorXi ODE::InputSizes(std::shared_ptr<ModPiece> const& rhs, pt::ptree 
   const bool autonomous = pt.get<bool>("Autonomous", true);
 
   // number of inputs for the RHS plus the time vector but not including current time if the system is aunomous
-  Eigen::VectorXi inSizes(rhs->numInputs+(autonomous? 1 : 0));
+  Eigen::VectorXi inSizes(rhs->numInputs+(autonomous?1:0));
 
   // same as rhs
-  inSizes.head(rhs->numInputs) = rhs->inputSizes;
+  if(autonomous){
+    inSizes.head(rhs->numInputs) = rhs->inputSizes;
+  }else{
+    inSizes.head(rhs->numInputs-1) = rhs->inputSizes.tail(rhs->numInputs-1);
+  }
 
   // number of times
-  inSizes(rhs->numInputs) = pt.get<unsigned int>("NumObservations");
+  inSizes(inSizes.size()-1) = pt.get<unsigned int>("NumObservations");
   return inSizes;
 }
 
@@ -60,11 +64,12 @@ Eigen::VectorXi ODE::OutputSizes(std::shared_ptr<ModPiece> const& rhs, pt::ptree
 
 
 void ODE::Integrate(ref_vector<Eigen::VectorXd> const& inputs, int const wrtIn, N_Vector const& vec, DerivativeMode const& mode) {
-  // the number of inputs must be greater than the number of inputs required by the rhs
-  assert(inputs.size()>rhs->numInputs-(autonomous? 0 : 1));
+
+  // the number of inputs must match the number of inputs required by the rhs
+  assert(inputs.size()==rhs->numInputs+(autonomous? 1 : 0));
 
   // get the state size
-  const unsigned int stateSize = autonomous? inputSizes(0) : inputSizes(1);
+  const unsigned int stateSize = inputSizes(0);
 
   // create the state vector
 #if MUQ_HAS_PARCER==1
@@ -123,7 +128,7 @@ void ODE::ForwardIntegration(void *cvode_mem, N_Vector& state, Eigen::VectorXd c
   outputs[0] = Eigen::VectorXd::Constant(outputSizes(0), std::numeric_limits<double>::quiet_NaN());
 
   // get the state size
-  const unsigned int stateSize = autonomous? inputSizes(0) : inputSizes(1);
+  const unsigned int stateSize = inputSizes(0);//autonomous? inputSizes(0) : inputSizes(1);
 
   // start the clock at t=0
   double tcurrent = 0.0;
@@ -133,7 +138,9 @@ void ODE::ForwardIntegration(void *cvode_mem, N_Vector& state, Eigen::VectorXd c
     // if we have to move forward --- i.e., not at the initial time or another output does not need the current time
     if( std::fabs(outputTimes(t)-tcurrent)>1.0e-14 ) { // we have to move forward in time
       int flag = CVode(cvode_mem, outputTimes(t), state, &tcurrent, CV_NORMAL);
-      assert(CheckFlag(&flag, "CVode", 1));
+      if(!CheckFlag(&flag, "CVode", 1)){
+        throw std::runtime_error("CVODE Integration Failed.");
+      }
     }
 
 #if MUQ_HAS_PARCER==1
@@ -360,13 +367,20 @@ void ODE::BackwardIntegration(ref_vector<Eigen::VectorXd> const& inputs, unsigne
   nvGradMap = Eigen::VectorXd::Zero(paramSize);
 
   // create a data structure to pass around in Sundials
-#if MUQ_HAS_PARCER==1
-  auto data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(), inputs.begin()+rhs->numInputs), autonomous, wrtIn, comm);
-#else
-  auto data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(),  inputs.begin()+rhs->numInputs), autonomous, wrtIn);
-#endif
+  std::shared_ptr<ODEData> data;
   if( !autonomous ) {
+    #if MUQ_HAS_PARCER==1
+      data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(), inputs.begin()+rhs->numInputs-1), autonomous, wrtIn, comm);
+    #else
+      data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(),  inputs.begin()+rhs->numInputs-1), autonomous, wrtIn);
+    #endif
     data->inputs.insert(data->inputs.begin(), Eigen::VectorXd::Zero(1));
+  }else{
+    #if MUQ_HAS_PARCER==1
+      data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(), inputs.begin()+rhs->numInputs), autonomous, wrtIn, comm);
+    #else
+      data = std::make_shared<ODEData>(rhs, ref_vector<Eigen::VectorXd>(inputs.begin(),  inputs.begin()+rhs->numInputs), autonomous, wrtIn);
+    #endif
   }
 
   // set solver to null
@@ -388,7 +402,9 @@ void ODE::BackwardIntegration(ref_vector<Eigen::VectorXd> const& inputs, unsigne
   for( unsigned int t=0; t<outputTimes.size(); ++t ) {
     if( std::fabs(outputTimes(t)-tcurrent)>1.0e-14 ) {
       int flag = CVodeF(cvode_mem, outputTimes(t), state, &tcurrent, CV_NORMAL, &numCheckpts);
-      assert(CheckFlag(&flag, "CVodeF", 1));
+      if(!(CheckFlag(&flag, "CVodeF", 1))){
+          throw std::runtime_error("CVODE Forward integration failed just before adjoint integration.");
+      }
     }
   }
 
@@ -396,7 +412,10 @@ void ODE::BackwardIntegration(ref_vector<Eigen::VectorXd> const& inputs, unsigne
     if( std::fabs(outputTimes(t)-tcurrent)>1.0e-14 ) {
       // integrate the adjoint variable back in time
       int flag = CVodeB(cvode_mem, outputTimes(t), CV_NORMAL);
-      assert(CheckFlag(&flag, "CVodeB", 1));
+      //assert(CheckFlag(&flag, "CVodeB", 1));
+      if(!(CheckFlag(&flag, "CVodeB", 1))){
+          throw std::runtime_error("CVODE Backward integration failed.");
+      }
 
       // get the adjoint variable
       flag = CVodeGetB(cvode_mem, indexB, &tcurrent, lambda);
