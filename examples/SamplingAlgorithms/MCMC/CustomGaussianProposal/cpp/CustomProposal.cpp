@@ -95,7 +95,7 @@ int main(){
   Eigen::VectorXd propMu = Eigen::VectorXd::Zero(2);
 
   // Set the proposal covariance to be the optimal scaling of the target covariance
-  Eigen::MatrixXd propCov = (2.4/std::sqrt(2))*cov;
+  Eigen::MatrixXd propCov = (2.4*2.4/std::sqrt(2))*cov;
 
   auto propDist = std::make_shared<Gaussian>(propMu, propCov);
 
@@ -157,16 +157,16 @@ int main(){
   values, i.e., $\mathbb{E}_x[(x_i-\mu_i)^3]$ for each $i$.
   */
   Eigen::VectorXd sampMean = samps->Mean();
-  std::cout << "\nSample Mean = \n" << sampMean.transpose() << std::endl;
+  std::cout << "\nSample Mean:\n" << sampMean.transpose() << std::endl;
 
   Eigen::VectorXd sampVar = samps->Variance();
-  std::cout << "\nSample Variance = \n" << sampVar.transpose() << std::endl;
+  std::cout << "\nSample Variance:\n" << sampVar.transpose() << std::endl;
 
   Eigen::MatrixXd sampCov = samps->Covariance();
-  std::cout << "\nSample Covariance = \n" << sampCov << std::endl;
+  std::cout << "\nSample Covariance:\n" << sampCov << std::endl;
 
   Eigen::VectorXd sampMom3 = samps->CentralMoment(3);
-  std::cout << "\nSample Third Moment = \n" << sampMom3 << std::endl << std::endl;
+  std::cout << "\nSample Third Moment:\n" << sampMom3.transpose() << std::endl << std::endl;
 
   /***
   ### 5. Inspect the sample meta data.
