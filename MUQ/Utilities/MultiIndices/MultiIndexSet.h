@@ -91,12 +91,9 @@ namespace muq{
       // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
       /** Get all the active multiindices in this set.
-          @return A \f$K\times D\f$ matrix of unsigned integers, where \f$D\f$ is
-          the dimension of each multiindex, and \f$K\f$ is the number of
-          multiindices in this set.  Note that each row of the returned matrix
-          is a multiindex.
+          @return A vector with shared pointers to all the multi indices in the set.
       */
-      //virtual std::vector<std::MultiIndices GetAllMultiIndices() const;
+      virtual std::vector<std::shared_ptr<MultiIndex>> GetAllMultiIndices() const {return allMultis;};
 
 
       /** Given an index into the set, return the corresponding multiindex as an
