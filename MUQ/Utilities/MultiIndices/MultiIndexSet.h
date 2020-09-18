@@ -99,13 +99,6 @@ namespace muq{
       //virtual std::vector<std::MultiIndices GetAllMultiIndices() const;
 
 
-      /** Given an index into the set, return the corresponding multiindex as a row vector of unsigned integers. If all the multiindices were stored in a vector called multiVec, the functionality of this method would be equivalent to multiVec[activeIndex].
-       @param[in] activeIndex Linear index of interest.
-       @return A row vector containing the multiindex corresponding to activeIndex.
-       */
-      //virtual Eigen::RowVectorXu IndexToMulti(unsigned int const activeIndex) const;
-
-
       /** Given an index into the set, return the corresponding multiindex as an
           instance of the MultiIndex set. If all the multiindices were stored in a
           vector called multiVec, the functionality of this method would be equivalent
@@ -123,12 +116,6 @@ namespace muq{
           contain the multiindex, -1 is returned.
       */
       virtual int MultiToIndex(std::shared_ptr<MultiIndex> const& input) const;
-
-      /** Given a multiindex, return the linear index where it is located.
-       @param[in] input A row vector of unsigned integers representing the multiindex.
-       @return If the multiindex was found in this set, a nonnegative value containing the linear index is returned.  However, if the set does not contain the multiindex, -1 is returned.
-       */
-      //virtual int MultiToIndex(Eigen::RowVectorXu const& multiIn) const;
 
       /** Get the dimension of the multiindex, i.e. how many components does it have? */
       virtual unsigned int GetMultiLength() const{return dim;};
@@ -150,26 +137,11 @@ namespace muq{
       virtual std::shared_ptr<MultiIndex> const& at(int activeIndex){return IndexToMulti(activeIndex);}
 
       /**
-       * This function provides constant access to each of the MultiIndices.
-       @param[in] outputIndex The index of the MultiIndex to return.
-       @return A pointer to the MultiIndex at index outputIndex.
-       */
-      //virtual const std::shared_ptr<MultiIndex>& at(int outputIndex) const{return pool->at(local2global.at(active2local.at(outputIndex)));};
-
-
-      /**
        * This function provides access to each of the MultiIndices without any bounds checking on the vector.
        @param[in] outputIndex The index of the active MultiIndex we want to return.
        @return A pointer to the MultiIndex at index outputIndex.
        */
       virtual std::shared_ptr<MultiIndex> operator[](int activeIndex){return allMultis[active2global[activeIndex]]; };
-
-      /**
-       * This function provides constant access to each of the basis functions without any bounds checking on the vector.
-       @param[in] outputIndex The index of the basis function we want to return.
-       @return A pointer to the basis function at index outputIndex.
-       */
-      //virtual const std::shared_ptr<MultiIndex>& operator[](int outputIndex) const{return (*pool)[local2global[active2local[outputIndex]]];};
 
       /**
        * Get the number of active MultiIndices in this set.
@@ -200,16 +172,6 @@ namespace muq{
        */
       virtual MultiIndexSet& operator+=(std::shared_ptr<MultiIndex> const& rhs);
 
-      /** @brief Add a single MultiIndex to the set.
-       @details This function creates an instance of MultiIndex from the row
-                vector and calls the other += operator.
-       @param[in] multiIndex A row vector of unsigned integers represent the
-                  multiindex.
-       @return A reference to this MultiIndex set, which may now contain the new
-               MultiIndex in multiIndex.
-       */
-      //virtual MultiIndexSet& operator+=(Eigen::RowVectorXu const& multiIndex);
-
       /** @brief Add all terms in rhs to this instance.
        @details This function adds all unique MultiIndices from the rhs into this MultiIndexSet.  In the event that a multiindex is active in one set, but not the other, the union will set that multiindex to be active.
        @param[in] rhs The MultiIndex set we want to add to this instance.
@@ -217,24 +179,14 @@ namespace muq{
        */
       virtual int Union(const MultiIndexSet &rhs);
 
-
       /**
          Make the multi-index active. Assumes that the multiIndex input is already
          admissible, as checked by an assertion.  To be admissable (according to
          this function), the multiIndex must already exist as an inactive member
          of this set.  If that is not the case, use the AddActive function instead.
-         @param[in] multiIndex A multiindex to make active.  Note that an assert will fail if multiIndex is not admissable.
+         @param[in] multiIndex A multiindex to make active. Note that an assert will fail if multiIndex is not admissable.
       */
       virtual void Activate(std::shared_ptr<MultiIndex> const& multiIndex);
-
-      /**
-         Make the multi-index active. Assumes that the multiIndex input is already
-         admissible, as checked by an assertion.  Notice that this function simply
-         creates an instance of MultiIndex and calls the
-         Activate(std::shared_ptr<MultiIndex> multiIndex) function.
-        @param[in] multiIndex A row vector of unsigned integers representing the multiindex.
-      */
-      //virtual void Activate(Eigen::RowVectorXu const& multiIndex){Activate(std::make_shared<MultiIndex>(multiIndex));};
 
       /**
        * Add the given multiindex to the set and make it active.  The functionality
@@ -248,14 +200,6 @@ namespace muq{
        @return An integer specifying the linear index of the now active multiindex.
        */
       virtual int AddActive(std::shared_ptr<MultiIndex> const& newNode);
-
-      /** This function simply creates an instance of MultiIndex and calls the
-          AddActive(std::shared_ptr<MultiIndex> newNode) function.
-       @param[in] multiIndex A row vector of unsigned integers representing the multiindex to add to the set.
-       @return An integer specifying the linear index of the now active multiindex.
-       */
-      //virtual int AddActive(Eigen::RowVectorXu const& multiIndex){return AddActive(std::make_shared<MultiIndex>(multiIndex));};
-
 
       /**
          If possible, make the neighbors of this index active, and return any
@@ -286,13 +230,6 @@ namespace muq{
                  added to the set in order to make the given multiIndex admissable.
        */
       virtual std::vector<unsigned> ForciblyActivate(std::shared_ptr<MultiIndex> const& multiIndex);
-
-      /**
-       * This function simply creates an instance of the MultiIndex class and calls ForciblyActivate(std::shared_ptr<MultiIndex> multiIndex).
-       * @param multiIndex A row vector of unsigned integers defining the multiindex.
-       * @return A vector of linear indices indicating all the active MultiIndices added to the set in order to make the given multiIndex admissable.
-       */
-      //virtual Eigen::VectorXu ForciblyActivate(Eigen::RowVectorXu const& multiIndex){return ForciblyActivate(std::make_shared<MultiIndex>(multiIndex));};
 
       /** This function returns the admissable forward neighbors of an active multiindex.
        @param[in] activeIndex The linear index of the active multiIndex under consideration.
@@ -346,19 +283,11 @@ namespace muq{
       virtual bool IsAdmissible(unsigned int globalIndex) const;
       virtual bool IsActive(unsigned int globalIndex) const;
 
-      //int AddActiveNode(std::shared_ptr<MultiIndex> newNode);
-      // int AddActive(std::shared_ptr<MultiIndex>                                        newNode,
-      //               std::map<std::shared_ptr<MultiIndex>, unsigned int, MultiPtrComp>::iterator iter);
-      //
-      // int AddInactive(std::shared_ptr<MultiIndex>                                        newNode,
-      //                 std::map<std::shared_ptr<MultiIndex>, unsigned int, MultiPtrComp>::iterator iter);
-
       void AddForwardNeighbors(unsigned int globalIndex, bool addInactive);
       void AddBackwardNeighbors(unsigned int globalIndex, bool addInactive);
 
       void Activate(int globalIndex);
       void ForciblyActivate(int localIndex, std::vector<unsigned int> &newInds);
-
 
       // Maps the active index to an entry in allMultis
       std::vector<unsigned> active2global;
