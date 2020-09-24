@@ -19,8 +19,8 @@ namespace muq {
 
       Eigen::VectorXd startingPoint = componentFactory->StartingPoint(index);
 
-      coarse_chain = std::make_shared<SingleChainMCMC>(pt,kernels);
-      coarse_chain->SetState(startingPoint);
+      fine_chain = std::make_shared<SingleChainMCMC>(pt,kernels); 
+      fine_chain->SetState(startingPoint);
     }
 
     std::shared_ptr<SampleCollection> SLMCMC::GetSamples() const {
@@ -31,17 +31,25 @@ namespace muq {
     }
 
     std::shared_ptr<SampleCollection> SLMCMC::RunImpl(std::vector<Eigen::VectorXd> const& x0) {
-      return coarse_chain->Run();
+      return fine_chain->Run();
     }
 
     Eigen::VectorXd SLMCMC::MeanQOI() {
-      return coarse_chain->GetQOIs()->Mean();
+      return fine_chain->GetQOIs()->Mean();
     }
 
     Eigen::VectorXd SLMCMC::MeanParameter() {
-      auto samps = coarse_chain->GetSamples();
+      auto samps = fine_chain->GetSamples();
       return samps->Mean();
     }
-
+    
+    void SLMCMC::WriteToFile(std::string filename){
+      auto samps = fine_chain->GetSamples();
+      auto QOI = fine_chain->GetQOIs();
+      if(QOI != nullptr)
+        QOI->WriteToFile(filename,"/qois");
+      samps->WriteToFile(filename,"/samples"); 
+    }
+    
   }
 }

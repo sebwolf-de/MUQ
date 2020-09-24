@@ -30,6 +30,8 @@ namespace muq {
       Eigen::VectorXd MeanQOI();
 
       Eigen::VectorXd MeanParameter();
+      
+      void WriteToFile(std::string filename);
 
     protected:
       virtual std::shared_ptr<SampleCollection> RunImpl(std::vector<Eigen::VectorXd> const& x0) override;
@@ -37,7 +39,7 @@ namespace muq {
     private:
       std::shared_ptr<MIComponentFactory> componentFactory;
 
-      std::shared_ptr<SingleChainMCMC> coarse_chain;
+      std::shared_ptr<SingleChainMCMC> fine_chain;
     };
 
   }
