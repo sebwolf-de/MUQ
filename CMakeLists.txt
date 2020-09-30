@@ -20,16 +20,16 @@ message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
 
 
 ###############################################
+# User options
+###############################################
+INCLUDE(OptionsSetup)
+
+###############################################
 # Compiler configuration
 ###############################################
 INCLUDE(SetupCompiler)
 INCLUDE(CompilerCheck)
 include_directories(.)
-
-###############################################
-# User options
-###############################################
-INCLUDE(OptionsSetup)
 
 ###############################################
 # Find source files and calculate required dependencies
