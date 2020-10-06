@@ -313,18 +313,20 @@ Eigen::VectorXd ModPiece::ApplyJacobianByFD(unsigned int                const  o
   numJacActFDCalls++;
 
   const double eps = 1e-4;
+  double vecNorm = vec.norm();
+  const Eigen::VectorXd stepDir = vec/vecNorm;
 
   ref_vector<Eigen::VectorXd> newInputVec = input;
-  Eigen::VectorXd newInput = input.at(inputDimWrt).get() - 0.5*eps*vec/vec.norm();
+  Eigen::VectorXd newInput = input.at(inputDimWrt).get() - 0.5*eps*stepDir;
   newInputVec.at(inputDimWrt) = std::cref(newInput);
   Eigen::VectorXd f0 = Evaluate(newInputVec).at(outputDimWrt);
-
-  newInput = input.at(inputDimWrt).get() + 0.5*eps*vec/vec.norm();
+  
+  newInput = input.at(inputDimWrt).get() + 0.5*eps*stepDir;
   newInputVec.at(inputDimWrt) = std::cref(newInput);
 
   Eigen::VectorXd f  = Evaluate(newInputVec).at(outputDimWrt);
 
-  return (f-f0)/eps;
+  return vecNorm*(f-f0)/eps;
 }
 
 Eigen::VectorXd ModPiece::ApplyHessian(unsigned int                const  outWrt,

@@ -25,8 +25,8 @@ pipelines:
           - make examples
           - make install
           - ./RunAllTests
-      
-      
+
+
 
   custom:
     weekly-build:
@@ -112,14 +112,14 @@ pipelines:
               image: ubuntu:latest
               script:
                 - apt-get update
-                - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev
+                - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev
 
 
                 # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
                 - cd /usr/src/gtest
                 - cmake CMakeLists.txt
                 - make
-                - cp *.a /usr/lib
+                - cp lib/*.a /usr/lib
 
 
                 # Build muq
@@ -139,14 +139,14 @@ pipelines:
               script:
                 - apt-get update
                 # We should pre-install sundials. However, its dependency petsc-dev is uninstallably broken in ubuntu 19.10 :/
-                - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev python-dev pybind11-dev #libsundials-dev
+                - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev python-dev pybind11-dev #libsundials-dev
 
 
                 # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
                 - cd /usr/src/gtest
                 - cmake CMakeLists.txt
                 - make
-                - cp *.a /usr/lib
+                - cp lib/*.a /usr/lib
 
 
                 # Build muq
