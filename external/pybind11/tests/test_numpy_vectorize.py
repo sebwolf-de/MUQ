@@ -1,10 +1,8 @@
+# -*- coding: utf-8 -*-
 import pytest
 from pybind11_tests import numpy_vectorize as m
 
-pytestmark = pytest.requires_numpy
-
-with pytest.suppress(ImportError):
-    import numpy as np
+np = pytest.importorskip("numpy")
 
 
 def test_vectorize(capture):
@@ -109,7 +107,7 @@ def test_type_selection():
 
 def test_docs(doc):
     assert doc(m.vectorized_func) == """
-        vectorized_func(arg0: numpy.ndarray[int32], arg1: numpy.ndarray[float32], arg2: numpy.ndarray[float64]) -> object
+        vectorized_func(arg0: numpy.ndarray[numpy.int32], arg1: numpy.ndarray[numpy.float32], arg2: numpy.ndarray[numpy.float64]) -> object
     """  # noqa: E501 line too long
 
 
@@ -160,12 +158,12 @@ def test_passthrough_arguments(doc):
     assert doc(m.vec_passthrough) == (
         "vec_passthrough(" + ", ".join([
             "arg0: float",
-            "arg1: numpy.ndarray[float64]",
-            "arg2: numpy.ndarray[float64]",
-            "arg3: numpy.ndarray[int32]",
+            "arg1: numpy.ndarray[numpy.float64]",
+            "arg2: numpy.ndarray[numpy.float64]",
+            "arg3: numpy.ndarray[numpy.int32]",
             "arg4: int",
             "arg5: m.numpy_vectorize.NonPODClass",
-            "arg6: numpy.ndarray[float64]"]) + ") -> object")
+            "arg6: numpy.ndarray[numpy.float64]"]) + ") -> object")
 
     b = np.array([[10, 20, 30]], dtype='float64')
     c = np.array([100, 200])  # NOT a vectorized argument
@@ -194,3 +192,14 @@ def test_array_collapse():
     z = m.vectorized_func(1, [[[2]]], 3)
     assert isinstance(z, np.ndarray)
     assert z.shape == (1, 1, 1)
+
+
+def test_vectorized_noreturn():
+    x = m.NonPODClass(0)
+    assert x.value == 0
+    m.add_to(x, [1, 2, 3, 4])
+    assert x.value == 10
+    m.add_to(x, 1)
+    assert x.value == 11
+    m.add_to(x, [[1, 1], [2, 3]])
+    assert x.value == 18
