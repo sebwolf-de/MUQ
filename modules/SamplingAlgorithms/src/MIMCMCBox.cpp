@@ -1,13 +1,15 @@
 #include "MUQ/SamplingAlgorithms/MIMCMCBox.h"
 #include "MUQ/SamplingAlgorithms/DummyKernel.h"
 #include "MUQ/SamplingAlgorithms/MIDummyKernel.h"
+#include "MUQ/SamplingAlgorithms/MarkovChain.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
 
     MIMCMCBox::MIMCMCBox(std::shared_ptr<MIComponentFactory> componentFactory, std::shared_ptr<MultiIndex> boxHighestIndex)
-    : componentFactory(componentFactory),
-    boxHighestIndex(boxHighestIndex)
+    : QOIDiff(std::make_shared<MarkovChain>()),
+      componentFactory(componentFactory),
+      boxHighestIndex(boxHighestIndex)
     {
       pt::ptree ptChains;
       ptChains.put("NumSamples", 0); // number of MCMC steps
@@ -109,12 +111,40 @@ namespace muq {
     }
 
     void MIMCMCBox::Sample() {
+      // Set up valid sample vector with arbitrary number of components in order to store contribution to telescoping sum
+      const int num_components = GetFinestProblem()->blockSizesQOI.size();
+      std::vector<Eigen::VectorXd> sampDiff(num_components);
+      for (int component = 0; component < num_components; component++) {
+        sampDiff[component] = Eigen::VectorXd::Zero(GetFinestProblem()->blockSizesQOI[component]);
+      }
+
       for (int i = 0; i < boxIndices->Size(); i++) {
         std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
         auto chain = boxChains[boxIndices->MultiToIndex(boxIndex)];
         chain->AddNumSamps(1);
         chain->Run();
+
+        // Add new sample to difference according to chain's position in telescoping sum
+        if (chain->GetQOIs()->size() > 0) {
+          auto new_state = chain->GetQOIs()->at(chain->GetQOIs()->size()-1);
+
+          std::shared_ptr<MultiIndex> index = std::make_shared<MultiIndex>(*boxLowestIndex + *boxIndex);
+          auto indexDiffFromTop = std::make_shared<MultiIndex>(*boxHighestIndex - *index);
+
+          if (indexDiffFromTop->Sum() % 2 == 0) {
+            for (int component = 0; component < num_components; component++) {
+              sampDiff[component] += new_state->state[component];
+            }
+          } else {
+            for (int component = 0; component < num_components; component++) {
+              sampDiff[component] -= new_state->state[component];
+            }
+          }
+        }
       }
+      if (boxChains[0]->GetQOIs()->size() > 0)
+        QOIDiff->Add(std::make_shared<SamplingState>(sampDiff));
+
     }
 
     void MIMCMCBox::WriteToFile(std::string filename) {
@@ -124,26 +154,11 @@ namespace muq {
         chain->GetSamples()->WriteToFile(filename, "/model_" + boxHighestIndex->ToString() + "_subchain_" + boxIndex->ToString() + "_samples");
         chain->GetQOIs()->WriteToFile(filename, "/model_" + boxHighestIndex->ToString() + "_subchain_" + boxIndex->ToString() + "_qois");
       }
+      QOIDiff->WriteToFile(filename, "/model_" + boxHighestIndex->ToString() + "_qoi_diff");
     }
 
     Eigen::VectorXd MIMCMCBox::MeanQOI() {
-      Eigen::VectorXd sampMean = Eigen::VectorXd::Zero(GetFinestProblem()->blockSizesQOI.sum());
-
-      for (int i = 0; i < boxIndices->Size(); i++) {
-        std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
-        auto chain = boxChains[boxIndices->MultiToIndex(boxIndex)];
-        auto samps = chain->GetQOIs();
-
-        std::shared_ptr<MultiIndex> index = std::make_shared<MultiIndex>(*boxLowestIndex + *boxIndex);
-        auto indexDiffFromTop = std::make_shared<MultiIndex>(*boxHighestIndex - *index);
-
-        if (indexDiffFromTop->Sum() % 2 == 0) {
-          sampMean += samps->Mean();
-        } else {
-          sampMean -= samps->Mean();
-        }
-      }
-      return sampMean;
+      return QOIDiff->Mean();
     }
 
     Eigen::VectorXd MIMCMCBox::MeanParam() {

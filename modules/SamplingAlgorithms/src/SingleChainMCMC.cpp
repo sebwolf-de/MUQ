@@ -13,7 +13,7 @@ using namespace muq::SamplingAlgorithms;
 
 SingleChainMCMC::SingleChainMCMC(pt::ptree pt,
                                  std::shared_ptr<AbstractSamplingProblem> const& problem) :
-                 SamplingAlgorithm(std::make_shared<MarkovChain>()),
+                 SamplingAlgorithm(std::make_shared<MarkovChain>(), std::make_shared<MarkovChain>()),
                  printLevel(pt.get("PrintLevel",3))
 {
   Setup(pt, problem);
@@ -42,7 +42,7 @@ SingleChainMCMC::SingleChainMCMC(pt::ptree pt,
 
 SingleChainMCMC::SingleChainMCMC(boost::property_tree::ptree pt,
                                  std::vector<std::shared_ptr<TransitionKernel> > const& kernelsIn) :
-                SamplingAlgorithm(std::make_shared<MarkovChain>()),
+                SamplingAlgorithm(std::make_shared<MarkovChain>(), std::make_shared<MarkovChain>()),
                 printLevel(pt.get("PrintLevel",3))
 {
   Setup(pt,kernelsIn);

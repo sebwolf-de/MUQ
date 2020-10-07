@@ -58,6 +58,7 @@ namespace muq {
       // Creates a path of multiindices back to zero, preferring a route along the diagonal
       std::shared_ptr<MultiIndexSet> CreateRootPath(std::shared_ptr<MultiIndex> index);
 
+      std::shared_ptr<SampleCollection> QOIDiff;
 
       std::shared_ptr<MIComponentFactory> componentFactory;
       std::shared_ptr<MultiIndex> boxHighestIndex;
