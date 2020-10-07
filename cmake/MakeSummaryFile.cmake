@@ -127,6 +127,7 @@ endmacro(PrintOptional)
 # print glog status
 FILE(APPEND ${_log_summary} "#  Optional dependencies:\n")
 PrintOptional(GTEST " ----")
+PrintOptional(OTF2 " -----")
 
 FILE(APPEND ${_log_summary} "#\n")
 
