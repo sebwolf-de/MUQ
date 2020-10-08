@@ -1,5 +1,6 @@
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Utilities/Exceptions.h"
+#include "MUQ/Utilities/Demangler.h"
 
 #include <chrono>
 
@@ -202,14 +203,10 @@ void ModPiece::EvaluateImpl(ref_vector<boost::any> const& inputs){
 //  hessTime += 1e6*static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
 // }
 
-
 void ModPiece::CheckInputs(ref_vector<Eigen::VectorXd> const& input, std::string const& funcName)
 {
   bool errorOccured = false;
-
-  std::string className = abi::__cxa_demangle(typeid(*this).name(), NULL, NULL, NULL);
-
-  std::string msg = "\nError evaluating " + className + "::" + funcName + ":\n";
+  std::string msg;
 
   if(input.size() != inputSizes.size()){
     msg += "  - Wrong number of input arguments.  Expected " + std::to_string(inputSizes.size()) + " inputs, but " + std::to_string(input.size()) + " were given.\n";
@@ -223,8 +220,12 @@ void ModPiece::CheckInputs(ref_vector<Eigen::VectorXd> const& input, std::string
     }
   }
 
-  if(errorOccured)
+  if(errorOccured){
+    std::string className = muq::Utilities::demangle(typeid(*this).name());
+    msg = "\nError evaluating " + className + "::" + funcName + ":\n" + msg;
+
     throw muq::WrongSizeError(msg);
+  }
 }
 
 
@@ -320,7 +321,7 @@ Eigen::VectorXd ModPiece::ApplyJacobianByFD(unsigned int                const  o
   Eigen::VectorXd newInput = input.at(inputDimWrt).get() - 0.5*eps*stepDir;
   newInputVec.at(inputDimWrt) = std::cref(newInput);
   Eigen::VectorXd f0 = Evaluate(newInputVec).at(outputDimWrt);
-  
+
   newInput = input.at(inputDimWrt).get() + 0.5*eps*stepDir;
   newInputVec.at(inputDimWrt) = std::cref(newInput);
 
