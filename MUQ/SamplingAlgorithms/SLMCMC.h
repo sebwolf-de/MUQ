@@ -22,6 +22,7 @@ namespace muq {
     class SLMCMC : public SamplingAlgorithm {
 
     public:
+      SLMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory, std::shared_ptr<MultiIndex> index);
       SLMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory);
 
       virtual std::shared_ptr<SampleCollection> GetSamples() const override;
@@ -38,8 +39,7 @@ namespace muq {
 
     private:
       std::shared_ptr<MIComponentFactory> componentFactory;
-
-      std::shared_ptr<SingleChainMCMC> fine_chain;
+      std::shared_ptr<SingleChainMCMC> single_chain;
     };
 
   }

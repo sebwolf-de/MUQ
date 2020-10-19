@@ -131,6 +131,8 @@ namespace muq {
       bool operator!=(const MultiIndex &b) const;
       bool operator<(const MultiIndex &b) const;
       bool operator>(const MultiIndex &b) const;
+      bool operator>=(const MultiIndex &b) const;
+      bool operator<=(const MultiIndex &b) const;
 
       MultiIndex& operator+=(const MultiIndex &b);
       MultiIndex& operator++();
