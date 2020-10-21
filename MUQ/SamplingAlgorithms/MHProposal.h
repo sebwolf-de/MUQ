@@ -1,7 +1,7 @@
 #ifndef MHPROPOSAL_H_
 #define MHPROPOSAL_H_
 
-#include "MUQ/Modeling/Distributions/Gaussian.h"
+#include "MUQ/Modeling/Distributions/GaussianBase.h"
 
 #include "MUQ/SamplingAlgorithms/MCMCProposal.h"
 
@@ -25,21 +25,19 @@ namespace muq {
 
       MHProposal(boost::property_tree::ptree const& pt,
                  std::shared_ptr<AbstractSamplingProblem> prob,
-                 std::shared_ptr<muq::Modeling::Gaussian> proposalIn);
+                 std::shared_ptr<muq::Modeling::GaussianBase> proposalIn);
 
       virtual ~MHProposal() = default;
 
     protected:
 
       /// The proposal distribution
-      std::shared_ptr<muq::Modeling::Gaussian> proposal;
+      std::shared_ptr<muq::Modeling::GaussianBase> proposal;
 
-      virtual std::shared_ptr<SamplingState>
-      Sample(std::shared_ptr<SamplingState> currentState) override;
+      virtual std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> const& currentState) override;
 
-      virtual double
-      LogDensity(std::shared_ptr<SamplingState> currState,
-                 std::shared_ptr<SamplingState> propState) override;
+      virtual double LogDensity(std::shared_ptr<SamplingState> const& currState,
+                                std::shared_ptr<SamplingState> const& propState) override;
 
 
     };

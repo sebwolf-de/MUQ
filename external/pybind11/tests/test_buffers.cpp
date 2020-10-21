@@ -9,6 +9,7 @@
 
 #include "pybind11_tests.h"
 #include "constructor_stats.h"
+#include <pybind11/stl.h>
 
 TEST_SUBMODULE(buffers, m) {
     // test_from_python / test_to_python:
@@ -78,7 +79,7 @@ TEST_SUBMODULE(buffers, m) {
     py::class_<Matrix>(m, "Matrix", py::buffer_protocol())
         .def(py::init<ssize_t, ssize_t>())
         /// Construct from a buffer
-        .def(py::init([](py::buffer b) {
+        .def(py::init([](py::buffer const b) {
             py::buffer_info info = b.request();
             if (info.format != py::format_descriptor<float>::format() || info.ndim != 2)
                 throw std::runtime_error("Incompatible buffer format!");
@@ -166,4 +167,48 @@ TEST_SUBMODULE(buffers, m) {
         .def_readwrite("value", (int32_t DerivedBuffer::*) &DerivedBuffer::value)
         .def_buffer(&DerivedBuffer::get_buffer_info);
 
+    struct BufferReadOnly {
+        const uint8_t value = 0;
+        BufferReadOnly(uint8_t value): value(value) {}
+
+        py::buffer_info get_buffer_info() {
+            return py::buffer_info(&value, 1);
+        }
+    };
+    py::class_<BufferReadOnly>(m, "BufferReadOnly", py::buffer_protocol())
+        .def(py::init<uint8_t>())
+        .def_buffer(&BufferReadOnly::get_buffer_info);
+
+    struct BufferReadOnlySelect {
+        uint8_t value = 0;
+        bool readonly = false;
+
+        py::buffer_info get_buffer_info() {
+            return py::buffer_info(&value, 1, readonly);
+        }
+    };
+    py::class_<BufferReadOnlySelect>(m, "BufferReadOnlySelect", py::buffer_protocol())
+        .def(py::init<>())
+        .def_readwrite("value", &BufferReadOnlySelect::value)
+        .def_readwrite("readonly", &BufferReadOnlySelect::readonly)
+        .def_buffer(&BufferReadOnlySelect::get_buffer_info);
+
+    // Expose buffer_info for testing.
+    py::class_<py::buffer_info>(m, "buffer_info")
+        .def(py::init<>())
+        .def_readonly("itemsize", &py::buffer_info::itemsize)
+        .def_readonly("size", &py::buffer_info::size)
+        .def_readonly("format", &py::buffer_info::format)
+        .def_readonly("ndim", &py::buffer_info::ndim)
+        .def_readonly("shape", &py::buffer_info::shape)
+        .def_readonly("strides", &py::buffer_info::strides)
+        .def_readonly("readonly", &py::buffer_info::readonly)
+        .def("__repr__", [](py::handle self) {
+             return py::str("itemsize={0.itemsize!r}, size={0.size!r}, format={0.format!r}, ndim={0.ndim!r}, shape={0.shape!r}, strides={0.strides!r}, readonly={0.readonly!r}").format(self);
+        })
+        ;
+
+    m.def("get_buffer_info", [](py::buffer buffer) {
+        return buffer.request();
+    });
 }

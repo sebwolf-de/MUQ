@@ -16,7 +16,7 @@ namespace muq {
     public:
 
       static std::shared_ptr<SingleChainMCMC>
-      CreateSingleChain(boost::property_tree::ptree&             pt,
+      CreateSingleChain(boost::property_tree::ptree             pt,
                         std::shared_ptr<AbstractSamplingProblem> problem);
 
     };

@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
 import pytest
 
-from pybind11_tests import virtual_functions as m
-from pybind11_tests import ConstructorStats
+import env  # noqa: F401
+
+m = pytest.importorskip("pybind11_tests.virtual_functions")
+from pybind11_tests import ConstructorStats  # noqa: E402
 
 
 def test_override(capture, msg):
@@ -159,7 +162,7 @@ def test_alias_delay_initialization2(capture):
 
 # PyPy: Reference count > 1 causes call with noncopyable instance
 # to fail in ncv1.print_nc()
-@pytest.unsupported_on_pypy
+@pytest.mark.xfail("env.PYPY")
 @pytest.mark.skipif(not hasattr(m, "NCVirt"), reason="NCVirt test broken on ICPC")
 def test_move_support():
     class NCVirtExt(m.NCVirt):
@@ -369,3 +372,9 @@ def test_inherited_virtuals():
     assert obj.unlucky_number() == -7
     assert obj.lucky_number() == -1.375
     assert obj.say_everything() == "BT -7"
+
+
+def test_issue_1454():
+    # Fix issue #1454 (crash when acquiring/releasing GIL on another thread in Python 2.7)
+    m.test_gil()
+    m.test_gil_from_thread()

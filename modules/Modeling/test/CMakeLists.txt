@@ -8,11 +8,12 @@ CreateTestGroup(
     ModGraphPieceTests.cpp
     ModPieceTests.cpp
     ConstantPieceTests.cpp
+    DerivativePieceTests.cpp
     IdentityPieceTests.cpp
     SplitVectorTests.cpp
     ScaleVectorTests.cpp
     CombineVectorsTests.cpp
-
+    SumPieceTests.cpp
     MultiLogisticTest.cpp
 )
 
@@ -32,6 +33,10 @@ CreateTestGroup(
 
     LinearAlgebra/LinearOperatorTests.cpp
     LinearAlgebra/LyapunovSolverTests.cpp
+    LinearAlgebra/AffineOperatorTests.cpp
+    LinearAlgebra/LOBPCGTests.cpp
+    LinearAlgebra/StochasticEigenSolverTests.cpp
+    LinearAlgebra/SliceOperatorTests.cpp
 
     #LinearAlgebra/ScalarAlgebraTests.cpp
     #LinearAlgebra/EigenVectorAlgebraTests.cpp

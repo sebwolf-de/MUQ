@@ -39,7 +39,7 @@ CreateCompileGroup(
     SAMPLING_ALGORITHM
     "Implement sampling algorithms such as Monte Carlo, importance sampling, and Markov chain Monte Carlo"
     muqSamplingAlgorithms
-    "MODELING_CORE;MODELING_DISTRIBUTIONS;UTILITIES_CORE;UTILITIES_HDF5;SAMPLING_PROBLEMS"
+    "UTILITIES_CORE;UTILITIES_MULTIINDEX;MODELING_CORE;MODELING_DISTRIBUTIONS;UTILITIES_CORE;UTILITIES_HDF5;SAMPLING_PROBLEMS"
     ""
     ""
     AbstractSamplingProblem.cpp
@@ -57,6 +57,8 @@ CreateCompileGroup(
     #MCKernel.cpp
     #ISKernel.cpp
     MHKernel.cpp
+    DRKernel.cpp
+    DILIKernel.cpp
     MIKernel.cpp
     GreedyMLMCMC.cpp
     MIMCMC.cpp
@@ -74,6 +76,9 @@ CreateCompileGroup(
     MCMCProposal.cpp
     MHProposal.cpp
     AMProposal.cpp
+    MALAProposal.cpp
+    InfMALAProposal.cpp
+    MixtureProposal.cpp
     ParallelAMProposal.cpp
     InverseGammaProposal.cpp
     CrankNicolsonProposal.cpp

@@ -8,7 +8,8 @@ namespace muq {
     boxHighestIndex(boxHighestIndex)
     {
       pt::ptree ptChains;
-      ptChains.put("NumSamples", 1e4); // number of MCMC steps
+      ptChains.put("NumSamples", 0); // number of MCMC steps
+      ptChains.put("PrintLevel", 0);
       pt::ptree ptBlockID;
       ptBlockID.put("BlockIndex",0);
 
@@ -92,12 +93,16 @@ namespace muq {
       return finestProblem;
     }
 
+    std::shared_ptr<MultiIndex> MIMCMCBox::getBoxHighestIndex() {
+      return boxHighestIndex;
+    }
 
     void MIMCMCBox::Sample() {
       for (int i = 0; i < boxIndices->Size(); i++) {
         std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
         auto chain = boxChains[boxIndices->MultiToIndex(boxIndex)];
-        chain->Sample();
+        chain->AddNumSamps(1);
+        chain->Run();
       }
     }
 
@@ -120,6 +125,27 @@ namespace muq {
       }
       return sampMean;
     }
+
+    Eigen::VectorXd MIMCMCBox::MeanParam() {
+      Eigen::VectorXd sampMean = Eigen::VectorXd::Zero(GetFinestProblem()->blockSizes.sum());
+
+      for (int i = 0; i < boxIndices->Size(); i++) {
+        std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
+        auto chain = boxChains[boxIndices->MultiToIndex(boxIndex)];
+        auto samps = chain->GetSamples();
+
+        std::shared_ptr<MultiIndex> index = std::make_shared<MultiIndex>(*boxLowestIndex + *boxIndex);
+        auto indexDiffFromTop = std::make_shared<MultiIndex>(*boxHighestIndex - *index);
+
+        if (indexDiffFromTop->Sum() % 2 == 0) {
+          sampMean += samps->Mean();
+        } else {
+          sampMean -= samps->Mean();
+        }
+      }
+      return sampMean;
+    }
+
 
     void MIMCMCBox::DrawChain(std::shared_ptr<SingleChainMCMC> chain, std::string chainid, std::ofstream& graphfile) const {
       graphfile << "subgraph cluster_" << chainid << " {" << std::endl;
@@ -205,6 +231,14 @@ namespace muq {
     std::shared_ptr<SingleChainMCMC> MIMCMCBox::FinestChain() {
       std::shared_ptr<MultiIndex> boxSize = std::make_shared<MultiIndex>(*boxHighestIndex - *boxLowestIndex);
       return boxChains[boxIndices->MultiToIndex(boxSize)];
+    }
+
+    std::shared_ptr<MultiIndexSet> MIMCMCBox::GetBoxIndices() {
+      return boxIndices;
+    }
+
+    std::shared_ptr<SingleChainMCMC> MIMCMCBox::GetChain(std::shared_ptr<MultiIndex> boxIndex) {
+      return boxChains[boxIndices->MultiToIndex(boxIndex)];
     }
 
     std::shared_ptr<MultiIndexSet> MIMCMCBox::CreateRootPath(std::shared_ptr<MultiIndex> index) {

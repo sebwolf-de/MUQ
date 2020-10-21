@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 from pybind11_tests import sequences_and_iterators as m
 from pybind11_tests import ConstructorStats
@@ -31,6 +32,19 @@ def test_generalized_iterators():
     for _ in range(3):
         with pytest.raises(StopIteration):
             next(it)
+
+
+def test_sliceable():
+    sliceable = m.Sliceable(100)
+    assert sliceable[::] == (0, 100, 1)
+    assert sliceable[10::] == (10, 100, 1)
+    assert sliceable[:10:] == (0, 10, 1)
+    assert sliceable[::10] == (0, 100, 10)
+    assert sliceable[-10::] == (90, 100, 1)
+    assert sliceable[:-10:] == (0, 90, 1)
+    assert sliceable[::-10] == (99, -1, -10)
+    assert sliceable[50:60:1] == (50, 60, 1)
+    assert sliceable[50:60:-1] == (50, 60, -1)
 
 
 def test_sequence():
@@ -85,6 +99,25 @@ def test_sequence():
     assert cstats.move_constructions >= 1
     assert cstats.copy_assignments == 0
     assert cstats.move_assignments == 0
+
+
+def test_sequence_length():
+    """#2076: Exception raised by len(arg) should be propagated """
+    class BadLen(RuntimeError):
+        pass
+
+    class SequenceLike():
+        def __getitem__(self, i):
+            return None
+
+        def __len__(self):
+            raise BadLen()
+
+    with pytest.raises(BadLen):
+        m.sequence_length(SequenceLike())
+
+    assert m.sequence_length([1, 2, 3]) == 3
+    assert m.sequence_length("hello") == 5
 
 
 def test_map_iterator():

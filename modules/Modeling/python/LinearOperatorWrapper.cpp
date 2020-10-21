@@ -3,6 +3,7 @@
 #include "MUQ/Modeling/ModPiece.h"
 
 #include "MUQ/Modeling/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/AffineOperator.h"
 #include "MUQ/Modeling/LinearAlgebra/EigenLinearOperator.h"
 //#include "MUQ/Modeling/LinearAlgebra/SparseLinearOperator.h"
 #include "MUQ/Modeling/LinearAlgebra/IdentityOperator.h"
@@ -16,6 +17,7 @@
 #include "MUQ/Modeling/LinearAlgebra/ProductOperator.h"
 #include "MUQ/Modeling/LinearAlgebra/SumOperator.h"
 #include "MUQ/Modeling/LinearAlgebra/ZeroOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/SliceOperator.h"
 
 
 #include <pybind11/pybind11.h>
@@ -41,6 +43,16 @@ void muq::Modeling::PythonBindings::LinearOperatorWrapper(py::module &m)
     .def("cols", &LinearOperator::cols)
     .def("GetMatrix", &LinearOperator::GetMatrix);
 
+  py::class_<AffineOperator, ModPiece, WorkPiece, std::shared_ptr<AffineOperator>>(m, "AffineOperator")
+    .def(py::init([](Eigen::MatrixXd const& Ain, Eigen::VectorXd const& bIn) {
+        return std::make_shared<AffineOperator>(Ain, bIn);;
+     }))
+    .def(py::init<std::shared_ptr<LinearOperator>,Eigen::VectorXd>())
+    .def("Linear", &AffineOperator::Linear)
+    .def("Offset", &AffineOperator::Offset)
+    .def("rows", &AffineOperator::rows)
+    .def("cols", &AffineOperator::cols);
+
   py::class_<EigenLinearOperator<Eigen::MatrixXd>, LinearOperator, ModPiece, WorkPiece, std::shared_ptr<EigenLinearOperator<Eigen::MatrixXd>>> elo(m, "DenseLinearOperator");
   elo
     .def(py::init<Eigen::MatrixXd>())
@@ -52,7 +64,7 @@ void muq::Modeling::PythonBindings::LinearOperatorWrapper(py::module &m)
     .def(py::init<unsigned int>())
     .def("Apply", &IdentityOperator::Apply)
     .def("ApplyTranspose", &IdentityOperator::ApplyTranspose);
-  
+
   /*
   py::class_<SparseLinearOperator, LinearOperator, std::shared_ptr<SparseLinearOperator>> slo(m, "SparseLinearOperator");
   slo
@@ -62,7 +74,7 @@ void muq::Modeling::PythonBindings::LinearOperatorWrapper(py::module &m)
     .def("ApplyTranspose", (Eigen::MatrixXd (SparseLinearOperator::*)(Eigen::Ref<Eigen::MatrixXd> const&)) &SparseLinearOperator::ApplyTranspose)
     .def("ApplyTranspose", (void (SparseLinearOperator::*)(Eigen::Ref<Eigen::MatrixXd> const&, Eigen::Ref<Eigen::MatrixXd>)) &SparseLinearOperator::ApplyTranspose);
   */
-  
+
   py::class_<BlockDiagonalOperator, LinearOperator, std::shared_ptr<BlockDiagonalOperator>> bdOp(m, "BlockDiagonalOperator");
   bdOp
     .def(py::init<std::vector<std::shared_ptr<LinearOperator>> const&>())
@@ -71,7 +83,7 @@ void muq::Modeling::PythonBindings::LinearOperatorWrapper(py::module &m)
     .def("GetMatrix", &BlockDiagonalOperator::GetMatrix)
     .def("GetBlock", &BlockDiagonalOperator::GetBlock)
     .def("GetBlocks", &BlockDiagonalOperator::GetBlocks);
-  
+
   py::class_<BlockRowOperator, LinearOperator, std::shared_ptr<BlockRowOperator>> brOp(m, "BlockRowOperator");
   brOp
     .def(py::init<std::vector<std::shared_ptr<LinearOperator>> const&>())
@@ -87,7 +99,7 @@ void muq::Modeling::PythonBindings::LinearOperatorWrapper(py::module &m)
     .def("Apply", &CompanionMatrix::Apply)
     .def("ApplyTranspose", &CompanionMatrix::ApplyTranspose)
     .def("GetMatrix", &CompanionMatrix::GetMatrix);
-    
+
   py::class_<ConcatenateOperator, LinearOperator, std::shared_ptr<ConcatenateOperator>> concatOp(m, "ConcatenateOperator");
   concatOp
     .def(py::init<std::vector<std::shared_ptr<LinearOperator>> const&, const int>())
@@ -96,20 +108,20 @@ void muq::Modeling::PythonBindings::LinearOperatorWrapper(py::module &m)
     .def("GetMatrix", &ConcatenateOperator::GetMatrix)
     .def("VStack", &ConcatenateOperator::VStack)
     .def("HStack", &ConcatenateOperator::HStack);
-    
+
   py::class_<DiagonalOperator, LinearOperator, std::shared_ptr<DiagonalOperator>> diagOp(m, "DiagonalOperator");
   diagOp
     .def(py::init<Eigen::VectorXd const&>())
     .def("Apply", &DiagonalOperator::Apply)
     .def("ApplyTranspose", &DiagonalOperator::ApplyTranspose)
     .def("GetMatrix", &DiagonalOperator::GetMatrix);
-    
+
   py::class_<KroneckerProductOperator, LinearOperator, std::shared_ptr<KroneckerProductOperator>> kpOp(m, "KroneckerProductOperator");
   kpOp
     .def(py::init<std::shared_ptr<LinearOperator>, std::shared_ptr<LinearOperator>>())
     .def("Apply", &KroneckerProductOperator::Apply)
     .def("ApplyTranspose", &KroneckerProductOperator::ApplyTranspose);
-  
+
   py::class_<ProductOperator, LinearOperator, std::shared_ptr<ProductOperator>> prOp(m, "ProductOperator");
   prOp
     .def(py::init<std::shared_ptr<LinearOperator>, std::shared_ptr<LinearOperator>>())
@@ -123,11 +135,16 @@ void muq::Modeling::PythonBindings::LinearOperatorWrapper(py::module &m)
     .def("Apply", &SumOperator::Apply)
     .def("ApplyTranspose", &SumOperator::ApplyTranspose)
     .def("GetMatrix", &SumOperator::GetMatrix);
-    
+
   py::class_<ZeroOperator, LinearOperator, std::shared_ptr<ZeroOperator>> zeroOp(m, "ZeroOperator");
   zeroOp
     .def(py::init<int, int>())
     .def("Apply", &ZeroOperator::Apply)
     .def("ApplyTranspose", &ZeroOperator::ApplyTranspose);
+
+  py::class_<SliceOperator, LinearOperator, std::shared_ptr<SliceOperator>>(m, "SliceOperator")
+    .def(py::init<int, int,int,int>())
+    .def("Apply", &SliceOperator::Apply)
+    .def("ApplyTranspose", &SliceOperator::ApplyTranspose);
 
 };

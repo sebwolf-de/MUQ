@@ -8,8 +8,8 @@ if(MUQ_USE_MPI)
 
   find_package(MPI REQUIRED)
 
-  set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
-  set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
+  list(APPEND MUQ_LINK_LIBS ${MPI_CXX_LIBRARIES})
+  list(APPEND MUQ_EXTERNAL_INCLUDES ${MPI_CXX_INCLUDE_DIRS})
 
   include_directories(${MPI_CXX_INCLUDE_DIRS})
   link_directories(${MPI_CXX_LIBRARIES})
@@ -21,7 +21,7 @@ else(MUQ_USE_MPI)
 endif(MUQ_USE_MPI)
 
 set(CMAKE_CXX_FLAGS_DEBUG  "-O0") #-O0 works better for memcheck
-set(CMAKE_CXX_FLAGS_RELEASE  "-O3") #full optimization with debug symbols for profiling
+set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -msse4 -mavx") #full optimization with debug symbols for profiling
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 

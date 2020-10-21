@@ -6,7 +6,9 @@ using namespace muq::SamplingAlgorithms;
 
 TransitionKernel::TransitionKernel(pt::ptree                 const& pt,
                                    std::shared_ptr<AbstractSamplingProblem> problem) : blockInd(pt.get("BlockIndex",0)),
-                                                                               problem(problem)  {}
+                                                                                       problem(problem),
+                                                                                       reeval(pt.get<bool>("ReevaluateAcceptedDensity", false)) {}
+
 
 std::shared_ptr<TransitionKernel::TransitionKernelMap> TransitionKernel::GetTransitionKernelMap() {
   // define a static map from type to constructor
@@ -21,6 +23,7 @@ std::shared_ptr<TransitionKernel::TransitionKernelMap> TransitionKernel::GetTran
 }
 
 std::shared_ptr<TransitionKernel> TransitionKernel::Construct(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) {
+
   // get the name of the kernel
   const std::string& kernelName = pt.get<std::string>("Method");
 

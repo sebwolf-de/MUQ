@@ -1,22 +1,23 @@
 cmake_minimum_required (VERSION 2.8.12)
 
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/finds)
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/checks)
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/builds)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/finds)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/checks)
+LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/builds)
 
 INCLUDE(CheckCXXSourceCompiles)
 INCLUDE(CheckCXXSourceRuns)
 INCLUDE(CheckFunctionExists)
 
 # define the project name
-project(MUQ_PRIVATE)
-set(${CMAKE_PROJECT_NAME}_MAJOR_VERSION 1)
-set(${CMAKE_PROJECT_NAME}_MINOR_VERSION 0)
+project(MUQ)
+set(${CMAKE_PROJECT_NAME}_MAJOR_VERSION 0)
+set(${CMAKE_PROJECT_NAME}_MINOR_VERSION 2)
 set(${CMAKE_PROJECT_NAME}_PATCH_VERSION 0)
 set(${CMAKE_PROJECT_NAME}_VERSION ${${CMAKE_PROJECT_NAME}_MAJOR_VERSION}.${${CMAKE_PROJECT_NAME}_MINOR_VERSION}.${${CMAKE_PROJECT_NAME}_PATCH_VERSION})
 
 message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
+
 
 ###############################################
 # Compiler configuration
@@ -72,6 +73,9 @@ get_directory_property(MUQ_COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
 message(STATUS "Storing MUQ_COMPILE_DEFINITIONS = ${MUQ_COMPILE_DEFINITIONS}")
 message(STATUS "MUQ_LIBRARIES = ${MUQ_LIBRARIES}")
 
+set(MUQ_LIBRARIES_CACHE ${MUQ_LIBRARIES} CACHE INTERNAL "List of MUQ libraries for linking in parent projects.")
+set(MUQ_LINK_LIBRARIES_CACHE ${MUQ_LINK_LIBRARIES} CACHE INTERNAL "List of external libraries needed by MUQ for use in parent projects.")
+
 set(MUQ_EXPORT_LIBRARIES "")
 FOREACH(BUILT_LIB ${MUQ_LIBRARIES})
 	list(APPEND MUQ_EXPORT_LIBRARIES ${CMAKE_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}${BUILT_LIB}${CMAKE_SHARED_LIBRARY_SUFFIX})
@@ -108,7 +112,7 @@ install(DIRECTORY MUQ
 	      FILES_MATCHING PATTERN "*.h")
 
 # install the python libraries -- Is there a way to avoid copying this for each library?
-#install(DIRECTORY "${CMAKE_SOURCE_DIR}/modules/Approximation/python/pymuqApproximation/"
+#install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/modules/Approximation/python/pymuqApproximation/"
 #        DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pymuqApproximation"
 #        PATTERN "wrappers/" EXCLUDE)
 
@@ -140,13 +144,7 @@ if(DOXYGEN_FOUND)
 		set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/analytics_header.html)
 	endif()
 
-  message(STATUS "Extracting parameter values from cpp files.  Results are stored in ${CMAKE_BINARY_DIR}/ExtractedParameters.dox")
-  message(STATUS "python ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}")
-  execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/FindPtreeParameters.py ${CMAKE_CURRENT_SOURCE_DIR}
-                  OUTPUT_FILE "${CMAKE_BINARY_DIR}/ParameterDescriptions.dox")
-
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/muq.doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile @ONLY)
-    #configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/ParameterDescriptions.dox.in ${CMAKE_CURRENT_BINARY_DIR}/ParameterDescriptions.dox @ONLY)
     add_custom_target(doc
         ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -155,3 +153,5 @@ if(DOXYGEN_FOUND)
 
 
 endif(DOXYGEN_FOUND)
+
+add_subdirectory(examples EXCLUDE_FROM_ALL)

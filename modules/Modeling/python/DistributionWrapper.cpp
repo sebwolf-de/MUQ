@@ -39,6 +39,46 @@ public:
 private:
 };
 
+class PyGaussianTramp : public PyGaussianBase {
+public:
+    /* Inherit the constructors */
+    using PyGaussianBase::PyGaussianBase;
+
+    /* Trampoline (need one for each virtual function) */
+    unsigned int Dimension() const override {
+      PYBIND11_OVERLOAD(unsigned int,GaussianBase,Dimension);
+    }
+
+    Eigen::MatrixXd ApplyCovariance(Eigen::Ref<const Eigen::MatrixXd> const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyCovariance, x);
+    }
+
+    Eigen::MatrixXd ApplyPrecision(Eigen::Ref<const Eigen::MatrixXd> const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyPrecision, x);
+    }
+
+    virtual Eigen::MatrixXd ApplyCovSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyCovSqrt, x);
+    }
+
+    Eigen::MatrixXd ApplyPrecSqrt(Eigen::Ref<const Eigen::MatrixXd> const& x) const override{
+      PYBIND11_OVERLOAD_PURE(Eigen::MatrixXd, PyGaussianBase, ApplyPrecSqrt, x);
+    }
+
+    Eigen::VectorXd SampleImpl(ref_vector<Eigen::VectorXd> const& params) override{
+      PYBIND11_OVERLOAD(Eigen::VectorXd, PyGaussianBase, SampleImpl, params);
+    }
+
+    void ResetHyperparameters(ref_vector<Eigen::VectorXd> const& params) override{
+      PYBIND11_OVERLOAD(void, PyGaussianBase, ResetHyperparameters, params);
+    }
+
+    double LogDeterminant() const override{
+      PYBIND11_OVERLOAD(double, PyGaussianBase, LogDeterminant);
+    }
+
+};
+
 class Publicist : public PyDistribution {
 public:
     // Expose protected functions
@@ -53,14 +93,14 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
       .def("LogDensity", (double (Distribution::*)(std::vector<Eigen::VectorXd> const&)) &Distribution::LogDensity)
       .def("LogDensity", (double (Distribution::*)(Eigen::VectorXd const&)) &Distribution::LogDensity)
       .def("GradLogDensity", (Eigen::VectorXd (Distribution::*)(unsigned int, std::vector<Eigen::VectorXd> const&)) &Distribution::GradLogDensity)
-      //.def("GradLogDensity", (Eigen::VectorXd (Distribution::*)(unsigned int, Eigen::VectorXd const&)) &Distribution::GradLogDensity)
+      .def("ApplyLogDensityHessian", (Eigen::VectorXd (Distribution::*)(unsigned int, unsigned int, std::vector<Eigen::VectorXd> const&, Eigen::VectorXd const&)) &Distribution::ApplyLogDensityHessian)
       .def("Sample", (Eigen::VectorXd (Distribution::*)(std::vector<Eigen::VectorXd> const&)) &Distribution::Sample)
-      //.def("Sample", (Eigen::VectorXd (Distribution::*)(Eigen::VectorXd const&)) &Distribution::Sample)
       .def("Sample", (Eigen::VectorXd (Distribution::*)()) &Distribution::Sample)
       .def("AsDensity", &Distribution::AsDensity)
       .def("AsVariable", &Distribution::AsVariable)
       .def_readonly("varSize", &Distribution::varSize)
       .def_readonly("hyperSizes", &Distribution::hyperSizes);
+
 
     py::class_<PyDistribution, PyDistributionTramp, Distribution, std::shared_ptr<PyDistribution>> pydist(m, "PyDistribution");
     pydist.def(py::init<unsigned int>());
@@ -88,7 +128,12 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
     uBox
       .def(py::init<Eigen::MatrixXd const&>());
 
-    py::class_<Gaussian, Distribution, std::shared_ptr<Gaussian>> gauss(m,"Gaussian");
+    py::class_<GaussianBase, Distribution, std::shared_ptr<GaussianBase>>(m,"GaussianBase")
+      .def("Dimension", &GaussianBase::Dimension)
+      .def("GetMean", &GaussianBase::GetMean)
+      .def("SetMean", &GaussianBase::SetMean);
+
+    py::class_<Gaussian, GaussianBase, std::shared_ptr<Gaussian>> gauss(m,"Gaussian");
     gauss
       .def(py::init<unsigned int>())
       .def(py::init<unsigned int, Gaussian::InputMask>())
@@ -98,18 +143,31 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
       .def(py::init<Eigen::VectorXd const&, Eigen::MatrixXd const&, Gaussian::Mode>())
       .def(py::init<Eigen::VectorXd const&, Eigen::MatrixXd const&, Gaussian::Mode, Gaussian::InputMask>())
       .def("GetMode", &Gaussian::GetMode)
-      .def("Dimension", &Gaussian::Dimension)
       .def("GetCovariance", &Gaussian::GetCovariance)
       .def("GetPrecision", &Gaussian::GetPrecision)
       .def("ApplyPrecision", &Gaussian::ApplyPrecision)
       .def("ApplyCovariance", &Gaussian::ApplyCovariance)
       .def("ApplyCovSqrt", &Gaussian::ApplyCovSqrt)
       .def("ApplyPrecSqrt", &Gaussian::ApplyPrecSqrt)
-      .def("GetMean", &Gaussian::GetMean)
-      .def("SetMean", &Gaussian::SetMean)
       .def("SetCovariance", &Gaussian::SetCovariance)
       .def("SetPrecision", &Gaussian::SetPrecision)
       .def("Condition", &Gaussian::Condition);
+
+    py::class_<PyGaussianBase, PyGaussianTramp, GaussianBase, Distribution, std::shared_ptr<PyGaussianBase>>(m, "PyGaussianBase")
+        .def(py::init<unsigned int>())
+        .def(py::init<unsigned int, Eigen::VectorXi>())
+        .def(py::init<Eigen::VectorXd>())
+        .def(py::init<Eigen::VectorXd, Eigen::VectorXi>())
+        .def("Dimension", &PyGaussianBase::Dimension)
+        .def("ApplyCovariance", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyCovariance)
+        .def("ApplyPrecision", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyPrecision)
+        .def("ApplyCovSqrt",(Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const)  &PyGaussianBase::ApplyCovSqrt)
+        .def("ApplyPrecSqrt", (Eigen::MatrixXd (PyGaussianBase::*)(Eigen::MatrixXd const&) const) &PyGaussianBase::ApplyPrecSqrt)
+        .def("LogDeterminant", &PyGaussianBase::LogDeterminant)
+        .def("SetMean", &PyGaussianBase::SetMean)
+        .def("GetMean", &PyGaussianBase::GetMean)
+        .def("SampleImpl", (Eigen::VectorXd (PyGaussianBase::*)(ref_vector<Eigen::VectorXd> const&)) &PyGaussianBase::SampleImpl);
+
 
     py::enum_<Gaussian::Mode>(gauss, "Mode")
           .value("Covariance", Gaussian::Mode::Covariance)
@@ -129,6 +187,7 @@ void muq::Modeling::PythonBindings::DistributionWrapper(py::module &m)
     py::class_<InverseGamma, Distribution, std::shared_ptr<InverseGamma>> ig(m, "InverseGamma");
     ig
       .def(py::init<double,double>())
+      .def(py::init<Eigen::VectorXd const&,Eigen::VectorXd const&>())
       .def_readonly("alpha", &InverseGamma::alpha)
       .def_readonly("beta", &InverseGamma::beta);
 }

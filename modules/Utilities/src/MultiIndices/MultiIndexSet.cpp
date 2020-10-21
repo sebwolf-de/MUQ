@@ -298,6 +298,24 @@ std::vector<unsigned int> MultiIndexSet::GetFrontier() const {
   return frontierInds;
 }
 
+std::vector<unsigned int> MultiIndexSet::GetStrictFrontier() const
+{
+  std::vector<unsigned int> frontierInds;
+
+  for(unsigned int activeInd = 0; activeInd<active2global.size(); ++activeInd) {
+    // loop over all the forward neighbors
+    unsigned int globalInd = active2global.at(activeInd);
+
+    bool isStrict = true;
+    for( auto neighbor : outEdges[globalInd])
+      isStrict = isStrict && (!IsActive(neighbor));
+
+    if(isStrict)
+      frontierInds.push_back(activeInd);
+  }
+
+  return frontierInds;
+}
 
 std::vector<unsigned int> MultiIndexSet::GetBackwardNeighbors(unsigned int activeIndex) const
 {
@@ -310,6 +328,39 @@ std::vector<unsigned int> MultiIndexSet::GetBackwardNeighbors(unsigned int activ
   return output;
 }
 
+std::vector<unsigned int> MultiIndexSet::GetBackwardNeighbors(std::shared_ptr<MultiIndex> const& multiIndex) const
+{
+  auto iter = multi2global.find(multiIndex);
+
+  assert(iter!=multi2global.end());
+
+  unsigned int globalInd = iter->second;
+  std::vector<unsigned int> output;
+  for(auto neighbor : inEdges[globalInd])
+    output.push_back(global2active.at(neighbor));
+
+  return output;
+}
+
+
+unsigned int MultiIndexSet::NumActiveForward(unsigned int activeInd) const
+{
+  unsigned int globalInd = active2global.at(activeInd);
+
+  unsigned int numActive = 0;
+  for( auto neighbor : outEdges[globalInd])
+  {
+    if(IsActive(neighbor))
+      numActive++;
+  }
+  return numActive;
+}
+
+unsigned int MultiIndexSet::NumForward(unsigned int activeInd) const
+{
+  unsigned int globalInd = active2global.at(activeInd);
+  return outEdges[globalInd].size();
+}
 
 void MultiIndexSet::AddBackwardNeighbors(unsigned int globalIndex, bool addInactive)
 {

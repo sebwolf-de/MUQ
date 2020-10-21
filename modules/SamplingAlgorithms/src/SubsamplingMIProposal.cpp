@@ -7,18 +7,19 @@ namespace muq {
        subsampling(pt.get("subsampling",1))
     {}
 
-    std::shared_ptr<SamplingState> SubsamplingMIProposal::Sample(std::shared_ptr<SamplingState> currentState) {
+    std::shared_ptr<SamplingState> SubsamplingMIProposal::Sample(std::shared_ptr<SamplingState> const& currentState) {
 
       sampleID += subsampling;
       while (coarseChain->GetSamples()->size() <= sampleID) {
-        coarseChain->Sample();
+        coarseChain->AddNumSamps(1);
+        coarseChain->Run();
       }
 
       return coarseChain->GetSamples()->at(sampleID);
     }
 
-    double SubsamplingMIProposal::LogDensity(std::shared_ptr<SamplingState> currState,
-                                             std::shared_ptr<SamplingState> propState) {
+    double SubsamplingMIProposal::LogDensity(std::shared_ptr<SamplingState> const& currState,
+                                             std::shared_ptr<SamplingState> const& propState) {
       return 0;
     }
 
