@@ -123,7 +123,7 @@ namespace muq {
 
 
         } else if (comm->GetRank() == phonebookRank) {
-          PhonebookServer phonebook(comm, tracer);
+          PhonebookServer phonebook(comm, pt.get<bool>("MLMCMC.Scheduling"), tracer);
           phonebook.Run();
         } else {
           auto phonebookClient = std::make_shared<PhonebookClient>(comm, phonebookRank);

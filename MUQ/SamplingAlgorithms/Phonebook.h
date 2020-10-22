@@ -25,8 +25,10 @@ namespace muq {
     class PhonebookServer {
     public:
 
-      PhonebookServer(std::shared_ptr<parcer::Communicator> comm, std::shared_ptr<muq::Utilities::OTF2TracerBase> tracer)
-        : comm(comm), tracer(tracer)
+      PhonebookServer(std::shared_ptr<parcer::Communicator> comm,
+                      bool scheduling_active = true,
+                      std::shared_ptr<muq::Utilities::OTF2TracerBase> tracer = std::make_shared<muq::Utilities::OTF2TracerDummy>())
+        : comm(comm), scheduling_active(scheduling_active), tracer(tracer)
       {
       }
 
@@ -40,7 +42,7 @@ namespace muq {
           //timer_idle.start();
 
 
-          if (scheduler_active) {
+          if (scheduling_active && !rescheduling_in_progress) {
             for ( auto &indexWorkerListPair : phonebook ) {
               std::shared_ptr<MultiIndex> index = indexWorkerListPair.first;
               WorkerList& workerList = indexWorkerListPair.second;
@@ -98,55 +100,9 @@ namespace muq {
                   comm->Send(rescheduleRank, RootNode, ControlTag);
                   comm->Send(*most_loaded_index, RootNode, ControlTag);
 
-                  //workerList.ResetTimer();
-
-                  scheduler_active = false;
+                  rescheduling_in_progress = true;
                   break; // Phonebook needs to be ready for further communication after rescheduling a process, so don't reschedule another one right now
                 }
-
-
-                /*if (workerList.GetIdleFraction() > .3 || work_run_out) {
-                  spdlog::debug("HIGH IDLE FRACTION IN {}", *indexWorkerListPair.first);
-
-                  // Find busiest model
-                  std::shared_ptr<MultiIndex> busiestModelIndex = nullptr;
-                  double busiest_idle_fraction = 1.0;
-                  for ( auto &indexWorkerListPair : phonebook ) {
-                    WorkerList& workerList = indexWorkerListPair.second;
-
-                    spdlog::debug("Model {} has idle fraction {}", *indexWorkerListPair.first, workerList.GetIdleFraction());
-
-                    // TODO: Add #pending high priority requests / #processes to model load
-                    int high_priority_in_queue = 0;
-                    for (auto request_iter = requests.begin(); request_iter != requests.end(); request_iter++) {
-                      std::shared_ptr<MultiIndex> index = std::get<0>(*request_iter);
-                      bool high_priority = std::get<2>(*request_iter);
-                      if (*index == *indexWorkerListPair.first && high_priority)
-                        high_priority_in_queue++;
-                    }
-                    double current_idle_fraction = workerList.GetIdleFraction();
-                    current_idle_fraction -= (double)high_priority_in_queue / workerList.NumWorkers();
-
-
-                    if (current_idle_fraction < busiest_idle_fraction) {
-                      busiest_idle_fraction = current_idle_fraction;
-                      busiestModelIndex = indexWorkerListPair.first;
-                    }
-                  }
-                  assert (busiestModelIndex != nullptr);
-
-
-                  const int RootNode = 0; // Send to root
-
-                  comm->Send(ControlFlag::SCHEDULING_NEEDED, RootNode, ControlTag);
-                  comm->Send(*indexWorkerListPair.first, RootNode, ControlTag);
-                  comm->Send(*busiestModelIndex, RootNode, ControlTag);
-
-                  scheduler_active = false;
-                  break; // Phonebook needs to be ready for further communication after rescheduling a process, so don't reschedule another one right now
-                }*/
-
-
 
               }
 
@@ -174,9 +130,9 @@ namespace muq {
             else
               requests.push_front(SampleRequest{.requestedSampleIndex = requested_sample_index, .sourceModelIndex = request_source_index, .sourceMPIRank = status.MPI_SOURCE, .highPriority = high_priority});
           } else if (command == ControlFlag::SCHEDULING_DONE) {
-            scheduler_active = true;
+            rescheduling_in_progress = false;
           } else if (command == ControlFlag::SCHEDULING_STOP) {
-            scheduler_active = false;
+            rescheduling_in_progress = true;
           } else if (command == ControlFlag::SET_WORKGROUP) {
             auto index = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(status.MPI_SOURCE, ControlTag));
             int rank = comm->Recv<int>(status.MPI_SOURCE, ControlTag, &status);
@@ -410,8 +366,9 @@ namespace muq {
 
       std::map<std::shared_ptr<MultiIndex>, WorkerList, MultiPtrComp> phonebook;
       std::shared_ptr<parcer::Communicator> comm;
+      bool scheduling_active;
       std::shared_ptr<muq::Utilities::OTF2TracerBase> tracer;
-      bool scheduler_active = true;
+      bool rescheduling_in_progress = false;
     };
 
 
