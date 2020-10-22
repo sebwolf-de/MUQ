@@ -66,7 +66,8 @@ namespace muq {
       StaticLoadBalancingMIMCMC (pt::ptree pt,
                                  std::shared_ptr<ParallelizableMIComponentFactory> componentFactory,
                                  std::shared_ptr<StaticLoadBalancer> loadBalancing = std::make_shared<RoundRobinStaticLoadBalancer>(),
-                                 std::shared_ptr<parcer::Communicator> comm = std::make_shared<parcer::Communicator>())
+                                 std::shared_ptr<parcer::Communicator> comm = std::make_shared<parcer::Communicator>(),
+                                 std::shared_ptr<muq::Utilities::OTF2TracerBase> tracer = std::make_shared<OTF2TracerDummy>())
        : SamplingAlgorithm(nullptr),
          pt(pt),
          comm(comm),
@@ -122,11 +123,11 @@ namespace muq {
 
 
         } else if (comm->GetRank() == phonebookRank) {
-          PhonebookServer phonebook(comm);
+          PhonebookServer phonebook(comm, tracer);
           phonebook.Run();
         } else {
           auto phonebookClient = std::make_shared<PhonebookClient>(comm, phonebookRank);
-          WorkerServer worker(pt, comm, phonebookClient, rootRank, componentFactory);
+          WorkerServer worker(pt, comm, phonebookClient, rootRank, componentFactory, tracer);
         }
 
       }

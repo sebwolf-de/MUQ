@@ -26,7 +26,7 @@ namespace muq {
     class ParallelMIMCMCBox {
     public:
 
-      ParallelMIMCMCBox(boost::property_tree::ptree const& pt, std::shared_ptr<MIComponentFactory> componentFactory, std::shared_ptr<MultiIndex> boxHighestIndex, std::shared_ptr<parcer::Communicator> global_comm, std::shared_ptr<PhonebookClient> phonebookClient)
+      ParallelMIMCMCBox(boost::property_tree::ptree const& pt, std::shared_ptr<MIComponentFactory> componentFactory, std::shared_ptr<MultiIndex> boxHighestIndex, std::shared_ptr<parcer::Communicator> global_comm, std::shared_ptr<PhonebookClient> phonebookClient, std::shared_ptr<muq::Utilities::OTF2TracerBase> tracer)
        : componentFactory(componentFactory),
          boxHighestIndex(boxHighestIndex)
       {
@@ -94,7 +94,7 @@ namespace muq {
 
               coarse_problem = componentFactory->SamplingProblem(remoteIndex); // TODO: Try to avoid this
 
-              auto coarse_proposal = std::make_shared<RemoteMIProposal>(ptBlockID, coarse_problem, global_comm, remoteIndex, phonebookClient);
+              auto coarse_proposal = std::make_shared<RemoteMIProposal>(ptBlockID, coarse_problem, global_comm, remoteIndex, boxHighestIndex, phonebookClient);
               auto startingPoint = componentFactory->StartingPoint(boxLowestIndex);
               auto problem = componentFactory->SamplingProblem(boxLowestIndex);
               auto proposal = componentFactory->Proposal(boxLowestIndex, problem);

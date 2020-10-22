@@ -20,18 +20,20 @@ namespace muq {
 
 		class RemoteMIProposal : public MCMCProposal {
 		public:
-			RemoteMIProposal (pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<parcer::Communicator> comm, std::shared_ptr<MultiIndex> remoteIndex, std::shared_ptr<PhonebookClient> phonebookClient)
+			RemoteMIProposal (pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<parcer::Communicator> comm, std::shared_ptr<MultiIndex> remoteIndex, std::shared_ptr<MultiIndex> sourceIndex, std::shared_ptr<PhonebookClient> phonebookClient)
 				: MCMCProposal(pt,prob),
 				//subsampling(pt.get<int>("Subsampling")),
 				comm(comm),
 		    remoteIndex(remoteIndex),
+		    sourceIndex(sourceIndex),
 				phonebookClient(phonebookClient)
 			{
 			}
 
 			std::shared_ptr<SamplingState> Sample(std::shared_ptr<SamplingState> const& currentState) {
 
-				int remoteRank = phonebookClient->Query(remoteIndex, true);
+
+				int remoteRank = phonebookClient->Query(remoteIndex, sourceIndex, true);
 
 				comm->Send(ControlFlag::SAMPLE, remoteRank, ControlTag);
 				Eigen::VectorXd remoteState = comm->Recv<Eigen::VectorXd>(remoteRank, ControlTag);
@@ -56,6 +58,7 @@ namespace muq {
 			//const int subsampling;
 			std::shared_ptr<parcer::Communicator> comm;
 		  std::shared_ptr<MultiIndex> remoteIndex;
+		  std::shared_ptr<MultiIndex> sourceIndex;
 			std::shared_ptr<PhonebookClient> phonebookClient;
 		};
 	}

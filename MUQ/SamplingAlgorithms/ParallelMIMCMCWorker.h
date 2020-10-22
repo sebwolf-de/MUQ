@@ -196,7 +196,7 @@ namespace muq {
 
     class WorkerServer {
     public:
-      WorkerServer(boost::property_tree::ptree const& pt, std::shared_ptr<parcer::Communicator> comm, std::shared_ptr<PhonebookClient> phonebookClient, int RootRank, std::shared_ptr<ParallelizableMIComponentFactory> componentFactory) {
+      WorkerServer(boost::property_tree::ptree const& pt, std::shared_ptr<parcer::Communicator> comm, std::shared_ptr<PhonebookClient> phonebookClient, int RootRank, std::shared_ptr<ParallelizableMIComponentFactory> componentFactory, std::shared_ptr<muq::Utilities::OTF2TracerBase> tracer) {
 
         while (true) {
           ControlFlag command = comm->Recv<ControlFlag>(RootRank, ControlTag);
@@ -223,7 +223,7 @@ namespace muq {
               auto finestProblem = parallelComponentFactory->SamplingProblem(parallelComponentFactory->FinestIndex());
 
               spdlog::trace("Setting up ParallelMIMCMCBox");
-              auto box = std::make_shared<ParallelMIMCMCBox>(pt, parallelComponentFactory, samplingProblemIndex, comm, phonebookClient);
+              auto box = std::make_shared<ParallelMIMCMCBox>(pt, parallelComponentFactory, samplingProblemIndex, comm, phonebookClient, tracer);
 
               spdlog::debug("Rank {} begins sampling", comm->GetRank());
               const int subsampling = pt.get<int>("MLMCMC.Subsampling");
@@ -352,7 +352,7 @@ namespace muq {
                   spdlog::trace("Requesting sample box for model {}", *boxHighestIndex);
                   if (i % (numSamples / 10) == 0)
                     spdlog::debug("Collected {} out of {} samples for model {}", i, numSamples, *boxHighestIndex);
-                  int remoteRank = phonebookClient->Query(boxHighestIndex, false);
+                  int remoteRank = phonebookClient->Query(boxHighestIndex, boxHighestIndex, false);
                   comm->Send(ControlFlag::SAMPLE_BOX, remoteRank, ControlTag); // TODO: Receive sample in one piece?
                   for (uint i = 0; i < boxIndices->Size(); i++) {
                     //std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
