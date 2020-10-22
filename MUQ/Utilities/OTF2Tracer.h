@@ -1,4 +1,4 @@
-#if MUQ_HAS_OTF2
+#if MUQ_HAS_OTF2==1
 #include <otf2/otf2.h>
 #include <otf2/OTF2_MPI_Collectives.h>
 #endif
@@ -51,7 +51,7 @@ namespace muq {
     };
 
 
-#if !MUQ_HAS_OTF2
+#if MUQ_HAS_OTF2==1
 
     static OTF2_TimeStamp
     get_time( void )
