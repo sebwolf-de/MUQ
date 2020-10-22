@@ -260,19 +260,13 @@ namespace muq {
               int rescheduleRank = comm->Recv<int>(status.MPI_SOURCE, ControlTag);
               auto busy_index = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(status.MPI_SOURCE, ControlTag));
 
-              //if (!did_reassign) {
               spdlog::debug("SCHEDULING_NEEDED Unassigning {}!", rescheduleRank);
-              workerClient.UnassignGroup(idle_index, rescheduleRank);
-              // TODO: Unterstütze Gruppen von workers!!
+              std::vector<int> groupMembers = workerClient.UnassignGroup(idle_index, rescheduleRank);
 
-              std::vector<int> subgroup(0);
-              subgroup.push_back(rescheduleRank);
-              workerClient.assignGroup(subgroup, busy_index);
+              workerClient.assignGroup(groupMembers, busy_index);
 
               phonebookClient->SchedulingDone();
               spdlog::debug("SCHEDULING_NEEDED left!");
-              //did_reassign=true;
-              //}
               command_handled = true;
             }
           }

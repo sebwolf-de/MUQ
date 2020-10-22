@@ -165,11 +165,13 @@ namespace muq {
         phonebookClient->Register(modelindex, subgroup[0]);
       }
 
-      void UnassignGroup (std::shared_ptr<MultiIndex> modelIndex, int groupRootRank) {
+      std::vector<int> UnassignGroup (std::shared_ptr<MultiIndex> modelIndex, int groupRootRank) {
         spdlog::trace("UnRegister {}", groupRootRank);
         phonebookClient->UnRegister(modelIndex, groupRootRank);
         spdlog::trace("Sending unassign to {}", groupRootRank);
         comm->Ssend(ControlFlag::UNASSIGN, groupRootRank, ControlTag);
+        std::vector<int> groupMembers = comm->Recv<std::vector<int>>(groupRootRank, ControlTag);
+        return groupMembers;
       }
 
       void UnassignAll() {
@@ -242,6 +244,7 @@ namespace muq {
                 command = comm->Recv<ControlFlag>(MPI_ANY_SOURCE, ControlTag, &status);
                 //timer_idle.stop();
                 if (command == ControlFlag::UNASSIGN) {
+                  comm->Send<std::vector<int>>(subgroup_proc, status.MPI_SOURCE, ControlTag);
                   break;
                 } else if (command == ControlFlag::SAMPLE) {
                   spdlog::trace("Send sample from {} to rank {}", comm->GetRank(), status.MPI_SOURCE);
