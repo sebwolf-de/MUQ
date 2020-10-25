@@ -26,7 +26,7 @@ namespace muq {
     class ParallelMIMCMCBox {
     public:
 
-      ParallelMIMCMCBox(boost::property_tree::ptree const& pt, std::shared_ptr<MIComponentFactory> componentFactory, std::shared_ptr<MultiIndex> boxHighestIndex, std::shared_ptr<parcer::Communicator> global_comm, std::shared_ptr<PhonebookClient> phonebookClient)
+      ParallelMIMCMCBox(boost::property_tree::ptree const& pt, std::shared_ptr<MIComponentFactory> componentFactory, std::shared_ptr<MultiIndex> boxHighestIndex, std::shared_ptr<parcer::Communicator> global_comm, std::shared_ptr<PhonebookClient> phonebookClient, std::shared_ptr<muq::Utilities::OTF2TracerBase> tracer)
        : componentFactory(componentFactory),
          boxHighestIndex(boxHighestIndex)
       {
@@ -76,10 +76,12 @@ namespace muq {
               coarse_chain->SetState(startPtCoarse);
               boxChains[boxIndices->MultiToIndex(boxIndex)] = coarse_chain;
 
+              tracer->enterRegion(TracerRegions::BurnIn);
               spdlog::debug("Rank {} burning in", global_comm->GetRank());
               coarse_chain->AddNumSamps(pt.get<int>("MCMC.BurnIn"));
               coarse_chain->Run();
               spdlog::debug("Rank {} burned in", global_comm->GetRank());
+              tracer->leaveRegion(TracerRegions::BurnIn);
 
 
             } else { // or we have to request proposals from the next coarser chain
@@ -92,7 +94,7 @@ namespace muq {
 
               coarse_problem = componentFactory->SamplingProblem(remoteIndex); // TODO: Try to avoid this
 
-              auto coarse_proposal = std::make_shared<RemoteMIProposal>(ptBlockID, coarse_problem, global_comm, remoteIndex, phonebookClient);
+              auto coarse_proposal = std::make_shared<RemoteMIProposal>(ptBlockID, coarse_problem, global_comm, remoteIndex, boxHighestIndex, phonebookClient);
               auto startingPoint = componentFactory->StartingPoint(boxLowestIndex);
               auto problem = componentFactory->SamplingProblem(boxLowestIndex);
               auto proposal = componentFactory->Proposal(boxLowestIndex, problem);

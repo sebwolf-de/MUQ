@@ -4,8 +4,8 @@ namespace muq {
   namespace SamplingAlgorithms {
 
     MIMCMC::MIMCMC (pt::ptree pt, std::shared_ptr<MIComponentFactory> componentFactory)
-    : pt(pt),
-      SamplingAlgorithm(std::shared_ptr<SampleCollection>(), std::shared_ptr<SampleCollection>()),
+    : SamplingAlgorithm(std::shared_ptr<SampleCollection>(), std::shared_ptr<SampleCollection>()),
+      pt(pt),
       componentFactory(componentFactory)
     {
       gridIndices = MultiIndexFactory::CreateFullTensor(componentFactory->FinestIndex()->GetVector());

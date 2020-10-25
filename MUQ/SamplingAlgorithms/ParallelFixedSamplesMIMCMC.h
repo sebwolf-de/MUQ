@@ -66,7 +66,8 @@ namespace muq {
       StaticLoadBalancingMIMCMC (pt::ptree pt,
                                  std::shared_ptr<ParallelizableMIComponentFactory> componentFactory,
                                  std::shared_ptr<StaticLoadBalancer> loadBalancing = std::make_shared<RoundRobinStaticLoadBalancer>(),
-                                 std::shared_ptr<parcer::Communicator> comm = std::make_shared<parcer::Communicator>())
+                                 std::shared_ptr<parcer::Communicator> comm = std::make_shared<parcer::Communicator>(),
+                                 std::shared_ptr<muq::Utilities::OTF2TracerBase> tracer = std::make_shared<OTF2TracerDummy>())
        : SamplingAlgorithm(nullptr),
          pt(pt),
          comm(comm),
@@ -122,11 +123,11 @@ namespace muq {
 
 
         } else if (comm->GetRank() == phonebookRank) {
-          PhonebookServer phonebook(comm);
+          PhonebookServer phonebook(comm, pt.get<bool>("MLMCMC.Scheduling"), tracer);
           phonebook.Run();
         } else {
           auto phonebookClient = std::make_shared<PhonebookClient>(comm, phonebookRank);
-          WorkerServer worker(pt, comm, phonebookClient, rootRank, componentFactory);
+          WorkerServer worker(pt, comm, phonebookClient, rootRank, componentFactory, tracer);
         }
 
       }
@@ -192,6 +193,7 @@ namespace muq {
 
       void Finalize() {
         if (comm->GetRank() == rootRank) {
+          phonebookClient->SchedulingStop();
           std::cout << "Starting unassign sequence" << std::endl;
           for (CollectorClient& client : collectorClients) {
             client.Unassign();
@@ -208,6 +210,7 @@ namespace muq {
         if (comm->GetRank() != rootRank) {
           return;
         }
+        // TODO: Divide work between workers
         for (CollectorClient& client : collectorClients) {
           client.GetModelIndex();
           if (client.GetModelIndex() == index) {
@@ -222,11 +225,13 @@ namespace muq {
         if (comm->GetRank() != rootRank) {
           return;
         }
+        // TODO: Get indices from collectors, then request samples for each index
         for (CollectorClient& client : collectorClients) {
           client.CollectSamples(numSamples);
         }
       }
 
+      //bool did_reassign = false;
       void RunSamples() {
         if (comm->GetRank() != rootRank) {
           return;
@@ -239,15 +244,38 @@ namespace muq {
           ControlFlag command = comm->Recv<ControlFlag>(MPI_ANY_SOURCE, ControlTag, &status);
           //timer_idle.stop();
 
+          bool command_handled = false;
           for (CollectorClient& client : collectorClients) {
-            if (client.Receive(command, status))
+            if (client.Receive(command, status)) {
+              command_handled = true;
               break;
+            }
           }
 
-          /*if (!command_handled) {
-           *    s td::cerr << "Unexpected command!" << std::*endl;
-           *    exit(43);
-        }*/
+          if (!command_handled) {
+            if (command == ControlFlag::SCHEDULING_NEEDED) {
+              spdlog::debug("SCHEDULING_NEEDED entered!");
+              // TODO: Phonebook client receive analog zu CollectorClient statt manuellem Empangen!
+              auto idle_index = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(status.MPI_SOURCE, ControlTag));
+              int rescheduleRank = comm->Recv<int>(status.MPI_SOURCE, ControlTag);
+              auto busy_index = std::make_shared<MultiIndex>(comm->Recv<MultiIndex>(status.MPI_SOURCE, ControlTag));
+
+              spdlog::debug("SCHEDULING_NEEDED Unassigning {}!", rescheduleRank);
+              std::vector<int> groupMembers = workerClient.UnassignGroup(idle_index, rescheduleRank);
+
+              workerClient.assignGroup(groupMembers, busy_index);
+
+              phonebookClient->SchedulingDone();
+              spdlog::debug("SCHEDULING_NEEDED left!");
+              command_handled = true;
+            }
+          }
+
+
+          if (!command_handled) {
+            std::cerr << "Unexpected command!" << std::endl;
+            exit(43);
+          }
 
           bool isSampling = false;
           for (CollectorClient& client : collectorClients) {
