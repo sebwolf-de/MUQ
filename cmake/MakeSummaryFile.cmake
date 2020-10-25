@@ -84,10 +84,11 @@ FILE(APPEND ${_log_summary}
 PrintRequired(EIGEN3 " --")
 PrintRequired(BOOST " ---")
 PrintRequired(HDF5 " ----")
-PrintRequired(NANOFLANN " ---")
+PrintRequired(NANOFLANN " ")
 PrintRequired(SUNDIALS " ")
 PrintRequired(NLOPT " ---")
 PrintRequired(PARCER " --")
+PrintRequired(SPDLOG " --")
 
 FILE(APPEND ${_log_summary} "#\n")
 
