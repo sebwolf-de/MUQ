@@ -81,14 +81,15 @@ endmacro(PrintRequired)
 FILE(APPEND ${_log_summary}
 "#  Required dependencies: \n"
 )
-PrintRequired(EIGEN3 " --")
-PrintRequired(BOOST " ---")
-PrintRequired(HDF5 " ----")
+PrintRequired(EIGEN3 " ---")
+PrintRequired(BOOST " ----")
+PrintRequired(HDF5 " -----")
 PrintRequired(NANOFLANN " ")
-PrintRequired(SUNDIALS " ")
-PrintRequired(NLOPT " ---")
-PrintRequired(PARCER " --")
-PrintRequired(SPDLOG " --")
+PrintRequired(SUNDIALS " -")
+PrintRequired(NLOPT " ----")
+PrintRequired(PARCER " ---")
+PrintRequired(SPDLOG " ---")
+PrintRequired(OTF2 " -----")
 
 FILE(APPEND ${_log_summary} "#\n")
 
@@ -127,8 +128,7 @@ endmacro(PrintOptional)
 
 # print glog status
 FILE(APPEND ${_log_summary} "#  Optional dependencies:\n")
-PrintOptional(GTEST " ----")
-PrintOptional(OTF2 " -----")
+PrintOptional(GTEST " -----")
 
 FILE(APPEND ${_log_summary} "#\n")
 

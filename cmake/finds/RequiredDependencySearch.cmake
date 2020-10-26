@@ -63,6 +63,7 @@ GetDependency(SUNDIALS)
 GetDependency(NLOPT)
 GetDependency(PARCER)
 GetDependency(SPDLOG)
+GetDependency(OTF2)
 
 
 ########################################

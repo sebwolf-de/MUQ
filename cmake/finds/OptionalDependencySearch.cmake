@@ -117,21 +117,6 @@ endif()
 
 
 
-####################################
-##### Look for OTF2 library   ######
-####################################
-
-find_package(OTF2)
-if(OTF2_FOUND)
-    LIST(APPEND MUQ_LINK_LIBRARIES ${OTF2_LIBRARY})
-    LIST(APPEND MUQ_EXTERNAL_INCLUDES ${OTF2_INCLUDE_DIRS})
-    include_directories(${OTF2_INCLUDE_DIRS})
-    set(MUQ_HAS_OTF2 1)
-else()
-    set(MUQ_HAS_OTF2 0)
-endif()
-
-
 ########################################
 ##### REMOVE DUPLICATE INCLUDES   ######
 ########################################
