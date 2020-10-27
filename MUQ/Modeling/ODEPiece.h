@@ -58,6 +58,11 @@ namespace Modeling {
        */
       virtual void EvaluateImpl(ref_vector<Eigen::VectorXd> const& inputs) override;
 
+      virtual void GradientImpl(unsigned int                       outWrt,
+                                unsigned int                       inWrt,
+                                ref_vector<Eigen::VectorXd> const& inputs,
+                                Eigen::VectorXd const&             sens) override;
+
       virtual void JacobianImpl(unsigned int outWrt,
                                 unsigned int inWrt,
                                 ref_vector<Eigen::VectorXd> const& inputs) override;
@@ -169,12 +174,21 @@ namespace Modeling {
         */
         static int SensitivityRHS(int Ns, realtype time, N_Vector y, N_Vector ydot, N_Vector *ys, N_Vector *ySdot, void *user_data, N_Vector tmp1, N_Vector tmp2);
 
-        // static int AdjointRHS(realtype time, N_Vector state, N_Vector lambda, N_Vector deriv, void *user_data);
-        // static int AdjointJacobian(long int N, realtype time, N_Vector state, N_Vector lambda, N_Vector rhs, DlsMat jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-        // static int AdjointJacobianAction(N_Vector target, N_Vector output, realtype time, N_Vector state, N_Vector lambda, N_Vector adjRhs, void *user_data, N_Vector tmp);
-        //
-        // /** Function for accumulating sensitivity wrt parameters during adjoint solve. */
-        // static int AdjointQuad(realtype time, N_Vector state, N_Vector lambda, N_Vector quadRhs, void *user_data);
+        /** Evaluates the RHS of the adjoint equation, which is given by
+        $$
+        \dot{\lambda} = -\left(\frac{\partial f}{\partial y}\right)^T \lambda - \left(\frac{\partial g}{\partial y}\right)
+        $$
+        For details, see Equation (15) in Section 2.3 of https://computing.llnl.gov/sites/default/files/public/toms_cvodes_with_covers.pdf
+        */
+        static int AdjointRHS(double time, N_Vector state, N_Vector lambda, N_Vector deriv, void *user_data);
+        static int AdjointJacobian(double time, N_Vector state, N_Vector lambda, N_Vector rhs, SUNMatrix jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+
+        static int AdjointJacobianAction(N_Vector target, N_Vector output, double time, N_Vector state, N_Vector lambda, N_Vector adjRhs, void *user_data, N_Vector tmp);
+
+        /** Function for accumulating sensitivity wrt parameters during adjoint solve.
+        See Equation (16) of https://computing.llnl.gov/sites/default/files/public/toms_cvodes_with_covers.pdf
+        */
+        static int AdjointQuad(realtype time, N_Vector state, N_Vector lambda, N_Vector quadRhs, void *user_data);
       };
 
       NonlinearSolverOptions nonlinOpts;
@@ -200,6 +214,11 @@ namespace Modeling {
       std::pair<SUNLinearSolver, SUNMatrix> CreateLinearSolver(void *cvode_mem, N_Vector const& state);
 
       SUNNonlinearSolver CreateNonlinearSolver(void *cvode_mem, N_Vector const& state);
+
+      std::pair<SUNLinearSolver, SUNMatrix> CreateAdjointLinearSolver(void *cvode_mem, N_Vector const& state, int indexB);
+
+      SUNNonlinearSolver CreateAdjointNonlinearSolver(void *cvode_mem, N_Vector const& state, int indexB);
+
 
       static Eigen::VectorXi GetInputSizes(std::shared_ptr<ModPiece> const& rhsIn,
                                            bool                             isAuto);

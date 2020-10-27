@@ -285,54 +285,39 @@ public:
       EXPECT_NEAR(jac01(2*i+1, 0), jac01true(2*i+1, 0), 1.0e-6);
     }
 
-    //
-    // // compute the gradient wrt initial conditions
-    // const Eigen::VectorXd sens00 = Eigen::VectorXd::Ones(2*outTimes.size());
-    // const Eigen::VectorXd& grad00 = ode->Gradient(0, 0, ic, params, sens00);
-    // const Eigen::VectorXd expectedGrad00 = jac00true.transpose()*sens00;
-    //
-    // EXPECT_EQ(grad00.size(), expectedGrad00.size());
-    // EXPECT_EQ(grad00.size(), 2);
-    // EXPECT_NEAR(grad00(0), expectedGrad00(0), 1.0e-6);
-    // EXPECT_NEAR(grad00(0), expectedGrad00(0), 1.0e-6);
-    //
 
-    // // compute the gradient wrt the parameter k
-    // const Eigen::VectorXd sens01 = Eigen::VectorXd::Ones(2*outTimes.size());
-    // const Eigen::VectorXd& grad01 = ode->Gradient(0, 1, ic, params, sens01);
-    // const Eigen::VectorXd expectedGrad01 = jac01true.transpose()*sens01;
-    //
-    // EXPECT_EQ(grad01.size(), expectedGrad01.size());
-    // EXPECT_EQ(grad01.size(), 1);
-    // EXPECT_NEAR(grad01(0), expectedGrad01(0), 1.0e-5);
-    //
-    // // compute jacobians of the times
-    // const Eigen::MatrixXd& jac02 = ode->Jacobian(0, 2, ic, params);
-    // Eigen::MatrixXd jac02true = Eigen::MatrixXd::Zero(2*outTimes.size(), outTimes.size());
-    //
-    // EXPECT_EQ(jac02.rows(), 2*outTimes.size()); // rows
-    // EXPECT_EQ(jac02.cols(), outTimes.size()); // cols
-    // for( unsigned int i=0; i<outTimes.size(); ++i ) {
-    //   const double time = outTimes(i);
-    //
-    //   jac02true(2*i, i) = -std::sqrt(k)*ic(0)*std::sin(std::sqrt(k)*time)+ic(1)*std::cos(std::sqrt(k)*time);
-    //   jac02true(2*i+1, i) = -k*(ic(0)*std::cos(std::sqrt(k)*time)+ic(1)/std::sqrt(k)*std::sin(std::sqrt(k)*time));
-    //
-    //   // check jacobian wrt output times
-    //   EXPECT_NEAR(jac02(2*i, i), jac02true(2*i, i), 1.0e-6);
-    //   EXPECT_NEAR(jac02(2*i+1, i), jac02true(2*i+1, i), 1.0e-6);
-    // }
-    //
-    // // compute the gradient wrt the output times
-    // const Eigen::VectorXd sens02 = Eigen::VectorXd::Ones(2*outTimes.size());
-    // const Eigen::VectorXd& grad02 = ode->Gradient(0, 2, ic, params, sens02);
-    // const Eigen::VectorXd expectedGrad02 = jac02true.transpose()*sens02;
-    //
-    // EXPECT_EQ(grad02.size(), expectedGrad02.size());
-    // EXPECT_EQ(grad02.size(), outTimes.size());
-    // for( unsigned int i=0; i<outTimes.size(); ++i ) {
-    //   EXPECT_NEAR(grad02(i), expectedGrad02(i), 1.0e-5);
-    // }
+    // compute the gradient wrt initial conditions
+    numCalls1 = ode->GetNumCalls("Evaluate");
+    int numGradCalls1 = ode->GetNumCalls("Gradient");
+
+    Eigen::VectorXd sens00 = Eigen::VectorXd::Ones(2*outTimes.size());
+    Eigen::VectorXd grad00 = ode->Gradient(0, 0, ic, params, sens00);
+    Eigen::VectorXd expectedGrad00 = jac00true.transpose()*sens00;
+
+    numCalls2 = ode->GetNumCalls("Evaluate");
+    int numGradCalls2 = ode->GetNumCalls("Gradient");
+
+    EXPECT_EQ(numCalls1,numCalls2);
+    EXPECT_EQ(numGradCalls1+1, numGradCalls2);
+
+    // Make sure caching is working for gradient calls
+    result = ode->Evaluate(ic, params);
+
+    EXPECT_EQ(numCalls2, ode->GetNumCalls("Evaluate"));
+
+    EXPECT_EQ(grad00.size(), expectedGrad00.size());
+    EXPECT_EQ(grad00.size(), 2);
+    EXPECT_NEAR(grad00(0), expectedGrad00(0), 1.0e-6);
+    EXPECT_NEAR(grad00(0), expectedGrad00(0), 1.0e-6);
+
+    // compute the gradient wrt the parameter k
+    Eigen::VectorXd sens01 = Eigen::VectorXd::Ones(2*outTimes.size());
+    Eigen::VectorXd grad01 = ode->Gradient(0, 1, ic, params, sens01);
+    Eigen::VectorXd expectedGrad01 = jac01true.transpose()*sens01;
+
+    EXPECT_EQ(grad01.size(), expectedGrad01.size());
+    EXPECT_EQ(grad01.size(), 1);
+    EXPECT_NEAR(grad01(0), expectedGrad01(0), 1.0e-5);
   }
 
   /// The right hand side
