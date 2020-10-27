@@ -317,7 +317,7 @@ void ODEPiece::JacobianImpl(unsigned int outWrt,
   auto rhsData = std::make_shared<ODEData>(rhs,
                                            ref_vector<Eigen::VectorXd>(inputs.begin(),  inputs.begin()+(isAutonomous ? rhs->numInputs : rhs->numInputs-1)),
                                            isAutonomous,
-                                           -1);
+                                           inWrt);
 
   // Create an NVector version of the state that CVODES understands.
   // Also map the memory in that vector to an object Eigen can understand.

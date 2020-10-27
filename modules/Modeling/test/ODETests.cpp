@@ -268,6 +268,22 @@ public:
       EXPECT_NEAR(result[0](2*t+1), -std::sqrt(newParams(0))*ic(0)*std::sin(std::sqrt(newParams(0))*time)+ic(1)*std::cos(std::sqrt(newParams(0))*time), 1.0e-6);
     }
 
+    // compute jacobian wrt the parameter k
+    Eigen::MatrixXd jac01 = ode->Jacobian(0, 1, ic, params);
+    Eigen::MatrixXd jac01true = Eigen::MatrixXd::Zero(2*outTimes.size(), 1);
+
+    EXPECT_EQ(jac01.rows(), 2*outTimes.size()); // rows
+    EXPECT_EQ(jac01.cols(), 1); // cols
+    for( unsigned int i=0; i<outTimes.size(); ++i ) {
+      const double time = outTimes(i);
+
+      jac01true(2*i, 0) = 0.5*(-ic(0)/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)+ic(1)/k*time*std::cos(std::sqrt(k)*time)-ic(1)/std::pow(k, 1.5)*std::sin(std::sqrt(k)*time));
+      jac01true(2*i+1, 0) = 0.5*(-ic(0)*time*std::cos(std::sqrt(k)*time)-ic(0)/std::sqrt(k)*std::sin(std::sqrt(k)*time)-ic(1)/std::sqrt(k)*time*std::sin(std::sqrt(k)*time));
+
+      // check jacobian wrt parameter k
+      EXPECT_NEAR(jac01(2*i, 0), jac01true(2*i, 0), 1.0e-6);
+      EXPECT_NEAR(jac01(2*i+1, 0), jac01true(2*i+1, 0), 1.0e-6);
+    }
 
     //
     // // compute the gradient wrt initial conditions
@@ -280,23 +296,7 @@ public:
     // EXPECT_NEAR(grad00(0), expectedGrad00(0), 1.0e-6);
     // EXPECT_NEAR(grad00(0), expectedGrad00(0), 1.0e-6);
     //
-    // // compute jacobians of the parameter k
-    // const Eigen::MatrixXd& jac01 = ode->Jacobian(0, 1, ic, params);
-    // Eigen::MatrixXd jac01true = Eigen::MatrixXd::Zero(2*outTimes.size(), 1);
-    //
-    // EXPECT_EQ(jac01.rows(), 2*outTimes.size()); // rows
-    // EXPECT_EQ(jac01.cols(), 1); // cols
-    // for( unsigned int i=0; i<outTimes.size(); ++i ) {
-    //   const double time = outTimes(i);
-    //
-    //   jac01true(2*i, 0) = 0.5*(-ic(0)/std::sqrt(k)*time*std::sin(std::sqrt(k)*time)+ic(1)/k*time*std::cos(std::sqrt(k)*time)-ic(1)/std::pow(k, 1.5)*std::sin(std::sqrt(k)*time));
-    //   jac01true(2*i+1, 0) = 0.5*(-ic(0)*time*std::cos(std::sqrt(k)*time)-ic(0)/std::sqrt(k)*std::sin(std::sqrt(k)*time)-ic(1)/std::sqrt(k)*time*std::sin(std::sqrt(k)*time));
-    //
-    //   // check jacobian wrt parameter k
-    //   EXPECT_NEAR(jac01(2*i, 0), jac01true(2*i, 0), 1.0e-6);
-    //   EXPECT_NEAR(jac01(2*i+1, 0), jac01true(2*i+1, 0), 1.0e-6);
-    // }
-    //
+
     // // compute the gradient wrt the parameter k
     // const Eigen::VectorXd sens01 = Eigen::VectorXd::Ones(2*outTimes.size());
     // const Eigen::VectorXd& grad01 = ode->Gradient(0, 1, ic, params, sens01);
