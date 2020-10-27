@@ -8,7 +8,12 @@ using namespace muq::Modeling;
 ODEData::ODEData(std::shared_ptr<ModPiece> const& rhs,
                  ref_vector<Eigen::VectorXd> const& refinputs,
                  bool const autonomous,
-                 int const wrtIn) : rhs(rhs), autonomous(autonomous), wrtIn(wrtIn)
+                 int const wrtIn,
+                 Eigen::VectorXd const& actionVecIn) : rhs(rhs),
+                                                     autonomous(autonomous),
+                                                     wrtIn(wrtIn),
+                                                     actionVec(actionVecIn),
+                                                     isAction(actionVecIn.size()>0)
 {
   inputs.reserve(refinputs.size());
   for( unsigned int i=0; i<refinputs.size(); ++i ) { inputs.push_back(refinputs[i]); }
@@ -18,7 +23,14 @@ ODEData::ODEData(std::shared_ptr<ModPiece> const& rhs,
 ODEData::ODEData(std::shared_ptr<ModPiece> const& rhs,
                  std::shared_ptr<ModPiece> const& root,
                  ref_vector<Eigen::VectorXd> const& refinputs,
-                 bool const autonomous, int const wrtIn) : rhs(rhs), root(root), autonomous(autonomous), wrtIn(wrtIn)
+                 bool const autonomous,
+                 int const wrtIn,
+                 Eigen::VectorXd const& actionVecIn) : rhs(rhs),
+                                                       root(root),
+                                                       autonomous(autonomous),
+                                                       wrtIn(wrtIn),
+                                                       actionVec(actionVecIn),
+                                                       isAction(actionVecIn.size()>0)
 {
   inputs.reserve(refinputs.size());
   for( unsigned int i=0; i<refinputs.size(); ++i ) { inputs.push_back(refinputs[i]); }

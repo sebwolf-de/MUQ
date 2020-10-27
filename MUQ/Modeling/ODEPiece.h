@@ -67,6 +67,11 @@ namespace Modeling {
                                 unsigned int inWrt,
                                 ref_vector<Eigen::VectorXd> const& inputs) override;
 
+      virtual void ApplyJacobianImpl(unsigned int outWrt,
+                                      unsigned int inWrt,
+                                      ref_vector<Eigen::VectorXd> const& inputs,
+                                      Eigen::VectorXd const& vec) override;
+
       /// Evaluate the Jacobian of the state wrt each parameter
       /**
        Returns the Jacobian of the state with respect to an input parameter at each timestep.  Returns a vector of Jacobians at each timestep if the output has more than one time.

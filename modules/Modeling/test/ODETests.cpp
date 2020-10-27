@@ -318,6 +318,23 @@ public:
     EXPECT_EQ(grad01.size(), expectedGrad01.size());
     EXPECT_EQ(grad01.size(), 1);
     EXPECT_NEAR(grad01(0), expectedGrad01(0), 1.0e-5);
+
+
+    // Test Jacobian action wrt initial condition
+    Eigen::VectorXd vec00 = Eigen::VectorXd::Random(ode->inputSizes(0));
+    Eigen::VectorXd jv00  = ode->ApplyJacobian(0,0,ic,params,vec00);
+    Eigen::VectorXd trueJv00 = ode->Jacobian(0, 0, ic, params) * vec00;
+
+    EXPECT_NEAR(trueJv00(0), jv00(0), 1e-8);
+    EXPECT_NEAR(trueJv00(1), jv00(1), 1e-8);
+
+    Eigen::VectorXd vec01 = Eigen::VectorXd::Random(ode->inputSizes(1));
+    Eigen::VectorXd jv01  = ode->ApplyJacobian(0,1,ic,params,vec01);
+    Eigen::VectorXd trueJv01 = ode->Jacobian(0, 1, ic, params) * vec01;
+
+    EXPECT_NEAR(trueJv01(0), jv01(0), 1e-8);
+    EXPECT_NEAR(trueJv01(1), jv01(1), 1e-8);
+
   }
 
   /// The right hand side

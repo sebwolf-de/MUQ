@@ -796,6 +796,182 @@ void ODEPiece::JacobianImpl(unsigned int outWrt,
   }
 }
 
+
+
+void ODEPiece::ApplyJacobianImpl(unsigned int outWrt,
+                                  unsigned int inWrt,
+                                  ref_vector<Eigen::VectorXd> const& inputs,
+                                  Eigen::VectorXd const& vec)
+{
+  // Used for monitoring the success of CVODE calls
+  int flag;
+
+  // The initial condition
+  Eigen::VectorXd const& x0  = inputs.at(0).get();
+  const unsigned int stateSize = x0.size();
+
+  auto rhsData = std::make_shared<ODEData>(rhs,
+                                           ref_vector<Eigen::VectorXd>(inputs.begin(),  inputs.begin()+(isAutonomous ? rhs->numInputs : rhs->numInputs-1)),
+                                           isAutonomous,
+                                           inWrt,
+                                           vec);
+
+  // Create an NVector version of the state that CVODES understands.
+  // Also map the memory in that vector to an object Eigen can understand.
+  N_Vector state = N_VNew_Serial(stateSize);
+  Eigen::Map<Eigen::VectorXd> stateMap(NV_DATA_S(state), stateSize);
+
+  // Set the initial condition
+  stateMap = x0;
+
+  // Set up for forward integration
+  void *cvode_mem = NULL;
+  if(intOpts.method=="BDF"){
+    cvode_mem = CVodeCreate(CV_BDF);
+  }else if(intOpts.method=="Adams"){
+    cvode_mem = CVodeCreate(CV_ADAMS);
+  }else{
+    std::stringstream msg;
+    msg << "ERROR: Invalid integrator method \"" << intOpts.method << "\".  Valid options are \"BDF\" or \"ADAMS\"\n";
+    throw std::runtime_error(msg.str());
+  }
+
+  // Initialize CVODES with the RHS function, initial time, and initial state.
+  flag = CVodeInit(cvode_mem, Interface::RHS, startTime, state);
+  CheckFlag(&flag, "CVodeSetUserData", 1);
+
+  flag = CVodeSStolerances(cvode_mem, intOpts.reltol, intOpts.abstol);
+  CheckFlag(&flag, "CVodeSStolerances", 1);
+
+  flag = CVodeSetUserData(cvode_mem, rhsData.get());
+  CheckFlag(&flag, "CVodeSetUserData", 1);
+
+  /* Set max steps between outputs */
+  if(intOpts.maxNumSteps>0){
+    flag = CVodeSetMaxNumSteps(cvode_mem, intOpts.maxNumSteps);
+    CheckFlag(&flag, "CVodeSetMaxNumSteps", 1);
+  }
+
+  /* -------- Linear Solver and Jacobian ----------- */
+  SUNMatrix rhsJac = NULL;
+  SUNLinearSolver LS;
+  std::tie(LS,rhsJac) = CreateLinearSolver(cvode_mem, state);
+
+  /* -------- Nonlinear solver ----------- */
+  SUNNonlinearSolver NLS = NULL;
+  NLS = CreateNonlinearSolver(cvode_mem, state);
+
+  /* -------- Sensitivity Setup ----------- */
+  const unsigned int paramSize = 1;
+
+  N_Vector *sensState = nullptr;
+  sensState = N_VCloneVectorArray_Serial(paramSize, state);
+  CheckFlag((void *)sensState, "N_VCloneVectorArray_Serial", 0);
+
+  // initialize the sensitivies.
+  N_VConst(0.0, sensState[0]);
+
+  if(inWrt==0){ // If wrt the initial state, the initial sensitivity is the vector
+    for(int ind=0; ind<stateSize; ++ind){
+      NV_Ith_S(sensState[0],ind) = vec(ind);
+    }
+  }
+
+  flag = CVodeSensInit(cvode_mem, paramSize, CV_SIMULTANEOUS, Interface::SensitivityRHS, sensState);
+  CheckFlag(&flag, "CVodeSensInit", 1);
+
+  SUNNonlinearSolver sensNLS = NULL;
+  if(nonlinOpts.method=="Newton"){
+    sensNLS = SUNNonlinSol_NewtonSens(paramSize+1,state);
+  }else{
+    sensNLS = SUNNonlinSol_FixedPointSens(paramSize+1, state, 0);
+  }
+
+  flag = CVodeSetNonlinearSolverSensSim(cvode_mem, sensNLS);
+  CheckFlag((void *)sensState, "CVodeSetNonlinearSolverSensSim", 0);
+
+  // set sensitivity tolerances
+  flag = CVodeSensEEtolerances(cvode_mem);
+  CheckFlag(&flag, "CVodeSensEEtolerances", 1);
+
+  //Eigen::VectorXd absTolVec = Eigen::VectorXd::Constant(paramSize, intOpts.abstol);
+  // flag = CVodeSensSStolerances(cvode_mem, intOpts.reltol, absTolVec.data());
+  // CheckFlag(&flag, "CVodeSensSStolerances", 1);
+
+  // // error control strategy should test the sensitivity variables
+  // flag = CVodeSetSensErrCon(cvode_mem, true);
+  // CheckFlag(&flag, "CVodeSetSensErrCon", 1);
+
+  // Resize the output vector
+  outputs.resize(1);
+  outputs.at(0).resize(evalTimes.size()*stateSize);
+
+  // Resize the jacobian vector
+  jacobianAction = Eigen::VectorXd::Zero(evalTimes.size()*stateSize);
+
+  // The current time
+  double t = startTime;
+  unsigned int tind=0;
+
+  // Check to see if the starting time is equal to the first evalTime
+  if(std::fabs(evalTimes(0)-startTime)<1e-14){
+
+    // copy the initial state into the output
+    outputs.at(0).segment(tind*stateSize, stateSize) = x0;
+
+    // If Jacobian is wrt state, then initial jac will be the identity, otherwise initial jac will be zero
+    if(inWrt==0){
+      jacobianAction.segment(tind*stateSize,stateSize) = vec;
+    }
+
+    // increment the time index
+    ++tind;
+  }
+
+  // loop through all the times where we want evaluations
+  for(; tind<evalTimes.size(); ++tind ) {
+
+    // Integrate the ODE and the sensitivity equations forward in time
+    flag = CVode(cvode_mem, evalTimes(tind), state, &t, CV_NORMAL);
+    CheckFlag(&flag, "CVode", 1);
+
+    // Extract the ODE state
+    outputs.at(0).segment(tind*stateSize, stateSize) = stateMap;
+
+    // Extract the sensitivities
+    int flag = CVodeGetSens(cvode_mem, &t, sensState);
+    CheckFlag(&flag, "CVodeGetSense", 1);
+
+    for( unsigned int i=0; i<stateSize; ++i ) {
+      jacobianAction(tind*stateSize + i) += NV_Ith_S(sensState[0], i);
+    }
+
+  } // end of time loop
+
+
+  N_VDestroy(state);
+  N_VDestroyVectorArray_Serial(sensState, paramSize);
+
+  if(rhsJac != NULL)
+    SUNMatDestroy(rhsJac);
+
+  CVodeFree(&cvode_mem);
+
+  if(LS != NULL)
+    SUNLinSolFree(LS);
+
+  SUNNonlinSolFree(NLS);
+  SUNNonlinSolFree(sensNLS);
+
+  // Make sure to update the one-step cache since we've updated the outputs vector
+  if(cacheEnabled){
+    cacheInput.resize(inputs.size());
+    for(int i=0; i<inputs.size(); ++i)
+      cacheInput.at(i) = inputs.at(i);
+  }
+}
+
+
 int ODEPiece::Interface::RHS(realtype time, N_Vector state, N_Vector timeDeriv, void *userData)
 {
   // get the data type
@@ -894,14 +1070,23 @@ int ODEPiece::Interface::SensitivityRHS(int Ns, realtype time, N_Vector y, N_Vec
 
     // the derivative of the rhs wrt the parameter
     unsigned int rhsWrt = data->autonomous? data->wrtIn : data->wrtIn+1;
-    const Eigen::MatrixXd& dfdp = data->rhs->Jacobian(0, rhsWrt, data->inputs);
 
-    // add the df/dp_i component for each index of the parameter p_i
-    for( unsigned int i=0; i<Ns; ++i ) {
-      Eigen::Map<Eigen::VectorXd> rhsMap(NV_DATA_S(ySdot[i]), stateref.size());
-      Eigen::Map<Eigen::VectorXd> sensMap(NV_DATA_S(ys[i]), stateref.size());
+    if(data->isAction){
 
-      rhsMap += dfdp.col(i);
+      Eigen::Map<Eigen::VectorXd> rhsMap(NV_DATA_S(ySdot[0]), stateref.size());
+      //Eigen::Map<Eigen::VectorXd> sensMap(NV_DATA_S(ys[0]), stateref.size());
+      rhsMap += data->rhs->ApplyJacobian(0,rhsWrt, data->inputs, data->actionVec);
+
+    }else{
+      const Eigen::MatrixXd& dfdp = data->rhs->Jacobian(0, rhsWrt, data->inputs);
+
+      // add the df/dp_i component for each index of the parameter p_i
+      for( unsigned int i=0; i<Ns; ++i ) {
+        Eigen::Map<Eigen::VectorXd> rhsMap(NV_DATA_S(ySdot[i]), stateref.size());
+        //Eigen::Map<Eigen::VectorXd> sensMap(NV_DATA_S(ys[i]), stateref.size());
+
+        rhsMap += dfdp.col(i);
+      }
     }
   }
 

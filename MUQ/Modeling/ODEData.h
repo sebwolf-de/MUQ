@@ -28,7 +28,8 @@ namespace muq {
       ODEData(std::shared_ptr<ModPiece> const& rhs,
               ref_vector<Eigen::VectorXd> const& refinputs,
               bool const autonomous,
-              int const wrtIn);
+              int const wrtIn,
+              Eigen::VectorXd const& actionVec = Eigen::VectorXd());
 
 
       /// Construct with root function
@@ -43,7 +44,8 @@ namespace muq {
               std::shared_ptr<ModPiece> const& root,
               ref_vector<Eigen::VectorXd> const& refinputs,
               bool const autonomous,
-              int const wrtIn);
+              int const wrtIn,
+              Eigen::VectorXd const& actionVec = Eigen::VectorXd());
 
       virtual ~ODEData() = default;
 
@@ -66,6 +68,9 @@ namespace muq {
 
       /// The input we are computing the derivative wrt --- negative indicates no derivative is being computed
       const int wrtIn = -1;
+
+      Eigen::VectorXd actionVec; // <- used to store the vector when ApplyJacobian is called
+      const bool isAction;
 
     private:
     };
