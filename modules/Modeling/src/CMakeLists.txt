@@ -132,8 +132,7 @@ CreateCompileGroup(
     "MODELING_CORE"
     "EIGEN3;BOOST;SUNDIALS"
     ""
-    ODEBase.cpp
+    ODEPiece.cpp
     ODEData.cpp
-    ODE.cpp
     #RootfindingIVP.cpp
 )
