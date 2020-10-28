@@ -16,6 +16,7 @@ pipelines:
           - make examples
           - make install
           - ./RunAllTests
+          - mpirun -np 2 ./RunAllParallelTests
 
   custom:
     weekly-build:
@@ -60,17 +61,10 @@ pipelines:
 
         - step:
             name: gcc-external-dep-mpi-python2
+            image: mparno/muq-build:latest
             script:
               - apt-get update
-              - apt-get install -y cmake libgtest-dev g++ libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev libopenmpi-dev openmpi-bin python2-dev pybind11-dev
-
-
-              # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
-              - cd /usr/src/gtest
-              - cmake CMakeLists.txt
-              - make
-              - cp *.a /usr/lib
-
+              - apt-get install -y python2-dev
 
               # Build muq
               - cd $BITBUCKET_CLONE_DIR
