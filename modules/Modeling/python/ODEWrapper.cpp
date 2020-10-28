@@ -10,6 +10,6 @@ namespace py = pybind11;
 
 void PythonBindings::ODEWrapper(py::module &m) {
   py::class_<ODEPiece, ModPiece, std::shared_ptr<ODEPiece> > ode(m, "ODEPiece");
-  ode.def(py::init( [] (std::shared_ptr<ModPiece> const& rhs, Eigen::VectorXd const&, py::dict const& d) { return new ODEPiece(rhs, ConvertDictToPtree(d)); }), py::keep_alive<1, 2>());
+  ode.def(py::init( [] (std::shared_ptr<ModPiece> const& rhs, Eigen::VectorXd const& times, py::dict const& d) { return new ODEPiece(rhs, times, ConvertDictToPtree(d)); }), py::keep_alive<1, 2>());
 
 }
