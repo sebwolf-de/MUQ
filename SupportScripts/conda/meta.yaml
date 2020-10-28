@@ -1,13 +1,17 @@
 {% set version = "latest" %}
 
 package:
-  name: muq2
+  name: muq
   version: {{ version }}
 
 source:
   git_url: https://bitbucket.org/mituq/muq2.git
   git_depth: 1
   git_tag: conda-build
+
+build:
+  number: 0
+  skip: True # [win]
 
 requirements:
   build:
@@ -20,22 +24,18 @@ requirements:
     - h5py
     - boost-cpp ==1.74
     - eigen >=3.3
-    #- scipy
-    #- hdf5==1.8.17
     - sundials ==5.4.0
-    #- nanoflann ==1.3.1
-    #- nlopt
+    - nanoflann ==1.3.1
+    - nlopt
   run:
     - python >=3.7
     - numpy
     - h5py
     - boost-cpp ==1.74
     - eigen >=3.3
-    #- scipy
-    #- hdf5==1.8.17
     - sundials ==5.4.0
-    #- nanoflann ==1.3.1
-    #  - nlopt
+    - nanoflann ==1.3.1
+    - nlopt
 
 test:
   imports:
