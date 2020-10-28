@@ -11,7 +11,7 @@ namespace Approximation
     {
 
     public:
-      virtual ~KarhuneLoeveBase() = default;
+      virtual ~KarhunenLoeveBase() = default;
 
       virtual Eigen::MatrixXd GetModes(Eigen::Ref<const Eigen::MatrixXd> const& pts) const = 0;
 
