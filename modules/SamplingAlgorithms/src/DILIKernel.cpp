@@ -100,7 +100,7 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
     eigOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+  }catch(boost::property_tree::ptree_bad_path &e){
     // Do nothing, just leave the solver options ptree empty
   }
 }
@@ -127,7 +127,7 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
     eigOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+  }catch(boost::property_tree::ptree_bad_path &e){
     // Do nothing, just leave the solver options ptree empty
   }
 
@@ -153,7 +153,7 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
     eigOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+  }catch(boost::property_tree::ptree_bad_path &e){
     // Do nothing, just leave the solver options ptree empty
   }
 }
@@ -179,7 +179,7 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
     eigOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+  }catch(boost::property_tree::ptree_bad_path &e){
     // Do nothing, just leave the solver options ptree empty
   }
 
@@ -285,7 +285,7 @@ void DILIKernel::CreateLIS(std::vector<Eigen::VectorXd> const& currState)
   // Solve the generalized Eigenvalue problem using StochasticEigenSolver
   StochasticEigenSolver solver(eigOpts);
   solver.compute(hessOp, precOp, covOp);
-  
+
   SetLIS(solver.eigenvalues(), solver.eigenvectors());
 }
 
