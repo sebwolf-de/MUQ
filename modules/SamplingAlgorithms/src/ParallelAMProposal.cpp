@@ -6,7 +6,16 @@ namespace pt = boost::property_tree;
 using namespace muq::SamplingAlgorithms;
 
 REGISTER_MCMC_PROPOSAL(ParallelAMProposal)
-ParallelAMProposal::ParallelAMProposal(pt::ptree const& pt , std::shared_ptr<AbstractSamplingProblem> prob) : AMProposal(pt, prob) {}
+
+ParallelAMProposal::ParallelAMProposal(boost::property_tree::ptree           const& pt,
+                                       std::shared_ptr<AbstractSamplingProblem>     problem) : ParallelAMProposal(pt, prob, std::make_shared<parcer::Communicator>()){}
+
+ParallelAMProposal::ParallelAMProposal(pt::ptree                             const& pt ,
+                                       std::shared_ptr<AbstractSamplingProblem>     prob,
+                                       std::shared_ptr<parcer::Communicator> const& newcomm) : AMProposal(pt, prob)
+{
+  SetCommunicator(newcomm);
+}
 
 void ParallelAMProposal::Adapt(unsigned int const t, std::vector<std::shared_ptr<SamplingState> > const& states) {
   assert(comm);
