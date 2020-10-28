@@ -24,7 +24,8 @@ ODEBase::ODEBase(std::shared_ptr<ModPiece> const& rhs, Eigen::VectorXi const& in
   ModPiece(inputSizes, outputSizes),
   rhs(rhs),
   reltol(pt.get<double>("RelativeTolerance", 1.0e-8)),
-  abstol(pt.get<double>("AbsoluteTolerance", 1.0e-8)), maxStepSize(pt.get<double>("MaxStepSize", 1.0)),
+  abstol(pt.get<double>("AbsoluteTolerance", 1.0e-8)),
+  maxStepSize(pt.get<double>("MaxStepSize", 1.0)),
   maxNumSteps(pt.get<unsigned int>("MaxNumSteps", 500)),
   autonomous(pt.get<bool>("Autonomous", true)),
   checkPtGap(pt.get<unsigned int>("CheckPointGap", 50))
@@ -42,7 +43,7 @@ ODEBase::ODEBase(std::shared_ptr<ModPiece> const& rhs, Eigen::VectorXi const& in
   multiStep = (multiStepMethod.compare("BDF")==0) ? CV_BDF : CV_ADAMS;
   const std::string& nonlinearSolver = pt.get<std::string>("NonlinearSolver", "Newton");
   assert(nonlinearSolver.compare("Iter")==0 || nonlinearSolver.compare("Newton")==0); // Iter or Newton
-  solveMethod = (nonlinearSolver.compare("Newton")==0) ? CV_NEWTON : CV_FUNCTIONAL;
+  //solveMethod = (nonlinearSolver.compare("Newton")==0) ? CV_NEWTON : CV_FUNCTIONAL;
 
   // determine the method of thelinear solver
   const std::string& linearSolver = pt.get<std::string>("LinearSolver", "Dense");
@@ -101,7 +102,7 @@ int ODEBase::CreateSolverMemoryB(void* cvode_mem, double const timeFinal, N_Vect
   assert(CheckFlag(&flag, "CVodeAdjInit", 1));
 
   // creat adjoint solver
-  flag = CVodeCreateB(cvode_mem, multiStep, solveMethod, &indexB);
+  flag = CVodeCreateB(cvode_mem, multiStep, &indexB);
   assert(CheckFlag(&flag, "CVodeCreateB", 1));
 
   // set the pointer to user-defined data
