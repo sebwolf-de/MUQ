@@ -100,7 +100,7 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
     eigOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+  }catch(const boost::property_tree::ptree_bad_path&){
     // Do nothing, just leave the solver options ptree empty
   }
 }
@@ -127,7 +127,7 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
     eigOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+  }catch(const boost::property_tree::ptree_bad_path&){
     // Do nothing, just leave the solver options ptree empty
   }
 
@@ -153,7 +153,7 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
     eigOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+  }catch(const boost::property_tree::ptree_bad_path&){
     // Do nothing, just leave the solver options ptree empty
   }
 }
@@ -179,7 +179,7 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
     eigOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+  }catch(const boost::property_tree::ptree_bad_path&){
     // Do nothing, just leave the solver options ptree empty
   }
 

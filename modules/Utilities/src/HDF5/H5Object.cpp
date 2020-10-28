@@ -246,8 +246,8 @@ unsigned H5Object::rows() const
 
 unsigned H5Object::cols() const
 {
-  if(!isDataset)
-    throw std::runtime_error("Attempted to call H5Object::cols() on a group object.");
+    if(!isDataset)
+      throw std::runtime_error("Attempted to call H5Object::cols() on a group object.");
 
     Eigen::VectorXi shape = file->GetDataSetSize(path);
     if(shape.size()==1)
@@ -258,8 +258,8 @@ unsigned H5Object::cols() const
 
 unsigned H5Object::size() const
 {
-  if(!isDataset)
-    throw std::runtime_error("Attempted to call H5Object::size() on a group object.");
+    if(!isDataset)
+      throw std::runtime_error("Attempted to call H5Object::size() on a group object.");
 
     Eigen::VectorXi shape = file->GetDataSetSize(path);
     return shape.prod();
