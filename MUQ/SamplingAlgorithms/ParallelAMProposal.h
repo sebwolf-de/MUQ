@@ -12,10 +12,10 @@ namespace muq {
     class ParallelAMProposal : public AMProposal {
     public:
 
-      ParallelAMProposal(boost::property_tree::ptree           const& pt,
+      ParallelAMProposal(boost::property_tree::ptree                  pt,
                          std::shared_ptr<AbstractSamplingProblem>     problem);
 
-      ParallelAMProposal(boost::property_tree::ptree           const& pt,
+      ParallelAMProposal(boost::property_tree::ptree                  pt,
                          std::shared_ptr<AbstractSamplingProblem>     problem,
                          std::shared_ptr<parcer::Communicator> const& newcomm);
 

@@ -1,4 +1,5 @@
 #include "MUQ/SamplingAlgorithms/ParallelAMProposal.h"
+#include "MUQ/Utilities/Cereal/BoostAnySerializer.h"
 
 #if MUQ_HAS_PARCER
 
@@ -7,12 +8,12 @@ using namespace muq::SamplingAlgorithms;
 
 REGISTER_MCMC_PROPOSAL(ParallelAMProposal)
 
-ParallelAMProposal::ParallelAMProposal(boost::property_tree::ptree           const& pt,
-                                       std::shared_ptr<AbstractSamplingProblem>     problem) : ParallelAMProposal(pt, prob, std::make_shared<parcer::Communicator>()){}
+ParallelAMProposal::ParallelAMProposal(boost::property_tree::ptree                  pt,
+                                       std::shared_ptr<AbstractSamplingProblem>     problem) : ParallelAMProposal(pt, problem, std::make_shared<parcer::Communicator>()){}
 
-ParallelAMProposal::ParallelAMProposal(pt::ptree                             const& pt ,
-                                       std::shared_ptr<AbstractSamplingProblem>     prob,
-                                       std::shared_ptr<parcer::Communicator> const& newcomm) : AMProposal(pt, prob)
+ParallelAMProposal::ParallelAMProposal(pt::ptree                                    pt ,
+                                       std::shared_ptr<AbstractSamplingProblem>     problem,
+                                       std::shared_ptr<parcer::Communicator> const& newcomm) : AMProposal(pt, problem)
 {
   SetCommunicator(newcomm);
 }
