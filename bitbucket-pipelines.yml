@@ -5,28 +5,17 @@ pipelines:
 
     - step:
         name: gcc-external-dep-mpi
+        image: mparno/muq-build:latest
         script:
-          - apt-get update
-          - apt-get install -y cmake libgtest-dev g++ libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev libopenmpi-dev openmpi-bin python-dev pybind11-dev
-
-
-          # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
-          - cd /usr/src/gtest
-          - cmake CMakeLists.txt
-          - make
-          - cp *.a /usr/lib
-
 
           # Build muq
           - cd $BITBUCKET_CLONE_DIR
           - cd build
-          - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON ..
+          - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_C_COMPILER=mpicc -DMUQ_USE_PYTHON=ON ..
           - make
           - make examples
           - make install
           - ./RunAllTests
-
-
 
   custom:
     weekly-build:
@@ -34,17 +23,8 @@ pipelines:
 
         - step:
               name: clang-external-dep
+              image: mparno/muq-build:latest
               script:
-                - apt-get update
-                - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev
-
-
-                # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
-                - cd /usr/src/gtest
-                - cmake CMakeLists.txt
-                - make
-                - cp *.a /usr/lib
-
 
                 # Build muq
                 - cd $BITBUCKET_CLONE_DIR
@@ -54,8 +34,6 @@ pipelines:
                 - make examples
                 - make install
                 - ./RunAllTests
-
-
 
         - step:
             name: clang-internal-dep
@@ -80,8 +58,6 @@ pipelines:
               - make install
               - ./RunAllTests
 
-
-
         - step:
             name: gcc-external-dep-mpi-python2
             script:
@@ -104,8 +80,6 @@ pipelines:
               - make examples
               - make install
               - ./RunAllTests
-
-
 
         - step:
               name: ubuntu-LTS
@@ -130,8 +104,6 @@ pipelines:
                 - make examples
                 - make install
                 - ./RunAllTests
-
-
 
         - step:
               name: ubuntu-latest-release
