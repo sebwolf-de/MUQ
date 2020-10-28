@@ -94,10 +94,10 @@ install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAM
 	    COMPONENT dev)
 
 # Install the pymuq libraries
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/modules/Modeling/python/pymuqModeling/"
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/modules/Modeling/python/pymuqModeling/"
         DESTINATION "${PYTHON_INSTALL_PREFIX}/muq/pymuqModeling"
         COMPONENT dev)
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/modules/PythonPackage/"
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/modules/PythonPackage/"
         DESTINATION "${PYTHON_INSTALL_PREFIX}/muq/"
         COMPONENT dev)
 

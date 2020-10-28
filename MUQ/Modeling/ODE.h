@@ -72,31 +72,6 @@ namespace Modeling {
                                       ref_vector<Eigen::VectorXd> const& inputs,
                                       Eigen::VectorXd const& vec) override;
 
-      /// Evaluate the Jacobian of the state wrt each parameter
-      /**
-       Returns the Jacobian of the state with respect to an input parameter at each timestep.  Returns a vector of Jacobians at each timestep if the output has more than one time.
-
-      //  \f$M\f$ inputs:
-      //  <ul>
-      //  <li> The first \f$N\f$ are the inputs to muq::Modeling::ODE::rhs
-      //  <li> The second \fM-N\f$ are the times where we want to return the state (either vectors or scalars)
-      //  </ul>
-      //  @param[in] wrtOut We are computing the derivative of this output
-      //  @param[in] wrtIn We are computing the derivative with repsect to this parameter
-      //  @param[in] inputs The inputs (see description)
-      //  */
-      // virtual void JacobianImpl(unsigned int const wrtOut, unsigned int const wrtIn, ref_vector<Eigen::VectorXd> const& inputs) override;
-      //
-      // /// Evaluate the action of the Jacobian transpose on a given vector wrt each parameter
-      // /**
-      //  @param[in] wrtOut We are computing the derivative of this output
-      //  @param[in] wrtIn We are computing the derivative with repsect to this parameter
-      //  @param[in] inputs The inputs
-      //  @param[in] vec The vector the Jacobian transpose is acting on at eact timestep
-      //  */
-      // virtual void GradientImpl(unsigned int const wrtOut, unsigned int const wrtIn, ref_vector<Eigen::VectorXd> const& inputs, Eigen::VectorXd const& vec) override;
-
-
       /** @class ODE::NonlinearSolverOptions
         Contains options for the nonlinear solver used by CVODES.
 
