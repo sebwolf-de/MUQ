@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 
-#include "MUQ/Modeling/ODEPiece.h"
+#include "MUQ/Modeling/ODE.h"
 
 namespace pt = boost::property_tree;
 using namespace muq::Modeling;
@@ -181,7 +181,7 @@ public:
 
   virtual void TearDown() override {
     // create the ODE integrator
-    auto ode = std::make_shared<ODEPiece>(rhs, outTimes, pt.get_child("ODE"));
+    auto ode = std::make_shared<ODE>(rhs, outTimes, pt.get_child("ODE"));
 
     // integrate the ODE
     Eigen::VectorXd params = Eigen::VectorXd::Constant(1, k);
