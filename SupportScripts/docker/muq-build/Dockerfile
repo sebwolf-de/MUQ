@@ -38,4 +38,8 @@ RUN wget https://computing.llnl.gov/projects/sundials/download/sundials-5.4.0.ta
     cmake ../ && make -j2 && make install && \
     cd ../../ &&  rm -r sundials-5.4.0  &&  rm sundials-5.4.0.tar.gz
 
+RUN useradd -ms /bin/bash  muq-user
+WORKDIR /home/muq-user
+USER muq-user
+
 CMD ["bash"]
