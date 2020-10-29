@@ -1,17 +1,16 @@
-{% set version = "latest" %}
+{% set version = "0.3.0" %}
 
 package:
   name: muq
   version: {{ version }}
 
 source:
-  git_url: https://bitbucket.org/mituq/muq2.git
-  git_depth: 1
-  git_tag: conda-build
+  url: https://bitbucket.org/mituq/muq2/downloads/muq_{{ version | replace(".", "_") }}.tar.gz
+  sha256: fc4b87685a53d41ad229978e2745f306c9c2875c44b2575ae72ac9ae4dc40740
 
 build:
   number: 0
-  skip: True # [win]
+  skip: true  # [win]
 
 requirements:
   build:
@@ -48,4 +47,13 @@ test:
 about:
   home: http://muq.mit.edu
   license: BSD-3-Clause
-  summary: 'MIT Uncertainty Quantification Library (MUQ) contains a suite of uncertainty quantification tools as well as a framework for constructing complex models that blend statistical and physical components.'
+  license_family: BSD
+  license_file: license.txt
+  summary: 'A suite of uncertainty quantification and phyiscal-statistical modeling tools.'
+  description: 'MUQ is a c++ library with python wrapper that contains tools for constructing models involving a mix of statistical and physical components.  It also contains a suite of uncertainty quantification tools including MCMC, polynomial chaos, Gaussian processes, Karhunen Loeve expansions, and transport maps.'
+  doc_url: http://muq.mit.edu/master-muq2-docs/
+  dev_url: https://bitbucket.org/mituq/muq2/src/master/
+
+extra:
+  recipe-maintainers:
+    - mparno
