@@ -1,8 +1,6 @@
 #include "MUQ/SamplingAlgorithms/ParallelAMProposal.h"
 #include "MUQ/Utilities/Cereal/BoostAnySerializer.h"
 
-#if MUQ_HAS_PARCER
-
 namespace pt = boost::property_tree;
 using namespace muq::SamplingAlgorithms;
 
@@ -32,5 +30,3 @@ void ParallelAMProposal::Adapt(unsigned int const t, std::vector<std::shared_ptr
     AMProposal::Adapt(totSamps, otherStates);
   }
 }
-
-#endif // end MUQ_HAS_PARCER
