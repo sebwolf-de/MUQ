@@ -1,12 +1,11 @@
 #ifndef PARALLELAMPROPOSAL_H_
 #define PARALLELAMPROPOSAL_H_
 
-#include "MUQ/config.h"
 #include "MUQ/SamplingAlgorithms/AMProposal.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
-    
+
     class ParallelAMProposal : public AMProposal {
     public:
 
