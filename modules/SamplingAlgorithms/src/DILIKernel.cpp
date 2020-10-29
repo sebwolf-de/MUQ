@@ -285,7 +285,7 @@ void DILIKernel::CreateLIS(std::vector<Eigen::VectorXd> const& currState)
   // Solve the generalized Eigenvalue problem using StochasticEigenSolver
   StochasticEigenSolver solver(eigOpts);
   solver.compute(hessOp, precOp, covOp);
-  
+
   SetLIS(solver.eigenvalues(), solver.eigenvectors());
 }
 
