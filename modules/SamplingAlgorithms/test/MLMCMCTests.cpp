@@ -152,7 +152,7 @@ TEST(MLMCMCTest, GreedyMLMCMC)
 
   auto mean = greedymlmcmc.MeanQOI();
 
-  EXPECT_NEAR(mean[0], 1.0, 0.1);
-  EXPECT_NEAR(mean[1], 2.0, 0.1);
+  EXPECT_NEAR(mean[0], 1.0, 0.15);
+  EXPECT_NEAR(mean[1], 2.0, 0.15);
 
 }
