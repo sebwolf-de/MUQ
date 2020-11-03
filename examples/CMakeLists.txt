@@ -17,7 +17,6 @@ add_custom_target(examples
 
                           MonteCarlo
                           MultilevelMonteCarlo
-                          ParallelMultilevelMonteCarlo
 
                           GaussianSampling
                           GaussianGammaSampling
@@ -27,3 +26,12 @@ add_custom_target(examples
                           BlockOperations
                           SimpleReadWrite
                           )
+if (MUQ_HAS_PARCER)
+  add_dependencies(examples
+                   ParallelMultilevelMonteCarlo
+
+                   ModelParallelMultilevelGaussianSampling
+                   FullParallelMultilevelGaussianSampling
+                   SubsamplingTestMultilevelGaussianSampling
+                   FullParallelMultiindexGaussianSampling)
+endif()

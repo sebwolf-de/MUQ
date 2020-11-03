@@ -34,15 +34,11 @@ public:
   }
 };
 
-class MyMIComponentFactory : public ParallelizableMIComponentFactory {
+class MyMIComponentFactory : public MIComponentFactory {
 public:
   MyMIComponentFactory (pt::ptree pt)
    : pt(pt)
   { }
-
-  void SetComm(std::shared_ptr<parcer::Communicator> const& comm) override {
-
-  }
 
   virtual std::shared_ptr<MCMCProposal> Proposal (std::shared_ptr<MultiIndex> const& index, std::shared_ptr<AbstractSamplingProblem> const& samplingProblem) override {
     pt::ptree pt_prop;
@@ -129,4 +125,4 @@ private:
   pt::ptree pt;
 };
 
- 
+

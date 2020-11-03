@@ -20,7 +20,7 @@ using namespace muq::Modeling;
 using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
-#include "Problem.h"
+#include "ParallelProblem.h"
 
 
 int main(){

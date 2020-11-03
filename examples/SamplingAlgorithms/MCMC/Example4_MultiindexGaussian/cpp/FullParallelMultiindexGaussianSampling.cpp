@@ -23,7 +23,7 @@ using namespace muq::Utilities;
 #include "MUQ/SamplingAlgorithms/ParallelMIMCMCWorker.h"
 #include "MUQ/SamplingAlgorithms/ParallelFixedSamplesMIMCMC.h"
 
-#include "Problem.h"
+#include "ParallelProblem.h"
 
 
 int main(int argc, char **argv){

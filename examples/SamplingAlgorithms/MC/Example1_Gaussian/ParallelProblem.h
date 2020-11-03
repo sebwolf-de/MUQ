@@ -36,7 +36,7 @@ public:
   }
 };
 
-class MyMIComponentFactory : public MIComponentFactory {
+class MyMIComponentFactory : public ParallelizableMIComponentFactory {
 public:
   MyMIComponentFactory (pt::ptree pt)
    : pt(pt)
@@ -44,6 +44,10 @@ public:
 
   virtual bool IsInverseProblem() override {
     return false;
+  }
+
+  void SetComm(std::shared_ptr<parcer::Communicator> const& comm) override {
+
   }
 
   virtual std::shared_ptr<MCMCProposal> Proposal (std::shared_ptr<MultiIndex> const& index, std::shared_ptr<AbstractSamplingProblem> const& samplingProblem) override {
