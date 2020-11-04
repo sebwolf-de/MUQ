@@ -17,6 +17,11 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /**
+     * @brief Base class handling the static load balancing of parallel MIMCMC.
+     * @details The user can implement a custom load balancing strategy and pass it to the
+     * parallel MIMCMC method.
+     */
     class StaticLoadBalancer {
     public:
       struct WorkerAssignment {
@@ -24,10 +29,24 @@ namespace muq {
         int numWorkersPerGroup;
       };
       virtual void setup(std::shared_ptr<ParallelizableMIComponentFactory> componentFactory, uint availableRanks) = 0;
+      /**
+       * @brief Number of collector processes assigned to a model index.
+       */
       virtual int numCollectors(std::shared_ptr<MultiIndex> modelIndex) = 0;
+      /**
+       * @brief Number of worker groups and number of workers per group for a given model index.
+       */
       virtual WorkerAssignment numWorkers(std::shared_ptr<MultiIndex> modelIndex) = 0;
     };
 
+    /**
+     * @brief Simple default static load balancing strategy suitable for many cases.
+     *
+     * @details This load balancing strategy assigns one collector rank for each model
+     * index, one worker per group and proceeds to evenly split groups across indices.
+     * It clearly makes no further assumptions on the model, and would best be used
+     * together with dynamic load balancing during runtime.
+     */
     class RoundRobinStaticLoadBalancer : public StaticLoadBalancer {
     public:
       void setup(std::shared_ptr<ParallelizableMIComponentFactory> componentFactory, uint availableRanks) override {
@@ -61,6 +80,18 @@ namespace muq {
 
     };
 
+    /**
+     * @brief A parallel MIMCMC method.
+     * @details This parallelized MIMCMC method begins by assigning tasks to processes according
+     * to a StaticLoadBalancer. It then proceeds to collect a pre-defined number of samples per level.
+     * The main result is a mean estimate quantity of interest, computed via a telescoping sum across
+     * model indices. When applied to one-dimensional multiindices, this is equivalent to a MLMCMC method.
+     *
+     * Optionally, more control can be taken: For example, samples can be analyzed on the fly and possibly additional
+     * samples requested in order to adaptively ensure high-quality estimates and optimize computational cost.
+     * To the same end, dynamic scheduling can be activated in the case of same-size work groups, which optimizes
+     * machine utilization by reassigning processes from less busy model indices to ones with higher load.
+     */
     class StaticLoadBalancingMIMCMC : public SamplingAlgorithm {
     public:
       StaticLoadBalancingMIMCMC (pt::ptree pt,
@@ -135,6 +166,9 @@ namespace muq {
       virtual std::shared_ptr<SampleCollection> GetSamples() const override { return nullptr; };
       virtual std::shared_ptr<SampleCollection> GetQOIs() const override { return nullptr; };
 
+      /**
+       * @brief Get mean quantity of interest estimate computed via telescoping sum.
+       */
       Eigen::VectorXd MeanQOI() {
         if (comm->GetRank() != rootRank) {
           return Eigen::VectorXd::Zero(1);
@@ -146,20 +180,12 @@ namespace muq {
 
         while (true) {
           MPI_Status status;
-          //timer_idle.start();
           ControlFlag command = comm->Recv<ControlFlag>(MPI_ANY_SOURCE, ControlTag, &status);
-          //timer_idle.stop();
 
           for (CollectorClient& client : collectorClients) {
             if (client.Receive(command, status))
               break;
           }
-
-          /*if (!command_handled) {
-           *    std::cerr << "Unexpected command!" << std::*endl;
-           *    exit(43);
-        }*/
-
 
           bool isComputingMeans = false;
           for (CollectorClient& client : collectorClients) {
@@ -168,8 +194,7 @@ namespace muq {
           if (!isComputingMeans)
             break;
         }
-        std::cout << "Computing means completed" << std::endl;
-        //std::cout << "Root process " << comm->GetRank() << " idle time:\t" << timer_idle.elapsed() << " of:\t" << timer_full.elapsed() << std::endl;
+        spdlog::info("Computing means completed");
 
 
         Eigen::VectorXd mean_box = collectorClients[0].GetQOIMean();
@@ -184,13 +209,23 @@ namespace muq {
         return mean;
       }
 
+      /**
+       * @brief Dummy implementation; required by interface, has no meaning in ML/MI setting.
+       */
       virtual std::shared_ptr<SampleCollection> GetSamples() {
         return nullptr;
       }
+      /**
+       * @brief Dummy implementation; required by interface, has no meaning in ML/MI setting.
+       */
       virtual std::shared_ptr<SampleCollection> GetQOIs() {
         return nullptr;
       }
 
+      /**
+       * @brief Cleanup parallel method, wait for all ranks to finish.
+       *
+       */
       void Finalize() {
         if (comm->GetRank() == rootRank) {
           phonebookClient->SchedulingStop();
@@ -206,11 +241,13 @@ namespace muq {
         }
       }
 
+      /**
+       * @brief Request additional samples to be compute for a given model index.
+       */
       void RequestSamples(std::shared_ptr<MultiIndex> index, int numSamples) {
         if (comm->GetRank() != rootRank) {
           return;
         }
-        // TODO: Divide work between workers
         for (CollectorClient& client : collectorClients) {
           client.GetModelIndex();
           if (client.GetModelIndex() == index) {
@@ -221,6 +258,9 @@ namespace muq {
         std::cerr << "Requested samples from nonexisting collector!" << std::endl;
       }
 
+      /**
+       * @brief Request an additional number of samples to be computed on each level.
+       */
       void RequestSamplesAll(int numSamples) {
         if (comm->GetRank() != rootRank) {
           return;
@@ -231,18 +271,20 @@ namespace muq {
         }
       }
 
-      //bool did_reassign = false;
+      /**
+       * @brief Run the parallel method.
+       *
+       * @details Note that this internally also handles reassigning tasks for scheduling purposes.
+       * The phonebook cannot be responsible for this, since the phonebook itself needs to be available
+       * during the reassignment process.
+       */
       void RunSamples() {
         if (comm->GetRank() != rootRank) {
           return;
         }
-        //Dune::Timer timer_idle;
-        //Dune::Timer timer_full;
         while (true) {
           MPI_Status status;
-          //timer_idle.start();
           ControlFlag command = comm->Recv<ControlFlag>(MPI_ANY_SOURCE, ControlTag, &status);
-          //timer_idle.stop();
 
           bool command_handled = false;
           for (CollectorClient& client : collectorClients) {

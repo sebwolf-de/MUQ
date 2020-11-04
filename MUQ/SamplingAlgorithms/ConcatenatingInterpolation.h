@@ -7,6 +7,12 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /**
+     * @brief A simple implementation concatenating coarse and fine sample vectors.
+     *
+     * @details This interpolation takes the coarse sample vector and appends additional fine components from the fine sample.
+     * This behaviour matches the one assumed by the theoretical MLMCMC literature. Should be sufficient for most applications.
+     */
     class ConcatenatingInterpolation : public MIInterpolation {
     public:
       ConcatenatingInterpolation(std::shared_ptr<muq::Utilities::MultiIndex> const& index) : index(index) {

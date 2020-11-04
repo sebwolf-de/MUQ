@@ -10,8 +10,8 @@ namespace muq {
   namespace SamplingAlgorithms {
 
     /** @brief Dummy kernel for Multiindex MC methods
-        @details This kernel combines a coarse proposal from a coarse chain
-        with a fine one, as needed for MIMC.
+        @details This kernel simply accepts any proposal. It can be used to turn a MLMCMC/MIMCMC method into a
+        Multilevel/Multiindex Monte Carlo method with the proposal density as its parameter distribution.
      */
     class MIDummyKernel : public TransitionKernel {
     public:

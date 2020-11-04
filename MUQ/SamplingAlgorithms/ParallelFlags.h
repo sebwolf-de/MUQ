@@ -6,9 +6,18 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /**
+     * @brief Tags separating MPI communication between
+     * control level processes and internal work group communication.
+     */
     const int ControlTag = 1;
     const int WorkgroupTag = 2;
 
+    /**
+     * @brief Flags used by parallel MCMC/MIMCMC type methods.
+     * @details Commands sent between the ranks of a parallel MCMC/MIMCMC
+     * method are distinguished by these flags.
+     */
     enum ControlFlag : const int {
 
       // SamplingProblem
@@ -17,7 +26,6 @@ namespace muq {
       LOGDENSITY,
       TEST,
       QOI,
-      //WRITE_VTK_FROM_QOI,
 
       // Assignment
       ASSIGN,

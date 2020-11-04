@@ -13,6 +13,9 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /**
+     * @brief
+     */
     class ParallelMIComponentFactory : public MIComponentFactory {
 
     public:
@@ -22,13 +25,9 @@ namespace muq {
       {
 
         if (comm->GetRank() != 0) {
-          //Dune::Timer timer_idle;
-          //Dune::Timer timer_full;
           while (true) {
             spdlog::trace("Parallel factory rank {} waiting...", comm->GetRank());
-            //timer_idle.start();
             ControlFlag command = comm->Recv<ControlFlag>(0, WorkgroupTag);
-            //timer_idle.stop();
             spdlog::trace("Parallel factory rank {} received command", comm->GetRank(), command);
             if (command == ControlFlag::FINALIZE) {
               samplingProblems.clear(); // Tear down models synchronously
@@ -52,7 +51,6 @@ namespace muq {
               auto state = std::make_shared<SamplingState>(comm->Recv<Eigen::VectorXd>(0, WorkgroupTag));
 
               double density;
-              //std::dynamic_pointer_cast<MySamplingProblem>(samplingProblems[id])->test(state, "test", density);
               std::cerr << "Not implemented!!!" << std::endl;
             }
             else if (command == ControlFlag::QOI) {
@@ -64,7 +62,6 @@ namespace muq {
               exit(43);
             }
           }
-          //std::cout << "Worker " << global_comm->GetRank() << " idle time:\t" << timer_idle.elapsed() << " of:\t" << timer_full.elapsed() << std::endl;
         }
       }
       virtual bool IsInverseProblem() override {
