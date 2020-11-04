@@ -12,7 +12,7 @@ INCLUDE(CheckFunctionExists)
 # define the project name
 project(MUQ)
 set(${CMAKE_PROJECT_NAME}_MAJOR_VERSION 0)
-set(${CMAKE_PROJECT_NAME}_MINOR_VERSION 2)
+set(${CMAKE_PROJECT_NAME}_MINOR_VERSION 3)
 set(${CMAKE_PROJECT_NAME}_PATCH_VERSION 0)
 set(${CMAKE_PROJECT_NAME}_VERSION ${${CMAKE_PROJECT_NAME}_MAJOR_VERSION}.${${CMAKE_PROJECT_NAME}_MINOR_VERSION}.${${CMAKE_PROJECT_NAME}_PATCH_VERSION})
 
@@ -29,6 +29,7 @@ include_directories(.)
 ###############################################
 # User options
 ###############################################
+INCLUDE(SetInstallPaths)
 INCLUDE(OptionsSetup)
 
 ###############################################
@@ -94,8 +95,11 @@ install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAM
 
 # Install the pymuq libraries
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/modules/Modeling/python/pymuqModeling/"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pymuqModeling"
-	    COMPONENT dev)
+        DESTINATION "${PYTHON_INSTALL_PREFIX}/muq/pymuqModeling"
+        COMPONENT dev)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/modules/PythonPackage/"
+        DESTINATION "${PYTHON_INSTALL_PREFIX}/muq/"
+        COMPONENT dev)
 
 # Install the export set for use with the install-tree
 install(EXPORT ${CMAKE_PROJECT_NAME}Depends

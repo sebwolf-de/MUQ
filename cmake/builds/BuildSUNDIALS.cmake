@@ -1,7 +1,7 @@
 
 include(ExternalProject)
 if(NOT SUNDIALS_EXTERNAL_SOURCE)
-	set(SUNDIALS_EXTERNAL_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/external/sundials-2.6.2.tar.gz)
+	set(SUNDIALS_EXTERNAL_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/external/sundials-5.4.0.tar.gz)
 endif()
 
 set(SUNDIALS_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/muq_external)

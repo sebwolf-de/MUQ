@@ -68,8 +68,6 @@ CreateCompileGroup(
     SLMCMC.cpp
     SubsamplingMIProposal.cpp
     GMHKernel.cpp
-    #MCMCKernel.cpp
-    #ParallelMHKernel.cpp
 
     MCMCFactory.cpp
 
@@ -79,8 +77,9 @@ CreateCompileGroup(
     MHProposal.cpp
     AMProposal.cpp
     MALAProposal.cpp
+    InfMALAProposal.cpp
     MixtureProposal.cpp
-    ParallelAMProposal.cpp
+
     InverseGammaProposal.cpp
     CrankNicolsonProposal.cpp
 )
@@ -94,6 +93,7 @@ if(MUQ_USE_MPI)
       "MODELING_CORE;UTILITIES_CORE;SAMPLING_ALGORITHM"
       "PARCER;SPDLOG;OTF2"
       ""
+      ParallelAMProposal.cpp
       DistributedCollection.cpp
       ParallelAbstractSamplingProblem.cpp
       ParallelMIComponentFactory.cpp

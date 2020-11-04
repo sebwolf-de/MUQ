@@ -48,6 +48,28 @@ protected:
     SampleCollection collection;
 };
 
+TEST(SampleCollectionMetaTest, List){
+  auto state1 = std::make_shared<SamplingState>(Eigen::Vector2d{1.0,2.0}, 1.0);
+  state1->meta["id"] = 1;
+
+  auto state2 = std::make_shared<SamplingState>(Eigen::Vector2d{2.0,3.0}, 0.5);
+  state2->meta["id"] = 2;
+  state2->meta["bonus"] = "what?";
+
+  SampleCollection collection;
+  collection.Add(state1);
+  collection.Add(state2);
+
+  std::set<std::string> anyList = collection.ListMeta(false);
+  EXPECT_EQ(2,anyList.size());
+
+  for(auto& str : anyList)
+    std::cout << str << std::endl;
+    
+  std::set<std::string> allList = collection.ListMeta(true);
+  EXPECT_EQ(1,allList.size());
+}
+
 TEST_F(SampleCollectionTest, Mean)
 {
   Eigen::VectorXd mu = collection.Mean(0);

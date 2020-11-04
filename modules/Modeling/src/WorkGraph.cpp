@@ -420,10 +420,14 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
 
   // loop through the sources
   for( auto it : sources ) {
+
     // the upstream node iterator
     auto v = it.second.first;
 
-    if( Constant(v) && std::dynamic_pointer_cast<ConstantPiece>(graph[v]->piece)==nullptr ) { // if this node is constant but is not already a muq::Modeling::ConstantPiece
+    // if this node is constant but is not already a muq::Modeling::ConstantPiece
+    bool isConstantPiece = (std::dynamic_pointer_cast<ConstantVector>(graph[v]->piece)!=nullptr)||(std::dynamic_pointer_cast<ConstantPiece>(graph[v]->piece)!=nullptr);
+    if( Constant(v) &&  (!isConstantPiece) ) {
+
       // get the output values for this node
       const std::vector<boost::any>& outputs = GetConstantOutputs(v);
 
@@ -433,11 +437,11 @@ void WorkGraph::RecursiveCut(const boost::graph_traits<Graph>::vertex_descriptor
 
       // loop through the edges from the source to this node
       for( auto e : it.second.second ) {
-	if( !newGraph->HasEdge(nextV, vNew, graph[*e]->inputDim) ) { // if edge does not exist ...
-	  // ... add the edge from this node to the existing node
-	  auto nextE = boost::add_edge(nextV, vNew, newGraph->graph);
-	  newGraph->graph[nextE.first] = std::make_shared<WorkGraphEdge>(graph[*e]->outputDim, graph[*e]->inputDim);
-	}
+      	if( !newGraph->HasEdge(nextV, vNew, graph[*e]->inputDim) ) { // if edge does not exist ...
+      	  // ... add the edge from this node to the existing node
+      	  auto nextE = boost::add_edge(nextV, vNew, newGraph->graph);
+      	  newGraph->graph[nextE.first] = std::make_shared<WorkGraphEdge>(graph[*e]->outputDim, graph[*e]->inputDim);
+      	}
       }
 
       // move to the next source
@@ -479,6 +483,7 @@ std::shared_ptr<WorkGraph> WorkGraph::DependentCut(std::string const& nameOut) c
 
   // if the desired node is constant
   if( Constant(nameOut) ) {
+
     // get the output values for this node
     const std::vector<boost::any>& outputs = GetConstantOutputs(nameOut);
 
@@ -588,12 +593,13 @@ std::shared_ptr<ModGraphPiece> WorkGraph::CreateModPiece(std::string const& node
   // make sure we have the node
   assert(HasNode(node));
 
-  // trime the extraneous branches from the graph
+  // trim the extraneous branches from the graph
   auto newGraph = DependentCut(node);
   assert(newGraph);
 
   // get the inputs to the cut graph
   std::vector<std::pair<boost::graph_traits<Graph>::vertex_descriptor, int> > inputs;
+
   if( inNames.size()>0 ) {
     for( unsigned int i=0; i<inNames.size(); ++i ) {
       boost::graph_traits<Graph>::vertex_iterator it;
@@ -604,6 +610,7 @@ std::shared_ptr<ModGraphPiece> WorkGraph::CreateModPiece(std::string const& node
       const int numInputs = newGraph->graph[*it]->piece->numInputs;
       std::vector<int> isSet;
       isSet.reserve(numInputs);
+
       // for each vertex, loop over the input nodes and figure out if the inputs are set
       boost::graph_traits<Graph>::in_edge_iterator e, e_end;
       for( tie(e, e_end)=in_edges(*it, newGraph->graph); e!=e_end; ++e ) {

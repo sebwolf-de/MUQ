@@ -18,9 +18,9 @@ namespace muq {
     This class implements the preconditioned Crank Nicolson proposal (pCN) from
     Cotter et al., 2013.  The proposal takes the form
     \f[
-    u^\prime = \sqrt{ 1 - \beta^2} u_c + \beta z,
+    u^\prime = \bar{u} + \sqrt{ 1 - \beta^2} (u_c-\bar{u}) + \beta z,
     \f]
-    where \f$u_c\f$ is the current state of the chain, \f$z\sim N(0,C)\f$ is a normal
+    where \f$\bar{u}\f$ is an estimate of the posterior mean (e.g., the prior mean or posterior MAP), \f$u_c\f$ is the current state of the chain, \f$z\sim N(0,C)\f$ is a normal
     random variable with a strategically chosen covariance \f$C\f$ (often the prior covariance), and \f$u^\prime\f$
     is the propsed point.  The parameter \f$\beta\f$ is a tuning parameter.
 

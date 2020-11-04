@@ -197,7 +197,7 @@ std::shared_ptr<SamplingState> SingleChainMCMC::SaveSamples(std::vector<std::sha
   return newStates.back();
 }
 
-bool SingleChainMCMC::ShouldSave(unsigned int const sampNum) const { return sampNum>=burnIn && scheduler->ShouldSave(sampNum); }
+bool SingleChainMCMC::ShouldSave(unsigned int const sampNum) const { return ((sampNum>=burnIn) && (scheduler->ShouldSave(sampNum))); }
 
 void SingleChainMCMC::SetState(std::vector<Eigen::VectorXd> const& x0) {
   SetState(std::make_shared<SamplingState>(x0));
@@ -205,5 +205,6 @@ void SingleChainMCMC::SetState(std::vector<Eigen::VectorXd> const& x0) {
 
 void SingleChainMCMC::SetState(std::shared_ptr<SamplingState> const& x0) {
   prevState = x0;
-  samples->Add(prevState);
+  if(ShouldSave(0))
+    samples->Add(prevState);
 }

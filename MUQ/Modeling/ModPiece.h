@@ -416,12 +416,40 @@ namespace muq{
                                             Eigen::VectorXd             const& sens,
                                             Eigen::VectorXd             const& vec);
 
+    /** The ModPiece class has support for caching one evaluation.  If more
+        extensive caching is needed, the muq::Modeling::FlannCache class
+        can be used.  The one step caching in the ModPiece class can be
+        useful when subsequent calls to the ModPiece might have the exact same
+        inputs.   If enabled, both the input and output of EvaluateImpl calls
+        will be stored.  If the next call to Evaluate has the same input, then
+        EvaluateImpl will not be called, the cached value will just be returned.
+
+        Note that caching introduces some additional overhead and is not always
+        a good idea.   It is therefore disabled by default and should be turned
+        on manually for expensive ModPieces.
+
+        Enabling the one-step cache is particularly useful in gradient based
+        optimization and MCMC methods, where subsequent calls to Evaluate and
+        Gradient will occur with the same inputs.   Without using caching, a call
+        to Gradient in a ModGraphPiece could result in duplicate calls to Evaluate.
+    */
+    void EnableCache(){cacheEnabled=true;};
+    void DisableCache(){cacheEnabled=false;};
+    bool CacheStatus() const{return cacheEnabled;};
+
     const Eigen::VectorXi inputSizes;
     const Eigen::VectorXi outputSizes;
 
   protected:
 
     std::vector<Eigen::VectorXd> ToStdVec(ref_vector<Eigen::VectorXd> const& input);
+
+    // Should one step caching be used?
+    bool cacheEnabled = false;
+    std::vector<Eigen::VectorXd> cacheInput;
+
+    /** Checks to see if the input matches the value stored in the one-step cache. */
+    bool ExistsInCache(ref_vector<Eigen::VectorXd> const& input) const;
 
     // The following variables keep track of how many times the Implemented functions, i.e. EvaluateImpl, GradientImpl,
     // etc... are called.
@@ -433,9 +461,6 @@ namespace muq{
     unsigned long int numJacFDCalls  = 0;
     unsigned long int numJacActFDCalls = 0;
     unsigned long int numHessActFDCalls = 0;
-
-
-
 
     // these variables keep track of the total wall-clock time spent in each of the Implemented functions.  They are in
     // units of milliseconds
@@ -493,6 +518,7 @@ namespace muq{
     //                       Eigen::VectorXd             const& vec);
 
   private:
+
     template<typename NextType, typename... Args>
     inline Eigen::VectorXd const& GradientRecurse(unsigned int outWrt,
                                                   unsigned int inWrt,

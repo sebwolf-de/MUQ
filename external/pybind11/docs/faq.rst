@@ -5,7 +5,7 @@ Frequently asked questions
 ===========================================================
 
 1. Make sure that the name specified in PYBIND11_MODULE is identical to the
-filename of the extension library (without prefixes such as .so)
+filename of the extension library (without suffixes such as .so)
 
 2. If the above did not fix the issue, you are likely using an incompatible
 version of Python (for instance, the extension library was compiled against
@@ -100,8 +100,8 @@ following example:
 
 .. code-block:: cpp
 
-    void init_ex1(py::module &);
-    void init_ex2(py::module &);
+    void init_ex1(py::module_ &);
+    void init_ex2(py::module_ &);
     /* ... */
 
     PYBIND11_MODULE(example, m) {
@@ -114,7 +114,7 @@ following example:
 
 .. code-block:: cpp
 
-    void init_ex1(py::module &m) {
+    void init_ex1(py::module_ &m) {
         m.def("add", [](int a, int b) { return a + b; });
     }
 
@@ -122,7 +122,7 @@ following example:
 
 .. code-block:: cpp
 
-    void init_ex2(py::module &m) {
+    void init_ex2(py::module_ &m) {
         m.def("sub", [](int a, int b) { return a - b; });
     }
 
@@ -248,6 +248,33 @@ that that were ``malloc()``-ed in another shared library, using data
 structures with incompatible ABIs, and so on. pybind11 is very careful not
 to make these types of mistakes.
 
+How can I properly handle Ctrl-C in long-running functions?
+===========================================================
+
+Ctrl-C is received by the Python interpreter, and holds it until the GIL
+is released, so a long-running function won't be interrupted.
+
+To interrupt from inside your function, you can use the ``PyErr_CheckSignals()``
+function, that will tell if a signal has been raised on the Python side.  This
+function merely checks a flag, so its impact is negligible. When a signal has
+been received, you must either explicitly interrupt execution by throwing
+``py::error_already_set`` (which will propagate the existing
+``KeyboardInterrupt``), or clear the error (which you usually will not want):
+
+.. code-block:: cpp
+
+    PYBIND11_MODULE(example, m)
+    {
+        m.def("long running_func", []()
+        {
+            for (;;) {
+                if (PyErr_CheckSignals() != 0)
+                    throw py::error_already_set();
+                // Long running iteration
+            }
+        });
+    }
+
 Inconsistent detection of Python version in CMake and pybind11
 ==============================================================
 
@@ -258,7 +285,7 @@ CMake code. Conflicts can arise, however, when using pybind11 in a project that 
 Python detection in a system with several Python versions installed.
 
 This difference may cause inconsistencies and errors if *both* mechanisms are used in the same project. Consider the following
-Cmake code executed in a system with Python 2.7 and 3.x installed:
+CMake code executed in a system with Python 2.7 and 3.x installed:
 
 .. code-block:: cmake
 

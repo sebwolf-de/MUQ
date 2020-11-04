@@ -1,5 +1,6 @@
 #include "MUQ/Modeling/ModPiece.h"
 #include "MUQ/Utilities/Exceptions.h"
+#include "MUQ/Utilities/Demangler.h"
 
 #include <chrono>
 
@@ -18,10 +19,51 @@ std::vector<Eigen::VectorXd> const& ModPiece::Evaluate(std::vector<Eigen::Vector
   return Evaluate(ToRefVector(input));
 }
 
+bool ModPiece::ExistsInCache(ref_vector<Eigen::VectorXd> const& input) const
+{
+  // Check to see if the input is the same as what's cached
+  if(input.size()!=cacheInput.size()){
+    return false;
+  }
+
+  // Check the size of each input vector
+  for(int i=0; i<input.size(); ++i){
+    if(input.at(i).get().size()!=cacheInput.at(i).size()){
+      return false;
+    }
+  }
+
+  // Check the contents of each input vector
+  for(int i=0; i<input.size(); ++i){
+    Eigen::VectorXd const& inVec = input.at(i).get();
+    for(int j=0; j<cacheInput[i].size(); ++j){
+      if(std::abs(inVec(j)-cacheInput[i](j))>std::numeric_limits<double>::epsilon()){
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 std::vector<Eigen::VectorXd> const& ModPiece::Evaluate(ref_vector<Eigen::VectorXd> const& input)
 {
   CheckInputs(input,"Evaluate");
 
+  // If we're using the one-step cache, check to see if the inputs are the same as the previous evaluation
+  if(cacheEnabled){
+    if(ExistsInCache(input)){
+      return outputs;
+
+    }else{
+      // Copy the contents
+      cacheInput.resize(input.size());
+      for(int i=0; i<input.size(); ++i)
+        cacheInput.at(i) = input.at(i);
+    }
+  }
+
+  // Otherwise, evaluate the model
   numEvalCalls++;
   auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -161,14 +203,10 @@ void ModPiece::EvaluateImpl(ref_vector<boost::any> const& inputs){
 //  hessTime += 1e6*static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time).count());
 // }
 
-
 void ModPiece::CheckInputs(ref_vector<Eigen::VectorXd> const& input, std::string const& funcName)
 {
   bool errorOccured = false;
-
-  std::string className = abi::__cxa_demangle(typeid(*this).name(), NULL, NULL, NULL);
-
-  std::string msg = "\nError evaluating " + className + "::" + funcName + ":\n";
+  std::string msg;
 
   if(input.size() != inputSizes.size()){
     msg += "  - Wrong number of input arguments.  Expected " + std::to_string(inputSizes.size()) + " inputs, but " + std::to_string(input.size()) + " were given.\n";
@@ -182,8 +220,12 @@ void ModPiece::CheckInputs(ref_vector<Eigen::VectorXd> const& input, std::string
     }
   }
 
-  if(errorOccured)
+  if(errorOccured){
+    std::string className = muq::Utilities::demangle(typeid(*this).name());
+    msg = "\nError evaluating " + className + "::" + funcName + ":\n" + msg;
+
     throw muq::WrongSizeError(msg);
+  }
 }
 
 
@@ -271,20 +313,21 @@ Eigen::VectorXd ModPiece::ApplyJacobianByFD(unsigned int                const  o
 {
   numJacActFDCalls++;
 
-  const double eps = std::max(1e-4, 1e-8*vec.norm());
+  const double eps = 1e-4;
+  double vecNorm = vec.norm();
+  const Eigen::VectorXd stepDir = vec/vecNorm;
 
   ref_vector<Eigen::VectorXd> newInputVec = input;
-  Eigen::VectorXd newInput = input.at(inputDimWrt).get() - 0.5*eps*vec;
+  Eigen::VectorXd newInput = input.at(inputDimWrt).get() - 0.5*eps*stepDir;
   newInputVec.at(inputDimWrt) = std::cref(newInput);
-
   Eigen::VectorXd f0 = Evaluate(newInputVec).at(outputDimWrt);
 
-  newInput = input.at(inputDimWrt).get() + 0.5*eps*vec;
+  newInput = input.at(inputDimWrt).get() + 0.5*eps*stepDir;
   newInputVec.at(inputDimWrt) = std::cref(newInput);
 
   Eigen::VectorXd f  = Evaluate(newInputVec).at(outputDimWrt);
 
-  return (f-f0)/eps;
+  return vecNorm*(f-f0)/eps;
 }
 
 Eigen::VectorXd ModPiece::ApplyHessian(unsigned int                const  outWrt,

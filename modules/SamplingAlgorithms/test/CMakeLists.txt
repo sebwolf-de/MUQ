@@ -14,6 +14,7 @@ CreateTestGroup(
     DelayedRejectionTests.cpp
     DILITests.cpp
     CrankNicolsonTests.cpp
+    InfMALATests.cpp
 )
 
 CreateTestGroup(

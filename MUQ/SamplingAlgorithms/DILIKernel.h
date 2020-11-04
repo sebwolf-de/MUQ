@@ -125,7 +125,7 @@ namespace muq {
       "Adapt Start" | int | 1 | The number of MCMC steps taken before updating the LIS. |
       "Adapt End" | int | -1 | No LIS updates will occur after this number of MCMC steps.  If negative, the LIS will continue to be updated until the end of the chain. |
       "Initial Weight" | int | 100 | "Weight" or number of samples given to the to initial Hessian.  The weight on the previous average Hessian estimate is given by $(N+W)/(N+W+1)$, where $N$ is the number of MCMC steps taken and $W$ is this parameter. |
-      "Eigensolver Block" | String | - | A string pointing to a block of LOBPCG options for solving the generalized eigenvalue problems. |
+      "Eigensolver Block" | String | - | A string pointing to a block of eigensolver options for solving the generalized eigenvalue problems. |
 
      */
     class DILIKernel : public TransitionKernel {
@@ -260,7 +260,7 @@ namespace muq {
       std::string hessType;
 
       // Options for the Generalized eigenvalue solver
-      boost::property_tree::ptree lobpcgOpts;
+      boost::property_tree::ptree eigOpts;
 
       const int updateInterval;
       const int adaptStart;

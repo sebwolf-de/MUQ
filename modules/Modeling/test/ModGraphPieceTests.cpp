@@ -202,8 +202,10 @@ TEST(Modeling_ModGraphPiece, BasicTest)
   auto myGraph = make_shared<WorkGraph>();
 
   // add nodes
-  myGraph->AddNode(make_shared<SinSumMod>(2), "f2");
-  myGraph->AddNode(make_shared<SinSumMod>(2), "f1");
+  auto f1 = make_shared<SinSumMod>(2);
+  auto f2 = make_shared<SinSumMod>(2);
+  myGraph->AddNode(f2, "f2");
+  myGraph->AddNode(f1, "f1");
   myGraph->AddNode(make_shared<SquareMod>(2), "x");
   myGraph->AddNode(make_shared<SquareMod>(2), "y1");
   myGraph->AddNode(make_shared<SquareMod>(2), "y2");
@@ -250,6 +252,7 @@ TEST(Modeling_ModGraphPiece, BasicTest)
   Eigen::VectorXd vec = Eigen::VectorXd::Ones(2);
   Eigen::VectorXd jacAct = graphMod->ApplyJacobian(0,0,input,vec);
   Eigen::VectorXd grad = graphMod->Gradient(0,0, input, Eigen::VectorXd::Ones(2).eval());
+
   EXPECT_DOUBLE_EQ(2.0 * input[0] * cos(input[0] * input[0]), grad[0]);
   EXPECT_DOUBLE_EQ(2.0 * input[1] * cos(input[1] * input[1]), grad[1]);
 
@@ -262,6 +265,44 @@ TEST(Modeling_ModGraphPiece, BasicTest)
   EXPECT_NEAR(jacAct(1), jacAct2(1), 5e-8);
 
 }
+
+TEST(Modeling_ModGraphPiece, Caching)
+{
+
+  auto graph = make_shared<WorkGraph>();
+  auto x = make_shared<IdentityOperator>(2);
+  auto f = make_shared<ExpOperator>(2);
+  auto g = make_shared<SinOperator>(2);
+
+  graph->AddNode(x, "x");
+  graph->AddNode(f, "f");
+  graph->AddNode(g, "g");
+  graph->AddEdge("x",0,"f",0);
+  graph->AddEdge("f",0,"g",0);
+
+  auto graphMod = graph->CreateModPiece("g");
+  auto gradPiece = graphMod->GradientGraph(0,0);
+
+  Eigen::VectorXd input(2);
+  input << 0.5, 0.75;
+  Eigen::VectorXd sens(2);
+  sens << 1.0, 1.0;
+
+  EXPECT_EQ(0,f->GetNumCalls("Evaluate"));
+  graphMod->Evaluate(input);
+  EXPECT_EQ(1,f->GetNumCalls("Evaluate"));
+  graphMod->Gradient(0,0,input,sens);
+  EXPECT_EQ(2,f->GetNumCalls("Evaluate"));
+  graphMod->Gradient(0,0,input,sens);
+  EXPECT_EQ(3,f->GetNumCalls("Evaluate"));
+
+  f->EnableCache();
+  graphMod->Evaluate(input);
+  EXPECT_EQ(4,f->GetNumCalls("Evaluate"));
+  graphMod->Gradient(0,0,input,sens);
+  EXPECT_EQ(4,f->GetNumCalls("Evaluate"));
+}
+
 
 TEST(Modeling_ModGraphPiece, MultiSplit)
 {

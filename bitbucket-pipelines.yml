@@ -5,28 +5,18 @@ pipelines:
 
     - step:
         name: gcc-external-dep-mpi
+        image: mparno/muq-build:latest
         script:
-          - apt-get update
-          - apt-get install -y cmake libgtest-dev g++ libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev libopenmpi-dev openmpi-bin python-dev pybind11-dev
-
-
-          # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
-          - cd /usr/src/gtest
-          - cmake CMakeLists.txt
-          - make
-          - cp *.a /usr/lib
-
 
           # Build muq
           - cd $BITBUCKET_CLONE_DIR
           - cd build
-          - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON ..
+          - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_C_COMPILER=mpicc -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
           - make
           - make examples
           - make install
           - ./RunAllTests
-      
-      
+          - mpirun -np 2 ./RunAllParallelTests
 
   custom:
     weekly-build:
@@ -34,28 +24,17 @@ pipelines:
 
         - step:
               name: clang-external-dep
+              image: mparno/muq-build:latest
               script:
-                - apt-get update
-                - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev
-
-
-                # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
-                - cd /usr/src/gtest
-                - cmake CMakeLists.txt
-                - make
-                - cp *.a /usr/lib
-
 
                 # Build muq
                 - cd $BITBUCKET_CLONE_DIR
                 - cd build
-                - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON -DMUQ_USE_PYTHON=ON ..
+                - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
                 - make
                 - make examples
                 - make install
                 - ./RunAllTests
-
-
 
         - step:
             name: clang-internal-dep
@@ -80,46 +59,59 @@ pipelines:
               - make install
               - ./RunAllTests
 
-
-
         - step:
             name: gcc-external-dep-mpi-python2
+            image: mparno/muq-build:latest
             script:
               - apt-get update
-              - apt-get install -y cmake libgtest-dev g++ libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev libopenmpi-dev openmpi-bin python2-dev pybind11-dev
-
-
-              # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
-              - cd /usr/src/gtest
-              - cmake CMakeLists.txt
-              - make
-              - cp *.a /usr/lib
-
+              - apt-get install -y python2-dev
 
               # Build muq
               - cd $BITBUCKET_CLONE_DIR
               - cd build
-              - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON -DPYBIND11_PYTHON_VERSION=2 ..
+              - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON -DPYBIND11_PYTHON_VERSION=2 -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
               - make
               - make examples
               - make install
               - ./RunAllTests
-
-
 
         - step:
               name: ubuntu-LTS
               image: ubuntu:latest
               script:
                 - apt-get update
-                - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev
+                - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev
 
 
                 # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
                 - cd /usr/src/gtest
                 - cmake CMakeLists.txt
                 - make
-                - cp *.a /usr/lib
+                - cp lib/*.a /usr/lib
+
+
+                # Build muq
+                - cd $BITBUCKET_CLONE_DIR
+                - cd build
+                - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON -DMUQ_USE_PYTHON=ON ..
+                - make
+                - make examples
+                - make install
+                - ./RunAllTests
+
+        - step:
+              name: ubuntu-latest-release
+              image: ubuntu:rolling
+              script:
+                - apt-get update
+                - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev
+
+
+                # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
+                - cd /usr/src/gtest
+                - cmake CMakeLists.txt
+                - make
+                - cp lib/*.a /usr/lib
 
 
                 # Build muq
@@ -133,20 +125,20 @@ pipelines:
 
 
 
+        # Run Debian unstable channel to catch package changes early
         - step:
-              name: ubuntu-latest-release
-              image: ubuntu:rolling
+              name: debian-unstable
+              image: debian:unstable
               script:
                 - apt-get update
-                # We should pre-install sundials. However, its dependency petsc-dev is uninstallably broken in ubuntu 19.10 :/
-                - apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev python-dev pybind11-dev #libsundials-dev
+                - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python3-dev pybind11-dev
 
 
                 # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
                 - cd /usr/src/gtest
                 - cmake CMakeLists.txt
                 - make
-                - cp *.a /usr/lib
+                - cp lib/*.a /usr/lib
 
 
                 # Build muq

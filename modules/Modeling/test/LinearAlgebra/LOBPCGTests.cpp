@@ -156,7 +156,7 @@ TEST(LOBPCG, Diagonal_Tolerance)
 TEST(LOBPCG, Random)
 {
     // The matrix size
-    const int dim = 30;
+    const int dim = 50;
 
     // The dimension of the range of the matrix
     const int subDim = 5;
@@ -187,7 +187,7 @@ TEST(LOBPCG, Random)
     const int numEigs = subDim-2;
     const double solveTol = 1e-5;
     const double eigTol = 0.0;
-    const int blockSize = numEigs;
+    const int blockSize = 2*numEigs;
 
     LOBPCG solver(numEigs, eigTol, eigTol, blockSize, solveTol);
     solver.compute(op);
