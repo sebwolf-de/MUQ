@@ -14,7 +14,16 @@ namespace muq {
   namespace SamplingAlgorithms {
 
     /**
-     * @brief
+     * @brief Wrapper for MIComponentFactory supporting parallel model setup
+     * @details This MIComponentFactory provides parallelized model setup
+     * initiated by rank zero of the given communicator and makes those models
+     * available to be controlled by the root rank. This allows rank zero
+     * to set up SaplingProblem's through this factory exactly as if it was sequential;
+     * this class ensures that the other worker ranks perform the same SamplingProblem
+     * construction at the same time. In particular, parallel models are guaranteed
+     * to be set up in sync, so most external model codes should just work once the appropriate
+     * communicator is passed to them. Further, once SamplingProblem's are set up, worker processes
+     * listen for LogDensity requests from the respective ParallelAbstractSamplingProblem.
      */
     class ParallelMIComponentFactory : public MIComponentFactory {
 
@@ -68,6 +77,10 @@ namespace muq {
         return componentFactory->IsInverseProblem();
       }
 
+      /**
+       * @brief Stops worker processes command loop, freeing them for other tasks.
+       *
+       */
       void finalize() {
         if (comm->GetRank() != 0)
           return;
@@ -94,7 +107,6 @@ namespace muq {
       }
 
       virtual std::shared_ptr<AbstractSamplingProblem> SamplingProblem (std::shared_ptr<MultiIndex> const& index) override {
-        //int idcnt = index->GetValue(0);
         idcnt++;
         if (comm->GetRank() == 0) {
           spdlog::debug("Rank {} requesting model {} from parallel factory", comm->GetRank(), *index);

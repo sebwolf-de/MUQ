@@ -17,7 +17,12 @@ namespace pt = boost::property_tree;
 namespace muq {
   namespace SamplingAlgorithms {
 
-
+		/**
+		 * @brief Proposal retrieving samples from other ranks.
+		 * @details This is particularly relevant for parallel MIMCMC type methods.
+		 * It allows drawing proposals from coarser chains being computed on other
+		 * processes. Which process to draw a sample from is determined via phonebook.
+		 */
 		class RemoteMIProposal : public MCMCProposal {
 		public:
 			RemoteMIProposal (pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<parcer::Communicator> comm, std::shared_ptr<MultiIndex> remoteIndex, std::shared_ptr<MultiIndex> sourceIndex, std::shared_ptr<PhonebookClient> phonebookClient)

@@ -83,7 +83,8 @@ namespace muq {
 
     /**
      * @brief Tracer implementation writing to OTF2 via libotf2
-     *
+     * The result can be viewed by several programs, one
+     * example is "vite" developed at INRIA.
      */
     class OTF2Tracer : public OTF2TracerBase {
 
@@ -120,6 +121,9 @@ namespace muq {
         setRegionName(TracerRegions::FetchingProposal, "FetchingProposal");
       }
 
+      /**
+       * @brief Call this to mark that a certain tracer region has been entered.
+       */
       void enterRegion(TracerRegions region) override {
         ensureRegionName(region);
         OTF2_EvtWriter_Enter( evt_writer,
@@ -128,6 +132,9 @@ namespace muq {
                               region );
       }
 
+      /**
+       * @brief Call this to mark that a certain tracer region has been left.
+       */
       void leaveRegion(TracerRegions region) override {
         ensureRegionName(region);
         OTF2_EvtWriter_Leave( evt_writer,

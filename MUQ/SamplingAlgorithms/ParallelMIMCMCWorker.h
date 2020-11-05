@@ -24,6 +24,11 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /**
+     * @brief High-level communication wrapper for controlling SampleCollectors.
+     * @details This takes care about assigning workers to a set of collectors for a specific
+     * model index/level, sending commands to them and finally unassigning them again.
+     */
     class CollectorClient {
     public:
       CollectorClient(std::shared_ptr<parcer::Communicator> comm, std::vector<int> subgroup, std::shared_ptr<MultiIndex> modelindex)
@@ -149,6 +154,11 @@ namespace muq {
 
     };
 
+    /**
+     * @brief High-level communication wrapper for controlling worker processes.
+     * @details This takes care about assigning workers to a worker group for a specific
+     * model index/level, sending commands to them and finally unassigning them again.
+     */
     class WorkerClient {
     public:
       WorkerClient(std::shared_ptr<parcer::Communicator> comm, std::shared_ptr<PhonebookClient> phonebookClient, int RootRank)
@@ -196,6 +206,16 @@ namespace muq {
       std::shared_ptr<PhonebookClient> phonebookClient;
     };
 
+    /**
+     * @brief Implements the actual sampling / collecting logic for parallel MIMCMC.
+     * @details Workers will, in a loop until finalized, wait for instructions to
+     * join a set of collectors or a worker group for sampling. They then listen
+     * for commands to execute these tasks until unassigned from that task again.
+     * As a collector, workers will request MCMC samples (more specifically,
+     * samples and their coarser ancesters in analogy to the sequential MIMCMCBox)
+     * from sampling worker groups. As part of a sampling worker group, they will
+     * compute MCMC samples and provide them to other processes via the phonebook.
+     */
     class WorkerServer {
     public:
       WorkerServer(boost::property_tree::ptree const& pt, std::shared_ptr<parcer::Communicator> comm, std::shared_ptr<PhonebookClient> phonebookClient, int RootRank, std::shared_ptr<ParallelizableMIComponentFactory> componentFactory, std::shared_ptr<muq::Utilities::OTF2TracerBase> tracer) {

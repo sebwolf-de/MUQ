@@ -22,6 +22,17 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /**
+     * @brief Phonebook implementation facilitating communication between different roles in a parallel MIMCMC type
+     * method. Also is responsible for dynamic scheduling.
+     * @details The phonebook process tracks which worker processes are assigned to which models. When samples are
+     * computed, the phonebook is informed by the respective worker group controller. When samples are requested
+     * by other controllers (in order to be used as proposals for finer chains) or by collectors, the phonebook
+     * sends to them the rank of a controller process that has such a sample available.
+     *
+     * Since the phonebook can also track which model indices/levels are busy and which are not, it can also
+     * take care of initiating the dynamic rescheduling of worker processes as needed.
+     */
     class PhonebookServer {
     public:
 
@@ -371,7 +382,12 @@ namespace muq {
       bool rescheduling_in_progress = false;
     };
 
-
+    /**
+     * @brief High-level wrapper for communicating with the phonebook process.
+     * @details This wraps communication with the phonebook in an easy to use
+     * interface. Needed for example by sampling worker processes to announce when
+     * samples are available to be collected.
+     */
     class PhonebookClient {
 
     public:

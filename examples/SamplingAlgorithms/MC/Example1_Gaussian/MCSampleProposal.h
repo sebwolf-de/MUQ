@@ -1,4 +1,11 @@
 
+
+/**
+ * @brief Proposal density intended for Monte Carlo methods.
+ * @details This proposal simply samples from a given density.
+ * When combined with a kernel that always accepts, this allows
+ * building Monte Carlo methods in the MCMC framework.
+ */
 class MCSampleProposal : public MCMCProposal {
 public:
   MCSampleProposal(boost::property_tree::ptree       const& pt,

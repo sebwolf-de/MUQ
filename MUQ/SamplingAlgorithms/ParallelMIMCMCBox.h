@@ -23,6 +23,15 @@ using namespace muq::Utilities;
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /**
+     * @brief Parallel equivalent to the MIMCMCBox, holds chains representing telescoping sum component.
+     * @details This class is responsible for handling MCMC chains associated to a part of the
+     * telescoping sum in a parallel multilevel/multiindex method. The main difference to its sequential
+     * counterpart is that it draws coarser proposals from remote ranks via communication, rather
+     * than implicitly setting up a sequence of increasingly coarse models for proposal generation. This
+     * allows parallelization across different indices/levels. In case of pure Monte Carlo methods,
+     * it employs kernels always accepting proposals in order to fit in the same framework.
+     */
     class ParallelMIMCMCBox {
     public:
 
