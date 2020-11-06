@@ -1,3 +1,6 @@
+#ifndef OTF2TRACER_H
+#define OTF2TRACER_H
+
 #if MUQ_HAS_OTF2==1
 #include <otf2/otf2.h>
 #include <otf2/OTF2_MPI_Collectives.h>
@@ -288,4 +291,4 @@ namespace muq {
   }
 }
 
-
+#endif
