@@ -70,9 +70,9 @@ pipelines:
               - cd mituq.bitbucket.io
               - if [ -d "$BITBUCKET_TAG" ]; then rm -Rf $BITBUCKET_TAG; fi
               - mv $BITBUCKET_CLONE_DIR/build/doxygen_output/html $BITBUCKET_TAG
-              - [[ "$BITBUCKET_TAG" =~ ^v[0-9].[0-9]+.[0-9]+$ ]] && echo "<meta http-equiv=\"refresh\" content=\"0; url=https://mituq.bitbucket.io/$BITBUCKET_TAG/index.html\">" > index.html
+              - if [[ "$BITBUCKET_TAG" =~ ^v[0-9].[0-9]+.[0-9]+$ ]]; then echo "<meta http-equiv=\"refresh\" content=\"0; url=https://mituq.bitbucket.io/$BITBUCKET_TAG/index.html\">" > index.html; fi
               - git add $BITBUCKET_TAG
-              - [[ "$BITBUCKET_TAG" =~ ^v[0-9].[0-9]+.[0-9]+$ ]] && git add index.html
+              - if [[ "$BITBUCKET_TAG" =~ ^v[0-9].[0-9]+.[0-9]+$ ]]; then git add index.html; fi
               - git commit -m "Added documentation for $BITBUCKET_TAG"
               - git push $BITBUCKET_USER:$BITBUCKET_PASSWORD@bitbucket.org/mituq/mituq.bitbucket.io.git --all
 
