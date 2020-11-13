@@ -31,6 +31,7 @@ pipelines:
               - docker
       - step:
             name: docker-muq
+            size: 2x
             script:
               - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
               - cd $BITBUCKET_CLONE_DIR/SupportScripts/docker/muq
@@ -49,6 +50,7 @@ pipelines:
               - docker
       - step:
             name: docker-muq-hippylib
+            size: 2x
             script:
               - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
               - cd $BITBUCKET_CLONE_DIR/SupportScripts/docker/muq-hippylib
