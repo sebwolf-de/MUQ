@@ -39,7 +39,8 @@ pipelines:
             services:
               - docker
       - step:
-            name: Documentaton
+            name: Documentation
+            image: mparno/muq-build
             script:
               - apt-get update
               - apt-get install -y doxygen
