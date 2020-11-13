@@ -21,25 +21,43 @@ pipelines:
   tags:
     'v*.*.*':
       - step:
-            name: Docker
+            name: docker-muq-build
             script:
               - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
               - cd $BITBUCKET_CLONE_DIR/SupportScripts/docker/muq-build
               - docker build --build-arg tag=$BITBUCKET_TAG -t mparno/muq-build:$BITBUCKET_TAG .
               - docker push mparno/muq-build:$BITBUCKET_TAG
+            services:
+              - docker
+      - step:
+            name: docker-muq
+            script:
+              - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
               - cd $BITBUCKET_CLONE_DIR/SupportScripts/docker/muq
               - docker build --build-arg tag=$BITBUCKET_TAG -t mparno/muq:$BITBUCKET_TAG .
               - docker push mparno/muq:$BITBUCKET_TAG
+            services:
+              - docker
+      - step:
+            name: docker-muq-jupyter
+            script:
+              - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
               - cd $BITBUCKET_CLONE_DIR/SupportScripts/docker/muq-jupyter
               - docker build --build-arg tag=$BITBUCKET_TAG -t mparno/muq-jupyter:$BITBUCKET_TAG .
               - docker push mparno/muq-jupyter:$BITBUCKET_TAG
+            services:
+              - docker
+      - step:
+            name: docker-muq-hippylib
+            script:
+              - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
               - cd $BITBUCKET_CLONE_DIR/SupportScripts/docker/muq-hippylib
               - docker build --build-arg tag=$BITBUCKET_TAG -t mparno/muq-hippylib:$BITBUCKET_TAG .
               - docker push mparno/muq-hippylib:$BITBUCKET_TAG
             services:
               - docker
       - step:
-            name: Documentation
+            name: documentation
             image: mparno/muq-build
             script:
               - apt-get update
