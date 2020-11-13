@@ -23,7 +23,7 @@ RUN cd /home/fenics && \
     git clone --depth 1 --branch $tag https://bitbucket.org/mituq/muq2.git && \
     cd muq2/; mkdir build; cd build;  \
     cmake -DCMAKE_INSTALL_PREFIX=/home/fenics/Installations/MUQ_INSTALL -DMUQ_USE_PYTHON=ON -DMUQ_HDF5_DIR=/usr/local/lib/python3.5/dist-packages/h5py/.libs/ ../ && \
-    make -j2 install && \
+    make install && \
     cd /home/fenics && \
     rm -r muq2
 

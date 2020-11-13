@@ -9,7 +9,7 @@ ARG tag
 RUN git clone --depth=1 --branch $tag https://bitbucket.org/mituq/muq2.git && \
     cd muq2/build && \
     cmake -DMUQ_USE_GTEST=ON -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=/home/muq-user/muq-install .. && \
-    make -j4 install && \
+    make install && \
     cd ../../ && cp -r muq2/examples /home/muq-user/muq-examples && \
     rm -r muq2
 
