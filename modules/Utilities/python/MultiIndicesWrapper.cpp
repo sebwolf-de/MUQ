@@ -82,6 +82,7 @@ void muq::Utilities::PythonBindings::MultiIndicesWrapper(py::module &m)
     .def_static("CreateTriHyperbolic", &MultiIndexFactory::CreateTriHyperbolic, py::arg("length"), py::arg("maxOrder"), py::arg("q")=0, py::arg("limiter")=std::make_shared<NoLimiter>())
     .def_static("CreateFullTensor",  (std::shared_ptr<MultiIndexSet>(*)(unsigned int const, unsigned int const,std::shared_ptr<MultiIndexLimiter>)) &MultiIndexFactory::CreateFullTensor, py::arg("length"), py::arg("order"), py::arg("limiter")=std::make_shared<NoLimiter>())
     .def_static("CreateFullTensor",  (std::shared_ptr<MultiIndexSet>(*)(const Eigen::RowVectorXi&, std::shared_ptr<MultiIndexLimiter>)) &MultiIndexFactory::CreateFullTensor, py::arg("orders"), py::arg("limiter")=std::make_shared<NoLimiter>())
+    .def_static("CreateAnisotropic", (std::shared_ptr<MultiIndexSet>(*)(const Eigen::RowVectorXf&, const double)) &MultiIndexFactory::CreateAnisotropic, py::arg("weights"), py::arg("epsilon"))
     //.def("CentralMoment", &SampleCollection::CentralMoment, py::arg("order"), py::arg("blockDim") = -1)
     .def_static("CreateTriHyperbolic", &MultiIndexFactory::CreateTriHyperbolic);
 
