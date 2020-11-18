@@ -53,7 +53,7 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
   double propTarget;
   double currentTarget;
 
-  if( prevState->HasMeta("LogTarget") && !reeval ){
+  if( prevState->HasMeta("LogTarget") && (prevState->HasMeta("QOI") || problem->numBlocksQOI == 0) && !reeval ){
     currentTarget = AnyCast( prevState->meta["LogTarget"]);
   }else{
     currentTarget = problem->LogDensity(prevState);
@@ -98,7 +98,7 @@ void MHKernel::PrintStatus(const std::string prefix) const
 {
   std::stringstream msg;
   msg << std::setprecision(2);
-  msg << prefix << "Acceptance Rate = "  << 100.0*double(numAccepts)/double(numCalls) << "%";
+  msg << prefix << "MHKernel acceptance Rate = "  << 100.0*double(numAccepts)/double(numCalls) << "%";
 
   std::cout << msg.str() << std::endl;
 }

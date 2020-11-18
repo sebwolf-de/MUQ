@@ -16,7 +16,7 @@ CreateCompileGroup(
     SAMPLING_PROBLEMS
     "Implement sampling sampling problems for MCMC."
     muqSamplingAlgorithms
-    "MODELING_CORE"
+    "MODELING_CORE;APPROXIMATION_REGRESSION"
     ""
     ""
 
@@ -54,6 +54,8 @@ CreateCompileGroup(
     MarkovChain.cpp
 
     TransitionKernel.cpp
+    DummyKernel.cpp
+    MIDummyKernel.cpp
     #MCKernel.cpp
     #ISKernel.cpp
     MHKernel.cpp
@@ -89,10 +91,12 @@ if(MUQ_USE_MPI)
       "Tools for sampling that require MPI distributed parallelism."
       muqSamplingAlgorithms
       "MODELING_CORE;UTILITIES_CORE;SAMPLING_ALGORITHM"
-      "PARCER"
+      "PARCER;SPDLOG;OTF2"
       ""
       ParallelAMProposal.cpp
       DistributedCollection.cpp
+      ParallelAbstractSamplingProblem.cpp
+      ParallelMIComponentFactory.cpp
   )
 
 endif()

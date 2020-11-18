@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.12)
+cmake_minimum_required (VERSION 3.10)
 
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/finds)
@@ -20,17 +20,17 @@ message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
 
 
 ###############################################
+# User options
+###############################################
+INCLUDE(OptionsSetup)
+INCLUDE(SetInstallPaths)
+
+###############################################
 # Compiler configuration
 ###############################################
 INCLUDE(SetupCompiler)
 INCLUDE(CompilerCheck)
 include_directories(.)
-
-###############################################
-# User options
-###############################################
-INCLUDE(SetInstallPaths)
-INCLUDE(OptionsSetup)
 
 ###############################################
 # Find source files and calculate required dependencies
@@ -115,6 +115,10 @@ install(DIRECTORY MUQ
 #install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/modules/Approximation/python/pymuqApproximation/"
 #        DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pymuqApproximation"
 #        PATTERN "wrappers/" EXCLUDE)
+
+install(DIRECTORY spdlog
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/include"
+	    FILES_MATCHING PATTERN "*.h")
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${INSTALL_LIB_DIR})

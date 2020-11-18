@@ -137,7 +137,7 @@ void PythonBindings::MCMCWrapper(py::module &m) {
     .def("FinestChain", &MIMCMCBox::FinestChain)
     .def("GetChain", &MIMCMCBox::GetChain)
     .def("GetBoxIndices", &MIMCMCBox::GetBoxIndices)
-    .def("getBoxHighestIndex", &MIMCMCBox::getBoxHighestIndex);
+    .def("GetHighestIndex", &MIMCMCBox::GetHighestIndex);
 
 
   py::class_<MIMCMC, SamplingAlgorithm, std::shared_ptr<MIMCMC>> multiindexMCMC(m, "MIMCMC");

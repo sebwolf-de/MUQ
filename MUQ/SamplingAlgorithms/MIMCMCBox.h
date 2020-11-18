@@ -4,6 +4,7 @@
 #include "MUQ/SamplingAlgorithms/MHKernel.h"
 #include "MUQ/SamplingAlgorithms/MIComponentFactory.h"
 #include "MUQ/SamplingAlgorithms/MIKernel.h"
+#include "MUQ/SamplingAlgorithms/RemoteMIProposal.h"
 #include "MUQ/Utilities/AnyHelpers.h"
 #include "MUQ/Utilities/MultiIndices/MultiIndexFactory.h"
 
@@ -48,13 +49,16 @@ namespace muq {
 
       std::shared_ptr<AbstractSamplingProblem> GetFinestProblem();
 
-      std::shared_ptr<MultiIndex> getBoxHighestIndex();
+      std::shared_ptr<MultiIndex> GetHighestIndex();
+
+      void WriteToFile(std::string filename);
 
     private:
 
       // Creates a path of multiindices back to zero, preferring a route along the diagonal
       std::shared_ptr<MultiIndexSet> CreateRootPath(std::shared_ptr<MultiIndex> index);
 
+      std::shared_ptr<SampleCollection> QOIDiff;
 
       std::shared_ptr<MIComponentFactory> componentFactory;
       std::shared_ptr<MultiIndex> boxHighestIndex;
