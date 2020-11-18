@@ -18,15 +18,8 @@ else(MUQ_USE_MPI)
   set(MUQ_HAS_MPI 0)
 endif(MUQ_USE_MPI)
 
-<<<<<<< HEAD
 set(CMAKE_CXX_FLAGS_DEBUG  "-O0")
 set(CMAKE_CXX_FLAGS_RELEASE  "-O3")
-=======
-set(CMAKE_CXX_FLAGS_DEBUG  "-O0") #-O0 works better for memcheck
-set(CMAKE_CXX_FLAGS_RELEASE  "-O3 -msse4 -mavx") #full optimization with debug symbols for profiling
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
->>>>>>> 3e1a7011088ccf5ae04a69b2a7b48c1960f196ee
 
 # default to a release build
 message(STATUS "User defined build type = " ${CMAKE_BUILD_TYPE})
