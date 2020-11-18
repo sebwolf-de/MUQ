@@ -37,10 +37,10 @@ pipelines:
                 - ./RunAllTests
 
         - step:
-            name: clang-internal-dep
+            name: clang-internal-dep-mpi
             script:
               - apt-get update
-              - apt-get install -y cmake libgtest-dev clang python-dev
+              - apt-get install -y cmake openmpi-bin libopenmpi-dev libgtest-dev clang python-dev
 
 
               # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
@@ -49,15 +49,17 @@ pipelines:
               - make
               - cp *.a /usr/lib
 
+              - export OMPI_CXX=clang++ # Need this to make sure openmpi actually uses clang
 
               # Build muq
               - cd $BITBUCKET_CLONE_DIR
               - cd build
-              - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON -DMUQ_USE_PYTHON=ON ..
+              - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON ..
               - make
               - make examples
               - make install
               - ./RunAllTests
+              - mpirun -np 2 ./RunAllParallelTests
 
         - step:
             name: gcc-external-dep-mpi-python2
@@ -74,6 +76,7 @@ pipelines:
               - make examples
               - make install
               - ./RunAllTests
+              - mpirun -np 2 ./RunAllParallelTests
 
         - step:
               name: ubuntu-LTS
