@@ -163,7 +163,7 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::GradientGraph(unsigned int        
         nodeName << filtGraph[adjointRunOrders[inputDimWrt][0]]->name << "_Gradient[" << outputDimWrt << "," << inDim << "]";
         try{
           gradGraph.AddNode(gradPiece, nodeName.str());
-        }catch(std::logic_error){}
+        }catch(const std::logic_error&){}
 
         gradGraph.AddEdge(outputName +"_Sensitivity", 0 , nodeName.str(), gradPiece->inputSizes.size()-1);
 
@@ -402,7 +402,7 @@ std::shared_ptr<ModGraphPiece> ModGraphPiece::JacobianGraph(unsigned int        
             }else if(boost::in_degree(source,filtGraph)>0){
               jacGraph.AddEdge(cumNames[filtGraph[source]->name].at(filtGraph[*ein.first]->outputDim), 0, jacName.str(),  jacPiece->inputSizes.size()-1);
             }
-          }catch(std::logic_error e){
+          }catch(const std::logic_error& e){
              //std::cout << "duplicate..." << std::endl;
           }
         } // Loop over output edges
