@@ -21,11 +21,11 @@ using namespace muq::SamplingAlgorithms;
 using namespace muq::Utilities;
 
 
+#include "Problem.h"
 
 
 
-
-class MySamplingProblem : public AbstractSamplingProblem {
+/*class MySamplingProblem : public AbstractSamplingProblem {
 public:
   MySamplingProblem(std::shared_ptr<muq::Modeling::ModPiece> const& targetIn)
    : AbstractSamplingProblem(Eigen::VectorXi::Constant(1,2), Eigen::VectorXi::Constant(1,2)),
@@ -146,11 +146,10 @@ public:
     return mu;
   }
 
-};
+};*/
+
 
 int main(){
-
-  auto componentFactory = std::make_shared<MyMIComponentFactory>();
 
   pt::ptree pt;
 
@@ -164,7 +163,9 @@ int main(){
   pt.put("NumSamples_2_0", 1e4);
   pt.put("NumSamples_2_1", 1e3);
   pt.put("NumSamples_2_2", 1e3);
+  pt.put("MLMCMC.Subsampling", 5);
 
+  auto componentFactory = std::make_shared<MyMIComponentFactory>(pt);
 
 
   std::cout << std::endl << "*************** multiindex chain" << std::endl << std::endl;

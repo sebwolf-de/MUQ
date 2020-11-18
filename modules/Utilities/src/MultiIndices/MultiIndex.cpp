@@ -202,6 +202,14 @@ bool MultiIndex::operator<(const MultiIndex &b) const{
 
 }
 
+bool MultiIndex::operator>=(const MultiIndex &b) const{
+    return !(*this < b);
+}
+
+bool MultiIndex::operator<=(const MultiIndex &b) const{
+    return !(*this > b);
+}
+
 MultiIndex& MultiIndex::operator+=(const MultiIndex &b) {
   for(int i=0; i<length; ++i){
     SetValue(i, GetValue(i) + b.GetValue(i));

@@ -87,8 +87,10 @@ PrintRequired(HDF5 " -----")
 PrintRequired(NANOFLANN " ")
 PrintRequired(SUNDIALS " -")
 PrintRequired(NLOPT " ----")
-PrintRequired(STANMATH " -")
 PrintRequired(PARCER " ---")
+PrintRequired(SPDLOG " ---")
+PrintRequired(OTF2 " -----")
+PrintRequired(STANMATH " -")
 
 FILE(APPEND ${_log_summary} "#\n")
 
@@ -127,7 +129,7 @@ endmacro(PrintOptional)
 
 # print glog status
 FILE(APPEND ${_log_summary} "#  Optional dependencies:\n")
-PrintOptional(GTEST " ----")
+PrintOptional(GTEST " -----")
 
 FILE(APPEND ${_log_summary} "#\n")
 

@@ -59,31 +59,16 @@ file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/muq_external/lib)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/include)
 
-########################################
-##### LOOK FOR AND/OR BUILD Eigen ######
-########################################
+########################################################
+##### LOOK FOR AND/OR BUILD REQUIRED DEPENDENCIES ######
+########################################################
 GetDependency(EIGEN3)
-
-########################################
-##### LOOK FOR AND/OR BUILD StanMath ######
-########################################
 GetDependency(STANMATH)
-
-########################################
-##### LOOK FOR AND/OR BUILD SUNDIALS ###
-########################################
 GetDependency(SUNDIALS)
-
-
-########################################
-##### LOOK FOR AND/OR BUILD NLOPT ###
-########################################
 GetDependency(NLOPT)
-
-########################################
-##### LOOK FOR AND/OR BUILD PARCER ###
-########################################
 GetDependency(PARCER)
+GetDependency(SPDLOG)
+GetDependency(OTF2)
 
 
 ########################################
