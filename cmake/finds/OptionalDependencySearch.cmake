@@ -58,13 +58,16 @@ if (${dindex} GREATER -1)
     if(MUQ_USE_PYTHON)
         set(PYBIND11_CPP_STANDARD -std=c++11)
 
-        FIND_PACKAGE(pybind11 2.3)
+        FIND_PACKAGE(pybind11)
 
         if(NOT pybind11_FOUND)
             message(STATUS "Falling back to internal pybind11 version")
             add_subdirectory(${CMAKE_SOURCE_DIR}/external/pybind11)
             include_directories(${CMAKE_SOURCE_DIR}/external/pybind11/include)
         endif()
+
+        message("PYTHON_SITE_PACKAGES = ${PYTHON_SITE_PACKAGES}")
+
     endif()
 else()
     set(MUQ_NEEDS_PYTHON OFF)

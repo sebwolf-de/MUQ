@@ -96,6 +96,8 @@ CreateCompileGroup(
     LinearAlgebra/GaussianOperator.cpp
     LinearAlgebra/GaussNewtonOperator.cpp
     LinearAlgebra/LOBPCG.cpp
+    LinearAlgebra/StochasticEigenSolver.cpp
+    LinearAlgebra/GeneralizedEigenSolver.cpp
     LinearAlgebra/SliceOperator.cpp
     #LinearAlgebra/AnyAlgebra.cpp
     #LinearAlgebra/ScalarAlgebra.cpp
@@ -130,8 +132,7 @@ CreateCompileGroup(
     "MODELING_CORE"
     "EIGEN3;BOOST;SUNDIALS"
     ""
-    ODEBase.cpp
-    ODEData.cpp
     ODE.cpp
+    ODEData.cpp
     #RootfindingIVP.cpp
 )

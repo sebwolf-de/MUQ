@@ -88,23 +88,22 @@ opts['Initial Weight'] = 100 # When the average Hessian is constructed, this rep
 
 # Options for the LOBPCG generalized eigensolver used by DILI
 eigOpts = dict()
-eigOpts['NumEigs'] = 15 # Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
-eigOpts['RelativeTolerance'] = 1e-3 # Fraction of the largest eigenvalue used as stopping criteria on how many eigenvalues to compute
-eigOpts['AbsoluteTolerance'] = 0.0 # Minimum allowed eigenvalue
-eigOpts['BlockSize'] = 30  # Number of eigenvalues computed simultaneously in LOBPCG.  Can be larger or smaller than NumEigs, but LOBPCG is generally more efficient if this is larger than NumEigs
-eigOpts['MaxIts'] = 30 # Maximum number of iterations taken by LOBPCG within each block
-eigOpts['Verbosity'] = 0 # Controls how much information the solver prints to terminal
-eigOpts['SolverTolerance'] = 5e-3 # tolerance on normalized residuals used to "fix" eigenvalues once they've converged
+eigOpts['NumEigs'] = 200 # Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
+eigOpts['RelativeTolerance'] = 1e-1 # Fraction of the largest eigenvalue used as stopping criteria on how many eigenvalues to compute
+eigOpts['AbsoluteTolerance'] = -100 # Minimum allowed eigenvalue
+#eigOpts['BlockSize'] = 30  # Number of eigenvalues computed simultaneously in LOBPCG.  Can be larger or smaller than NumEigs, but LOBPCG is generally more efficient if this is larger than NumEigs
+#eigOpts['MaxIts'] = 30 # Maximum number of iterations taken by LOBPCG within each block
+eigOpts['Verbosity'] = 3 # Controls how much information the solver prints to terminal
 
-opts['Eigensolver Block'] = 'LOBPCG' # Key in the opts dictionary where LOBPCG options are specified
-opts['LOBPCG'] = eigOpts
+opts['Eigensolver Block'] = 'EigSolver' # Key in the opts dictionary where LOBPCG options are specified
+opts['EigSolver'] = eigOpts
 
 # Options for the transition kernel employed in the LIS
 lisOpts = dict()
 lisOpts['Method'] = 'MHKernel'
 lisOpts['Proposal'] = 'PropOpts' # Key in the lisOpts dictionary where proposal options are specified
 lisOpts['PropOpts.Method'] = 'MALAProposal'
-lisOpts['PropOpts.StepSize'] = 0.3
+lisOpts['PropOpts.StepSize'] = 0.1
 
 opts['LIS Block'] = "LIS" # Dictionary key where the LIS options are specified
 opts['LIS'] = lisOpts
@@ -114,7 +113,7 @@ csOpts = dict()
 csOpts['Method'] = 'MHKernel'
 csOpts['Proposal'] = 'PropOpts' # Key in the csOpts dictionary where proposal options are specified
 csOpts['PropOpts.Method'] = 'CrankNicolsonProposal'
-csOpts['PropOpts.Beta'] = 0.5 # Crank-Nicolson beta
+csOpts['PropOpts.Beta'] = 0.3 # Crank-Nicolson beta
 csOpts['PropOpts.PriorNode'] = 'Prior' # Name of the prior node in the graph constructed above
 
 opts['CS Block'] =  "CS" # Dictionary key where the CS options are specified

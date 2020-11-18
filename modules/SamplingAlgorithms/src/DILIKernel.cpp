@@ -3,7 +3,7 @@
 #include "MUQ/Modeling/LinearAlgebra/HessianOperator.h"
 #include "MUQ/Modeling/LinearAlgebra/GaussNewtonOperator.h"
 #include "MUQ/Modeling/LinearAlgebra/GaussianOperator.h"
-#include "MUQ/Modeling/LinearAlgebra/LOBPCG.h"
+#include "MUQ/Modeling/LinearAlgebra/StochasticEigenSolver.h"
 #include "MUQ/Modeling/WorkGraph.h"
 #include "MUQ/Modeling/Distributions/DensityProduct.h"
 #include "MUQ/Modeling/SumPiece.h"
@@ -99,8 +99,8 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
 {
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
-    lobpcgOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+    eigOpts = pt.get_child(blockName);
+  }catch(const boost::property_tree::ptree_bad_path&){
     // Do nothing, just leave the solver options ptree empty
   }
 }
@@ -126,8 +126,8 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
 {
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
-    lobpcgOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+    eigOpts = pt.get_child(blockName);
+  }catch(const boost::property_tree::ptree_bad_path&){
     // Do nothing, just leave the solver options ptree empty
   }
 
@@ -152,8 +152,8 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
 {
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
-    lobpcgOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+    eigOpts = pt.get_child(blockName);
+  }catch(const boost::property_tree::ptree_bad_path&){
     // Do nothing, just leave the solver options ptree empty
   }
 }
@@ -178,8 +178,8 @@ DILIKernel::DILIKernel(boost::property_tree::ptree                  const& pt,
 {
   try{
     std::string blockName = pt.get<std::string>("Eigensolver Block");
-    lobpcgOpts = pt.get_child(blockName);
-  }catch(boost::property_tree::ptree_bad_path){
+    eigOpts = pt.get_child(blockName);
+  }catch(const boost::property_tree::ptree_bad_path&){
     // Do nothing, just leave the solver options ptree empty
   }
 
@@ -282,8 +282,8 @@ void DILIKernel::CreateLIS(std::vector<Eigen::VectorXd> const& currState)
   std::shared_ptr<LinearOperator> precOp = std::make_shared<GaussianOperator>(prior, Gaussian::Precision);
   std::shared_ptr<LinearOperator> covOp = std::make_shared<GaussianOperator>(prior, Gaussian::Covariance);
 
-  // Solve the generalized Eigenvalue problem using LOBPCG
-  LOBPCG solver(lobpcgOpts);
+  // Solve the generalized Eigenvalue problem using StochasticEigenSolver
+  StochasticEigenSolver solver(eigOpts);
   solver.compute(hessOp, precOp, covOp);
 
   SetLIS(solver.eigenvalues(), solver.eigenvectors());
@@ -335,7 +335,7 @@ void DILIKernel::UpdateLIS(unsigned int                        numSamps,
   precOp = std::make_shared<GaussianOperator>(prior, Gaussian::Precision);
   covOp = std::make_shared<GaussianOperator>(prior, Gaussian::Covariance);
 
-  LOBPCG solver(lobpcgOpts);
+  StochasticEigenSolver solver(eigOpts);
   solver.compute(hessOp, precOp, covOp);
 
   lisU = std::make_shared<Eigen::MatrixXd>(solver.eigenvectors());

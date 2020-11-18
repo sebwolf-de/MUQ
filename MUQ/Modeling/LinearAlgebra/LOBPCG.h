@@ -3,6 +3,7 @@
 
 
 #include "MUQ/Modeling/LinearAlgebra/LinearOperator.h"
+#include "MUQ/Modeling/LinearAlgebra/GeneralizedEigenSolver.h"
 
 #include <boost/property_tree/ptree_fwd.hpp>
 #include <Eigen/Core>
@@ -16,7 +17,7 @@ namespace Modeling{
       @details This class solves generalized eigenvalue problems of the form \f$Av = \lambda Bv\f$ when the matrix \f$A\f$ is symmetric and the matrix \f$B\f$ is symmetric positive definite.  It uses the The Locally Optimal Block Preconditioned Conjugate Gradient Method (LOBPCG) method described in
       "TOWARD THE OPTIMAL PRECONDITIONED EIGENSOLVER: LOCALLY OPTIMAL BLOCK PRECONDITIONED CONJUGATE GRADIENT METHOD" by ANDREW V. KNYAZEV.
    */
-  class LOBPCG
+  class LOBPCG : public GeneralizedEigenSolver
   {
   public:
 
@@ -51,6 +52,8 @@ namespace Modeling{
     */
     LOBPCG(boost::property_tree::ptree const& options);
 
+    virtual ~LOBPCG() = default;
+
     /**
     Compute the generalized eigenvalues and eigenvectors of a symmetric system \f$Av = \lambda Bv\f$.  If compute has been previously called, the eigenvalues and eigenvectors from the previous call will be used as an initial guess for this call to the solver.  This can speed up the solver if A changes slightly and the eigenvalues need to be recomputed (as in DILI MCMC).
 
@@ -59,8 +62,8 @@ namespace Modeling{
     @param[in] M An optional preconditioner.  If specified, the LinearOperator M should approximate the inverse of A.
     */
     LOBPCG& compute(std::shared_ptr<LinearOperator> const& A,
-                    std::shared_ptr<LinearOperator>        B = nullptr,
-                    std::shared_ptr<LinearOperator>        M = nullptr);
+                    std::shared_ptr<LinearOperator>        B=nullptr,
+                    std::shared_ptr<LinearOperator>        M=nullptr){return compute(A,Eigen::MatrixXd(),B,M);};
 
     /**
     Compute the generalized eigenvalues and eigenvectors of a symmetric system \f$Av = \lambda Bv\f$ that are in the B-orthogonal complement to some constraints \f$Y\f$.  More precisely, the computed eigenvectors \f$v_i\v$ will satisfy \f$Y^T B v_i=0\f$.
@@ -79,17 +82,6 @@ namespace Modeling{
     */
     void InitializeVectors(Eigen::MatrixXd const& vecs);
 
-
-    /** Return a reference to the computed vector of eigenvalues.  The vector
-        will only be valid after calling compute.
-    */
-    Eigen::VectorXd const& eigenvalues() const{return eigVals;}
-
-    /** Return a matrix whose columns contain the computed eigenvectors.  The
-        matrix will only be valid after calling compute.
-    */
-    Eigen::MatrixXd const& eigenvectors() const{return eigVecs;};
-
     /** Resets the current eigenvalues and eigenvectors so that a random initial
         guess is used during the next call to compute instead of reusing the
         previously computed eigenvalues and eigenvectors as initial guesses.
@@ -106,25 +98,6 @@ namespace Modeling{
                                                              Eigen::Ref<const Eigen::MatrixXd> const& constMat,
                                                              std::shared_ptr<LinearOperator>          B,
                                                              std::shared_ptr<LinearOperator>          M);
-
-    /**
-    Sorts the columns of the matrix using precomputed swaps from the GetSortSwaps function.
-    */
-    static void SortCols(std::vector<std::pair<int,int>> const& swapInds,
-                         Eigen::Ref<Eigen::MatrixXd>            matrix);
-
-    static void SortVec(std::vector<std::pair<int,int>> const& swapInds,
-                             Eigen::Ref<Eigen::VectorXd>       matrix);
-
-    static void SortVec(std::vector<std::pair<int,int>> const& swapInds,
-                        std::vector<bool>                    & vec);
-    /**
-    Returns a vector of swaps needed to sort the provided matrix using a selection sort.
-    */
-    static std::vector<std::pair<int,int>> GetSortSwaps(Eigen::Ref<const Eigen::VectorXd> const& residNorms,
-                                                        std::vector<bool>                 const& isActive);
-
-    static std::vector<std::pair<int,int>> GetSortSwaps(Eigen::Ref<const Eigen::VectorXd> const& residNorms);
 
     /** Makes the columns of a matrix V orthonormal wrt the B inner product \f$v^T B v\f$. */
     class Orthonormalizer{
@@ -181,10 +154,10 @@ namespace Modeling{
     /// Controls how much information we want to print
     int verbosity;
 
-    Eigen::VectorXd eigVals;
-    Eigen::MatrixXd eigVecs;
+    //Eigen::VectorXd eigVals;
+    //Eigen::MatrixXd eigVecs;
 
-    std::shared_ptr<LinearOperator> A, B, M;
+    //std::shared_ptr<LinearOperator> A, B, M;
     double Anorm, Bnorm;
 
   }; // class LOBPCG

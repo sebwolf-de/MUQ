@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 import pytest
+
+import env  # noqa: F401
+
 from pybind11_tests import numpy_array as m
 
-pytestmark = pytest.requires_numpy
-
-with pytest.suppress(ImportError):
-    import numpy as np
+np = pytest.importorskip("numpy")
 
 
 def test_dtypes():
@@ -242,7 +243,6 @@ def test_numpy_view(capture):
     """
 
 
-@pytest.unsupported_on_pypy
 def test_cast_numpy_int64_to_uint64():
     m.function_taking_uint64(123)
     m.function_taking_uint64(np.uint64(123))
@@ -286,13 +286,13 @@ def test_overload_resolution(msg):
         m.overloaded("not an array")
     assert msg(excinfo.value) == """
         overloaded(): incompatible function arguments. The following argument types are supported:
-            1. (arg0: numpy.ndarray[float64]) -> str
-            2. (arg0: numpy.ndarray[float32]) -> str
-            3. (arg0: numpy.ndarray[int32]) -> str
-            4. (arg0: numpy.ndarray[uint16]) -> str
-            5. (arg0: numpy.ndarray[int64]) -> str
-            6. (arg0: numpy.ndarray[complex128]) -> str
-            7. (arg0: numpy.ndarray[complex64]) -> str
+            1. (arg0: numpy.ndarray[numpy.float64]) -> str
+            2. (arg0: numpy.ndarray[numpy.float32]) -> str
+            3. (arg0: numpy.ndarray[numpy.int32]) -> str
+            4. (arg0: numpy.ndarray[numpy.uint16]) -> str
+            5. (arg0: numpy.ndarray[numpy.int64]) -> str
+            6. (arg0: numpy.ndarray[numpy.complex128]) -> str
+            7. (arg0: numpy.ndarray[numpy.complex64]) -> str
 
         Invoked with: 'not an array'
     """
@@ -307,8 +307,8 @@ def test_overload_resolution(msg):
     assert m.overloaded3(np.array([1], dtype='intc')) == 'int'
     expected_exc = """
         overloaded3(): incompatible function arguments. The following argument types are supported:
-            1. (arg0: numpy.ndarray[int32]) -> str
-            2. (arg0: numpy.ndarray[float64]) -> str
+            1. (arg0: numpy.ndarray[numpy.int32]) -> str
+            2. (arg0: numpy.ndarray[numpy.float64]) -> str
 
         Invoked with: """
 
@@ -363,6 +363,9 @@ def test_array_unchecked_fixed_dims(msg):
 
     assert m.proxy_auxiliaries2(z1) == [11, 11, True, 2, 8, 2, 2, 4, 32]
     assert m.proxy_auxiliaries2(z1) == m.array_auxiliaries2(z1)
+
+    assert m.proxy_auxiliaries1_const_ref(z1[0, :])
+    assert m.proxy_auxiliaries2_const_ref(z1)
 
 
 def test_array_unchecked_dyn_dims(msg):
@@ -423,20 +426,65 @@ def test_array_resize(msg):
     assert(b.shape == (8, 8))
 
 
-@pytest.unsupported_on_pypy
+@pytest.mark.xfail("env.PYPY")
 def test_array_create_and_resize(msg):
     a = m.create_and_resize(2)
     assert(a.size == 4)
     assert(np.all(a == 42.))
 
 
-@pytest.unsupported_on_py2
 def test_index_using_ellipsis():
     a = m.index_using_ellipsis(np.zeros((5, 6, 7)))
     assert a.shape == (6,)
 
 
-@pytest.unsupported_on_pypy
+@pytest.mark.parametrize("forcecast", [False, True])
+@pytest.mark.parametrize("contiguity", [None, 'C', 'F'])
+@pytest.mark.parametrize("noconvert", [False, True])
+@pytest.mark.filterwarnings(
+    "ignore:Casting complex values to real discards the imaginary part:numpy.ComplexWarning"
+)
+def test_argument_conversions(forcecast, contiguity, noconvert):
+    function_name = "accept_double"
+    if contiguity == 'C':
+        function_name += "_c_style"
+    elif contiguity == 'F':
+        function_name += "_f_style"
+    if forcecast:
+        function_name += "_forcecast"
+    if noconvert:
+        function_name += "_noconvert"
+    function = getattr(m, function_name)
+
+    for dtype in [np.dtype('float32'), np.dtype('float64'), np.dtype('complex128')]:
+        for order in ['C', 'F']:
+            for shape in [(2, 2), (1, 3, 1, 1), (1, 1, 1), (0,)]:
+                if not noconvert:
+                    # If noconvert is not passed, only complex128 needs to be truncated and
+                    # "cannot be safely obtained". So without `forcecast`, the argument shouldn't
+                    # be accepted.
+                    should_raise = dtype.name == 'complex128' and not forcecast
+                else:
+                    # If noconvert is passed, only float64 and the matching order is accepted.
+                    # If at most one dimension has a size greater than 1, the array is also
+                    # trivially contiguous.
+                    trivially_contiguous = sum(1 for d in shape if d > 1) <= 1
+                    should_raise = (
+                        dtype.name != 'float64' or
+                        (contiguity is not None and
+                         contiguity != order and
+                         not trivially_contiguous)
+                    )
+
+                array = np.zeros(shape, dtype=dtype, order=order)
+                if not should_raise:
+                    function(array)
+                else:
+                    with pytest.raises(TypeError, match="incompatible function arguments"):
+                        function(array)
+
+
+@pytest.mark.xfail("env.PYPY")
 def test_dtype_refcount_leak():
     from sys import getrefcount
     dtype = np.dtype(np.float_)

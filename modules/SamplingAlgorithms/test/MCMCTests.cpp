@@ -262,7 +262,7 @@ TEST(MCMC, MHKernel_MALAProposal) {
   EXPECT_GE(N, dist->GetNumCalls("Evaluate"));
   EXPECT_GE(N, dist->GetNumCalls("Gradient"));
   EXPECT_EQ(pt.get<int>("NumSamples"), samps->size());
-
+  
   //boost::any anyMean = samps.Mean();
   Eigen::VectorXd mean = samps->Mean();
   EXPECT_NEAR(mu(0), mean(0), 1e-1);
