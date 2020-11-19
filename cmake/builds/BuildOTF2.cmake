@@ -10,7 +10,7 @@ ExternalProject_Add(
                 PREFIX ${CMAKE_CURRENT_BINARY_DIR}/external/otf2
                 URL ${OTF2_EXTERNAL_SOURCE}
                 BUILD_IN_SOURCE TRUE
-                CONFIGURE_COMMAND ./configure --prefix=${OTF2_INSTALL_DIR}
+                CONFIGURE_COMMAND ./configure --prefix=${OTF2_INSTALL_DIR} CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
                 BUILD_COMMAND make
                 INSTALL_COMMAND make install
 )
