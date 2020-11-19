@@ -59,19 +59,17 @@ pipelines:
               - make examples
               - make install
               - ./RunAllTests
-              - mpirun -np 2 ./RunAllParallelTests
+              - mpirun --allow-run-as-root -np 2 ./RunAllParallelTests
 
         - step:
-            name: gcc-external-dep-mpi-python2
+            name: gcc-external-dep-mpi
             image: mparno/muq-build:latest
             script:
-              - apt-get update
-              - apt-get install -y libspdlog-dev python2-dev
 
               # Build muq
               - cd $BITBUCKET_CLONE_DIR
               - cd build
-              - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON -DPYBIND11_PYTHON_VERSION=2 -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
+              - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
               - make
               - make examples
               - make install
