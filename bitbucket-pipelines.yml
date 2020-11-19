@@ -66,7 +66,7 @@ pipelines:
             image: mparno/muq-build:latest
             script:
               - apt-get update
-              - apt-get install -y python2-dev
+              - apt-get install -y libspdlog-dev python2-dev
 
               # Build muq
               - cd $BITBUCKET_CLONE_DIR
