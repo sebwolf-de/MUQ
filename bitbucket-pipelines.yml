@@ -36,7 +36,7 @@ pipelines:
             - cmake -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=$BITBUCKET_CLONE_DIR/build/install ..
             - make install
 
-            - export PYTHONPATH=$BITBUCKET_CLONE_DIR/build/install
+            - export PYTHONPATH=$BITBUCKET_CLONE_DIR/build/install/python
             - sh RunAllNotebooks.sh
 
   custom:
