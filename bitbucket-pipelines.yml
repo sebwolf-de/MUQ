@@ -18,6 +18,27 @@ pipelines:
           - ./RunAllTests
           - mpirun -np 2 ./RunAllParallelTests
 
+    - step:
+        name: python-notebooks
+        image: ubuntu:latest
+        script:
+          - apt-get update
+          - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev
+
+          # Python deps
+          - DEBIAN_FRONTEND="noninteractive" apt-get install -y python3-pip
+          - pip3 install papermill ipykernel # Tools for running notebooks
+          - pip3 install matplotlib h5py # Some of our examples require this
+
+          # Build muq
+          - cd $BITBUCKET_CLONE_DIR
+          - cd build
+          - cmake -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=$BITBUCKET_CLONE_DIR/build/install ..
+          - make install
+
+          - export PYTHONPATH=$BITBUCKET_CLONE_DIR/build/install
+          - sh RunAllNotebooks.sh
+
   custom:
     weekly-build:
       - parallel:
