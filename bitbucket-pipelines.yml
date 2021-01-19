@@ -39,7 +39,7 @@ pipelines:
             # Run all python notebooks
             - cd $BITBUCKET_CLONE_DIR
             - export PYTHONPATH=$BITBUCKET_CLONE_DIR/build/install/python
-            - sh RunAllNotebooks.sh
+            - ./RunAllNotebooks.sh
 
   custom:
     weekly-build:
