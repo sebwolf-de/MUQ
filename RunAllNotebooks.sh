@@ -13,6 +13,8 @@ for notebook in **/*.ipynb; do # Whitespace-safe and recursive
 
     papermill_exit=$?
 
+    echo ""
+
     if [ $papermill_exit -eq 0 ]
     then
         echo "Notebook $notebook successful."
@@ -22,5 +24,16 @@ for notebook in **/*.ipynb; do # Whitespace-safe and recursive
 
     exit_code=$(($exit_code + $papermill_exit)) # Simply add exit codes; will be zero if all tests successful
 done
+
+
+echo "======================"
+echo ""
+
+if [ $exit_code -eq 0 ]
+then
+    echo "All notebooks successful."
+else
+    echo "$exit_code notebooks FAILED!"
+fi
 
 exit $exit_code
