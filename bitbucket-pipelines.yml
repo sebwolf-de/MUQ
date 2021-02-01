@@ -23,7 +23,7 @@ pipelines:
           image: ubuntu:latest
           script:
             - apt-get update
-            - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev
+            - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev graphviz
 
             # Python deps
             - DEBIAN_FRONTEND="noninteractive" apt-get install -y python3-pip
@@ -33,7 +33,7 @@ pipelines:
             # Build muq
             - cd $BITBUCKET_CLONE_DIR
             - cd build
-            - cmake -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=$BITBUCKET_CLONE_DIR/build/install ..
+            - cmake -DMUQ_USE_PYTHON=ON -DPYBIND11_PYTHON_VERSION=3 -DCMAKE_INSTALL_PREFIX=$BITBUCKET_CLONE_DIR/build/install ..
             - make install
 
             # Run all python notebooks
