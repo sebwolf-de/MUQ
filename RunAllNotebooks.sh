@@ -11,7 +11,7 @@ for notebook in **/*.ipynb; do # Whitespace-safe and recursive
     echo "Running $notebook:"
     echo ""
 
-    papermill --cwd "$(dirname "$notebook")" "$notebook" -
+    papermill --progress-bar --cwd "$(dirname "$notebook")" "$notebook" - > /dev/null
 
     papermill_exit=$?
 
