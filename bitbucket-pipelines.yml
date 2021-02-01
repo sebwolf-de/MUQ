@@ -28,7 +28,7 @@ pipelines:
             # Python deps
             - DEBIAN_FRONTEND="noninteractive" apt-get install -y python3-pip
             - pip3 install papermill ipykernel # Tools for running notebooks
-            - pip3 install matplotlib h5py ipywidgets # Some of our examples require this
+            - pip3 install matplotlib h5py ipywidgets scipy # Some of our examples require this
 
             # Build muq
             - cd $BITBUCKET_CLONE_DIR
