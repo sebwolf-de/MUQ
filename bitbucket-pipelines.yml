@@ -38,7 +38,8 @@ pipelines:
 
             # Run all python notebooks
             - cd $BITBUCKET_CLONE_DIR
-            - export PYTHONPATH=$BITBUCKET_CLONE_DIR/build/install/python
+            - export PYTHONPATH=$PYTHONPATH:$BITBUCKET_CLONE_DIR/build/install/python:$BITBUCKET_CLONE_DIR/build/install/lib
+            - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BITBUCKET_CLONE_DIR/build/install/lib:$BITBUCKET_CLONE_DIR/build/install/muq_external/lib
             - ./RunAllNotebooks.sh
 
   custom:
