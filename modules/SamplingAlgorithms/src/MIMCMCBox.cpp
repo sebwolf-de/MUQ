@@ -160,6 +160,10 @@ namespace muq {
     Eigen::VectorXd MIMCMCBox::MeanQOI() {
       return QOIDiff->Mean();
     }
+    
+    std::shared_ptr<SampleCollection> MIMCMCBox::GetQOIDiff(){
+      return QOIDiff;
+    }
 
     Eigen::VectorXd MIMCMCBox::MeanParam() {
       Eigen::VectorXd sampMean = Eigen::VectorXd::Zero(GetFinestProblem()->blockSizes.sum());

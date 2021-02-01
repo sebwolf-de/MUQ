@@ -5,7 +5,7 @@ USER root
 
 # Install most dependencies
 RUN apt-get update && \
-    apt-get install -y wget unzip cmake clang git g++ libgtest-dev libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libopenmpi-dev openmpi-bin doxygen python-dev python-pip python3-dev python3-pip pybind11-dev && \
+    apt-get install -y wget unzip cmake clang git g++ libgtest-dev libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libopenmpi-dev openmpi-bin libspdlog-dev doxygen python-dev python-pip python3-dev python3-pip pybind11-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Make sure gtest libraries and header files are installed

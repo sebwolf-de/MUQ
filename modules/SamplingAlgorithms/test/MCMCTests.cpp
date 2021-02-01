@@ -62,10 +62,10 @@ TEST(MCMC, MHKernel_ThinScheduler) {
   EXPECT_NEAR(mu(1), mean(1), 8e-2);
 
   Eigen::MatrixXd cov = samps->Covariance();
-  EXPECT_NEAR(1.0, cov(0,0), 1.2e-1);
-  EXPECT_NEAR(0.0, cov(0,1), 1.2e-1);
-  EXPECT_NEAR(0.0, cov(1,0), 1.2e-1);
-  EXPECT_NEAR(1.0, cov(1,1), 1.2e-1);
+  EXPECT_NEAR(1.0, cov(0,0), 1.5e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1.5e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1.5e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1.5e-1);
 
 }
 
@@ -112,14 +112,14 @@ TEST(MCMC, MHKernel_MHProposal) {
 
   //boost::any anyMean = samps.Mean();
   Eigen::VectorXd mean = samps->Mean();
-  EXPECT_NEAR(mu(0), mean(0), 1e-1);
-  EXPECT_NEAR(mu(1), mean(1), 1e-1);
+  EXPECT_NEAR(mu(0), mean(0), 1.2e-1);
+  EXPECT_NEAR(mu(1), mean(1), 1.2e-1);
 
   Eigen::MatrixXd cov = samps->Covariance();
-  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
-  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
-  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
-  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
+  EXPECT_NEAR(1.0, cov(0,0), 1.2e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1.2e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1.2e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1.2e-1);
 }
 
 
@@ -209,14 +209,14 @@ TEST(MCMC, MHKernel_MixtureProposal) {
 
   //boost::any anyMean = samps.Mean();
   Eigen::VectorXd mean = samps->Mean();
-  EXPECT_NEAR(mu(0), mean(0), 1e-1);
-  EXPECT_NEAR(mu(1), mean(1), 1e-1);
+  EXPECT_NEAR(mu(0), mean(0), 1.5e-1);
+  EXPECT_NEAR(mu(1), mean(1), 1.5e-1);
 
   Eigen::MatrixXd cov = samps->Covariance();
-  EXPECT_NEAR(1.0, cov(0,0), 1e-1);
-  EXPECT_NEAR(0.0, cov(0,1), 1e-1);
-  EXPECT_NEAR(0.0, cov(1,0), 1e-1);
-  EXPECT_NEAR(1.0, cov(1,1), 1e-1);
+  EXPECT_NEAR(1.0, cov(0,0), 1.5e-1);
+  EXPECT_NEAR(0.0, cov(0,1), 1.5e-1);
+  EXPECT_NEAR(0.0, cov(1,0), 1.5e-1);
+  EXPECT_NEAR(1.0, cov(1,1), 1.5e-1);
 }
 
 
