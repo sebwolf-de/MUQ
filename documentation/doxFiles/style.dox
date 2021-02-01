@@ -50,4 +50,8 @@
  * \section documentation Documentation
  *
  * Use doxygen! \\addgroup and \\ingroup are your friends.
+ * \example install-instructions.sh
+ * \example SupportScripts/install-instructions.sh
+ * \example /SupportScripts/install-instructions.sh
+ *
  */

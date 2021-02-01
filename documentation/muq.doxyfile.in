@@ -584,7 +584,7 @@ WARN_LOGFILE =
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
-INPUT = @CMAKE_CURRENT_SOURCE_DIR@ @CMAKE_BINARY_DIR@/ParameterDescriptions.dox
+INPUT = @CMAKE_CURRENT_SOURCE_DIR@ @CMAKE_BINARY_DIR@/doxygen_prep
 CITE_BIB_FILES = @CMAKE_CURRENT_SOURCE_DIR@/documentation/references.bib
 
 # This tag can be used to specify the character encoding of the source files
@@ -614,7 +614,7 @@ RECURSIVE = YES
 # excluded from the INPUT source files. This way you can easily exclude a
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE = inc build doc Optimization/external GeneralUtilities/inc/Eigen external data results
+EXCLUDE = external
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or
 # directories that are symbolic links (a Unix filesystem feature) are excluded
@@ -628,7 +628,7 @@ EXCLUDE_SYMLINKS = NO
 # against the file with absolute path, so to exclude all test directories
 # for example use the pattern */test/*
 
-EXCLUDE_PATTERNS = */test/* */build/* */external/* */cmake/*
+EXCLUDE_PATTERNS = */test/* */build/(?!doxygen_prep) */external/* */cmake/* */doxFiles/excluded/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
