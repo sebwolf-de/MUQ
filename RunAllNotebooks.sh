@@ -2,6 +2,8 @@
 
 exit_code=0
 
+summary=""
+
 # Make sure globstar is enabled
 shopt -s globstar
 for notebook in **/*.ipynb; do # Whitespace-safe and recursive
@@ -18,8 +20,10 @@ for notebook in **/*.ipynb; do # Whitespace-safe and recursive
     if [ $papermill_exit -eq 0 ]
     then
         echo "Notebook $notebook successful."
+	summary="$summary\nNotebook $notebook successful"
     else
         echo "Notebook $notebook FAILED!"
+	summary="$summary\nNotebook $notebook FAILED!"
     fi
 
     exit_code=$(($exit_code + $papermill_exit)) # Simply add exit codes; will be zero if all tests successful
@@ -27,6 +31,9 @@ done
 
 
 echo "======================"
+
+echo -e $summary
+
 echo ""
 
 if [ $exit_code -eq 0 ]
