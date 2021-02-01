@@ -83,7 +83,7 @@ public:
                                                            std::shared_ptr<SingleChainMCMC> const& coarseChain) override {
     pt::ptree ptProposal;
     ptProposal.put("BlockIndex",0);
-    ptProposal.put("subsampling", pt.get<int>("Subsampling"));
+    ptProposal.put("Subsampling", pt.get<int>("Subsampling"));
     return std::make_shared<SubsamplingMIProposal>(ptProposal, coarseProblem, coarseChain);
   }
 

@@ -2,21 +2,45 @@ image: debian:latest
 
 pipelines:
   default:
+    - parallel:
+      - step:
+          name: gcc-external-dep-mpi
+          image: mparno/muq-build:latest
+          script:
 
-    - step:
-        name: gcc-external-dep-mpi
-        image: mparno/muq-build:latest
-        script:
+            # Build muq
+            - cd $BITBUCKET_CLONE_DIR
+            - cd build
+            - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_C_COMPILER=mpicc -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
+            - make
+            - make examples
+            - make install
+            - ./RunAllTests
+            - mpirun -np 2 ./RunAllParallelTests
 
-          # Build muq
-          - cd $BITBUCKET_CLONE_DIR
-          - cd build
-          - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_C_COMPILER=mpicc -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
-          - make
-          - make examples
-          - make install
-          - ./RunAllTests
-          - mpirun -np 2 ./RunAllParallelTests
+      - step:
+          name: python-notebooks
+          image: ubuntu:latest
+          script:
+            - apt-get update
+            - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev graphviz
+
+            # Python deps
+            - DEBIAN_FRONTEND="noninteractive" apt-get install -y python3-pip
+            - pip3 install papermill ipykernel # Tools for running notebooks
+            - pip3 install matplotlib h5py ipywidgets scipy # Some of our examples require this
+
+            # Build muq
+            - cd $BITBUCKET_CLONE_DIR
+            - cd build
+            - cmake -DMUQ_USE_PYTHON=ON -DPYBIND11_PYTHON_VERSION=3 -DCMAKE_INSTALL_PREFIX=$BITBUCKET_CLONE_DIR/build/install ..
+            - make install
+
+            # Run all python notebooks
+            - cd $BITBUCKET_CLONE_DIR
+            - export PYTHONPATH=$PYTHONPATH:$BITBUCKET_CLONE_DIR/build/install/python:$BITBUCKET_CLONE_DIR/build/install/lib
+            - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BITBUCKET_CLONE_DIR/build/install/lib:$BITBUCKET_CLONE_DIR/build/install/muq_external/lib
+            - ./RunAllNotebooks.sh
 
   tags:
     'v*.*.*':

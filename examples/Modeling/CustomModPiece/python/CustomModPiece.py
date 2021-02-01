@@ -1,4 +1,4 @@
-import pymuqModeling as mm
+import muq.Modeling as mm
 
 import numpy as np
 import copy

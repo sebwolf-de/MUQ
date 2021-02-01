@@ -1,8 +1,8 @@
-import pymuqModeling as mm
-import pymuqSamplingAlgorithms as ms
-import pymuqApproximationWrappers as ma
-import pymuqUtilities as mu
-import pymuqOptimization as mo
+import muq.Modeling as mm
+import muq.SamplingAlgorithms as ms
+import muq.Approximation as ma
+import muq.Utilities as mu
+import muq.Optimization as mo
 
 import matplotlib.pyplot as plt
 import numpy as np
