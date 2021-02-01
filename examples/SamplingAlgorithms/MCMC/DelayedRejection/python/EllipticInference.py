@@ -1,13 +1,10 @@
-import pymuqModeling as mm
-import pymuqSamplingAlgorithms as ms
-import pymuqApproximationWrappers as ma
-import pymuqUtilities as mu
+import muq.Modeling as mm
+import muq.SamplingAlgorithms as ms
+import muq.Approximation as ma
+import muq.Utilities as mu
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-import sys
-sys.path.append('../../../../Modeling/CustomModPiece/python')
 
 # Import a DiffusionEquation ModPiece from the CustomModPiece example
 from CustomModPiece import DiffusionEquation

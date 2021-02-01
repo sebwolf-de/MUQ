@@ -1,7 +1,7 @@
 # Run This script with:
 #   python -m memory_profiler ModPieceMemory.py
 
-import pymuqModeling as mm
+import muq.Modeling as mm
 
 import numpy as np
 

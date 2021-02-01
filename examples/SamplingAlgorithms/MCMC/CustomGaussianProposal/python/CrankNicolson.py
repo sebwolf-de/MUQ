@@ -2,8 +2,8 @@
 import numpy as np
 import scipy.linalg as la
 
-import pymuqModeling as mm
-import pymuqSamplingAlgorithms as ms
+import muq.Modeling as mm
+import muq.SamplingAlgorithms as ms
 
 
 class MyGauss(mm.PyGaussianBase):
