@@ -183,3 +183,13 @@ pipelines:
                 - make examples
                 - make install
                 - ./RunAllTests
+
+        - step:
+              name: install-instructions
+              image: ubuntu:latest
+              script:
+                - apt update
+                - DEBIAN_FRONTEND="noninteractive" apt install -y sudo tzdata
+                - cd $BITBUCKET_CLONE_DIR
+                - cd SupportScripts
+                - bash install-instructions.sh
