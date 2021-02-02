@@ -40,7 +40,7 @@ if [ $exit_code -eq 0 ]
 then
     echo "All notebooks successful."
 else
-    echo "$exit_code notebooks FAILED!"
+    echo "Some notebooks FAILED!"
 fi
 
 exit $exit_code
