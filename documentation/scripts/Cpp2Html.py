@@ -54,8 +54,10 @@ class TutorialDocument:
         stripPieces = []
         for piece in codePieces:
             if(len(piece)>0):
-                stripPieces.append(piece.lstrip('\n').rstrip(' '))
-
+                print(piece)
+                stripPieces.append(piece.replace('<','&lt;').replace('>','&gt;').lstrip('\n').rstrip(' '))
+                print(stripPieces[-1])
+                print('-------------------------')
         completeCode = self.StripLines(''.join(stripPieces))
 
         output = markdown2.markdown('#Complete Code')
@@ -105,7 +107,7 @@ class TutorialDocument:
         return '\n'.join(lines)
 
 if __name__=='__main__':
-    
+
     if(len(sys.argv)!=3):
         print("\nERROR: Incorrect number of command line arguments to Cpp2Html.py")
         print("\nUSAGE:\n\tpython Cpp2Html.py <c++ inputfile> <html outputfile>\n\n")
