@@ -1,0 +1,5 @@
+- example:
+    file: CrankNicolson.ipynb
+    tag: MCMC
+    title: MCMC with pCN proposal
+    description: Implement a simple MCMC method with preconditioned Crank-Nicolson proposal.
