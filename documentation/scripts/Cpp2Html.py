@@ -54,10 +54,8 @@ class TutorialDocument:
         stripPieces = []
         for piece in codePieces:
             if(len(piece)>0):
-                print(piece)
                 stripPieces.append(piece.replace('<','&lt;').replace('>','&gt;').lstrip('\n').rstrip(' '))
-                print(stripPieces[-1])
-                print('-------------------------')
+        
         completeCode = self.StripLines(''.join(stripPieces))
 
         output = markdown2.markdown('#Complete Code')
