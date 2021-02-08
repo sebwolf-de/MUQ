@@ -1,0 +1,5 @@
+- example:
+    file: EllipticInference.py
+    tag: MCMC
+    title: Delayed Acceptance MCMC
+    description: A Delayed Acceptance MCMC method for a custom Bayesian Inference problem.

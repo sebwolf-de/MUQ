@@ -1,0 +1,6 @@
+- example:
+    file: MultiindexGaussianSampling.ipynb
+    tag: MCMC
+    title: Multiindex MCMC
+    description: Defines a two dimensional hierarchy of simple Gaussian models and applies Multiindex MCMC to it.
+
