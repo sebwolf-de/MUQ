@@ -96,9 +96,8 @@ std::vector<std::shared_ptr<SamplingState>> MHKernel::Step(unsigned int const t,
 
 void MHKernel::PrintStatus(const std::string prefix) const
 {
-  std::stringstream msg;
-  msg << std::setprecision(2);
-  msg << prefix << "MHKernel acceptance Rate = "  << 100.0*double(numAccepts)/double(numCalls) << "%";
+  char buff[50];
+  std::snprintf(buff, sizeof(buff), "MHKernel acceptance Rate = %3.0f%%", 100.0*double(numAccepts)/double(numCalls));
 
-  std::cout << msg.str() << std::endl;
+  std::cout << prefix << buff << std::endl;
 }
