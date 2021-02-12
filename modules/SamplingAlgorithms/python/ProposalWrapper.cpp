@@ -6,6 +6,7 @@
 #include "MUQ/SamplingAlgorithms/InfMALAProposal.h"
 #include "MUQ/SamplingAlgorithms/MHProposal.h"
 #include "MUQ/SamplingAlgorithms/CrankNicolsonProposal.h"
+#include "MUQ/SamplingAlgorithms/InverseGammaProposal.h"
 
 #include "MUQ/Utilities/PyDictConversion.h"
 
@@ -27,7 +28,9 @@ void PythonBindings::ProposalWrapper(py::module &m) {
   py::class_<MCMCProposal, std::shared_ptr<MCMCProposal>> mcmcPro(m, "MCMCProposal");
   mcmcPro
     .def("Sample", &MCMCProposal::Sample)
-    .def("LogDensity", &MCMCProposal::LogDensity);
+    .def("LogDensity", &MCMCProposal::LogDensity)
+    .def("GetBlockInd", &MCMCProposal::GetBlockInd)
+    .def("SetBlockInd", &MCMCProposal::SetBlockInd);
     //.def("Construct", &MCMCProposal::Construct)
     //.def("GetMCMCProposalMap", &MCMCProposal::GetMCMCProposalMap);
 
@@ -42,6 +45,8 @@ void PythonBindings::ProposalWrapper(py::module &m) {
     .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> prob) {return new CrankNicolsonProposal(ConvertDictToPtree(d), prob);} ))
     .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> prob, std::shared_ptr<muq::Modeling::GaussianBase> gauss) { return new CrankNicolsonProposal(ConvertDictToPtree(d), prob, gauss);}));
 
+  py::class_<InverseGammaProposal, MCMCProposal, std::shared_ptr<InverseGammaProposal>>(m, "InverseGammaProposal")
+    .def(py::init( [](py::dict d, std::shared_ptr<AbstractSamplingProblem> prob) {return new InverseGammaProposal(ConvertDictToPtree(d), prob);} ));
 
   py::class_<AMProposal, MCMCProposal, std::shared_ptr<AMProposal>> amPro(m, "AMProposal");
   amPro

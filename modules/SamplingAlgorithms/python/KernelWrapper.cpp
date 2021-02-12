@@ -27,7 +27,8 @@ void PythonBindings::KernelWrapper(py::module &m) {
     .def("PreStep", &TransitionKernel::PreStep)
     .def("PostStep", &TransitionKernel::PostStep)
     .def("Step", &TransitionKernel::Step)
-    .def_readonly("blockInd", &TransitionKernel::blockInd);
+    .def("GetBlockInd", &TransitionKernel::GetBlockInd)
+    .def("SetBlockInd", &TransitionKernel::SetBlockInd);
 
 
   py::class_<MHKernel, TransitionKernel, std::shared_ptr<MHKernel>> mhKern(m, "MHKernel");
