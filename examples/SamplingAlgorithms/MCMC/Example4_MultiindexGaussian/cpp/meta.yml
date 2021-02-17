@@ -1,0 +1,11 @@
+- example:
+    file: MultiindexGaussianSampling.cpp
+    tag: MCMC
+    title: Multiindex MCMC
+    description: Defines a two-dimensional hierarchy of simple Gaussian models and applies Multiindex MCMC to it.
+
+- example:
+    file: FullParallelMultiindexGaussianSampling.cpp
+    tag: MCMC
+    title: Parallel Multiindex MCMC with parallel model
+    description: Defines a two-dimensional hierarchy of simple Gaussian models and applies Multilevel MCMC to it. The MIMCMC method itself allows massive parallelization, and the forward model may be parallelized as well. We use simple Gaussian target densities here, but the example can serve as a template for actually parallel models.

@@ -1,5 +1,5 @@
-name: Dimension Independent MCMC with DILI
-language: python
-code_files: EllipticInference.py
-doc_level: Fair # Should be "None", "Fair", "Good", or "Excellent"
-run_command: python EllipticInference.py
+- example:
+    file: EllipticInference.py
+    tag: MCMC
+    title: DILI MCMC
+    description: Demonstrates the basic usage of the Dimension Independent Likelihood Informed (DILI) MCMC algorithm.

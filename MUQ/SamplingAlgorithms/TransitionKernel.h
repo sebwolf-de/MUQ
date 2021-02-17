@@ -80,9 +80,13 @@ namespace muq {
       virtual inline void PrintStatus(std::string prefix) const {};
 
       // What block of the state does this kernel work on?
-      const int blockInd = 0;
+
+      virtual void SetBlockInd(int newBlockInd){blockInd = newBlockInd;};
+      virtual int GetBlockInd() const{return blockInd;};
 
     protected:
+
+      int blockInd = 0;
 
       /// The sampling problem that evaluates/samples the target distribution
       std::shared_ptr<AbstractSamplingProblem> problem;
