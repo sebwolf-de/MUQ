@@ -197,7 +197,7 @@ provides this functionality.
   graph->Visualize("DensityGraph.png");
   /***
   <center>
-    <img src="DocFiles/DensityGraph.png" alt="MUQ-Generated Graph" style="width: 600px;"/>
+    <img src="DensityGraph.png" alt="MUQ-Generated Graph" style="width: 600px;"/>
   </center>
   */
 
