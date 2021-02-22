@@ -19,7 +19,7 @@ def CheckFields(data,filename):
 
     Returns True if everything is good.  Prints a warning andd returns Falses otherwise.
     """
-    requiredFields = ['title', 'tag', 'file', 'description']
+    requiredFields = ['title', 'tag', 'file', 'description', 'doc_level']
 
     for field in requiredFields:
         if(field not in data):
@@ -40,11 +40,12 @@ layout: default
 description: {}
 language: {}
 tag: {}
+doc_level: {}
 ---
 <h1><small class="text-muted">Example</small> </br> {}<h1>
 <blockquote class="blockquote"><p class="mb-0">{}</p></blockquote>
 </br>
-""".format(exMeta['title'], exMeta['description'],language, exMeta['tag'],exMeta['title'],exMeta['description'])
+""".format(exMeta['title'], exMeta['description'],language, exMeta['tag'],exMeta['doc_level'], exMeta['title'], exMeta['description'])
 
     return head
 
