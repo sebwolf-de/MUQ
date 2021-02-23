@@ -1,11 +1,10 @@
 /***
-# MCMC Example: Setting Proposal Covariance
 
-#### Overview
+### Overview
 This example demonstrates how to manually specify the proposal covariance in a
 simple random walk proposal.
 
-#### MUQ MCMC Interfaces
+### MUQ MCMC Interfaces
 There are two ways to specify MCMC samplers in MUQ.  The first, which is
 demonstrated in the Example1_Gaussian example, specifies the proposal variance
 and other algorithmic parameters through a boost property tree.  A lower level

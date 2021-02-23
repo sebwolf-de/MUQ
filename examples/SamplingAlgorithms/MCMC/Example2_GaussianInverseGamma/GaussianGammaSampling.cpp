@@ -1,5 +1,4 @@
 /***
-# MCMC Example 2: Introduction to block MCMC sampling
 ## Overview
 The goal of this example is to demonstrate MCMC sampling with block updates.
 The problem is to sample a Gaussian distribution where the variance of

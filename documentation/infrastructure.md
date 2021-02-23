@@ -1,4 +1,4 @@
-## MUQ Infrastructure:
+## MUQ Infrastructure
 
 ### Git
 - Hosted at https://bitbucket.org/mituq/muq2

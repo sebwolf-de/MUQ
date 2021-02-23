@@ -1,5 +1,4 @@
 /***
-# MCMC Example 1: Simple Gaussian Sampling
 ## Overview
 The goal of this example is to demonstrate the use of MUQ's MCMC stack by sampling
 a simple bivariate Gaussian density.  To keep things as simple as possible, we
