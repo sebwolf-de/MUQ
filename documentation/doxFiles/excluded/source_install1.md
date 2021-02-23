@@ -2,7 +2,7 @@
 
 
 # Building from source
- MUQ2 is hosted on<a href=https://bitbucket.org/mituq/muq2>BitBucket</a>.  To get the source code, you can clone our git repository by running
+ MUQ2 is hosted on <a href=https://bitbucket.org/mituq/muq2>BitBucket</a>.  To get the source code, you can clone our git repository by running
  ```
  git clone https://bitbucket.org/mituq/muq2
  ```
