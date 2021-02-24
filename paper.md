@@ -47,6 +47,10 @@ While MUQ is capable of solving both forward and inverse UQ problems, its primar
 
 # Acknowledgements
 
-We acknowledge additional software contributions from Patrick Conrad and additional support from Youssef Marzouk, Peter Bastian, and Robert Scheichl.  This material is based upon work supported by the National Science Foundation under Grant No. ACI-1550487.
+We acknowledge additional software contributions from Patrick Conrad and additional support from Youssef Marzouk, Peter Bastian, and Robert Scheichl.  
+
+This material is based upon work supported by the National Science Foundation under Grant No. ACI-1550487.
+
+This material is based upon work supported by the US Department of Energy, Office of Advanced Scientific Computing Research, SciDAC (Scientific Discovery through Advanced Computing) program under awards DE-SC0007099 and DE-SC0021226, for the QUEST and FASTMath SciDAC Institutes.
 
 # References
