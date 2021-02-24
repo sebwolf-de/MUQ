@@ -19,6 +19,7 @@
 - Accessible at https://mituq.bitbucket.io/
 - When something is committed to this repository, bitbucket pipelines runs Jekyll and generate the html.
 - (in progress) HTML example pages are generated from the documentation/scripts/ProcessExamples.py in the MUQ2 repository.   This script is run from the pipelines script in the MUQ2 repository when a new git tag is created.
+- The bitbucket.io site is static, but the slack invitation button requires extra processing that cannot occur on a static site.  To overcome this,  a "cloud function" has been set up on the Google cloud platform to handle POST requests when the invitation modal and interact with the slack API.
 
 ### Doxygen
 - Built via CI when release tag is defined on master repo, pushed as commit to website repo
