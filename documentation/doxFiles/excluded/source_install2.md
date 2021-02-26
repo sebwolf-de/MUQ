@@ -10,6 +10,20 @@ During this call, CMake will search for all necessary dependencies, test those d
 
 Additional configuration options can also be added to the CMake command to control the build process; the most important of these are described in the subsections below.
 
+Note that after installation, you will need to update your environment variables to include the MUQ libraries (and optionally python bindings).    
+
+On OSX:
+```bash
+export PYTHONPATH=$PYTHONPATH:/my/install/path/python:/my/install/path/lib
+export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/my/install/path/lib:/my/install/path/muq_external/lib
+```
+
+On Linux:
+```bash
+export PYTHONPATH=$PYTHONPATH:/my/install/path/python:/my/install/path/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/my/install/path/lib:/my/install/path/muq_external/lib
+```
+
 ### Handling Dependencies
 Various parts of MUQ rely on several external dependencies.  MUQ will download and build any required dependencies that are not found on your system and needed to compile the requested components of MUQ (see compile group discussion below).   The table below lists MUQ's dependencies, the version that will be compiled internally if the package is not found, as well as the name used to refer to the package in MUQ's CMake configuration scripts.
 

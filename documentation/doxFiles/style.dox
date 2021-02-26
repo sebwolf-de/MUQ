@@ -1,5 +1,5 @@
 /**
- * \page muqstyle MUQ Development Style
+ * \page muqstyle Development Style Guide
  *
  *  \section styleconventions C++ style and naming conventions
  *  I often like the google c++ style guide for such things. They have smart people who thought hard about this stuff,
