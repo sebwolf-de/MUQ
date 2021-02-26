@@ -8,7 +8,6 @@ USER root
 
 RUN apt-get update && \
     apt-get install -yy pwgen npm python3-pip && \
-    npm install npm@latest -g && \
     npm install -g configurable-http-proxy && \
     pip3 install --upgrade pip && \
     pip3 install --upgrade numpy && \
