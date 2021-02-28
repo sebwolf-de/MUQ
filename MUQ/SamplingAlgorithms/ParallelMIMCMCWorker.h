@@ -297,6 +297,7 @@ namespace muq {
                     auto latestSample = sampleCollection->back();
                     // TODO: Send "full" sample via parcer?
                     comm->Send<Eigen::VectorXd>(latestSample->state[0], status.MPI_SOURCE, ControlTag);
+                    comm->Send<double>(AnyCast(latestSample->meta["LogTarget"]), status.MPI_SOURCE, ControlTag);
                     if (latestSample->HasMeta("QOI")) {
                       std::shared_ptr<SamplingState> qoi = AnyCast(latestSample->meta["QOI"]);
                       comm->Send<Eigen::VectorXd>(qoi->state[0], status.MPI_SOURCE, ControlTag);
@@ -382,7 +383,9 @@ namespace muq {
                   comm->Send(ControlFlag::SAMPLE_BOX, remoteRank, ControlTag); // TODO: Receive sample in one piece?
                   for (uint i = 0; i < boxIndices->Size(); i++) {
                     //std::shared_ptr<MultiIndex> boxIndex = (*boxIndices)[i];
-                    sampleCollections[i]->Add(std::make_shared<SamplingState>(comm->Recv<Eigen::VectorXd>(remoteRank, ControlTag)));
+                    auto new_state = std::make_shared<SamplingState>(comm->Recv<Eigen::VectorXd>(remoteRank, ControlTag));
+                    new_state->meta["LogTarget"] = comm->Recv<double>(remoteRank, ControlTag);
+                    sampleCollections[i]->Add(new_state);
                     qoiCollections[i]->Add(std::make_shared<SamplingState>(comm->Recv<Eigen::VectorXd>(remoteRank, ControlTag)));
                 		//Eigen::VectorXd remoteQOI = comm->Recv<Eigen::VectorXd>(remoteRank, ControlTag);
                   }
