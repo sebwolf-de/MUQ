@@ -17,13 +17,13 @@ authors:
     orcid: 0000-0001-8632-8493
     affiliation: 4
 affiliations:
- - name: Cold Regions Research and Engineering Laboratory
+ - name: US Army Corps of Engineers, Cold Regions Research and Engineering Laboratory, Hanover, NH USA
    index: 1
- - name: Dartmouth College
+ - name: Dartmouth College, Hanover, NH USA
    index: 2
- - name: Courant Institute of Mathematical Sciences
+ - name: Courant Institute of Mathematical Sciences, New York University, New York, NY USA
    index: 3
- - name: Institute for Scientific Computing, Heidelberg University
+ - name: Institute for Scientific Computing, Heidelberg University, Heidelberg, Germany
    index: 4
 date: 22 February 2021
 bibliography: paper.bib
