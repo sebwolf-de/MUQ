@@ -377,8 +377,6 @@ namespace muq {
 
                 for (int i = 0; i < numSamples; i++) {
                   spdlog::trace("Requesting sample box for model {}", *boxHighestIndex);
-                  if (i % (numSamples / 10) == 0)
-                    spdlog::debug("Collected {} out of {} samples for model {}", i, numSamples, *boxHighestIndex);
                   int remoteRank = phonebookClient->Query(boxHighestIndex, boxHighestIndex, false);
                   comm->Send(ControlFlag::SAMPLE_BOX, remoteRank, ControlTag); // TODO: Receive sample in one piece?
                   for (uint i = 0; i < boxIndices->Size(); i++) {
@@ -390,6 +388,8 @@ namespace muq {
                 		//Eigen::VectorXd remoteQOI = comm->Recv<Eigen::VectorXd>(remoteRank, ControlTag);
                   }
                   qoiDiffCollection->Add(std::make_shared<SamplingState>(comm->Recv<Eigen::VectorXd>(remoteRank, ControlTag)));
+                  if ((i+1) % std::max(1,numSamples / 10) == 0)
+                    spdlog::debug("Collected {} out of {} samples for model {}", i+1, numSamples, *boxHighestIndex);
                 }
                 if (subcomm->GetRank() == 0)
                   comm->Send(ControlFlag::SAMPLE_BOX_DONE, RootRank, ControlTag); // TODO: Receive sample in one piece?
