@@ -21,6 +21,7 @@ namespace muq {
 
       // Set up root index sampling
       auto coarse_problem = componentFactory->SamplingProblem(rootIndex);
+      std::shared_ptr<MultiIndex> coarse_index = rootIndex;
       auto proposal_coarse = componentFactory->Proposal(rootIndex, coarse_problem);
 
       std::vector<std::shared_ptr<TransitionKernel>> coarse_kernels(1);
@@ -45,7 +46,7 @@ namespace muq {
 
         auto problem = componentFactory->SamplingProblem(index);
         auto proposal = componentFactory->Proposal(index, problem);
-        auto coarse_proposal = componentFactory->CoarseProposal(index, coarse_problem, coarse_chain);
+        auto coarse_proposal = componentFactory->CoarseProposal(index, coarse_index, coarse_problem, coarse_chain);
         auto proposalInterpolation = componentFactory->Interpolation(index);
         auto startingPoint = componentFactory->StartingPoint(index);
 
@@ -59,6 +60,7 @@ namespace muq {
         chain->SetState(startingPoint);
 
         coarse_problem = problem;
+        coarse_index = index;
         coarse_chain = chain;
       }
 
@@ -82,7 +84,7 @@ namespace muq {
 
         auto problem = componentFactory->SamplingProblem(index);
         auto proposal = componentFactory->Proposal(index, problem);
-        auto coarse_proposal = componentFactory->CoarseProposal(index, coarse_problem, coarse_chain);
+        auto coarse_proposal = componentFactory->CoarseProposal(index, coarse_index, coarse_problem, coarse_chain);
         auto proposalInterpolation = componentFactory->Interpolation(index);
         auto startingPoint = componentFactory->StartingPoint(index);
 

@@ -40,13 +40,16 @@ int main(int argc, char **argv){
   auto tracer = std::make_shared<OTF2Tracer>("trace", timestamp);
 
   pt::ptree pt;
-  pt.put("NumSamples_0", 1e3);
-  pt.put("NumSamples_1", 5e2);
+  pt.put("NumSamples_0", 10);
+  pt.put("NumSamples_1", 1);
   pt.put("NumSamples_2", 1e2);
-  pt.put("NumSamples_3", 5e1);
-  pt.put("MCMC.BurnIn", 100);
-  pt.put("MLMCMC.Subsampling", 10);
-  pt.put("MLMCMC.Scheduling", true);
+  pt.put("NumSamples_3", 2e1);
+  pt.put("MCMC.BurnIn", 0);
+  pt.put("MLMCMC.Scheduling", false);
+  pt.put("MLMCMC.Subsampling_0", 10);
+  pt.put("MLMCMC.Subsampling_1", 1);
+  pt.put("MLMCMC.Subsampling_2", 3);
+  pt.put("MLMCMC.Subsampling_3", 0);
 
 
   auto componentFactory = std::make_shared<MyMIComponentFactory>(pt);

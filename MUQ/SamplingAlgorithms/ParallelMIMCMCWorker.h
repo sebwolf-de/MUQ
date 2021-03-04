@@ -248,7 +248,7 @@ namespace muq {
               auto box = std::make_shared<ParallelMIMCMCBox>(pt, parallelComponentFactory, samplingProblemIndex, comm, phonebookClient, tracer);
 
               spdlog::debug("Rank {} begins sampling", comm->GetRank());
-              const int subsampling = pt.get<int>("MLMCMC.Subsampling");
+              const int subsampling = pt.get<int>("MLMCMC.Subsampling" + multiindexToConfigString(samplingProblemIndex));
               tracer->enterRegion(TracerRegions::Sampling);
               for (int i = 0; i < 2 + subsampling; i++) // TODO: Really subsampling on every level? Maybe subsample when requesting samples?
                 box->Sample();
@@ -438,6 +438,14 @@ namespace muq {
 
       }
 
+    private:
+      std::string multiindexToConfigString (std::shared_ptr<MultiIndex> index) {
+        std::stringstream strs;
+        for (int i = 0; i < index->GetLength(); i++) {
+          strs << "_" << index->GetValue(i);
+        }
+        return strs.str();
+      }
     };
 
   }

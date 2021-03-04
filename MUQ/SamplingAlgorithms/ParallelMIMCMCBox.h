@@ -130,7 +130,7 @@ namespace muq {
 
             auto problem = componentFactory->SamplingProblem(index);
             auto proposal = componentFactory->Proposal(index, problem);
-            auto coarse_proposal = componentFactory->CoarseProposal(index, coarse_problem, coarse_chain);
+            auto coarse_proposal = componentFactory->CoarseProposal(index, boxLowestIndex, coarse_problem, coarse_chain);
             auto proposalInterpolation = componentFactory->Interpolation(index);
             auto startingPoint = componentFactory->StartingPoint(index);
 
