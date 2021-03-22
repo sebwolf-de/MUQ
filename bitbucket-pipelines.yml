@@ -75,6 +75,30 @@ pipelines:
               - echo "Creating archive ${TARFILE}"
               - git archive --format=tar.gz --output=${TARFILE} HEAD
               - curl -X POST --user "${BITBUCKET_USERNAME}:${BITBUCKET_APP_PASSWORD}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"${TARFILE}"
+      - step:
+            name: conda
+            script:
+              - apt-get update
+              - apt-get install -y git curl openssl
+              - v0=`echo $BITBUCKET_TAG | cut -c 2-2`;v1=`echo $BITBUCKET_TAG | cut -c 4-4`; v2=`echo $BITBUCKET_TAG | cut -c 6-6`; export TARFILE="muq_${v0}_${v1}_${v2}.tar.gz"
+              - export DOWNLOAD_URL="https://bitbucket.org/mituq/muq2/downloads/${TARFILE}"
+              - export MUQ_SHA=`curl -sL ${DOWNLOAD_URL} | openssl sha256 | cut -c10-`
+              - cd ~
+              - git clone https://$GITHUB_USER:$GITHUB_PASSWORD@github.com/mparno/muq-feedstock
+              - cd muq-feedstock
+              - git remote add upstream https://github.com/conda-forge/muq-feedstock
+              - git fetch upstream
+              - git rebase upstream/master
+              - git checkout -b $BITBUCKET_TAG
+              - temp=`echo $BITBUCKET_TAG | cut -c2-`; export NEW_VERSION="{% set version = \"${temp}\" %}"
+              - sed -i "s/.*set version.*/$NEW_VERSION/" recipe/meta.yaml
+              - sed -i "s/.*sha256.*/  sha256: $MUQ_SHA/" recipe/meta.yaml
+              - sed -i "s/  number: .*/  number: 0/" recipe/meta.yaml
+              - git add recipe/meta.yaml
+              - git config --global user.email "parnomd@gmail.com"
+              - git config --global user.name "Bitbucket Pipelines"
+              - git commit -m "Updated recipe version."
+              - git push https://$GITHUB_USER:$GITHUB_PASSWORD@github.com/mparno/muq-feedstock --all
 
   custom:
     weekly-build:
