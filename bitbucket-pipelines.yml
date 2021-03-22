@@ -65,6 +65,7 @@ pipelines:
               - git push https://$BITBUCKET_USER:$BITBUCKET_PASSWORD@bitbucket.org/mituq/mituq.bitbucket.io.git --all
       - step:
             name: archive
+            image: mparno/muq-build
             script:
               - cd $BITBUCKET_CLONE_DIR
               - v0=`echo $BITBUCKET_TAG | cut -c 2-2`;v1=`echo $BITBUCKET_TAG | cut -c 4-4`; v2=`echo $BITBUCKET_TAG | cut -c 6-6`; export TARFILE="muq_${v0}_${v1}_${v2}.tar.gz"
