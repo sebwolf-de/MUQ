@@ -62,7 +62,7 @@ pipelines:
               - git config --global user.email "parnomd@gmail.com"
               - git config --global user.name "Bitbucket Pipelines"
               - git commit -m "Added documentation for $BITBUCKET_TAG"
-              - git push $BITBUCKET_USER:$BITBUCKET_PASSWORD@bitbucket.org/mituq/mituq.bitbucket.io.git --all
+              - git push https://$BITBUCKET_USER:$BITBUCKET_PASSWORD@bitbucket.org/mituq/mituq.bitbucket.io.git --all
       - step:
             name: archive
             script:
