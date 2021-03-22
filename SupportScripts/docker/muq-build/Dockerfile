@@ -31,12 +31,12 @@ RUN git clone --depth=1 https://mparno@bitbucket.org/mituq/parcer.git && \
     cmake .. && make -j2 && make install && \
     cd ../../ && rm -r parcer
 
-# Install sundials 5.4 from source because packages are out of date
-RUN wget https://computing.llnl.gov/projects/sundials/download/sundials-5.4.0.tar.gz && \
-    tar -xzvf sundials-5.4.0.tar.gz && \
-    cd sundials-5.4.0 && mkdir build && cd build && \
+# Install sundials 5.7 from source because packages are out of date
+RUN wget https://github.com/LLNL/sundials/releases/download/v5.7.0/sundials-5.7.0.tar.gz && \
+    tar -xzvf sundials-5.7.0.tar.gz && \
+    cd sundials-5.7.0 && mkdir build && cd build && \
     cmake ../ && make -j2 && make install && \
-    cd ../../ &&  rm -r sundials-5.4.0  &&  rm sundials-5.4.0.tar.gz
+    cd ../../ &&  rm -r sundials-5.7.0  &&  rm sundials-5.7.0.tar.gz
 
 RUN useradd -ms /bin/bash  muq-user
 WORKDIR /home/muq-user
