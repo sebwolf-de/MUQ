@@ -25,10 +25,11 @@ class H5Object;
 H5Object AddChildren(std::shared_ptr<HDF5File>        file,
        std::string               const& groupName);
 
+
 /// Open an HDF5 file and return the root object
 /**
-   @brief Primary way to open an HDF5file.  It returns the root group.
-   @details
+  @brief Primary way to open an HDF5file.  It returns the root group.
+  @details
 @code
 // Open the HDF5 file for reading and writing
 auto f = muq::Utilities::OpenFile("Data.h5");
@@ -46,9 +47,8 @@ f["/NewGroup/Ones"] = Eigen::VectorXd::Ones(10);
 f["/AnotherGroup/Zeros"] = Eigen::MatrixXd::Zero(5,5);
 @endcode
 
- */
+*/
 H5Object OpenFile(std::string const& filename);
-
 
 class H5Object
 {

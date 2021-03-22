@@ -72,6 +72,7 @@ H5Object& H5Object::CreateGroup(std::string const& grpName)
       }else{
         return children[pathParts.first];
       }
+
     }else{
       return children[pathParts.first].CreateGroup(pathParts.second);
     }

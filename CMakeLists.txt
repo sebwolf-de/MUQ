@@ -90,7 +90,7 @@ configure_file(cmake/MUQConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRE
 
 # Install the MUQConfig.cmake file
 install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${CMAKE_PROJECT_NAME}Config.cmake"
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/${CMAKE_PROJECT_NAME}"
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/${CMAKE_PROJECT_NAME}"
 	    COMPONENT dev)
 
 # Install the pymuq libraries
@@ -103,7 +103,7 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/modules/PythonPackage/"
 
 # Install the export set for use with the install-tree
 install(EXPORT ${CMAKE_PROJECT_NAME}Depends
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/CMake/${CMAKE_PROJECT_NAME}"
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/${CMAKE_PROJECT_NAME}"
 	    COMPONENT dev)
 
 # install all the MUQ headers -- may be better off installing for each package individually

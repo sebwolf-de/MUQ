@@ -29,7 +29,7 @@ Various parts of MUQ rely on several external dependencies.  MUQ will download a
 
 | Dependency | Internal Version | MUQ CMake Name |
 | ---------- | -------------------- | -------------- |
-| <a href=http://www.boost.org/>Boost | 1.74 | `BOOST` |
+| <a href=http://www.boost.org/>Boost</a> | 1.74 | `BOOST` |
 | <a href=http://eigen.tuxfamily.org/>Eigen</a> | 3.3.7 | `EIGEN3` |
 | <a href=http://www.hdfgroup.org/HDF5/>HDF5</a> | 1.8.19 | `HDF5` |
 | <a href=http://mc-stan.org/>Stan Math</a> | 2.18.0 | `STANMATH` |
