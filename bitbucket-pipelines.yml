@@ -59,6 +59,8 @@ pipelines:
               - if [[ "$BITBUCKET_TAG" =~ ^v[0-9].[0-9]+.[0-9]+$ ]]; then echo "<meta http-equiv=\"refresh\" content=\"0; url=https://mituq.bitbucket.io/$BITBUCKET_TAG/index.html\">" > index.html; fi
               - git add $BITBUCKET_TAG
               - if [[ "$BITBUCKET_TAG" =~ ^v[0-9].[0-9]+.[0-9]+$ ]]; then git add index.html; fi
+              - git config --global user.email "parnomd@gmail.com"
+              - git config --global user.name "Bitbucket Pipelines"
               - git commit -m "Added documentation for $BITBUCKET_TAG"
               - git push $BITBUCKET_USER:$BITBUCKET_PASSWORD@bitbucket.org/mituq/mituq.bitbucket.io.git --all
       - step:
