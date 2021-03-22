@@ -54,11 +54,13 @@ pipelines:
               - cd ~
               - git clone https://$BITBUCKET_USER:$BITBUCKET_PASSWORD@bitbucket.org/mituq/mituq.bitbucket.io.git
               - cd mituq.bitbucket.io
-              - if [ -d "$BITBUCKET_TAG" ]; then rm -Rf $BITBUCKET_TAG; fi
-              - mv $BITBUCKET_CLONE_DIR/build/doxygen_output/html $BITBUCKET_TAG
-              - if [[ "$BITBUCKET_TAG" =~ ^v[0-9].[0-9]+.[0-9]+$ ]]; then echo "<meta http-equiv=\"refresh\" content=\"0; url=https://mituq.bitbucket.io/$BITBUCKET_TAG/index.html\">" > index.html; fi
-              - git add $BITBUCKET_TAG
-              - if [[ "$BITBUCKET_TAG" =~ ^v[0-9].[0-9]+.[0-9]+$ ]]; then git add index.html; fi
+              - if [ -d "source/${BITBUCKET_TAG}" ]; then rm -rf source/${BITBUCKET_TAG}; fi
+              - rm -rf source/latest
+              - cp -r $BITBUCKET_CLONE_DIR/build/doxygen_output/html source/${BITBUCKET_TAG}
+              - cp -r $BITBUCKET_CLONE_DIR/build/doxygen_output/html source/latest
+              - git add source/${BITBUCKET_TAG}
+              - git add -u
+              - git add source/latest
               - git config --global user.email "parnomd@gmail.com"
               - git config --global user.name "Bitbucket Pipelines"
               - git commit -m "Added documentation for $BITBUCKET_TAG"
