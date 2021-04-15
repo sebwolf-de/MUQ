@@ -358,6 +358,11 @@ std::pair<Eigen::MatrixXd, Eigen::VectorXd> DILIKernel::ComputeLocalLIS(std::vec
 
   // Solve the generalized Eigenvalue problem using StochasticEigenSolver
   eigOpts.put("AbsoluteTolerance", lisValTol); // <- We are computing the local LIS, so use the local tolerance
+  if(lisDim>0){
+    eigOpts.put("ExpectedRank", lisDim);
+    eigOpts.put("NumEigs", 2*lisDim);
+  }
+
   StochasticEigenSolver solver(eigOpts);
   solver.compute(hessOp, precOp, covOp);
 
@@ -422,6 +427,11 @@ void DILIKernel::UpdateLIS(unsigned int                        numSamps,
   covOp = std::make_shared<GaussianOperator>(prior, Gaussian::Covariance);
 
   eigOpts.put("AbsoluteTolerance", hessValTol);
+  if(hessEigVals!=nullptr){
+    eigOpts.put("ExpectedRank", hessEigVals->size());
+    eigOpts.put("NumEigs", 2*hessEigVals->size());
+  }
+
   StochasticEigenSolver solver(eigOpts);
   solver.compute(hessOp, precOp, covOp);
 

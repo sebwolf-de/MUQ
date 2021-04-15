@@ -312,7 +312,7 @@ namespace muq {
        global hessian.  The number of eigenvalues greater than lisValTol dictates
        the LIS dimension
       */
-      unsigned int lisDim;
+      unsigned int lisDim=0;
 
       /* Threshold on eigenvalues defining the low rank approximation of the global
         hessian.  Note that this toleran is typically smaller than the tolerance

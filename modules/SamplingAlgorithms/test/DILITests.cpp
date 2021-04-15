@@ -583,9 +583,10 @@ TEST(MCMC, DILIKernel_LogNormal) {
 
 
   pt.put("Eigensolver Block", "EigOpts");
-  pt.put("EigOpts.NumEigs",100); // Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
-  pt.put("EigOpts.ExpectedRank", dataDim);
-  pt.put("EigOpts.OversamplingFactor", 10);
+  pt.put("EigOpts.NumEigs",20); // Maximum number of generalized eigenvalues to compute (e.g., maximum LIS dimension)
+  // pt.put("EigOpts.ExpectedRank", dataDim);
+  pt.put("EigOpts.OversamplingFactor", 2);
+  // pt.put("EigOpts.Verbosity",0);
   pt.put("Hess Tolerance", 1e-4);
   pt.put("LIS Tolerance", 0.1);
 
