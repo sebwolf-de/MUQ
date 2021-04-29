@@ -91,7 +91,7 @@ public:
     ptProposal.put("BlockIndex",0);
     int subsampling = 5;
     ptProposal.put("Subsampling", subsampling);
-    return std::make_shared<SubsamplingMIProposal>(ptProposal, coarseProblem, coarseChain);
+    return std::make_shared<SubsamplingMIProposal>(ptProposal, coarseProblem, coarseIndex, coarseChain);
   }
 
   virtual std::shared_ptr<AbstractSamplingProblem> SamplingProblem (std::shared_ptr<MultiIndex> const& index) override {
