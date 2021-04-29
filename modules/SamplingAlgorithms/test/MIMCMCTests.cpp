@@ -60,6 +60,9 @@ public:
 
 class MyMIComponentFactory : public MIComponentFactory {
 public:
+
+  MyMIComponentFactory(pt::ptree pt) : pt(pt) {}
+
   virtual std::shared_ptr<MCMCProposal> Proposal (std::shared_ptr<MultiIndex> const& index, std::shared_ptr<AbstractSamplingProblem> const& samplingProblem) override {
     pt::ptree pt;
     pt.put("BlockIndex",0);
@@ -87,10 +90,8 @@ public:
                                                         std::shared_ptr<MultiIndex> const& coarseIndex,
                                                         std::shared_ptr<AbstractSamplingProblem> const& coarseProblem,
                                                         std::shared_ptr<SingleChainMCMC> const& coarseChain) override {
-    pt::ptree ptProposal;
+    pt::ptree ptProposal = pt;
     ptProposal.put("BlockIndex",0);
-    int subsampling = 5;
-    ptProposal.put("Subsampling", subsampling);
     return std::make_shared<SubsamplingMIProposal>(ptProposal, coarseProblem, coarseIndex, coarseChain);
   }
 
@@ -146,10 +147,11 @@ public:
     return mu;
   }
 
+private:
+  pt::ptree pt;
 };
 
 TEST(MIMCMCTest, MIMCMC) {
-  auto componentFactory = std::make_shared<MyMIComponentFactory>();
 
   pt::ptree pt;
   pt.put("NumSamples_0_0", 1e3);
@@ -161,6 +163,17 @@ TEST(MIMCMCTest, MIMCMC) {
   pt.put("NumSamples_2_0", 1e3);
   pt.put("NumSamples_2_1", 1e3);
   pt.put("NumSamples_2_2", 1e3);
+  pt.put("MLMCMC.Subsampling_0_0", 5);
+  pt.put("MLMCMC.Subsampling_0_1", 5);
+  pt.put("MLMCMC.Subsampling_0_2", 5);
+  pt.put("MLMCMC.Subsampling_1_0", 5);
+  pt.put("MLMCMC.Subsampling_1_1", 5);
+  pt.put("MLMCMC.Subsampling_1_2", 5);
+  pt.put("MLMCMC.Subsampling_2_0", 5);
+  pt.put("MLMCMC.Subsampling_2_1", 5);
+  pt.put("MLMCMC.Subsampling_2_2", 5);
+
+  auto componentFactory = std::make_shared<MyMIComponentFactory>(pt);
 
   MIMCMC mimcmc (pt, componentFactory);
   mimcmc.Run(Eigen::Vector2d(1.0, 2.0));
@@ -175,11 +188,12 @@ TEST(MIMCMCTest, MIMCMC) {
 
 TEST(MIMCMCTest, SLMCMC)
 {
-  auto componentFactory = std::make_shared<MyMIComponentFactory>();
 
   pt::ptree pt;
 
   pt.put("NumSamples", 5e3); // number of samples for single level
+
+  auto componentFactory = std::make_shared<MyMIComponentFactory>(pt);
 
   SLMCMC slmcmc (pt, componentFactory);
   slmcmc.Run(Eigen::Vector2d(1.0, 2.0));
