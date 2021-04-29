@@ -43,7 +43,15 @@ int main(int argc, char **argv){
   pt.put("NumSamples_2_1", 1e2);
   pt.put("NumSamples_2_2", 1e2);
   pt.put("MCMC.BurnIn", 1e1);
-  pt.put("MLMCMC.Subsampling", 5);
+  pt.put("MLMCMC.Subsampling_0_0", 5);
+  pt.put("MLMCMC.Subsampling_0_1", 5);
+  pt.put("MLMCMC.Subsampling_0_2", 5);
+  pt.put("MLMCMC.Subsampling_1_0", 5);
+  pt.put("MLMCMC.Subsampling_1_1", 5);
+  pt.put("MLMCMC.Subsampling_1_2", 5);
+  pt.put("MLMCMC.Subsampling_2_0", 5);
+  pt.put("MLMCMC.Subsampling_2_1", 5);
+  pt.put("MLMCMC.Subsampling_2_2", 5);
   pt.put("MLMCMC.Scheduling", true);
 
   auto comm = std::make_shared<parcer::Communicator>(MPI_COMM_WORLD);
