@@ -9,6 +9,7 @@ INCLUDE(CheckCXXSourceCompiles)
 INCLUDE(CheckCXXSourceRuns)
 INCLUDE(CheckFunctionExists)
 
+
 # define the project name
 project(MUQ)
 set(${CMAKE_PROJECT_NAME}_MAJOR_VERSION 0)
@@ -140,17 +141,20 @@ MESSAGE("${MUQ_LOG_SUMMARY}")
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
+
 	message(STATUS "To build documentation, run 'make doc'")
 
 	option(MUQDOC_INCLUDE_ANALYTICS OFF)
 	if(MUQDOC_INCLUDE_ANALYTICS)
 		message(STATUS "Will include google analytics header information in doxygen output.")
 		set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/analytics_header.html)
+	else()
+		set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/noanalytics_header.html)
 	endif()
 
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/muq.doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile @ONLY)
     add_custom_target(doc
-        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/documentation/scripts/doxygen_preprocessing.py ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+        COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/documentation/scripts/doxygen_preprocessing.py ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
         COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen" VERBATIM
