@@ -9,8 +9,8 @@
 
 namespace pt = boost::property_tree;
 
-/** @defgroup MIMCMC
-    @ingroup MCMC
+/** @ingoup MIMCMC
+    @{
     @brief Tools for defininig and running multilevel and multiindex MCMC algorithms.
     @details Multiindex MCMC methods are built on an entire arbitriry-dimensional
     grid of sampling problems, in contrast to classical MCMC only sampling from
@@ -29,12 +29,14 @@ namespace pt = boost::property_tree;
     fine chain.
 
     Refer to the MCMC examples for complete code examples.
+    @}
 */
 
 namespace muq {
   namespace SamplingAlgorithms {
 
     /** @brief Multiindex MCMC method.
+        @ingroup MIMCMC
         @details A basic MIMCMC method based on a fixed
         number of samples for all model indices.
      */

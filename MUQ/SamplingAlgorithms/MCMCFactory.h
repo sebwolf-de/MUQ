@@ -3,14 +3,11 @@
 
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 
-/**
-@defgroup MCMC
-@ingroup SamplingAlgorithms
-*/
 
 namespace muq {
   namespace SamplingAlgorithms {
 
+    /** @ingroup mcmc */
     class MCMCFactory {
 
     public:

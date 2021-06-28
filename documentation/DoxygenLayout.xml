@@ -113,11 +113,11 @@
   <group>
     <briefdescription visible="no"/>
     <groupgraph visible="$GROUP_GRAPHS"/>
-    <detaileddescription title=""/>
+    <detaileddescription title=" "/>
     <memberdecl>
       <nestedgroups visible="yes" title=""/>
-      <dirs visible="yes" title=""/>
-      <files visible="yes" title=""/>
+      <dirs visible="no" title=""/>
+      <files visible="no" title=""/>
       <namespaces visible="yes" title=""/>
       <classes visible="yes" title=""/>
       <defines title=""/>
