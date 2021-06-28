@@ -4,7 +4,7 @@
 #include "MUQ/Modeling/ModPiece.h"
 
 /**
-@defgroup Modeling
+@defgroup modeling Modeling
 
 ## Background and Motivation
 UQ algorithms use repeated model evaluations to propagate uncertainties or to sample probability distributions.   The same implementation of a UQ algorithm needs to be used on many different models.  The Modeling module in MUQ provides a collection of classes that enable models to be defined in a way that MUQ can understand.   Many algorithms also require derivative information (such as gradients, Jacobian matrices, and Hessian matrices), which can also be defined and evaluated using this module.
@@ -15,8 +15,8 @@ MUQ adopts a hybrid approach that blends the computational graph concept used by
 */
 
 /**
-@defgroup Model Components and the ModPiece class
-@ingroup Modeling
+@defgroup modpieces Model Components and the ModPiece class
+@ingroup modeling
 
 ## Model Components in MUQ
 Each model component in MUQ is defined as a child of the [ModPiece](\ref muq::Modeling::ModPiece) abstract base class.  The ModPiece class is the software analog of a function
@@ -204,8 +204,8 @@ deriv2 = expMod.ApplyHessian(outWrt,inWrt1,inWrt2,x,sens,direction)
 */
 
 /**
-@defgroup User-Defined Models
-@ingroup Modeling
+@defgroup usermods User-Defined Models
+@ingroup modeling
 
 ## Creating Modeling Components
 While MUQ has many built-in ModPieces, using MUQ on a new application typically requires creating one or more new model components.  This is accomplished by creating a new class that inherits from <code>ModPiece</code> and overides the evaluation method (and optionally the derivative functions).  To demonstrate this process, consider a simple <code>ModPiece</code> that evaluates a scalar linear regression model at several points to produce a single vector of predictions at those points.  Let \f$y_i\in\mathbb{R}\f$ denote the model prediction at a point \f$x_i\in\mathbb{R}\f$.  The model is given by
@@ -253,6 +253,8 @@ protected:
 @endcodeblock
 The ModPiece constructor takes two vectors: one containing the dimensions of each input \f$N_1, N_2\f$ and one containing the dimensions of each output \f$M_1\f$.  Here we have used the [c++11 list initialization](https://en.cppreference.com/w/cpp/language/list_initialization) feature to specify the vectors (curly brackets) in a concise way.  In general however, the <code>ModPiece</code> constructor expects either an <code>Eigen::VectorXi</code> or a <code>std::vector<int></code> in c++ and a list or numpy array of ints in python.
 
+Note that <code>EvaluateImpl</code> function does not return the result.  Instead, it sets the member variable <code>outputs</code>, which is a <code>std::vector</code> of <code>Eigen::VectorXd</code> vectors in c++ and a list of numpy arrays in Python.  Setting <code>outputs</code> instead of returning a vector allows MUQ to reduce the number of times data is copied in large computational graphs.  It also enables easy one-step caching, which prevents consecutive calls to the <code>EvaluateImpl</code> with the same inputs.
+
 Using the <code>SimpleModel</code> ModPiece is identical to using the native ModPieces provided by MUQ:
 @codeblock{cpp,C++}
 unsigned int numPts = 10;
@@ -278,7 +280,7 @@ y = mod.Evaluate(x,c)[0]
 Notice that the <code>EvaluateImpl</code> function is defined in the <code>SimpleModel</code> class, but we call the <code>Evaluate</code> function when evaluating the model.  The <code>Evaluate</code> function is defined in the parent <code>ModPiece</code> class and calls the <code>EvaluateImpl</code> function.  The parent <code>Evaluate</code> function also checks the size of the input, supports one-step caching of the evaluation, and keeps track of average runtimes.
 
 ### Defining Derivative Information
-The <code>EvaluateImpl</code> function is the only thing that must be implemented to define a new ModPiece.  All unimplemented derivative functions (e.g., <code>Jacobian</code>, <code>Gradient</code>, etc...) will default to finite difference implementations.  Overriding the defaults involves implementing the <code>JacobianImpl</code>, <code>ApplyJacobianImpl</code>, <code>GradientImpl</code>, or <code>ApplyHessianImpl</code> functions.   Extending the <code>SimpleModel</code> definition above, derivatives could be implemented as
+The <code>EvaluateImpl</code> function is the only thing that must be implemented to define a new ModPiece.  All unimplemented derivative functions (e.g., <code>Jacobian</code>, <code>Gradient</code>, etc...) will default to finite difference implementations.  However, overriding the finite difference implementation is advantageous if derivatives can be computed analytically.   This can be accomplished in MUQ by implementing one or more of the <code>JacobianImpl</code>, <code>ApplyJacobianImpl</code>, <code>GradientImpl</code>, or <code>ApplyHessianImpl</code> functions.   Extending the <code>SimpleModel</code> definition above, all of the derivative functions could be implemented as
 @codeblock{cpp,C++}
 class SimpleModel : public muq::Modeling::ModPiece
 {
@@ -465,8 +467,9 @@ class SimpleModel(mm.PyModPiece):
 */
 
 /**
-@defgroup Combining Components: Model Graphs
-@ingroup Modeling
+@defgroup modgraphs Combining Components: Model Graphs
+@ingroup modeling
+
 ## Description
 Individual ModPieces form the building blocks for larger more complicated models.  MUQ makes it possible to connect ModPieces together on a computational graph to define larger models and enable the reuse of existing ModPiece implementations.  The idea is to great graph of ModPieces where each node in the graph corresponds to a ModPiece and each edge represents a composition of one ModPiece with another.   For example, if functions \f$g(y)\f$ and \f$f(x)\f$ are implemented as ModPieces, we can define the composition \f$g(f(x))\f$ by creating a graph with two nodes and one edge from the output of \f$f\f$ to the input of \f$g\f$.  Visually, the resulting graph would look something like
 
@@ -516,7 +519,13 @@ gof = graph.CreateModPiece("f")
 
 The <code>AddEdge</code> function takes in the names of the nodes you wish to connect as well as integers specifying a particular output of <code>f</code> we want to connect to a particular input of <code>g</code>.   In this case, both the <code>SinOperator</code> and <code>ExpOperator</code> ModPieces have a single input and a single input.  Hence, we used "0" for both inputs and outputs.  The <code>CreateModPiece</code> function returns a chile of the <code>ModPiece</code> class that uses the graph to evaluate \f$f(g(x))\f$.  Becuase it's a ModPiece, all of the usual ModPiece derivative functions are available.  MUQ uses first and second order chain rules to analytically compute derivative information through the entire graph.
 
-Consider another example where \f$x\in\mathbb{R}^4\f$ and we want to implement a model that computes \f$\sin(x_{1:2}) + \exp(x_{3:4})\f$.   First, we'll use the [SplitVector](\ref muq::Modeling::SplitVector) ModPiece to separate the vector \f$x\f$ into two vectors: \f$x_{1:2}\f$ and \f$x_{3:4}\f$.  After using the <code>SinOperator</code> and <code>ExpOperator</code>, we'll then sum the results using the <code>SumPiece</code> ModPiece.
+Consider another example where \f$x\in\mathbb{R}^4\f$ and we want to implement a model that computes \f$\sin(x_{1:2}) + \exp(x_{3:4})\f$.   First, we'll use the [SplitVector](\ref muq::Modeling::SplitVector) ModPiece to separate the vector \f$x\f$ into two vectors: \f$x_{1:2}\f$ and \f$x_{3:4}\f$.  After using the <code>SinOperator</code> and <code>ExpOperator</code>, we'll then sum the results using the <code>SumPiece</code> ModPiece.  The resulting graph should look like
+
+![imgDef2]
+
+[imgDef2]: SplitSumWorkGraph.png "Split-Sum WorkGraph"
+
+The code to construct this computational graph in MUQ is given below. 
 @codeblock{cpp,C++}
 #include "MUQ/Modeling/WorkGraph.h"
 #include "MUQ/Modeling/ModGraphPiece.h"
