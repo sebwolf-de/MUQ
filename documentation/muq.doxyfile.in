@@ -12,7 +12,8 @@
 
 USE_MATHJAX = YES
 USE_MDFILE_AS_MAINPAGE = readme.md
-
+MARKDOWN_SUPPORT = YES
+TOC_INCLUDE_HEADINGS = 5
 #---------------------------------------------------------------------------
 # Project related configuration options
 #---------------------------------------------------------------------------

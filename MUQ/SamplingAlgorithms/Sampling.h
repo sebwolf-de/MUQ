@@ -104,6 +104,7 @@ Complete introductory examples can be found [in python](https://mituq.bitbucket.
 /** @defgroup mcmcalg Getting Started: Defining an MCMC Algorithm
 @ingroup mcmc
 
+
 ## Overview
 The goal of MCMC is to construct a Markov chain that is ergodic and has a given stationary distribution \f$p(x)\f$.  MUQ defines MCMC algorithms through three components: the chain, a transition kernel, and a proposal.  This idea is illustrated below for Metropolis-Hastings and Delayed-Rejection algorithms.
 
@@ -292,12 +293,150 @@ gradLogDensity = samps.GetMeta("GradLogDensity_0") # <- Only available when usin
 
 Just like ModPieces can have multiple vector-valued inputs, the log density we're trying to sample might have multiple inputs, say \f$p(x,y)\f$.  In <code>GetMeta("GradLogDensity_0")</code>, the "_0" part of the string refers to index of the input that the gradient was taken with respect to, e.g., "_0" matches \f$\nabla_x \log p(x,y)\f$ and "_1" would match \f$\nabla_y \log p(x,y)\f$.  More information on sampling problems with more than one input can be found in the [Blocks and Kernel Composition](#blockmcmc) section.
 
-#### Assessing Convergence {#convergence}
+### Assessing Convergence {#convergence}
+The transition kernels used in MCMC methods guarantee that the target distribution \f$p(x)\f$ is the unique stationary distribution of the chain.  If the distribution of the initial state \f$x^{(0)}\f$ is \f$p(x)\f$, this stationarity property guarantees that all subsequent steps in the chain will also be distributed according to the target distribution \f$p(x)\f$.  In practice however, the reason we are using MCMC is because we can't generate samples of the target distribution and therefore can't guarantee \f$x^{(0)}\sim p(x)\f$.
 
+For an arbitrary starting point \f$x^{(0)}\f$, we therefore need to assess whether the chain is long enough to ensure that the states have converged to the target distribution.   Often the first step in assessing convergence is to look a trace plot of the chain.   In python, we can convert extract a matrix of MCMC states from the <code>SampleCollection</code> class and then use matplotlib to create a trace plot (see below).
+
+@codeblock{python,Python}
+sampMat = samps.AsMatrix()
+
+plt.plot(sampMat[0,:])
+plt.xlabel('MCMC Step',fontsize=14)
+plt.ylabel('Parameter $x_0$',fontsize=14)
+plt.title('Converged Trace Plot',fontsize=16)
+plt.show()
+@endcodeblock
+
+For a sufficient long chain, this code might result in a trace plot like:
+
+![traceimg1]
+
+[traceimg1]: ConvergedTracePlot.png "Trace plot for a sufficiently long MCMC chain."
+
+For a short chain that has not "forgotten" it's starting point, you might see a trace plot that looks like:
+
+![shorttraceplot]
+
+[shorttraceplot]: ShortTracePlot.png "Trace plot for a short MCMC chain."
+
+
+Trace plots are incredibly useful, but MUQ also has diagnostic tools for **quantitatively assessing convergence** using parallel chains and the\f$\hat{R}\f$ diagnostic described in \cite Gelman2013, \cite Vehtari2021, and many other publications.  The idea is to run multiple chains from different starting points and to assess whether the chains have reached the same distribution, presumably the target distribution \f$p(x)\f$.   Inter-chain means and variances are used to compute \f$\hat{R}\f$ for each dimension of the chain.  Values close to \f$1\f$ indicate convergence.    Here's an example running four chains and computing \f$\hat{R}\f$ with MUQ:
+
+@codeblock{cpp,C++}
+unsigned int dim = 2;
+unsigned int numChains = 4;
+std::vector<std::shared_ptr<SampleCollection>> collections(numChains);
+
+for(int i=0; i<numChains; ++i){
+  Eigen::VectorXd startPt = RandomGenerator::GetNormal(dim);
+  auto sampler = std::make_shared<SingleChainMCMC>(chainOpts, kern);
+  collections.at(i) = sampler->Run(startPt);
+}
+
+Eigen::VectorXd rhat = Diagnostics::Rhat(collections);
+@endcodeblock
+@codeblock{python,Python}
+dim = 2
+numChains = 4
+collections = [None]*numChains
+
+for i in range(numChains):
+    startPt = np.random.randn(dim);
+    sampler = ms.SingleChainMCMC(chainOpts, [kern])
+    collections[i] = sampler.Run([startPt])
+
+rhat = ms.Diagnostics.Rhat(collections)
+@endcodeblock
+
+The [Rhat](\ref muq::SamplingAlgorithms::Diagnostics::Rhat) function returns a vector containing the \f$\hat{R}\f$ statistic for each component of the chain.  Historically, values of \f$\hat{R}<1.1\f$ have been used to indicate convergence.  More recently however, it has been argued that this can sometimes lead to erroneous conclusions and a threshold of \f$\hat{R}<1.01\f$ may be more appropriate.  See \cite Vehtari2021 for more discussion on this point.
+
+### Measuring Efficiency {#efficiency}
+The \f$\hat{R}\f$ statistic helps quantify if the MCMC sampler is indeed producing samples of the target distribution \f$p(x)\f$.   However, it does not indicate how efficiently the sampler is exploring \f$p(x)\f$.  This is commonly accomplished by looking at the **effective sample size.**   MCMC produces a chain of *correlated* samples.  Monte Carlo estimators using these correlated samples will therefore have a larger variance than an estimator using the same number of independent samples.  The effective sample size (ESS) of a chain is the number of independent samples that would be needed to obtain the same estimator variance as the MCMC chain.
+
+MUQ estimates the ESS of a single chain using the approach in \cite Wolff2004, which is based on the chain's autocorrelation function.   The <SampleCollection> class has a [ESS](\ref muq::Modeling::MarkovChain::ESS) function that returns a vector of estimate ESS values for each component of the chain.  Here's an example:
+@codeblock{cpp,C++}
+// Estimate the effective sample size
+Eigen::VectorXd ess = samps->ESS();
+
+// Estimate the Monte Carlo standard error (MCSE)
+Eigen::VectorXd variance = samps->Variance();
+Eigen::VectorXd mcse = (variance.array() / ess.array()).sqrt();
+@endcodeblock
+@codeblock{python,Python}
+# Estimate the effective sample size
+ess = samps.ESS()
+
+# Estimate the Monte Carlo standard error (MCSE)
+variance = samps.Variance()
+mcse = np.sqrt(variance/ess)
+@endcodeblock
 
 ## Using Options Lists
+The MCMC samplers defined above were created by programmtically creating a proposal, then a kernel, and then an instance of the <code>SingleChainMCMC</code> class.   It is also possible to define MCMC algorithms entirely through string-valued options stored in either a <code>boost::property_tree::ptree</code> in c++ or a dictionary in python.   MUQ internally registers each MCMC proposal and kernel class with a string.  This allows scripts and executables to easily define difference algorithms entirely from text-based input files (like YAML or XML files).   Below is code to recreate a random walk sampler using only the list of options.
+@codeblock{cpp,C++}
+boost::property_tree::ptree options;
 
-## Blocks and Kernel Composition {#blockmcmc}
+options.put("NumSamples", 10000); // number of MCMC steps
+options.put("KernelList", "Kernel1"); // name of block that defines the transition kernel
+options.put("Kernel1.Method", "MHKernel"); // name of the transition kernel class
+options.put("Kernel1.Proposal", "MyProposal"); // name of block defining the proposal distribution
+options.put("Kernel1.MyProposal.Method", "MHProposal"); // name of proposal class
+options.put("Kernel1.MyProposal.ProposalVariance", 0.5); // variance of the isotropic MH proposal
+
+auto mcmc = std::make_shared<SingleChainMCMC>(options,problem);
+@endcodeblock
+@codeblock{python,Python}
+options = {
+           "NumSamples": 10000, # number of MCMC steps
+           "KernelList": "Kernel1",  # name of block that defines the transition kernel
+           "Kernel1.Method": "MHKernel",  # name of the transition kernel class
+           "Kernel1.Proposal": "MyProposal", # name of block defining the proposal distribution
+           "Kernel1.MyProposal.Method": "MHProposal", # name of proposal class
+           "Kernel1.MyProposal.ProposalVariance": 0.5 # variance of the isotropic MH proposal
+         }
+
+mcmc = ms.SingleChainMCMC(options,problem)
+@endcodeblock
+@codeblock{json,JSON}
+{
+  "NumSamples" : 10000,
+  "KernelList" : "Kernel1",
+  "Kernel1" :
+  {
+    "Method" : "MHKernel",
+    "Proposal" : "MyProposal",
+    "MyProposal" :
+    {
+      "Method" : "MHProposal",
+      "ProposalVariance" : 0.5
+    }
+  }
+}
+@endcodeblock
+@codeblock{cpp,C++ w/ JSON}
+// Make Sure to include this at top of file
+// #include <boost/property_tree/json_parser.hpp>
+
+// Create an empty ptree
+boost::property_tree::ptree options;
+
+// Load the json contents into the ptree
+boost::property_tree::read_json("mcmc-options.json", options);
+
+auto mcmc = std::make_shared<SingleChainMCMC>(options,problem);
+@endcodeblock
+@codeblock{python,Python w/ JSON}
+# Make sure to import json at start of script:
+# import json
+
+with open('mcmc-options.json','r') as fin:
+  options = json.load(fin)
+
+mcmc = ms.SingleChainMCMC(options,problem)
+@endcodeblock
+
+## Blockwise Sampling and Kernel Composition {#blockmcmc}
 
 */
 
