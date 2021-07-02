@@ -103,8 +103,8 @@ Eigen::VectorXd const& SamplingStatePartialMoment::operator()(SamplingState cons
 
 void SampleCollection::Add(std::shared_ptr<SamplingState> newSamp)
 {
-  // copy the sample
-  samples.push_back(std::make_shared<SamplingState>(*newSamp));
+  // copy the sample pointer
+  samples.push_back(newSamp);//std::make_shared<SamplingState>(*newSamp));
 }
 
 std::shared_ptr<SamplingState> SampleCollection::at(unsigned i)
