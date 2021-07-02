@@ -16,7 +16,7 @@ where \f$w_i\f$ are appropriately defined weights.  Typically, \f$w_i = N^{-1}\f
 
 
 - The basics of **defining a sampling problem** in MUQ can be found [here](\ref mcmcprob).
-- An introduction to **constructing MCMC algorithms** is provided [here](\ref mcmc).
+- An introduction to **MCMC algorithms** is provided [here](\ref mcmc).
 - An introduction to **dimension independent MCMC algorithms** can also be found [here](\ref disamp).
 - **Multi-fidelity and Multi-index MCMC algorithms** are described [here](\ref MIMCMC).
 
@@ -27,26 +27,278 @@ where \f$w_i\f$ are appropriately defined weights.  Typically, \f$w_i = N^{-1}\f
 @ingroup sampling
 
 ## Markov chain Monte Carlo (MCMC)
+MCMC algorithms construct ergodic Markov chains \f$\{x^{(1)}, \ldots, x^{(N)}\}\f$ that can be used as samples in Monte Carlo approximations, like
+\f\[
+\int_\Omega h(x) p(x) dx \approx \frac{1}{N} h\left(x^{(i)}\right) = \hat{h}.
+\f\]
+
+The Markov chain is defined in terms of a transition kernel \f$K_n(x^{(n+1)} | x^{(n)})\f$, which is a probability distribution over the next state in the chain \f$x^{(n+1)}\f$ given the current state in the chain \f$x^{(n)}\f$.  There are many different ways of constructing the transition kernel; one of the most common approaches is to use the Metropolis-Hastings (MH) rule.   The MH rule constructs the kernel using another proposal distribution \f$q(x^\prime | x^{(n)})\f$ and evaluations of the target density \f$p(x)\f$.   In particular, the transition kernel is defined by the following process:
+
+1. Draw a random sample \f$x^\prime \sim q(x^\prime | x^{(n)})\f$ from the proposal distribution.
+2. Compute the acceptance probability
+\f\[
+\alpha = \min\left\{1,\quad \frac{p(x^\prime) q(x^{(n)} | x^\prime)}{p(x^{(n)}) q(x^\prime | x^{(n)})} \right\}
+\f\]
+3. Set \f$x^{(n+1)} = x^\prime\f$ with probability \f$\alpha\f$.  Else, \f$x^{(n+1)} = x^{(n)}\f$.
+
+MUQ structures it's sampling module to mimic the components needed by the Metropolis-Hastings rule.   The [SamplingProblem](\ref muq::SamplingAlgorithms::SamplingProblem) interfaces with the target distribution \f$p(x)\f$ and (optionally) the quantity of interest \f$h(x)\f$.  Typically, \f$p(x)\f$ and \f$h(x)\f$ are defined as ModPieces.  (See the \ref Modeling chapter for more details on constructing ModPieces.)   Once the <code>SamplingProblem</code> is defined, an MCMC algorithm is constructed by combining an instance of the [TransitionKernel](\ref muq::SamplingAlgorithms::TransitionKernel) class with one or more instances of the [MCMCProposal](\ref muq::SamplingAlgorithms::MCMCProposal) class.
+
+## Quickstart
+Here's an example of constructing and running an MCMC sampler in MUQ.  This example
+assumes that a ModPiece called <code>tgtDens</code> has been defined to compute \f$\log p(x)\f$ and
+that a vector <code>x0</code> has been defined for the initial state \f$x^{(0)}\f$ of the chain.
+
+@codeblock{cpp,C++}
+// Construct the sampling problem from the target density
+auto problem = std::make_shared<SamplingProblem>(tgtDens);
+
+// Define proposal
+boost::property_tree::ptree propOpts;
+propOpts.put("ProposalVariance", 1.0);
+auto prop = std::make_shared<MHProposal>(propOpts, problem);
+
+// Use the proposal to construct a Metropolis-Hastings kernel
+boost::property_tree::ptree kernOpts;
+auto kern = std::make_shared<MHKernel>(kernOpts, problem, prop);
+
+// Construct the MCMC sampler using this transition kernel
+boost::property_tree::ptree chainOpts;
+chainOpts.put("NumSamples", 2000);
+chainOpts.put("BurnIn", 10);
+chainOpts.put("PrintLevel", 3);
+auto sampler = std::make_shared<SingleChainMCMC>(chainOpts, kern);
+
+// Run the MCMC algorithm to generate samples. x0 is the starting location
+auto samps = sampler.Run(x0);
+@endcodeblock
+@codeblock{python,Python}
+# Construct the sampling problem from the target density
+problem = ms.SamplingProblem(tgtDens)
+
+# Define proposal
+propOpts = {"ProposalVariance" : 1.0}
+prop = ms.MHProposal(propOpts, problem)
+
+# Use the proposal to construct a Metropolis-Hastings kernel
+kernOpts = dict()
+kern = ms.MHKernel(kernOpts, problem, prop)
+
+# Construct the MCMC sampler using this transition kernel
+chainOpts = {'NumSamples': 2000,
+             'BurnIn': 10,
+             'PrintLevel' : 3}
+
+sampler = ms.SingleChainMCMC(chainOpts, [kern])
+
+# Run the MCMC algorithm to generate samples. x0 is the starting location
+samps = sampler.Run(x0)
+@endcodeblock
+
+Details on **defining MCMC algorithms** can be found [here](\ref mcmcalg).
+
+Complete introductory examples can be found [in python](https://mituq.bitbucket.io/source/_site/example_pages_v0_3_1/webExamples/SamplingAlgorithms/MCMC/Example1_Gaussian/python/GaussianSampling.html) and [in c++](https://mituq.bitbucket.io/source/_site/example_pages_v0_3_1/webExamples/SamplingAlgorithms/MCMC/Example1_Gaussian/cpp/GaussianSampling.html).
+
 */
 
-/** @defgroup mcmcprob Getting Started 1: Creating a Sampling Problem
-@ingroup mcmc
 
-## Sampling Problems
-
-## Posterior Sampling with MCMC
-*/
-
-/** @defgroup mcmcalg Getting Started 2: Defining an MCMC Algorithm
+/** @defgroup mcmcalg Getting Started: Defining an MCMC Algorithm
 @ingroup mcmc
 
 ## Overview
+The goal of MCMC is to construct a Markov chain that is ergodic and has a given stationary distribution \f$p(x)\f$.  MUQ defines MCMC algorithms through three components: the chain, a transition kernel, and a proposal.  This idea is illustrated below for Metropolis-Hastings and Delayed-Rejection algorithms.
 
-## Chains
+![mhimg]
 
-## Kernels
+[mhimg]: MHPuzzle.png "Components in a Metropolis-Hastings MCMC algorithm."
 
-## Proposals
+![drimg]
+
+[drimg]: DRPuzzle.png "Components in a Delayed-Rejection MCMC algorithm."
+
+
+In MUQ, the chain is the top level object in an MCMC definition.  In particular, the [SingleChainMCMC](\ref SingleChainMCMC) class is typically used to define a standard single-chain MCMC algorithm.   The chain, of course, depends on the transition kernel.  This corresponds to another abstract base class in the MUQ MCMC stack, the [TransitionKernel](\ref muq::SamplingAlgorithms::TransitionKernel) class.  The classic Metropolis-Hastings rule is implemented in the [MHKernel](\ref muq::SamplingAlgorithms::MHKernel) class, but this is just one of many different [transition kernels](\ref MCMCKernels) available in MUQ.  Each of these kernels can be coupled with one of the [proposal distributions](\ref MCMCProposals) implemented in MUQ.  The proposal distributions are children of the abstract [MCMCProposal](\ref muq::SamplingAlgorithms::MCMCProposal) base class.
+
+
+## Step 1: Defining the Problem
+The first step in using MUQ's MCMC tools is to define the posterior distribution we want to sample.  This is typically accomplished via the [SamplingProblem](\ref muq::SamplingAlgorithms::SamplingProblem) class.   The constructor of <code>SamplingProblem</code> takes a ModPiece that evaluates the log density \f$\log p(x)\f$.  It is also possible to pass another ModPiece that evaluates an additional quantity of interest that needs to be evaluated at samples of the target distribution.
+
+Below is an example of defining a simple two dimensional Gaussian <code>SamplingProblem</code>.
+
+The [Gaussian](\ref muq::Modeling::Gaussian) class is used to define the target density.  The Gaussian class can be used for either sampling or density evaluations.  The <code>AsDensity</code> function returns a ModPiece that evaluates the log of the Gaussian density -- exactly what the <code>SamplingProblem</code> needs.
+
+@codeblock{cpp,C++}
+Eigen::VectorXd mu(2);
+mu << 1.0, 2.0;
+
+Eigen::MatrixXd cov(2,2);
+cov << 1.0, 0.8,
+       0.8, 1.5;
+
+auto targetDensity = std::make_shared<Gaussian>(mu, cov)->AsDensity();
+auto problem = std::make_shared<SamplingProblem>(targetDensity);
+@endcodeblock
+@codeblock{python,Python}
+mu = np.array([1.0,2.0])
+
+cov = np.array([[1.0, 0.8],
+                [0.8, 1.0]])
+
+targetDensity = mm.Gaussian(mu,cov).AsDensity()
+problem = ms.SamplingProblem(targetDensity)
+@endcodeblock
+
+
+## Step 2: Assembling an Algorithm
+Once the problem is defined, it's time to combine chain, kernel, and proposal components to define an MCMC algorithm.  Below is an example combining the random walk [MHProposal](\ref muq::SamplingAlgorithms::MHProposal) proposal with the usual Metropolis-Hastings [MHKernel](\ref muq::SamplingAlgorithms::MHKernel) kernel in a single chain MCMC sampler.   Note that additional options are specified in with <code>boost::property_tree::ptree</code> variables in c++ and dictionaries in python.
+
+@codeblock{cpp,C++}
+// Define the random walk proposal proposal
+boost::property_tree::ptree propOpts;
+propOpts.put("ProposalVariance", 1.0);
+auto prop = std::make_shared<MHProposal>(propOpts, problem);
+
+// Define the Metropolis-Hastings transition kernel
+boost::property_tree::ptree kernOpts;
+auto kern = std::make_shared<MHKernel>(kernOpts, problem, prop);
+
+// Construct the MCMC sampler using this transition kernel
+boost::property_tree::ptree chainOpts;
+chainOpts.put("NumSamples", 2000);
+chainOpts.put("BurnIn", 10);
+chainOpts.put("PrintLevel", 3);
+
+auto sampler = std::make_shared<SingleChainMCMC>(chainOpts, kern);
+@endcodeblock
+@codeblock{python,Python}
+# Define the random walk proposal
+propOpts = {"ProposalVariance" : 1.0}
+prop = ms.MHProposal(propOpts, problem)
+
+# Define the Metropolis-Hastings transition kernel
+kernOpts = dict()
+kern = ms.MHKernel(kernOpts, problem, prop)
+
+# Construct the MCMC sampler
+chainOpts = {'NumSamples': 2000,
+             'BurnIn': 10,
+             'PrintLevel' : 3}
+
+sampler = ms.SingleChainMCMC(chainOpts, [kern])
+@endcodeblock
+
+#### Swapping Proposals
+Individual components of the MCMC sampler can be changed without changing anything else.  For example, the Metropolis-Adjusted Langevin Algorithm (MALA) uses the Metropolis-Hastings algorithm with a proposal that leverages gradient information to "shift" the random walk proposal towards higher density regions of \f$p(x)\f$.  Only the proposal distribution is different betweeen the MALA algorithm the basic standard Random Walk Metropolis (RWM) algorithm defined in the code above.  Defining a MALA sampler in MUQ therefore only requires changing the proposal to use the [MALAProposal](\ref muq::SamplingAlgorithms::MALAProposal) class.  This is shown below.
+@codeblock{cpp,C++}
+// Define the random walk proposal proposal
+boost::property_tree::ptree propOpts;
+propOpts.put("StepSize", 0.3);
+auto prop = std::make_shared<MALAProposal>(propOpts, problem);
+@endcodeblock
+@codeblock{python,Python}
+# Define the MALA proposal
+propOpts = {"StepSize" : 0.3}
+prop = ms.MALAProposal(propOpts, problem)
+@endcodeblock
+
+#### Changing Transition Kernels
+Transition kernels are also interchangeable.  Here is an example of constructing a delayed rejection sampler \cite Mira2001, where the first stage is a random walk proposal and the second stage uses a Langevin proposal.
+@codeblock{cpp,C++}
+// Define a list of proposals to use with the DR kernel
+std::vector<std::shared_ptr<MCMCProposal>> props(2);
+
+// Create the random walk proposal proposal
+boost::property_tree::ptree propOpts;
+propOpts.put("ProposalVariance", 1.0);
+props.at(0) = std::make_shared<MHProposal>(propOpts, problem);
+
+// Create the Langevin proposal
+boost::property_tree::ptree malaOpts;
+malaOpts.put("StepSize", 0.3);
+props.at(1) = std::make_shared<MALAProposal>(malaOpts, problem);
+
+// Define the delayed rejection kernel
+boost::property_tree::ptree kernOpts;
+auto kern = std::make_shared<DRKernel>(kernOpts, problem, props);
+@endcodeblock
+@codeblock{python,Python}
+# Create the random walk proposal
+rwmOpts = {"ProposalVariance" : 1.0}
+rwmProp = ms.MHProposal(rwmOpts, problem)
+
+# Create the Langevin proposal
+malaOpts = {"StepSize" : 0.3}
+malaProp = ms.MALAProposal(malaOpts, problem)
+
+# Create the delayed rejection kernel
+kernOpts = dict()
+kern = ms.DRKernel(kernOpts, problem, [rwmProp, malaProp])
+@endcodeblock
+
+## Step 3: Running the Sampler
+We now have a sampling algorithm defined in the <code>sampler</code> variable in the code above, but no samples have been generated yet.   To run the sampler and generate samples, we need to call the <code>Run</code> method, which accepts a starting point and returns the MCMC samples in the form of a [SampleCollection](\ref muq::Modeling::SampleCollection).
+@codeblock{cpp,C++}
+// Define an initial state for the chain
+Eigen::VectorXd x0(2);
+x0 << 1.0, 2.0;
+
+// Run the MCMC algorithm to generate samples. x0 is the starting location
+std::shared_ptr<SampleCollection> samps = sampler->Run(x0);
+@endcodeblock
+@codeblock{python,Python}
+# Define an initial state for the chain
+x0 = np.array([1.0, 2.0])
+
+# Run the MCMC algorithm to generate samples. x0 is the starting location
+samps = sampler.Run([x0])
+@endcodeblock
+
+
+## Step 4: Inspecting the Results
+The <code>Run</code> function returns a [SampleCollection](\ref muq::SamplingAlgorithms::SampleCollection) object.  SampleCollections store the state in the MCMC chain, weights for each state (in order to support importance sampling), as well as additional metadata that might have been stored for each sample by the MCMC components.
+
+Here's an example of some basic things you might want to do with the sample collection.
+@codeblock{cpp,C++}
+// Return the number of samples in the collection
+int numSamps = samps->size();
+
+// Get various sample moments
+Eigen::VectorXd mean = samps->Mean();
+Eigen::VectorXd var = samps->Variance();
+Eigen::MatrixXd cov = samps->Covariance();
+
+// Create an Eigen matrix with all of the samples
+Eigen::MatrixXd sampsAsMat = samps->AsMatrix();
+
+// Extract metadata saved by the MCMC algorithm.
+Eigen::MatrixXd logDensity = samps->GetMeta("LogTarget");
+Eigen::MatrixXd gradLogDensity = samps->GetMeta("GradLogDensity_0"); // <- Only available when using gradient-based proposals (e.g., MALA)
+@endcodeblock
+@codeblock{python,Python}
+# Return the number of samples in the collection
+numSamps = samps.size()
+
+# Get various sample moments
+mean = samps.Mean()
+var = samps.Variance()
+cov = samps.Covariance()
+
+# Create an Eigen matrix with all of the samples
+sampsAsMat = samps.AsMatrix()
+
+# Extract metadata saved by the MCMC algorithm.
+logDensity = samps.GetMeta("LogTarget")
+gradLogDensity = samps.GetMeta("GradLogDensity_0") # <- Only available when using gradient-based proposals (e.g., MALA)
+@endcodeblock
+
+Just like ModPieces can have multiple vector-valued inputs, the log density we're trying to sample might have multiple inputs, say \f$p(x,y)\f$.  In <code>GetMeta("GradLogDensity_0")</code>, the "_0" part of the string refers to index of the input that the gradient was taken with respect to, e.g., "_0" matches \f$\nabla_x \log p(x,y)\f$ and "_1" would match \f$\nabla_y \log p(x,y)\f$.  More information on sampling problems with more than one input can be found in the [Blocks and Kernel Composition](#blockmcmc) section.
+
+#### Assessing Convergence {#convergence}
+
+
+## Using Options Lists
+
+## Blocks and Kernel Composition {#blockmcmc}
+
 */
 
 
@@ -60,6 +312,11 @@ Coming soon...
 
 /**
 @defgroup MIMCMC Multi-Index MCMC
+@ingroup mcmc
+*/
+
+/**
+@defgroup MCMCProposals MCMC Proposal Distributions
 @ingroup mcmc
 */
 
