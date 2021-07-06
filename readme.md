@@ -43,18 +43,16 @@ MUQ is composed of several different modules, which work together to define and 
 You can also find many [examples](https://mituq.bitbucket.io/source/_site/examples.html) using both the c++ and Python interfaces to MUQ.  These examples can provide useful starting places for using MUQ on your own problems.
 
 #### Getting Connected
-Join our Slack channel via our [website](http://muq.mit.edu/) to get in touch with MUQ developers and other users. We are always happy to help!
+Join the MUQ Slack channel via our [website](http://muq.mit.edu/) to get in touch with MUQ developers and other users. We are always happy to help!
 
 ## Citing
 Parno, M., Davis, A., Seelinger, L., and Marzouk, Y. (2014). MIT Uncertainty Quantification (MUQ) library.
 
-<div><pre><code class="language-plaintext">
-@misc{MUQ,
+<div><pre><code class="language-plaintext">@misc{MUQ,
   title={MIT uncertainty quantification (MUQ) library},
   author={Parno, Matthew and Davis, Andrew and Seelinger, Linus and Marzouk, Youssef},
   year={2014}
-}
-</code></pre></div>
+}</code></pre></div>
 
 ## Contributing
 
