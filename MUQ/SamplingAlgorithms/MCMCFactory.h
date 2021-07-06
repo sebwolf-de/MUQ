@@ -7,7 +7,6 @@
 namespace muq {
   namespace SamplingAlgorithms {
 
-    /** @ingroup mcmc */
     class MCMCFactory {
 
     public:

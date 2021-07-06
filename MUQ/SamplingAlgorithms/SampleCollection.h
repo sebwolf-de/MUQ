@@ -62,8 +62,7 @@ namespace muq{
       Eigen::VectorXd output;
     };
 
-    /** @ingroup sampling
-        @class SampleCollection
+    /** @class SampleCollection
         @brief A class to hold and analyze a collection of SamplingState objects
     */
     class SampleCollection{

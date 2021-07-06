@@ -373,7 +373,7 @@ mcse = np.sqrt(variance/ess)
 @endcodeblock
 
 ## Using Options Lists
-The MCMC samplers defined above were created by programmtically creating a proposal, then a kernel, and then an instance of the <code>SingleChainMCMC</code> class.   It is also possible to define MCMC algorithms entirely through string-valued options stored in either a <code>boost::property_tree::ptree</code> in c++ or a dictionary in python.   MUQ internally registers each MCMC proposal and kernel class with a string.  This allows scripts and executables to easily define difference algorithms entirely from text-based input files (like YAML or XML files).   Below is code to recreate a random walk sampler using only the list of options.
+The MCMC samplers defined above were created by programmtically creating a proposal, then a kernel, and then an instance of the <code>SingleChainMCMC</code> class.   It is also possible to define MCMC algorithms entirely through string-valued options stored in either a <code>boost::property_tree::ptree</code> in c++ or a dictionary in python.   MUQ internally registers each MCMC proposal and kernel class with a string.  This allows scripts and executables to easily define difference algorithms entirely from text-based input files (e.g., JSON, YAML, XML).   Below is code to recreate a random walk sampler using only the list of options.
 @codeblock{cpp,C++}
 boost::property_tree::ptree options;
 
@@ -437,6 +437,112 @@ mcmc = ms.SingleChainMCMC(options,problem)
 @endcodeblock
 
 ## Blockwise Sampling and Kernel Composition {#blockmcmc}
+In the examples above, we considered sampling a density \f$p(x)\f$ that had one vector-valued input \f$x\f$.  However, SamplingProblems can have more than one input.  This situation commonly arises in hierarchical models, where we are interested in sampling a density \f$p(x, \alpha)\f$ with additional vector-valued hyperparameters \f$\alpha\f$ (e.g., the prior variance, or likelihood precision).   Often it is more convenient, and sometimes more efficient, to sample \f$x\f$ and \f$\alpha\f$ one at a time.  In the two-input case, the idea is to alternate through MCMC steps that first target the conditional \f$p(x | \alpha^{(k)})\f$ for a fixed value \f$\alpha^{(k)}\f$ and then target the conditional \f$p(\alpha | x^{(k)})\f$.  When variants of the Metropolis-Hastings rule are used for the MCMC transition kernel, this blockwise approach is known as Metropolis-in-Gibbs sampling.
+
+MUQ defines Metrpolis-in-Gibbs samplers by passing in multiple transition kernels to the <code>SingleChainMCMC</code> class.  For illustration, consider a simple target density \f$p(x,y)=p(x)p(y)\f$, where \f$x\f$ takes values in \f$\mathbb{R}\f$, \f$y\f$ takes values in \f$\mathbb{R}^2\f$, \f$p(x)=N(\mu_x,\sigma_x)\f$, and \f$p(y)=N(\mu_y,\sigma_y)\f$.   In MUQ, we could define this density using a [WorkGraph](\ref modgraphs) as shown below
+@codeblock{cpp,C++}
+Eigen::VectorXd mux(1), varx(1);
+mux << 1.0;
+varx << 0.5;
+
+auto px = std::make_shared<Gaussian>(mux,varx)->AsDensity();
+
+Eigen::VectorXd muy(2), vary(2);
+muy << -1.0, -1.0;
+vary << 1.0, 2.0;
+
+auto py = std::make_shared<Gaussian>(muy,vary)->AsDensity();
+
+auto graph = std::make_shared<WorkGraph>();
+graph->AddNode(px, "p(x)");
+graph->AddNode(py, "p(y)");
+graph->AddNode(std::make_shared<DensityProduct>(2), "p(x,y)");
+graph->AddEdge("p(x)",0,"p(x,y)",0);
+graph->AddEdge("p(y)",0,"p(x,y)",1);
+
+auto pxy = graph->CreateModPiece("p(x,y)");
+@endcodeblock
+@codeblock{python,Python}
+mux = np.array([1.0])
+varx = np.array([0.5])
+
+# Create the joint log density, which will have two inputs with sizes [1,2]
+px = mm.Gaussian(mux,varx).AsDensity()
+
+muy = np.array([-1.0,-1.0])
+vary = np.array([1.0,2.0])
+
+py = mm.Gaussian(muy,vary).AsDensity()
+
+graph = mm.WorkGraph>()
+graph.AddNode(px, "p(x)")
+graph.AddNode(py, "p(y)")
+graph.AddNode(mm.DensityProduct(2), "p(x,y)")
+graph.AddEdge("p(x)",0,"p(x,y)",0)
+graph.AddEdge("p(y)",0,"p(x,y)",1)
+
+# Create the joint log density, which will have two inputs with sizes [1,2]
+pxy = graph.CreateModPiece("p(x,y)")
+@endcodeblock
+
+In this example, the <code>pxy</code> variable is a two-input ModPiece that evaluates the log density \f$\log p(x,y)\f$.  The index of each input to this ModPiece can be specified through the <code>BlockIndex</code> option in the MCMCProposal class, which tells the proposal which input of the target density to target.   The snippet below demonstrates this for two random walk proposals.
+@codeblock{cpp,C++}
+// Define the sampling problem as usual
+auto problem = std::make_shared<SamplingProblem>(pxy);
+
+// Construct two kernels: one for x and one for y
+boost::property_tree::ptree opts;
+
+// A vector to holding the two transition kernels
+std::vector<std::shared_ptr<TransitionKernel>> kernels(2);
+
+// Construct the kernel on x
+opts.put("ProposalVariance", 3.0);
+opts.put("BlockIndex", 0); // Specify that this proposal should target x
+auto propx = std::make_shared<MHProposal>(opts, problem);
+kernels.at(0) = std::make_shared<MHKernel>(opts, problem, propx);
+
+// Construct the kernel on y
+opts.put("ProposalVariance", 5.0);
+opts.put("BlockIndex", 1); // Specify that this proposal should target y
+auto propy = std::make_shared<MHProposal>(opts, problem);
+kernels.at(1) = std::make_shared<MHKernel>(opts, problem, propy);
+
+// Construct the MCMC sampler using this transition kernel
+opts.put("NumSamples", 2000);
+opts.put("BurnIn", 10);
+opts.put("PrintLevel", 3);
+
+auto sampler = std::make_shared<SingleChainMCMC>(chainOpts, kernels);
+@endcodeblock
+@codeblock{python,Python}
+# Define the sampling problem as usual
+problem = ms.SamplingProblem(pxy)
+
+# Construct the proposal on x
+opts = {
+        "ProposalVariance": 3.0,
+        "BlockIndex" : 0 # Specify that this proposal should target x
+       }
+
+propx = ms.MHProposal(opts, problem)
+
+# Construct the proposal on y
+opts = {
+        "ProposalVariance": 5.0,
+        "BlockIndex": 1
+       }
+
+propy = ms.MHProposal(opts, problem)
+
+# Construct the MCMC sampler using this transition kernel
+kernels = [ms.MHKernel({}, problem, propx),
+           ms.MHKernel({}, problem, propy)]
+
+sampler = SingleChainMCMC(opts, kernels)
+@endcodeblock
+
+See the [pump test example](https://mituq.bitbucket.io/source/_site/example_pages_v0_3_1/webExamples/OtherApplications/PumpTest_Theis/TheisInference.html) for a more comprehensive example showing the use of Metropolis-in-Gibbs sampling for hyperparameters in a Gaussian likelihood function.
 
 */
 
@@ -446,12 +552,34 @@ mcmc = ms.SingleChainMCMC(options,problem)
 @ingroup mcmc
 
 ## Dimension-Independent MCMC
-Coming soon...
+Documentation coming soon...
+*/
+
+/** @defgroup mcmcdiag Markov Chain Diagnostics
+@ingroup mcmc
 */
 
 /**
 @defgroup MIMCMC Multi-Index MCMC
 @ingroup mcmc
+@brief Tools for defininig and running multilevel and multiindex MCMC algorithms.
+@details Multiindex MCMC methods are built on an entire arbitriry-dimensional
+grid of sampling problems, in contrast to classical MCMC only sampling from
+a single distribution.
+
+In order to be effective, MIMCMC methods require distributions closely related to each
+other, where evaluating the coarser ones should be significantly computationally cheaper.
+A typical example are models based on the Finite Element method, where strongly varying mesh
+resolutions lead to a hierarchy of models. Then, coarser models are a
+good approximation of finer ones while being far cheaper to compute.
+
+In analogy to the mathematical definition, running a MIMCMC method requires defining
+a grid of models (as well as other needed components) via MIComponentFactory.
+Most importantly, how proposals will be drawn from coarser chains has to be defined
+as well as how to combine them (via MIInterpolation) with a proposal for the current
+fine chain.
+
+Refer to the MCMC examples for complete code examples.
 */
 
 /**

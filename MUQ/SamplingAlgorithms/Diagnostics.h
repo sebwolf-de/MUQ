@@ -11,8 +11,9 @@ namespace muq{
   namespace SamplingAlgorithms{
 
     namespace Diagnostics{
-      /** @defgroup Diagnostics
-          @ingroup mcmc
+      /**
+          @ingroup mcmcdiag
+          @{
       */
 
 
@@ -40,6 +41,10 @@ namespace muq{
       std::vector<Eigen::VectorXd> ComputeRanks(std::vector<std::shared_ptr<SampleCollection>> const& collections,
                                    unsigned int                         dim);
 
+      /**
+      @}
+      */
+      
     } // namespace Diagnostics
   } // namespace SamplingAlgorithms
 } // namespace muq
