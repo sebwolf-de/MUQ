@@ -23,18 +23,16 @@ conda install -c conda-forge muq fenics
 
 # Linking against MUQ in c++
 MUQ leverages CMake to configure its build.  For a C++ project building on MUQ, CMake is therefore the most natural way to link to the MUQ libraries.   Here's a minimal of example of a <code>CMakeLists.txt</code> file for linking against MUQ.
-@codeblock{cmake,CMake}
+@codeblock{cmake,CMakeLists.txt}
 cmake_minimum_required(VERSION 3.10)
 
 project(GaussianProcess_CO2)
-
-set (CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
 
 find_package(MUQ REQUIRED)
 include_directories(${MUQ_INCLUDE_DIRS})
 
 add_executable(my_muq_exe MyCode.cpp)
-
 target_link_libraries(my_muq_exe ${MUQ_LIBRARIES} ${MUQ_LINK_LIBRARIES})
 @endcodeblock
 
@@ -46,4 +44,4 @@ cmake ..
 make
 @endcodeblock
 
-Note, on newer Macs with the Apple M1 processor, you might have to set <code>-DCMAKE_OSX_ARCHITECTURES=x86_64</code> when running cmake.
+Note: On newer Macs with the Apple M1 processor, you might have to set <code>-DCMAKE_OSX_ARCHITECTURES=x86_64</code> when running cmake.
