@@ -28,16 +28,16 @@ For more installation options, check out the [installation guide](https://mituq.
 
 ## Getting Started
 
-MUQ is composed of several different modules, which work together to define and solve UQ problems.  Documentation for each of these modules is included with our doxygen-generated [API documentation](https://mituq.bitbucket.io/source/_site/latest/index.html).   Most applications will require using the [modeling module](\ref Modeling) to define statistical models or interact with user-defined models.  Learning the basics of this module is therefore a good place to start.
+MUQ is composed of several different modules, which work together to define and solve UQ problems.  Documentation for each of these modules is included with our doxygen-generated [API documentation](https://mituq.bitbucket.io/source/_site/latest/index.html).   Most applications will require using the [modeling module](\ref modeling) to define statistical models or interact with user-defined models.  Learning the basics of this module is therefore a good place to start.
 
 #### Interested in forward UQ?
-- First, get acquainted with the [modeling module](\ref Modeling).  You'll need to use one or more instances of the [ModPiece class](\ref muq::Modeling::ModPiece) to define the model that will be evaluated by the UQ algorithm.
-- Once you have a model, check out the [polynomial chaos module](\ref Polynomial Chaos).
+- First, get acquainted with the [modeling module](\ref modeling).  You'll need to use one or more instances of the [ModPiece class](\ref muq::Modeling::ModPiece) to define the model that will be evaluated by the UQ algorithm.
+- Once you have a model, check out the [polynomial chaos module](\ref polychaos).
 - Other examples can be found by selecting the "PCE" examples on the MUQ [webpage](https://mituq.bitbucket.io/source/_site/examples.html).
 
 #### Want to tackle Bayesian inverse problems?
-- Just like for forward UQ, you'll want to get familiar with the [modeling module](\ref Modeling) module to define a forward model.  The [WorkGraph class](\ref muq::Modeling::WorkGraph) within the modeling module is also used to combine multiple components (e.g., the prior, forward model, and likelihood function) comprising the Bayesian posterior distribution.
-- Look at methods in the [sampling algorithms](\ref SamplingAlgorithms) module to generate samples of your Bayesian posterior.
+- Just like for forward UQ, you'll want to get familiar with the [modeling module](\ref modeling) module to define a forward model.  The [WorkGraph class](\ref muq::Modeling::WorkGraph) within the modeling module is also used to combine multiple components (e.g., the prior, forward model, and likelihood function) comprising the Bayesian posterior distribution.
+- Look at methods in the [sampling algorithms](\ref sampling) module to generate samples of your Bayesian posterior.
 - Other examples can be found by filtering the "MCMC" examples on the MUQ [webpage](https://mituq.bitbucket.io/source/_site/examples.html).
 
 You can also find many [examples](https://mituq.bitbucket.io/source/_site/examples.html) using both the c++ and Python interfaces to MUQ.  These examples can provide useful starting places for using MUQ on your own problems.
