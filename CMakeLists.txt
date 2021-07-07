@@ -37,7 +37,7 @@ INCLUDE(CheckFunctionExists)
 project(MUQ)
 set(${CMAKE_PROJECT_NAME}_MAJOR_VERSION 0)
 set(${CMAKE_PROJECT_NAME}_MINOR_VERSION 3)
-set(${CMAKE_PROJECT_NAME}_PATCH_VERSION 3)
+set(${CMAKE_PROJECT_NAME}_PATCH_VERSION 4)
 set(${CMAKE_PROJECT_NAME}_VERSION ${${CMAKE_PROJECT_NAME}_MAJOR_VERSION}.${${CMAKE_PROJECT_NAME}_MINOR_VERSION}.${${CMAKE_PROJECT_NAME}_PATCH_VERSION})
 
 message(STATUS "\n\nThis is MUQ, the MIT UQ Library!\n\n")
@@ -165,9 +165,16 @@ MESSAGE("${MUQ_LOG_SUMMARY}")
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
 
-	find_package(Python3 COMPONENTS Interpreter)
+	if(PYTHON_EXECUTABLE)
+		set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
+		set(Python3_Interpreter_FOUND ON)
+	else()
+		find_package(Python3 COMPONENTS Interpreter)
+	endif()
+
 	if(Python3_Interpreter_FOUND)
 
+		message(STATUS "PYTHON3 EXE: ${Python3_EXECUTABLE}")
 		message(STATUS "To build documentation, run 'make doc'")
 
 		option(MUQDOC_INCLUDE_ANALYTICS OFF)
