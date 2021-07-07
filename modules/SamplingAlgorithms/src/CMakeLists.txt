@@ -82,6 +82,8 @@ CreateCompileGroup(
 
     InverseGammaProposal.cpp
     CrankNicolsonProposal.cpp
+
+    Diagnostics.cpp
 )
 
 if(MUQ_USE_MPI)
