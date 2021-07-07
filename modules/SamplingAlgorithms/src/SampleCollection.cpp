@@ -128,6 +128,10 @@ std::shared_ptr<SampleCollection> SampleCollection::segment(unsigned int startIn
   return output;
 }
 
+const std::shared_ptr<SamplingState> SampleCollection::back() const {
+  return samples.back();
+}
+
 
 Eigen::VectorXd SampleCollection::CentralMoment(unsigned order, Eigen::VectorXd const& mean, int blockNum) const {
   SamplingStatePartialMoment op(blockNum, order, mean);

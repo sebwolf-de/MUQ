@@ -14,6 +14,10 @@ A conda package containing the c++ and python components of MUQ is available via
 ```
 conda install -c conda-forge muq
 ```
+If using MUQ with c++, you will also need to install CMake in order to link with MUQ:
+```
+conda install -c conda-forge muq cmake
+```
 
 You may run into conflicts when installing MUQ and Fenics with conda if they are installed one at a time.  To avoid this, we recommend installing MUQ and Fenics at the same time:
 ```
