@@ -25,7 +25,11 @@ AverageHessian::AverageHessian(unsigned int                            numOldSam
                                                                                                   oldW(oldWIn),
                                                                                                   oldEigVals(oldValsIn),
                                                                                                   newHess(newHessIn)
-{}
+{
+  assert(oldW->rows()>0);
+  assert(oldW->cols()>0);
+  assert(oldEigVals->size()==oldW->cols());
+}
 
 Eigen::MatrixXd AverageHessian::Apply(Eigen::Ref<const Eigen::MatrixXd> const& x)
 {

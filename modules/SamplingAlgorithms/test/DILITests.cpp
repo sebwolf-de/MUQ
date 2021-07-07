@@ -11,6 +11,8 @@
 #include "MUQ/Modeling/Distributions/DensityProduct.h"
 #include "MUQ/Modeling/LinearAlgebra/HessianOperator.h"
 
+#include "MUQ/Utilities/RandomGenerator.h"
+
 #include "MUQ/SamplingAlgorithms/SingleChainMCMC.h"
 #include "MUQ/SamplingAlgorithms/DILIKernel.h"
 #include "MUQ/SamplingAlgorithms/MHProposal.h"
@@ -372,6 +374,8 @@ TEST(MCMC, DILIKernel_AutomaticGaussNewton) {
 
 
 TEST(MCMC, DILIKernel_LogNormal) {
+
+  RandomGenerator::SetSeed(2012);
 
   const unsigned int numNodes = 100;
   const unsigned int dataDim = 5;

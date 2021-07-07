@@ -15,6 +15,7 @@ CreateTestGroup(
     DILITests.cpp
     CrankNicolsonTests.cpp
     InfMALATests.cpp
+    InverseGammaProposalTests.cpp
 )
 
 CreateTestGroup(

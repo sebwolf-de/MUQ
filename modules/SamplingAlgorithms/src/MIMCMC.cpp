@@ -1,4 +1,5 @@
 #include "MUQ/SamplingAlgorithms/MIMCMC.h"
+#include "spdlog/spdlog.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
@@ -26,9 +27,11 @@ namespace muq {
     }
 
     std::shared_ptr<SampleCollection> MIMCMC::GetSamples() const {
+      spdlog::warn("GetSamples() called on MIMCMC. This is not supported and returns a nullptr since we have multiple chains here! Use GetMIMCMCBox() instead to access chains.");
       return nullptr;
     }
     std::shared_ptr<SampleCollection> MIMCMC::GetQOIs() const {
+      spdlog::warn("GetQOIs() called on MIMCMC. This is not supported and returns a nullptr since we have multiple chains here! Use GetMIMCMCBox() instead to access chains.");
       return nullptr;
     }
 
@@ -73,7 +76,7 @@ namespace muq {
 
     std::shared_ptr<MIMCMCBox> MIMCMC::GetMIMCMCBox(std::shared_ptr<MultiIndex> index) {
       for (auto box : boxes) {
-        if (box->GetHighestIndex() == index)
+        if (*(box->GetHighestIndex()) == *index)
           return box;
       }
       return nullptr;

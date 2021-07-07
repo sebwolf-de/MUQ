@@ -2,81 +2,103 @@ image: debian:latest
 
 pipelines:
   default:
+    - parallel:
+      - step:
+          name: gcc-external-dep-mpi
+          image: mparno/muq-build:latest
+          script:
 
-    - step:
-        name: gcc-external-dep-mpi
-        image: mparno/muq-build:latest
-        script:
+            # Build muq
+            - cd $BITBUCKET_CLONE_DIR
+            - cd build
+            - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_C_COMPILER=mpicc -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
+            - make
+            - make examples
+            - make install
+            - ./RunAllTests
+            - mpirun -np 2 ./RunAllParallelTests
 
-          # Build muq
-          - cd $BITBUCKET_CLONE_DIR
-          - cd build
-          - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_C_COMPILER=mpicc -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
-          - make
-          - make examples
-          - make install
-          - ./RunAllTests
-          - mpirun -np 2 ./RunAllParallelTests
+      - step:
+          name: python-notebooks
+          image: ubuntu:latest
+          script:
+            - apt-get update
+            - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python-dev pybind11-dev graphviz
+
+            # Python deps
+            - DEBIAN_FRONTEND="noninteractive" apt-get install -y python3-pip
+            - pip3 install papermill ipykernel # Tools for running notebooks
+            - pip3 install matplotlib h5py ipywidgets scipy # Some of our examples require this
+
+            # Build muq
+            - cd $BITBUCKET_CLONE_DIR
+            - cd build
+            - cmake -DMUQ_USE_PYTHON=ON -DPYBIND11_PYTHON_VERSION=3 -DCMAKE_INSTALL_PREFIX=$BITBUCKET_CLONE_DIR/build/install ..
+            - make install
+
+            # Run all python notebooks
+            - cd $BITBUCKET_CLONE_DIR
+            - export PYTHONPATH=$PYTHONPATH:$BITBUCKET_CLONE_DIR/build/install/python:$BITBUCKET_CLONE_DIR/build/install/lib
+            - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BITBUCKET_CLONE_DIR/build/install/lib:$BITBUCKET_CLONE_DIR/build/install/muq_external/lib
+            - ./RunAllNotebooks.sh
 
   tags:
     'v*.*.*':
-      # - step:
-      #       name: docker-muq-build
-      #       script:
-      #         - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
-      #         - cd $BITBUCKET_CLONE_DIR/SupportScripts/docker/muq-build
-      #         - docker build --build-arg tag=$BITBUCKET_TAG -t mparno/muq-build:$BITBUCKET_TAG .
-      #         - docker push mparno/muq-build:$BITBUCKET_TAG
-      #       services:
-      #         - docker
-      # - step:
-      #       name: docker-muq
-      #       size: 2x
-      #       script:
-      #         - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
-      #         - cd $BITBUCKET_CLONE_DIR/SupportScripts/docker/muq
-      #         - docker build --build-arg tag=$BITBUCKET_TAG -t mparno/muq:$BITBUCKET_TAG .
-      #         - docker push mparno/muq:$BITBUCKET_TAG
-      #       services:
-      #         - docker
-      # - step:
-      #       name: docker-muq-jupyter
-      #       script:
-      #         - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
-      #         - cd $BITBUCKET_CLONE_DIR/SupportScripts/docker/muq-jupyter
-      #         - docker build --build-arg tag=$BITBUCKET_TAG -t mparno/muq-jupyter:$BITBUCKET_TAG .
-      #         - docker push mparno/muq-jupyter:$BITBUCKET_TAG
-      #       services:
-      #         - docker
-      # - step:
-      #       name: docker-muq-hippylib
-      #       size: 2x
-      #       script:
-      #         - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
-      #         - cd $BITBUCKET_CLONE_DIR/SupportScripts/docker/muq-hippylib
-      #         - docker build --build-arg tag=$BITBUCKET_TAG -t mparno/muq-hippylib:$BITBUCKET_TAG .
-      #         - docker push mparno/muq-hippylib:$BITBUCKET_TAG
-      #       services:
-      #         - docker
       - step:
             name: documentation
             image: mparno/muq-build
             script:
-              - apt-get update
-              - apt-get install -y doxygen
               - cd $BITBUCKET_CLONE_DIR/build
               - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DCMAKE_CXX_COMPILER=mpic++ -DCMAKE_C_COMPILER=mpicc -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
               - make doc
               - cd ~
               - git clone https://$BITBUCKET_USER:$BITBUCKET_PASSWORD@bitbucket.org/mituq/mituq.bitbucket.io.git
               - cd mituq.bitbucket.io
-              - if [ -d "$BITBUCKET_TAG" ]; then rm -Rf $BITBUCKET_TAG; fi
-              - mv $BITBUCKET_CLONE_DIR/build/doxygen_output/html $BITBUCKET_TAG
-              - if [[ "$BITBUCKET_TAG" =~ ^v[0-9].[0-9]+.[0-9]+$ ]]; then echo "<meta http-equiv=\"refresh\" content=\"0; url=https://mituq.bitbucket.io/$BITBUCKET_TAG/index.html\">" > index.html; fi
-              - git add $BITBUCKET_TAG
-              - if [[ "$BITBUCKET_TAG" =~ ^v[0-9].[0-9]+.[0-9]+$ ]]; then git add index.html; fi
+              - if [ -d "source/${BITBUCKET_TAG}" ]; then rm -rf source/${BITBUCKET_TAG}; fi
+              - rm -rf source/latest
+              - cp -r $BITBUCKET_CLONE_DIR/build/doxygen_output/html source/${BITBUCKET_TAG}
+              - cp -r $BITBUCKET_CLONE_DIR/build/doxygen_output/html source/latest
+              - git add source/${BITBUCKET_TAG}
+              - git add -u
+              - git add source/latest
+              - git config --global user.email "parnomd@gmail.com"
+              - git config --global user.name "Bitbucket Pipelines"
               - git commit -m "Added documentation for $BITBUCKET_TAG"
-              - git push $BITBUCKET_USER:$BITBUCKET_PASSWORD@bitbucket.org/mituq/mituq.bitbucket.io.git --all
+              - git push https://$BITBUCKET_USER:$BITBUCKET_PASSWORD@bitbucket.org/mituq/mituq.bitbucket.io.git --all
+      - step:
+            name: archive
+            script:
+              - apt-get update
+              - apt-get install -y git curl
+              - cd $BITBUCKET_CLONE_DIR
+              - v0=`echo $BITBUCKET_TAG | cut -c 2-2`;v1=`echo $BITBUCKET_TAG | cut -c 4-4`; v2=`echo $BITBUCKET_TAG | cut -c 6-6`; export TARFILE="muq_${v0}_${v1}_${v2}.tar.gz"
+              - echo "Creating archive ${TARFILE}"
+              - git archive --format=tar.gz --output=${TARFILE} HEAD
+              - curl -X POST --user "${BITBUCKET_USERNAME}:${BITBUCKET_APP_PASSWORD}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"${TARFILE}"
+      - step:
+            name: conda
+            script:
+              - apt-get update
+              - apt-get install -y git curl openssl
+              - v0=`echo $BITBUCKET_TAG | cut -c 2-2`;v1=`echo $BITBUCKET_TAG | cut -c 4-4`; v2=`echo $BITBUCKET_TAG | cut -c 6-6`; export TARFILE="muq_${v0}_${v1}_${v2}.tar.gz"
+              - export DOWNLOAD_URL="https://bitbucket.org/mituq/muq2/downloads/${TARFILE}"
+              - export MUQ_SHA=`curl -sL ${DOWNLOAD_URL} | openssl sha256 | cut -c10-`
+              - cd ~
+              - git clone https://$GITHUB_USER:$GITHUB_PASSWORD@github.com/mparno/muq-feedstock
+              - cd muq-feedstock
+              - git remote add upstream https://github.com/conda-forge/muq-feedstock
+              - git fetch upstream
+              - git rebase upstream/master
+              - git checkout -b $BITBUCKET_TAG
+              - temp=`echo $BITBUCKET_TAG | cut -c2-`; export NEW_VERSION="{% set version = \"${temp}\" %}"
+              - 'sed -i "s/.*set version.*/$NEW_VERSION/" recipe/meta.yaml'
+              - 'sed -i "s/.*sha256.*/  sha256: $MUQ_SHA/" recipe/meta.yaml'
+              - 'sed -i "s/  number: .*/  number: 0/" recipe/meta.yaml'
+              - git add recipe/meta.yaml
+              - git config --global user.email "parnomd@gmail.com"
+              - git config --global user.name "Bitbucket Pipelines"
+              - git commit -m "Updated recipe version."
+              - git push https://$GITHUB_USER:$GITHUB_PASSWORD@github.com/mparno/muq-feedstock --all
 
   custom:
     weekly-build:
@@ -119,19 +141,17 @@ pipelines:
               - make examples
               - make install
               - ./RunAllTests
-              - mpirun -np 2 ./RunAllParallelTests
+              - mpirun --allow-run-as-root -np 2 ./RunAllParallelTests
 
         - step:
-            name: gcc-external-dep-mpi-python2
+            name: gcc-external-dep-mpi
             image: mparno/muq-build:latest
             script:
-              - apt-get update
-              - apt-get install -y python2-dev
 
               # Build muq
               - cd $BITBUCKET_CLONE_DIR
               - cd build
-              - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON -DPYBIND11_PYTHON_VERSION=2 -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
+              - cmake -DMUQ_USE_GTEST=ON -DMUQ_USE_MPI=ON -DMUQ_USE_PYTHON=ON -DCMAKE_INSTALL_PREFIX=/home/muq-user/install ..
               - make
               - make examples
               - make install
@@ -186,29 +206,12 @@ pipelines:
                 - make install
                 - ./RunAllTests
 
-
-
-        # Run Debian unstable channel to catch package changes early
         - step:
-              name: debian-unstable
-              image: debian:unstable
+              name: install-instructions
+              image: ubuntu:latest
               script:
-                - apt-get update
-                - DEBIAN_FRONTEND="noninteractive" apt-get install -y cmake libgtest-dev clang libhdf5-dev libeigen3-dev libboost-all-dev libnlopt-dev libsundials-dev python3-dev pybind11-dev
-
-
-                # Build gtest (have to, since libgtest-dev only includes sources, no binaries available currently...)
-                - cd /usr/src/gtest
-                - cmake CMakeLists.txt
-                - make
-                - cp lib/*.a /usr/lib
-
-
-                # Build muq
+                - apt update
+                - DEBIAN_FRONTEND="noninteractive" apt install -y sudo tzdata
                 - cd $BITBUCKET_CLONE_DIR
-                - cd build
-                - cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DMUQ_USE_GTEST=ON -DMUQ_USE_PYTHON=ON ..
-                - make
-                - make examples
-                - make install
-                - ./RunAllTests
+                - cd SupportScripts
+                - bash install-instructions.sh

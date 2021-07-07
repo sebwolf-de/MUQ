@@ -118,6 +118,10 @@ namespace muq {
       /** Returns a vector with the scaling used for each proposal stage. */
       std::vector<double> GetScales() const{return propScales;};
 
+
+      virtual void SetBlockInd(int newBlockInd) override;
+
+
     protected:
 
       /** Extracts information from the property tree and creates MCMC proposals.
