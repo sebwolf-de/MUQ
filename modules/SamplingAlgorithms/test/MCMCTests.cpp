@@ -114,14 +114,17 @@ TEST(MCMC, MHKernel_MHProposal) {
 
   //boost::any anyMean = samps.Mean();
   Eigen::VectorXd mean = samps->Mean();
-  EXPECT_NEAR(mu(0), mean(0), 1.2e-1);
-  EXPECT_NEAR(mu(1), mean(1), 1.2e-1);
+  Eigen::VectorXd ess = samps->ESS();
+  Eigen::VectorXd var = samps->Variance();
+  Eigen::VectorXd mcse = (var.array()/ess.array()).sqrt();
+  EXPECT_NEAR(mu(0), mean(0), 2.0*mcse(0));
+  EXPECT_NEAR(mu(1), mean(1), 2.0*mcse(1));
 
   Eigen::MatrixXd cov = samps->Covariance();
-  EXPECT_NEAR(1.0, cov(0,0), 1.2e-1);
-  EXPECT_NEAR(0.0, cov(0,1), 1.2e-1);
-  EXPECT_NEAR(0.0, cov(1,0), 1.2e-1);
-  EXPECT_NEAR(1.0, cov(1,1), 1.2e-1);
+  EXPECT_NEAR(1.0, cov(0,0), 3.0*mcse(0));
+  EXPECT_NEAR(0.0, cov(0,1), 3.0*mcse(0));
+  EXPECT_NEAR(0.0, cov(1,0), 3.0*mcse(1));
+  EXPECT_NEAR(1.0, cov(1,1), 3.0*mcse(1));
 }
 
 TEST(MCMC, Diagnostics_Pass) {
