@@ -165,25 +165,28 @@ MESSAGE("${MUQ_LOG_SUMMARY}")
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
 
-	message(STATUS "To build documentation, run 'make doc'")
+	find_package(Python3 COMPONENTS Interpreter)
+	if(Python3_Interpreter_FOUND)
 
-	option(MUQDOC_INCLUDE_ANALYTICS OFF)
-	if(MUQDOC_INCLUDE_ANALYTICS)
-		message(STATUS "Will include google analytics header information in doxygen output.")
-		set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/analytics_header.html)
-	else()
-		set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/noanalytics_header.html)
-	endif()
+		message(STATUS "To build documentation, run 'make doc'")
 
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/muq.doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile @ONLY)
-    add_custom_target(doc
-        COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/documentation/scripts/doxygen_preprocessing.py ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
-        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Generating API documentation with Doxygen" VERBATIM
-    )
+		option(MUQDOC_INCLUDE_ANALYTICS OFF)
+		if(MUQDOC_INCLUDE_ANALYTICS)
+			message(STATUS "Will include google analytics header information in doxygen output.")
+			set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/analytics_header.html)
+		else()
+			set(ANALYTICS_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/documentation/doxFiles/noanalytics_header.html)
+		endif()
 
+	    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/documentation/muq.doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile @ONLY)
+	    add_custom_target(doc
+	        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/documentation/scripts/doxygen_preprocessing.py ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+	        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/muq.doxyfile
+	        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	        COMMENT "Generating API documentation with Doxygen" VERBATIM
+	    )
 
+	endif(Python3_Interpreter_FOUND)
 endif(DOXYGEN_FOUND)
 
 add_subdirectory(examples EXCLUDE_FROM_ALL)
