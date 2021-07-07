@@ -1,4 +1,4 @@
-## MUQ Infrastructure
+\page infrastructure Developer Infrastructure Notes
 
 ### Git
 - Hosted at https://bitbucket.org/mituq/muq2
@@ -31,6 +31,7 @@
 
 ### Conda
 - The MUQ2 conda image lives on conda-forge.
-- To update the conda recipe, we need to follow the conda-forge instructions for updating the muq-feedstock.
+- The recipe for the MUQ2 conda image lives in the [muq-feedstock repository](https://github.com/conda-forge/muq-feedstock) on github.   
+- Directions for updating the recipe manually can be found [here](https://conda-forge.org/docs/maintainer/updating_pkgs.html).
 - Currently Matt is the only maintainer, but we should change that.
-- The idea is to update conda-forge everytime we create a new tag on the MUQ2 repo.
+- In our bitbucket-pipelines.yml file, a fork of conda-forge's muq-feedstock repository is updated every time a new tag is created on the MUQ2 repository.   To update the image on conda-forge, we then need to go into github and create a pull request to merge our fork into conda-forge's repo.
