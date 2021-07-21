@@ -135,14 +135,14 @@ if (${dindex} GREATER -1)
 
     # store include directory information
     if(NOT DEFINED Boost_INCLUDE_DIRS)
-        set(Boost_INCLUDE_DIRS ${BOOST_INCLUDE_DIRS})
+        set(Boost_INCLUDE_DIRS ${BOOST_INCLUDE_DIR})
     endif()
 
     include_directories(${Boost_INCLUDE_DIRS})
     LIST(APPEND ${CMAKE_PROJECT_NAME}_EXTERNAL_INCLUDES ${Boost_INCLUDE_DIRS})
 
     if(NOT DEFINED Boost_LIBRARIES)
-        set(Boost_LIBRARIES ${BOOST_LIBRARIES})
+        set(Boost_LIBRARIES ${BOOST_LIBRARY})
         set(Boost_LIBRARIES_STATIC ${BOOST_LIBRARIES_STATIC})
     endif()
 
