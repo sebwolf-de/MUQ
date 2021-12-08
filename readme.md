@@ -1,4 +1,11 @@
 # Overview
+This is a fork from original muq2 (see description below) at commit 7fafda25. It was forked to enable some changes in the source code for my MA project to enable fused simulation runs in UQ_SeisSol.
+
+
+
+
+
+## MUQ - Overview
 
 Welcome to MUQ (pronounced “muck”), a modular software framework for defining and solving forward and inverse uncertainty quantification problems.
 
