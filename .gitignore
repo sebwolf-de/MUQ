@@ -2,6 +2,10 @@
 
 MUQ/config.h
 
+build/
+
+.vscode
+
 *.ipynb_checkpoints*
 
 modules/Modeling/test/WorkGraphVisualizations/FixedInOutNum.pdf
