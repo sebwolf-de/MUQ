@@ -3,9 +3,8 @@
 
 #include "MUQ/config.h"
 
-#include "MUQ/SamplingAlgorithms/GMHKernel.h"
 #include "MUQ/SamplingAlgorithms/MCMCProposal.h"
-#include "MUQ/SamplingAlgorithms/MHKernel.h"
+#include "MUQ/SamplingAlgorithms/GMHKernel.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
