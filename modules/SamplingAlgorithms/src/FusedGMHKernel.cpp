@@ -18,7 +18,7 @@ FusedGMHKernel::FusedGMHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamp
 
 FusedGMHKernel::~FusedGMHKernel() {}
 
-void FusedGMKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {
+void FusedGMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {
   // propose N steps
   FusedProposal(t, state);
 }
@@ -45,10 +45,10 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   problem->LogDensity(helpState);
 
   // Transfer LogDensity data to proposedStates
-  unsigned int j = 0;
+  unsigned int k = 0;
   for(auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) {
-    *it = helpState->state.at(j++);
-    (*it)->meta["LogTarget"] = helpState->meta["LogTarget"][j++];
+    *it = helpState->state.at(k++);
+    (*it)->meta["LogTarget"] = helpState->meta["LogTarget"][k];
   }
 
   // evaluate the target density
