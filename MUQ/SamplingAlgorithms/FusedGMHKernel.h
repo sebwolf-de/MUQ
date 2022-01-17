@@ -1,5 +1,5 @@
-#ifndef GMHKERNEL_H_
-#define GMHKERNEL_H_
+#ifndef FusedGMHKERNEL_H_
+#define FusedGMHKERNEL_H_
 
 #include "MUQ/config.h"
 
