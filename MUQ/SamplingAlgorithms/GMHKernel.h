@@ -67,7 +67,7 @@ namespace muq {
       std::shared_ptr<parcer::Communicator> GetCommunicator() const;
 #endif
 
-    private:
+    protected:
 
       /// Propose \f$N\f$ points in serial and evaluate the log target
       /**
