@@ -68,6 +68,7 @@ CreateCompileGroup(
     SLMCMC.cpp
     SubsamplingMIProposal.cpp
     GMHKernel.cpp
+    FusedGMHKernel.cpp
 
     MCMCFactory.cpp
 
