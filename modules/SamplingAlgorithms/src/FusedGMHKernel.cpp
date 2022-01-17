@@ -38,17 +38,18 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   proposedStates[0] = state;
 
   for(unsigned int j = 0; j<N; j++) {
-    helpState->state.at(j) = proposal->Sample(state);
+    helpState->state.at(j) = proposal->Sample(state)->state[0];
   }
 
   // Run fused simulation
   problem->LogDensity(helpState);
+  double* logDensityArray = boost::any_cast<double*>(helpState->meta["LogTarget"]);
 
   // Transfer LogDensity data to proposedStates
   unsigned int k = 0;
   for(auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) {
-    *it = helpState->state.at(k);
-    (*it)->meta["LogTarget"] = AnyCast(helpState->meta["LogTarget"])[k++];
+    (*it)->state[0] = helpState->state.at(k);
+    (*it)->meta["LogTarget"] = logDensityArray[k++];
   }
 
   // evaluate the target density
