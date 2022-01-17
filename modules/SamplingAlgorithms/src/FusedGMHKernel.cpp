@@ -47,8 +47,8 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   // Transfer LogDensity data to proposedStates
   unsigned int k = 0;
   for(auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) {
-    *it = helpState->state.at(k++);
-    (*it)->meta["LogTarget"] = helpState->meta["LogTarget"][k];
+    *it = helpState->state.at(k);
+    (*it)->meta["LogTarget"] = helpState->meta["LogTarget"][k++];
   }
 
   // evaluate the target density
