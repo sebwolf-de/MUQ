@@ -18,7 +18,12 @@ FusedGMHKernel::FusedGMHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamp
 
 FusedGMHKernel::~FusedGMHKernel() {}
 
-void GMHKernel::SerialProposal(unsigned int const t, std::shared_ptr<SamplingState> state) {
+void FusedGMKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {
+  // propose N steps
+  FusedProposal(t, state);
+}
+
+void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<SamplingState> state) {
 
   std::shared_ptr<SamplingState> helpState;
   helpState->state.resize(N, nullptr); // TODO: check for correct pointer syntax
@@ -33,7 +38,7 @@ void GMHKernel::SerialProposal(unsigned int const t, std::shared_ptr<SamplingSta
   proposedStates[0] = state;
 
   for(unsigned int j = 0; j<N; j++) {
-    helpState->state.at(j) = proposal->Sample(state); // TODO: check for correct pointer syntax
+    helpState->state.at(j) = proposal->Sample(state);
   }
 
   // Run fused simulation

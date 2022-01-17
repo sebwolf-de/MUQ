@@ -3,8 +3,9 @@
 
 #include "MUQ/config.h"
 
-// #include "MUQ/SamplingAlgorithms/MCMCProposal.h"
 #include "MUQ/SamplingAlgorithms/GMHKernel.h"
+#include "MUQ/SamplingAlgorithms/MCMCProposal.h"
+#include "MUQ/SamplingAlgorithms/MHKernel.h"
 
 namespace muq {
   namespace SamplingAlgorithms {
@@ -31,14 +32,23 @@ namespace muq {
 
     private:
 
+    /**
+	 Propose GMHKernel::N points and compute the cumulative distribution of the stationary distribution for the acceptance probability (GMHKernel::proposedStates and GMHKernel::stationaryAcceptance, respectively)
+	 @param[in] t The current step in the MCMC chain
+	 @param[in] state The current MCMC state
+      */
+    virtual void PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) override;
+
     /// Adapt the function to a single fused simulation call instead of multiple serial ones
     /// Propose \f$N\f$ points in serial and evaluate the log target
     /**
     @param[in] t The current step in the MCMC chain
     @param[in] state The current point
     */
-    void SerialProposal(unsigned int const t, std::shared_ptr<SamplingState> state) override;
+    void FusedProposal(unsigned int const t, std::shared_ptr<SamplingState> state);
 
+
+    };
 
 
 
