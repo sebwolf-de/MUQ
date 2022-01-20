@@ -34,7 +34,7 @@ void FusedGMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState
 void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<SamplingState> state) {
 
   std::cout << "Enter FusedProposal." << std::endl;
-  std::shared_ptr<SamplingState> helpState;
+  std::shared_ptr<SamplingState> helpState = state;
   helpState->state.resize(N); // TODO: check for correct pointer syntax
   std::cout << "Fused line 39" << std::endl;
   // If the current state does not have LogTarget information, add it
