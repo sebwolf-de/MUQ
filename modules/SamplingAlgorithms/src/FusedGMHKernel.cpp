@@ -27,7 +27,7 @@ void FusedGMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState
 void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<SamplingState> state) {
 
   std::shared_ptr<SamplingState> helpState;
-  helpState->state.resize(N); // TODO: check for correct pointer syntax
+  helpState->state.resize(0); // TODO: check for correct pointer syntax
 
   // If the current state does not have LogTarget information, add it
   if(! state->HasMeta("LogTarget"))
@@ -38,12 +38,15 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   proposedStates.resize(Np1, nullptr);
   proposedStates[0] = state;
 
+  for(unsigned int j = 0; j<N; j++) {
+    helpState->state.push_back(proposal->Sample(state)->state[0]);
+  }
   // for(unsigned int j = 0; j<N; j++) {
   //   helpState->state.at(j) = proposal->Sample(state)->state[0];
   // }
-  for(auto it = helpState->state.begin()+1; it!=helpState->state.end(); ++it ) {
-    *it = proposal->Sample(state);
-  }
+  // for(auto it = helpState->state.begin()+1; it!=helpState->state.end(); ++it ) {
+  //   *it = proposal->Sample(state);
+  // }
 
   // Run fused simulation
   problem->LogDensity(helpState);
