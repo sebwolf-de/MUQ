@@ -41,7 +41,7 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   // for(unsigned int j = 0; j<N; j++) {
   //   helpState->state.at(j) = proposal->Sample(state)->state[0];
   // }
-  for(auto it = helpState.begin()+1; it!=helpState.end(); ++it ) {
+  for(auto it = helpState->state.begin()+1; it!=helpState->state.end(); ++it ) {
     *it = proposal->Sample(state);
   }
 
