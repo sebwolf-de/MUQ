@@ -30,7 +30,7 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   std::cout << "Fused line 30" << std::endl;
   // If the current state does not have LogTarget information, add it
   if(! state->HasMeta("LogTarget"))
-    state->meta["LogTarget"] = 0.0; // dummy value to avoid unfuded sim ... problem->LogDensity(state);
+    state->meta["LogTarget"] = 0.0; // dummy value to avoid unfused sim ... problem->LogDensity(state);
 
   std::shared_ptr<SamplingState> helpState = state;
   helpState->state.resize(N); // TODO: check for correct pointer syntax
@@ -61,8 +61,9 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   std::cout << "Fused line 61" << std::endl;
   // evaluate the target density
   Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
-  for( unsigned int i=0; i<Np1; ++i )
-    R(i) = boost::any_cast<double>(proposedStates[i]->meta["LogTarget"]);
+  // R(0) = AnyCast(state->meta["LogTarget"])[0];
+  for( unsigned int i=1; i<Np1; ++i )
+    R(i) = logDensityArray[i]; // -> first i=0 muss von state kommen!
 
   std::cout << "Fused line 67" << std::endl;
   // compute stationary transition probability
