@@ -27,11 +27,13 @@ FusedGMHKernel::~FusedGMHKernel() {}
 
 void FusedGMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState> state) {
   // propose N steps
+  std::cout << "Enter PreStep." << std::endl;
   FusedProposal(t, state);
 }
 
 void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<SamplingState> state) {
 
+  std::cout << "Enter FusedProposal." << std::endl;
   std::shared_ptr<SamplingState> helpState;
   helpState->state.resize(N); // TODO: check for correct pointer syntax
 
