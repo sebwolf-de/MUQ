@@ -5,6 +5,8 @@
 #include "MUQ/Utilities/RandomGenerator.h"
 #include "MUQ/Utilities/AnyHelpers.h"
 
+#include <iostream>
+
 namespace pt = boost::property_tree;
 using namespace muq::Utilities;
 using namespace muq::SamplingAlgorithms;
@@ -41,6 +43,8 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   for(unsigned int j = 0; j<N; j++) {
     helpState->state.push_back(proposal->Sample(state)->state[0]);
   }
+  std::cout << "Size of N: " << N << std::endl;
+  std::cout << "Size of state vector: " << helpState->state.size() << std::endl;
   // for(unsigned int j = 0; j<N; j++) {
   //   helpState->state.at(j) = proposal->Sample(state)->state[0];
   // }
