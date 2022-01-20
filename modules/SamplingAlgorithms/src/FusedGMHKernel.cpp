@@ -62,7 +62,7 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   // evaluate the target density
   Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
   for( unsigned int i=0; i<Np1; ++i )
-    R(i) = AnyCast(proposedStates[i]->meta["LogTarget"]);
+    R(i) = boost::any_cast<double>(proposedStates[i]->meta["LogTarget"]);
 
   std::cout << "Fused line 67" << std::endl;
   // compute stationary transition probability
