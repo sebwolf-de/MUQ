@@ -36,16 +36,16 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   std::cout << "Enter FusedProposal." << std::endl;
   std::shared_ptr<SamplingState> helpState;
   helpState->state.resize(N); // TODO: check for correct pointer syntax
-
+  std::cout << "Fused line 39" << std::endl;
   // If the current state does not have LogTarget information, add it
   if(! state->HasMeta("LogTarget"))
     state->meta["LogTarget"] = 0.0; // dummy value to avoid unfuded sim ... problem->LogDensity(state);
 
-
+  std::cout << "Fused line 44" << std::endl;
   // propose the points
   proposedStates.resize(Np1, nullptr);
   proposedStates[0] = state;
-
+  std::cout << "Fused line 48" << std::endl;
   // for(unsigned int j = 0; j<N; j++) {
   //   helpState->state.push_back(proposal->Sample(state)->state[0]);
   // }
@@ -57,11 +57,11 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   // for(auto it = helpState->state.begin()+1; it!=helpState->state.end(); ++it ) {
   //   *it = proposal->Sample(state);
   // }
-
+  std::cout << "Fused line 60" << std::endl;
   // Run fused simulation
   problem->LogDensity(helpState);
   double* logDensityArray = boost::any_cast<double*>(helpState->meta["LogTarget"]);
-
+  std::cout << "Fused line 64" << std::endl;
   // Transfer LogDensity data to proposedStates
   unsigned int k = 0;
   for(auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) {
