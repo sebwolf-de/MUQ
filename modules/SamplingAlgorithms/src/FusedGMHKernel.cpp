@@ -55,7 +55,7 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   // Transfer LogDensity data to proposedStates
   unsigned int k = 0;
   for(auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) {
-    *it = helpState->state.at(k);
+    *it = std::make_shared<SamplingState>(helpState->state.at(k));
     (*it)->meta["LogTarget"] = logDensityArray[k++];
   }
   std::cout << "Fused line 61" << std::endl;
