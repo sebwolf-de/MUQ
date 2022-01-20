@@ -14,10 +14,14 @@ using namespace muq::SamplingAlgorithms;
 REGISTER_TRANSITION_KERNEL(FusedGMHKernel)
 
 FusedGMHKernel::FusedGMHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem) : 
-  GMHKernel(pt, problem) {}
+  GMHKernel(pt, problem) {
+    std::cout << "Setup of Kernel complete." << std::endl;
+  }
 
 FusedGMHKernel::FusedGMHKernel(pt::ptree const& pt, std::shared_ptr<AbstractSamplingProblem> problem, std::shared_ptr<MCMCProposal> proposalIn) :
-  GMHKernel(pt, problem, proposalIn) {}
+  GMHKernel(pt, problem, proposalIn) {
+    std::cout << "Setup of Kernel complete." << std::endl;
+  }
 
 FusedGMHKernel::~FusedGMHKernel() {}
 
