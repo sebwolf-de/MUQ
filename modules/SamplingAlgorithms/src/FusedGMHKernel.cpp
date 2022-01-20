@@ -38,8 +38,11 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   proposedStates.resize(Np1, nullptr);
   proposedStates[0] = state;
 
-  for(unsigned int j = 0; j<N; j++) {
-    helpState->state.at(j) = proposal->Sample(state)->state[0];
+  // for(unsigned int j = 0; j<N; j++) {
+  //   helpState->state.at(j) = proposal->Sample(state)->state[0];
+  // }
+  for(auto it = helpState.begin()+1; it!=helpState.end(); ++it ) {
+    *it = proposal->Sample(state);
   }
 
   // Run fused simulation
