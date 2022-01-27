@@ -5,8 +5,6 @@
 #include "MUQ/Utilities/RandomGenerator.h"
 #include "MUQ/Utilities/AnyHelpers.h"
 
-#include <iostream>
-
 namespace pt = boost::property_tree;
 using namespace muq::Utilities;
 using namespace muq::SamplingAlgorithms;
@@ -27,16 +25,16 @@ void FusedGMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState
 }
 
 void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<SamplingState> state) {
-  std::cout << "Fused line 30" << std::endl;
+  
   // If the current state does not have LogTarget information, add it
   if(! state->HasMeta("LogTarget")) {
     double* tmp = new double[1];
   	tmp[0] = 0.0;
-    state->meta["LogTarget"] = 0.0; // dummy value to avoid unfused sim ... problem->LogDensity(state);
+    state->meta["LogTarget"] = 0.0; // dummy value to avoid unfused sim 
   }
     
   std::shared_ptr<SamplingState> helpState = state;
-  helpState->state.resize(N); // TODO: check for correct pointer syntax
+  helpState->state.resize(N);
   
   // propose the points
   proposedStates.resize(Np1, nullptr);
@@ -56,14 +54,14 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
     *it = std::make_shared<SamplingState>(helpState->state.at(k));
     (*it)->meta["LogTarget"] = logDensityArray[k++];
   }
-  std::cout << "Fused line 61" << std::endl;
+  
   // evaluate the target density
   Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
   R(0) = boost::any_cast<double*>(state->meta["LogTarget"])[0];
   for( unsigned int i=1; i<Np1; ++i )
-    R(i) = logDensityArray[i]; // -> first i=0 muss von state kommen!
+    R(i) = logDensityArray[i];
 
-  std::cout << "Fused line 67" << std::endl;
+  
   // compute stationary transition probability
   AcceptanceDensity(R);
 }
