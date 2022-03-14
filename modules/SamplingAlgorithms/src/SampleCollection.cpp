@@ -324,8 +324,8 @@ Eigen::MatrixXd SampleCollection::AsMatrix(int blockDim) const
     for(int i=0; i<samples.size(); ++i){
       int startInd = 0;
 
-      for(int block=0; block<samples.at(i)->state.size(); ++block){ // use i instead of 0 
-        int blockSize = samples.at(i)->state.at(block).size();      // use i instead of 0 
+      for(int block=0; block<samples.at(0)->state.size(); ++block){
+        int blockSize = samples.at(0)->state.at(block).size();     
         output.col(i).segment(startInd, blockSize) = samples.at(i)->state.at(block);
         startInd += blockSize;
       }
