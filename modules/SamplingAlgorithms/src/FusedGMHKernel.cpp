@@ -28,9 +28,9 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   
   // If the current state does not have LogTarget information, add it
   if(! state->HasMeta("LogTarget")) {
-    double* tmp = new double[1];
-  	tmp[0] = -0.018509458526643048; // value for inital values [2000,0,0] and sim time= 6.01s
-    state->meta["LogTarget"] = tmp;
+    // double* tmp = new double[1];
+  	// tmp[0] = -0.018509458526643048; // value for inital values [2000,0,0] and sim time= 6.01s
+    state->meta["LogTarget"] = -0.018509458526643048; // tmp;
   }
     
   std::shared_ptr<SamplingState> helpState = std::make_shared<SamplingState>(state->state);
@@ -53,7 +53,7 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   unsigned int k = 0;
   for(auto it = proposedStates.begin()+1; it!=proposedStates.end(); ++it ) {
     *it = std::make_shared<SamplingState>(helpState->state.at(k));
-    (*it)->meta["LogTarget"] = &logDensityArray[k++];
+    (*it)->meta["LogTarget"] = logDensityArray[k++]; // &
   }
   
   // evaluate the target density
