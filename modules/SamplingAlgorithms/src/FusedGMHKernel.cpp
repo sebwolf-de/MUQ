@@ -58,7 +58,7 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   
   // evaluate the target density
   Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
-  R(0) = boost::any_cast<double*>(state->meta["LogTarget"])[0];
+  R(0) = boost::any_cast<double>(state->meta["LogTarget"]);// boost::any_cast<double*>(state->meta["LogTarget"])[0];
   for( unsigned int i=1; i<Np1; ++i )
     R(i) = logDensityArray[i];
 
