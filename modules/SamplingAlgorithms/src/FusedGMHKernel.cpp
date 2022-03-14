@@ -29,11 +29,12 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   // If the current state does not have LogTarget information, add it
   if(! state->HasMeta("LogTarget")) {
     double* tmp = new double[1];
-  	tmp[0] = 0.0;
-    state->meta["LogTarget"] = 0.0; // dummy value to avoid unfused sim 
+  	tmp[0] = -0.018509458526643048; // value for inital values [2000,0,0] and sim time= 6.01s
+    state->meta["LogTarget"] = tmp;
   }
     
-  std::shared_ptr<SamplingState> helpState = state;
+  std::shared_ptr<SamplingState> helpState = std::make_shared<SamplingState>(state->state);
+
   helpState->state.resize(N);
   
   // propose the points
