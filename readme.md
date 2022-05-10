@@ -1,10 +1,8 @@
 # Overview
-This is a fork from original muq2 (see description below) at commit 7fafda25. It was forked to enable some changes in the source code for my MA project to enable fused simulation runs in UQ_SeisSol.
+This is a fork from original muq2 (https://bitbucket.org/mituq/muq2/, see description below) at commit 7fafda25. It was forked to enable some changes in the source code for fused simulation runs in UQ_SeisSol.
 
 ### Use case
-This branch includes the additional class FusedGMHKernel, which is needed to run the FusedGMHKernel version of UQ_SeisSol. See https://gitlab.lrz.de/sebastian-wolf/uq-seissol/-/tree/fusedGMHKernel for more information to use that version.
-
-
+This branch includes the additional class FusedGMHKernel, which is needed to run the FusedGMHKernel version of UQ_SeisSol. See https://github.com/sebwolf-de/UQ-SeisSol/tree/fusedGMHKernel for more information to use that version.
 
 ## MUQ - Overview
 
