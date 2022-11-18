@@ -45,7 +45,7 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   
   // Run fused simulation
   problem->LogDensity(helpState);
-  double* logDensityArray = boost::any_cast<double*>(helpState->meta["LogTarget"]);
+  std::vector<double> logDensityArray = boost::any_cast<std::vector<double>>(helpState->meta["LogTarget"]);
   
   // Transfer LogDensity data to proposedStates
   unsigned int k = 0;
