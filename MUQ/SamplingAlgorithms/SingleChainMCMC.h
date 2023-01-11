@@ -138,7 +138,7 @@ namespace muq{
         SetState(vec);
       }
 
-      unsigned int sampNum = 1;
+      unsigned int sampNum = 0;
       std::shared_ptr<SamplingState> prevState = nullptr;
       std::shared_ptr<SamplingState> lastSavedState = nullptr;
       double totalTime = 0.0;

@@ -58,7 +58,7 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
   R(0) = boost::any_cast<double>(state->meta["LogTarget"]);
   for( unsigned int i=1; i<Np1; ++i )
-    R(i) = logDensityArray[i];
+    R(i) = logDensityArray[i-1];
 
   
   // compute stationary transition probability
