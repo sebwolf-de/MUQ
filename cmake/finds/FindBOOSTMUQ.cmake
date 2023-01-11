@@ -8,7 +8,7 @@ if(NOT DEFINED MUQ_BOOST_DIR)
 	unset(Boost_LIBRARIES)
 	unset(Boost_INCLUDE_DIR)
 	unset(Boost_LIBRARY_DIRS)
-	set(Boost_USE_STATIC_LIBS ON)
+        #set(Boost_USE_STATIC_LIBS ON)
 
 	find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS system filesystem graph)
 
