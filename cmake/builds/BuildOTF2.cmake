@@ -1,6 +1,6 @@
 include(ExternalProject)
 if(NOT OTF2_EXTERNAL_SOURCE)
-	set(OTF2_EXTERNAL_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/external/otf2-2.2.tar.gz)
+	set(OTF2_EXTERNAL_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/external/otf2-2.3.tar.gz)
 endif()
 
 set(OTF2_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/muq_external)
