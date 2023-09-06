@@ -25,10 +25,18 @@ void FusedGMHKernel::PreStep(unsigned int const t, std::shared_ptr<SamplingState
 }
 
 void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<SamplingState> state) {
-  
-  // If the current state does not have LogTarget information, add it
+  // If the current state does not have LogTarget information, evaluate and add it
+  // Should only happen once in the beginning.
   if(! state->HasMeta("LogTarget")) {
-    state->meta["LogTarget"] = -0.018509458526643048; // value for inital values [2000,0,0] and sim time= 6.01s
+    std::cout << "State does not have meta info, run Sampling Problem." << std::endl;
+    std::shared_ptr<SamplingState> helpState = std::make_shared<SamplingState>(state->state);
+    helpState->state.resize(N);
+    for (size_t i = 0; i < N; i++) {
+      helpState->state.at(i) = state->state[0];
+    }
+    problem->LogDensity(helpState);
+    std::vector<double> logDensityArray = boost::any_cast<std::vector<double>>(helpState->meta["LogTarget"]);
+    state->meta["LogTarget"] = logDensityArray.at(0);
   }
     
   std::shared_ptr<SamplingState> helpState = std::make_shared<SamplingState>(state->state);
@@ -57,9 +65,9 @@ void FusedGMHKernel::FusedProposal(unsigned int const t, std::shared_ptr<Samplin
   // evaluate the target density
   Eigen::VectorXd R = Eigen::VectorXd::Zero(Np1);
   R(0) = boost::any_cast<double>(state->meta["LogTarget"]);
-  for( unsigned int i=1; i<Np1; ++i )
+  for( unsigned int i=1; i<Np1; ++i ) {
     R(i) = logDensityArray[i-1];
-
+  }
   
   // compute stationary transition probability
   AcceptanceDensity(R);
